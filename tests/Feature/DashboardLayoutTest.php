@@ -250,3 +250,10 @@ it('omits the edit controls on a shared dashboard the user does not own', functi
         ->assertSee('Alpha stats widget')
         ->assertDontSee('data-testid="remove-alpha-stats"', false);
 });
+
+it('answers a missing dashboard with a plain 404', function (): void {
+    $this->actingAs(makeUser('owner@example.com'))
+        ->putJson(route('atrium.dashboards.layout', 999), ['widgets' => []])
+        ->assertNotFound()
+        ->assertExactJson(['message' => 'Not found.']);
+});

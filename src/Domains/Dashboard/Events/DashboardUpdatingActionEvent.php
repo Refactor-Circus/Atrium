@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\UpdateDashboardData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Keystone\Contracts\ActionStartingEvent;
 
@@ -19,7 +20,6 @@ final class DashboardUpdatingActionEvent implements ActionStartingEvent
 
     public function __construct(
         public DashboardModel $dashboard,
-        /** @var array{name?: string, is_default?: bool} */
-        public array $data,
+        public UpdateDashboardData $data,
     ) {}
 }

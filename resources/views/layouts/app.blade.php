@@ -9,6 +9,8 @@
 
     <title>{{ $title ?? config('app.name') }}</title>
 
+    {{-- Asked once; the head script and the switcher both need it. --}}
+    @php($atriumSwitchable = app(\RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry::class)->switchable(request()))
     @include('atrium::partials.theme')
 
     <link rel="stylesheet" href="{{ asset('vendor/atrium/atrium.css') }}">
@@ -25,8 +27,9 @@
     @stack('atrium-head')
 </head>
 <body class="bg-canvas text-on-surface antialiased dark:bg-canvas-dark dark:text-on-surface-dark">
+@php($atriumNav = app(\RefactorCircus\Atrium\Domains\Navigation\Services\NavigationState::class))
 @php($atriumSections = \RefactorCircus\Atrium\Facades\Atrium::navigationSections(request()))
-@php($atriumCurrentSection = collect($atriumSections)->first(fn ($section) => $section->grouped && $section->isActive(request()))?->key)
+@php($atriumCurrentSection = collect($atriumSections)->first(fn ($section) => $section->grouped && $atriumNav->sectionIsActive($section, request()))?->key)
 <div class="flex h-dvh" x-data="atriumShell(@js($atriumCurrentSection))" x-on:keydown.escape.window="drawer = false" x-on:atrium-theme-changed.window="flyout = null">
     <a class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-radius focus:bg-surface focus:px-3 focus:py-2 dark:focus:bg-surface-dark" href="#atrium-main">
         {{ __('atrium::atrium.skip_to_content') }}

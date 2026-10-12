@@ -37,6 +37,8 @@ class WidgetDefinition
 
     public private(set) int $minHeight = 1;
 
+    public private(set) bool $lazy = false;
+
     /** @var (Closure(array<string, mixed>): array<string, mixed>)|null */
     private ?Closure $resolver = null;
 
@@ -108,6 +110,20 @@ class WidgetDefinition
     {
         $this->minWidth = $width;
         $this->minHeight = $height;
+
+        return $this;
+    }
+
+    /**
+     * Render a placeholder with the page and fetch the widget's body
+     * afterwards, so a slow widget does not hold up the dashboard. The body
+     * arrives as HTML: Alpine in it starts, but its scripts do not run and
+     * Livewire components in it are not booted, so keep lazy widgets to
+     * plain Blade.
+     */
+    public function lazy(bool $lazy = true): static
+    {
+        $this->lazy = $lazy;
 
         return $this;
     }

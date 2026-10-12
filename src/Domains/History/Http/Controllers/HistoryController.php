@@ -20,7 +20,8 @@ class HistoryController
     {
         $resolved = $packages->find($package);
 
-        abort_if($resolved === null || ! $history->available(), 404);
+        // Only while the package audits: Keen installed, its `audit.enabled` on.
+        abort_if($resolved === null || ! $resolved->audits(), 404);
 
         $filters = $request->validate(History::rules());
 

@@ -6,6 +6,10 @@ use Illuminate\Database\Seeder;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\CreateDashboardAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\SaveDashboardLayoutAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\UpdateDashboardAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\UpdateDashboardData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\WidgetPlacementData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
@@ -30,7 +34,7 @@ class DatabaseSeeder extends Seeder
 
         // The admin's own dashboards: a default overview and a second one,
         // so the switcher and edit mode have something to show.
-        $overview = $this->dashboard(['name' => 'Overview'], $admin, [
+        $overview = $this->dashboard(new CreateDashboardData('Overview'), $admin, [
             ['demo.revenue', 3, 1],
             ['demo.orders', 3, 1],
             ['demo.conversion', 3, 1],
@@ -40,9 +44,9 @@ class DatabaseSeeder extends Seeder
             ['demo.welcome', 6, 2],
             ['demo.goals', 6, 2],
         ]);
-        app(UpdateDashboardAction::class)->execute($overview, ['is_default' => true]);
+        app(UpdateDashboardAction::class)->execute($overview, new UpdateDashboardData(isDefault: true));
 
-        $this->dashboard(['name' => 'Operations'], $admin, [
+        $this->dashboard(new CreateDashboardData('Operations'), $admin, [
             ['demo.services', 4, 2],
             ['demo.recent-orders', 8, 2],
             ['demo.orders', 6, 1],
@@ -51,7 +55,7 @@ class DatabaseSeeder extends Seeder
 
         // Grace shares a dashboard with everyone. Shared dashboards have no
         // owner, so the admin can view it but not edit it.
-        $this->dashboard(['name' => 'Company KPIs', 'is_shared' => true], $grace, [
+        $this->dashboard(new CreateDashboardData('Company KPIs', isShared: true), $grace, [
             ['demo.revenue', 4, 1],
             ['demo.orders', 4, 1],
             ['demo.conversion', 4, 1],
@@ -59,7 +63,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Grace's private dashboard, which the admin never sees.
-        $this->dashboard(['name' => 'Grace\'s board'], $grace, [
+        $this->dashboard(new CreateDashboardData('Grace\'s board'), $grace, [
             ['demo.recent-orders', 12, 2],
         ]);
     }
@@ -79,10 +83,9 @@ class DatabaseSeeder extends Seeder
      * Create a dashboard and lay its widgets out left to right, wrapping at
      * the grid's twelve columns.
      *
-     * @param  array{name: string, is_shared?: bool}  $data
      * @param  array<int, array{0: string, 1: int, 2: int}>  $widgets  Widget key, width and height.
      */
-    private function dashboard(array $data, User $owner, array $widgets): DashboardModel
+    private function dashboard(CreateDashboardData $data, User $owner, array $widgets): DashboardModel
     {
         $dashboard = app(CreateDashboardAction::class)->execute($data, $owner);
 
@@ -96,17 +99,11 @@ class DatabaseSeeder extends Seeder
                 $column = 0;
             }
 
-            $layout[] = [
-                'widget_key' => $key,
-                'grid_row' => $row,
-                'grid_column' => $column,
-                'grid_width' => $width,
-                'grid_height' => $height,
-            ];
+            $layout[] = new WidgetPlacementData($key, $row, $column, $width, $height);
 
             $column += $width;
         }
 
-        return app(SaveDashboardLayoutAction::class)->execute($dashboard, $layout);
+        return app(SaveDashboardLayoutAction::class)->execute($dashboard, new SaveDashboardLayoutData($layout));
     }
 }

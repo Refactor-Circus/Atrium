@@ -1,6 +1,7 @@
 @php
     $sections ??= \RefactorCircus\Atrium\Facades\Atrium::navigationSections(request());
     $currentSection ??= null;
+    $atriumNav ??= app(\RefactorCircus\Atrium\Domains\Navigation\Services\NavigationState::class);
 
     $railButton = 'relative grid size-10 shrink-0 cursor-pointer place-items-center rounded-radius transition-colors [&_svg]:size-5';
     $railIdle = 'text-on-surface hover:bg-on-surface-strong/5 hover:text-on-surface-strong dark:text-on-surface-dark dark:hover:bg-white/5 dark:hover:text-on-surface-dark-strong';
@@ -22,14 +23,14 @@
              x-on:scroll="flyout = null">
             @foreach ($sections as $section)
                 @php
-                    $active = $section->isActive(request());
+                    $active = $atriumNav->sectionIsActive($section, request());
                     $flyout = [
                         'label' => $section->label,
                         'badge' => null,
                         'children' => $section->grouped ? array_map(fn ($item) => [
                             'label' => $item->label,
-                            'url' => $item->resolveUrl() ?? '#',
-                            'active' => $item->isActive(request()),
+                            'url' => $atriumNav->url($item, request()) ?? '#',
+                            'active' => $atriumNav->isActive($item, request()),
                         ], $section->items) : [],
                     ];
                     $glyph = $section->icon ?? null;
@@ -45,7 +46,7 @@
                             @class([$railButton, $railActive => $active, $railIdle => ! $active])
                             :class="! @js($active) && section === @js($section->key) && ! collapsed && 'bg-on-surface-strong/5 text-on-surface-strong dark:bg-white/5 dark:text-on-surface-dark-strong'">
                 @else
-                    <a href="{{ $section->url() ?? '#' }}" data-testid="nav-section" data-section="{{ $section->key }}"
+                    <a href="{{ $atriumNav->sectionUrl($section, request()) ?? '#' }}" data-testid="nav-section" data-section="{{ $section->key }}"
                        aria-label="{{ $section->label }}" data-flyout="{{ json_encode($flyout) }}"
                        x-on:mouseenter="previewSection($el, null)" x-on:mouseleave="unpeek()"
                        x-on:focus="previewSection($el, null)" x-on:blur="unpeek()"

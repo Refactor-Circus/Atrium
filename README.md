@@ -122,6 +122,8 @@ Atrium::plugin(BillingPlugin::class);
 
 Host applications stay in control. Add plugin classes to `plugins` in `config/atrium.php`, list keys under `disabled` to hide a discovered plugin, or set `discover` to `false` to turn discovery off entirely.
 
+Discovered plugins are cached in `bootstrap/cache/atrium-plugins.php`, as Laravel caches its package manifest, so a request does not read Composer's `installed.json`. `package:discover` (which Composer runs after every install and update) and `optimize` rebuild it, `atrium:discover` rebuilds it by hand, and `optimize:clear` (or `atrium:clear-discovered`) removes it. Without the file, plugins are read from the installed packages on every boot, as before.
+
 ## Managing Pennant feature flags
 
 The Feature flags page moved to [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus), which registers it as an Atrium plugin when both are installed.
@@ -129,6 +131,8 @@ The Feature flags page moved to [refactor-circus/pennantplus](https://github.com
 ## Widgets are offered, never placed
 
 Returning a `WidgetDefinition` makes a widget *available* in the widget picker. It does not put it on anyone's dashboard. Only a user adding it does that.
+
+A widget that is slow to render can be marked `->lazy()`: the dashboard renders a placeholder in its place and fetches the widget's body afterwards from `atrium.dashboards.widgets.show` (`GET /atrium/dashboards/{dashboard}/widgets/{widget}`), which answers whoever may see the dashboard, behind the same gate. The body arrives as HTML, so Alpine in it starts but its `<script>` tags do not run and Livewire components are not booted; keep lazy widgets to plain Blade views. Widgets render with the page unless marked lazy.
 
 Users keep as many dashboards as they like. Each dashboard belongs to one user, and a dashboard can be marked shared so everyone sees it. When a plugin is uninstalled, its placements are skipped rather than breaking the page.
 
@@ -403,11 +407,13 @@ public function search(): ?SearchSource
 }
 ```
 
-Sources run concurrently, using the `Concurrency` driver in `atrium.search.concurrency` (the application's default when null). A source that throws is reported and skipped, so one broken plugin never empties the palette. With the `process` or `fork` driver each source runs outside the request: Atrium hands it the signed-in user and the request's root URL (so `route()` and `url()` link to the host the user is on, not `APP_URL`), but nothing else from the request.
+Sources run with the `Concurrency` driver in `atrium.search.concurrency`: `sync` by default, which runs them one after another inside the request and costs nothing extra for fast sources. Set it to `process` to run them concurrently, each in its own PHP process with its own timeout - worth it for slow sources, but every search then boots the framework once per source - or to null for the application's default. A source that throws is reported and skipped, so one broken plugin never empties the palette. With the `process` or `fork` driver each source runs outside the request: Atrium hands it the signed-in user and the request's root URL (so `route()` and `url()` link to the host the user is on, not `APP_URL`), but nothing else from the request.
 
 Each source gets `atrium.search.timeout` seconds (5 by default), or its own `->timeout(10)`. A source still running then is stopped, reported, and left out, while the others' results are still returned. Only the `process` driver can stop a running source; with `sync` or `fork` the timeout is not enforced.
 
 A source's closures are serialized into the child process, so they must be defined somewhere that process can autoload, such as a plugin class. Closures written inside a Pest test file are scoped to a test class that only exists in the test run, so set `atrium.search.concurrency` to `sync` in tests that register sources that way.
+
+The search box asks for results once a query has `atrium.search.min_length` characters (2 by default), and the endpoint runs no source for a shorter one. A newer keystroke cancels the search in flight, so a slow, stale answer never replaces a newer one.
 
 Without classification every source runs, so `atrium.search.concurrency_limit` caps how many run at once. The rest wait their turn: with the `process` driver the next source starts the moment a running one finishes, and with other drivers sources run in batches of that size. Null runs every source at once.
 
@@ -435,14 +441,14 @@ They fire synchronously, as Eloquent's own events do, so a `creating`, `updating
 
 ### Action events
 
-Every action dispatches a start event before it does any work, carrying the input, and a finish event once it succeeds, carrying the result:
+Every action dispatches a start event before it does any work, carrying the input (the action's Data object), and a finish event once it succeeds, carrying the result:
 
 | Action | Start event (carries) | Finish event (carries) |
 | --- | --- | --- |
 | `CreateDashboardAction` | `DashboardCreatingActionEvent` (`data`, `owner`) | `DashboardCreatedActionEvent` (`dashboard`) |
 | `UpdateDashboardAction` | `DashboardUpdatingActionEvent` (`dashboard`, `data`) | `DashboardUpdatedActionEvent` (`dashboard`) |
 | `DeleteDashboardAction` | `DashboardDeletingActionEvent` (`dashboard`) | `DashboardDeletedActionEvent` (`dashboard`) |
-| `SaveDashboardLayoutAction` | `DashboardLayoutSavingActionEvent` (`dashboard`, `widgets`) | `DashboardLayoutSavedActionEvent` (`dashboard`, `widgetKeys`) |
+| `SaveDashboardLayoutAction` | `DashboardLayoutSavingActionEvent` (`dashboard`, `data`) | `DashboardLayoutSavedActionEvent` (`dashboard`, `widgetKeys`) |
 
 ```php
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardLayoutSavedActionEvent;
@@ -519,10 +525,10 @@ class AtriumDashboardPolicy extends DashboardPolicy
 Atrium's writes follow the same pattern its plugins should. Requests own validation and authorization and expose their work through `persist()`; controllers only pass through. The work itself lives in an action, which announces that it is starting, wraps the write in a transaction, and announces that it finished once the write commits.
 
 ```php
-$dashboard = app(CreateDashboardAction::class)->execute(['name' => 'Operations'], $user);
+$dashboard = app(CreateDashboardAction::class)->execute(new CreateDashboardData('Operations'), $user);
 ```
 
-Actions expose `execute()` and keep `handle()` protected, so there is one entry point per action.
+Actions expose `execute()` and keep `handle()` protected, so there is one entry point per action. Their input is a `final readonly` Data object (`CreateDashboardData`, `UpdateDashboardData`, `SaveDashboardLayoutData`, whose `widgets` are `WidgetPlacementData`, in `RefactorCircus\Atrium\Domains\Dashboard\Data`, on refactor-circus/keystone's `Data`), never an array: build it with `new` for values your code vouches for, or with `CreateDashboardData::from($input)` to validate untrusted input against its `rules()`.
 
 ## Package layout
 
@@ -538,7 +544,7 @@ The code is organised into domain modules under `src/Domains/{Domain}`, namespac
 | `Settings` | `Data\SettingsPanel`, `Services\SettingsRegistry` and the settings pages |
 | `Widgets` | `Data\WidgetDefinition` and `Services\WidgetRegistry` |
 
-Package-wide pieces stay at the top level: the `Atrium` class and facade, the `Http\Requests\Request` base class, and `Support` (`Icons`, `StyleRegistry`). The `Action` base, the event contracts and the `DispatchesModelEvents` trait come from [refactor-circus/keystone](https://github.com/Refactor-Circus/Keystone), the shared runtime of the suite. Config keys, route names, view and component names, translation keys and publish tags are the same whichever domain a class lives in.
+Package-wide pieces stay at the top level: the `Atrium` class and facade, the `Http\Requests\Request` base class, and `Support` (`Icons`, `StyleRegistry`, `Tables`). The `Action` base, the event contracts and the `DispatchesModelEvents` trait come from [refactor-circus/keystone](https://github.com/Refactor-Circus/Keystone), the shared runtime of the suite. Config keys, route names, view and component names, translation keys and publish tags are the same whichever domain a class lives in.
 
 The models keep the class names they had before the move (`RefactorCircus\Atrium\Models\Dashboard`, `RefactorCircus\Atrium\Models\DashboardWidget`) as their morph aliases, so any polymorphic column or audit record that stored those names still resolves, and new records store the same values.
 
@@ -551,14 +557,16 @@ The models keep the class names they had before the move (`RefactorCircus\Atrium
 | `middleware` | The middleware stack applied to all Atrium and plugin routes. |
 | `gate` | The gate ability checked before the dashboard is shown. |
 | `policies` | The policy class the Gate uses for `DashboardModel` and `DashboardWidgetModel`. |
+| `tables` | The table each model is stored in (`dashboards`, `dashboard_widgets`). Rename them **before** migrating: the migrations and models read the same keys, and a published config that lists only some keeps the defaults for the rest. |
 | `discover` | Whether to discover plugins from installed packages. |
 | `plugins` | Plugin classes registered manually. |
 | `disabled` | Plugin keys to hide. |
 | `alpine` | Whether the layout loads Atrium's bundled Alpine.js. Set to `false` when the application already loads Alpine. |
 | `theme` | Values emitted as CSS custom properties. |
-| `search.concurrency` | The `Concurrency` driver search sources run with. Null uses the application's default. |
+| `search.concurrency` | The `Concurrency` driver search sources run with: `sync` (default), `process` or `fork`. Null uses the application's default. |
 | `search.concurrency_limit` | The most search sources run at once when classification is not choosing them. Null for no limit. |
 | `search.timeout` | Seconds a search source may run before it is stopped. Enforced by the `process` driver. |
+| `search.min_length` | The fewest characters a query needs before any source runs (2). |
 | `search.results` | `per_source` and `total` result caps. Null for no limit. |
 | `search.classification` | `enabled`, `sources` (how many of the most likely sources run, default 3), `provider`, and `model` for classifying search queries with laravel/ai. |
 
@@ -568,6 +576,8 @@ The models keep the class names they had before the move (`RefactorCircus\Atrium
 | --- | --- |
 | `atrium:install` | Publish the config and assets, and print the gate stub. |
 | `atrium:plugins` | List the plugins currently registered. |
+| `atrium:discover` | Cache the plugins installed packages declare (also run by `package:discover` and `optimize`). |
+| `atrium:clear-discovered` | Remove that cache (also run by `optimize:clear`). |
 | `atrium:plugin` | Generate a new plugin class. |
 
 ## Testing

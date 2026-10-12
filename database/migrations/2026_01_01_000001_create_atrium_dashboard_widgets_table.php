@@ -5,16 +5,17 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use RefactorCircus\Atrium\Support\Tables;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('atrium_dashboard_widgets', function (Blueprint $table): void {
+        Schema::create(Tables::name('dashboard_widgets'), function (Blueprint $table): void {
             $table->id();
 
             $table->foreignId('dashboard_id')
-                ->constrained('atrium_dashboards')
+                ->constrained(Tables::name('dashboards'))
                 ->cascadeOnDelete();
 
             // References a WidgetDefinition key from the widget registry. The
@@ -37,6 +38,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('atrium_dashboard_widgets');
+        Schema::dropIfExists(Tables::name('dashboard_widgets'));
     }
 };

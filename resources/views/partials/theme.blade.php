@@ -3,7 +3,7 @@
     $atriumDefaultTheme = $atriumThemes->default()?->key;
     // Without the switcher only the default theme is ever applied, whatever
     // a browser remembers from when it was on.
-    $atriumSwitchable = $atriumThemes->switchable(request());
+    $atriumSwitchable ??= $atriumThemes->switchable(request());
     $atriumThemeKeys = $atriumSwitchable ? array_keys($atriumThemes->all()) : array_filter([$atriumDefaultTheme]);
 @endphp
 

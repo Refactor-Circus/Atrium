@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Domains\Dashboard\Actions;
 
 use Illuminate\Support\Facades\DB;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\WidgetPlacementData;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardLayoutSavedActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardLayoutSavingActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
@@ -17,25 +19,23 @@ class SaveDashboardLayoutAction extends Action
      *
      * Placements are addressed positionally rather than by id, so the caller
      * sends the layout it wants and the action reconciles.
-     *
-     * @param  array<int, array<string, mixed>>  $widgets
      */
-    protected function handle(DashboardModel $dashboard, array $widgets): DashboardModel
+    protected function handle(DashboardModel $dashboard, SaveDashboardLayoutData $data): DashboardModel
     {
-        DashboardLayoutSavingActionEvent::dispatch($dashboard, $widgets);
+        DashboardLayoutSavingActionEvent::dispatch($dashboard, $data);
 
-        $result = $this->perform($dashboard, $widgets);
+        $result = $this->perform($dashboard, $data->widgets);
 
         DashboardLayoutSavedActionEvent::dispatch($result, array_map(
-            fn (array $widget): string => (string) $widget['widget_key'],
-            array_values($widgets),
+            fn (WidgetPlacementData $widget): string => $widget->widgetKey,
+            array_values($data->widgets),
         ));
 
         return $result;
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $widgets
+     * @param  array<int, WidgetPlacementData>  $widgets
      */
     private function perform(DashboardModel $dashboard, array $widgets): DashboardModel
     {
@@ -44,12 +44,7 @@ class SaveDashboardLayoutAction extends Action
 
             foreach (array_values($widgets) as $index => $widget) {
                 $dashboard->widgets()->create([
-                    'widget_key' => $widget['widget_key'],
-                    'grid_row' => $widget['grid_row'] ?? 0,
-                    'grid_column' => $widget['grid_column'] ?? 0,
-                    'grid_width' => $widget['grid_width'] ?? 4,
-                    'grid_height' => $widget['grid_height'] ?? 2,
-                    'settings' => $widget['settings'] ?? null,
+                    ...$widget->toArray(),
                     'sort' => $index,
                 ]);
             }

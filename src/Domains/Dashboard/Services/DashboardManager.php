@@ -27,12 +27,33 @@ class DashboardManager
     }
 
     /**
+     * Whether the request may see the given dashboard: it is the user's own
+     * or a shared one, as visible() lists them.
+     */
+    public function isVisible(Request $request, DashboardModel $dashboard): bool
+    {
+        return DashboardModel::query()
+            ->visibleTo($this->owner($request))
+            ->whereKey($dashboard->getKey())
+            ->exists();
+    }
+
+    /**
      * The dashboard to show when none is specified.
      */
     public function current(Request $request, ?string $slug = null): ?DashboardModel
     {
-        $dashboards = $this->visible($request);
+        return $this->pick($this->visible($request), $slug);
+    }
 
+    /**
+     * The dashboard to show from those already fetched: the one with the
+     * given slug, else the default, else the first.
+     *
+     * @param  Collection<int, DashboardModel>  $dashboards
+     */
+    public function pick(Collection $dashboards, ?string $slug = null): ?DashboardModel
+    {
         if ($slug !== null) {
             return $dashboards->firstWhere('slug', $slug);
         }

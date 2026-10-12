@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
 use RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin as PluginContract;
 use RefactorCircus\Atrium\Domains\Plugins\Exceptions\InvalidPluginException;
+use WeakMap;
 
 class PluginRegistry
 {
@@ -18,7 +19,21 @@ class PluginRegistry
     /** @var array<int, string> */
     protected array $disabled = [];
 
-    public function __construct(protected Container $container) {}
+    /**
+     * authorized() answers per request: navigation, search, settings and
+     * widgets all ask during one page. Keyed weakly on the request, so an
+     * answer goes when its request does (and never outlives it under Octane),
+     * and kept with the user it was decided for, so signing in or out
+     * mid-request decides again.
+     *
+     * @var WeakMap<Request, array{user: mixed, plugins: array<string, PluginContract>}>
+     */
+    private WeakMap $authorized;
+
+    public function __construct(protected Container $container)
+    {
+        $this->authorized = new WeakMap;
+    }
 
     /**
      * Keys the host app has disabled in config.
@@ -28,6 +43,7 @@ class PluginRegistry
     public function disable(array $keys): static
     {
         $this->disabled = $keys;
+        $this->authorized = new WeakMap;
 
         return $this;
     }
@@ -54,6 +70,7 @@ class PluginRegistry
         }
 
         $this->plugins[$key] = $instance;
+        $this->authorized = new WeakMap;
 
         return $this;
     }
@@ -98,15 +115,25 @@ class PluginRegistry
      */
     public function authorized(Request $request): array
     {
+        $user = $request->user();
+
+        if (isset($this->authorized[$request]) && $this->authorized[$request]['user'] === $user) {
+            return $this->authorized[$request]['plugins'];
+        }
+
         $gatekeeper = $this->container->make(Gatekeeper::class);
 
-        return array_filter(
+        $plugins = array_filter(
             $this->plugins,
             fn (PluginContract $plugin): bool => array_all(
                 $plugin->features(),
                 fn (string $feature): bool => $gatekeeper->enabled($feature, $request),
             ) && $plugin->authorize($request),
         );
+
+        $this->authorized[$request] = ['user' => $user, 'plugins' => $plugins];
+
+        return $plugins;
     }
 
     /**

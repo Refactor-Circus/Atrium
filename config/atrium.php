@@ -82,11 +82,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tables
+    |--------------------------------------------------------------------------
+    |
+    | The table each of Atrium's records is stored in. Set these before running
+    | the migrations: the migrations and models both read them. Keys left out
+    | keep their default.
+    |
+    */
+
+    'tables' => [
+        'dashboards' => 'atrium_dashboards',
+        'dashboard_widgets' => 'atrium_dashboard_widgets',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auditing
+    |--------------------------------------------------------------------------
+    |
+    | Atrium keeps no audit log of its own. With refactor-circus/keen
+    | installed, Keen records every dashboard change Atrium makes, and
+    | Atrium shows each package's history while that package audits.
+    |
+    | enabled: Set to false to keep Atrium's own dashboard changes out of the
+    |          audit log even while Keen is installed. Other packages' history
+    |          follows their own `audit.enabled`.
+    |
+    */
+
+    'audit' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Plugins
     |--------------------------------------------------------------------------
     |
     | Plugins are discovered automatically from installed packages that
-    | declare them under "extra.atrium.plugins" in their composer.json.
+    | declare them under "extra.atrium.plugins" in their composer.json. The
+    | list is cached in bootstrap/cache/atrium-plugins.php by `atrium:discover`
+    | (run by `package:discover` and `optimize`) and removed by
+    | `optimize:clear`; without the cache it is read on every boot.
     |
     | Add plugin classes here to register them manually, and list plugin keys
     | under "disabled" to hide discovered plugins you do not want.
@@ -125,11 +163,18 @@ return [
     | runs out of time is reported and skipped rather than failing the
     | whole search.
     |
-    | concurrency: The Concurrency driver to run sources with - `process`,
-    |              `fork` or `sync`. Null uses the application's default.
-    |              Process and fork run each source outside the request, so
-    |              Atrium hands each one the signed-in user; anything else a
-    |              source needs from the request is not available to it.
+    | concurrency: The Concurrency driver to run sources with - `sync`,
+    |              `process` or `fork`. Null uses the application's default.
+    |              `sync` (the default) runs the sources one after another
+    |              inside the request, which is cheapest for fast sources.
+    |              `process` starts a PHP process per source on every search,
+    |              which costs a framework boot each, but runs them at once
+    |              and is the only driver that enforces `timeout`; opt into
+    |              it for slow sources. `fork` needs spatie/fork and the
+    |              console. Process and fork run each source outside the
+    |              request, so Atrium hands each one the signed-in user;
+    |              anything else a source needs from the request is not
+    |              available to it.
     | concurrency_limit:
     |              The most sources searched at once when classification is
     |              not choosing them. The rest wait, and each starts as soon
@@ -137,6 +182,11 @@ return [
     | timeout:     Seconds a source may run before it is stopped and left
     |              out. A source's own `timeout()` overrides it. Only the
     |              process driver can enforce it; null means no limit.
+    |
+    | min_length:  The fewest characters a query needs before the search box
+    |              asks for results, and before the search endpoint runs any
+    |              source. Shorter queries return no results. Null for no
+    |              minimum.
     |
     | results.per_source: The most results one source contributes.
     | results.total:      The most results returned for one query.
@@ -152,11 +202,13 @@ return [
     */
 
     'search' => [
-        'concurrency' => null,
+        'concurrency' => 'sync',
 
         'concurrency_limit' => null,
 
         'timeout' => 5,
+
+        'min_length' => 2,
 
         'results' => [
             'per_source' => 5,

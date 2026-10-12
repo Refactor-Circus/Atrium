@@ -43,6 +43,7 @@ class AtriumServiceProvider extends PackageServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+        $this->registerNotFoundResponses();
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
 

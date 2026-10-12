@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Policies;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
@@ -15,28 +16,28 @@ use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
  */
 class DashboardWidgetPolicy extends Policy
 {
-    public function viewAny(Model $user, DashboardModel $dashboard): bool
+    public function viewAny(Model&Authenticatable $user, DashboardModel $dashboard): bool
     {
-        return $this->allowsOnDashboard($user, 'view', $dashboard);
+        return $this->allowsOn($user, 'view', $dashboard);
     }
 
-    public function view(Model $user, DashboardWidgetModel $widget): bool
+    public function view(Model&Authenticatable $user, DashboardWidgetModel $widget): bool
     {
-        return $this->allowsOnDashboard($user, 'view', $widget->dashboard);
+        return $this->allowsOn($user, 'view', $widget->dashboard);
     }
 
-    public function create(Model $user, DashboardModel $dashboard): bool
+    public function create(Model&Authenticatable $user, DashboardModel $dashboard): bool
     {
-        return $this->allowsOnDashboard($user, 'update', $dashboard);
+        return $this->allowsOn($user, 'update', $dashboard);
     }
 
-    public function update(Model $user, DashboardWidgetModel $widget): bool
+    public function update(Model&Authenticatable $user, DashboardWidgetModel $widget): bool
     {
-        return $this->allowsOnDashboard($user, 'update', $widget->dashboard);
+        return $this->allowsOn($user, 'update', $widget->dashboard);
     }
 
-    public function delete(Model $user, DashboardWidgetModel $widget): bool
+    public function delete(Model&Authenticatable $user, DashboardWidgetModel $widget): bool
     {
-        return $this->allowsOnDashboard($user, 'update', $widget->dashboard);
+        return $this->allowsOn($user, 'update', $widget->dashboard);
     }
 }

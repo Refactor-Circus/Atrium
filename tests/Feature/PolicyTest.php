@@ -86,7 +86,8 @@ it('refuses guests', function (): void {
     expect(Gate::forUser(null)->allows('create', DashboardModel::class))->toBeFalse()
         ->and(Gate::forUser(null)->allows('view', $dashboard))->toBeFalse();
 
-    $this->post(route('atrium.dashboards.store'), ['name' => 'Anonymous'])->assertForbidden();
+    // Unauthenticated, not forbidden: refactor-circus/keystone answers guests 401.
+    $this->postJson(route('atrium.dashboards.store'), ['name' => 'Anonymous'])->assertUnauthorized();
 
     expect(DashboardModel::query()->where('name', 'Anonymous')->exists())->toBeFalse();
 });

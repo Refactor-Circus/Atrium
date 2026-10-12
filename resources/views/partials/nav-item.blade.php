@@ -1,10 +1,11 @@
 @php
     $depth ??= 0;
+    $atriumNav ??= app(\RefactorCircus\Atrium\Domains\Navigation\Services\NavigationState::class);
     $badge = $item->resolveBadge();
-    $active = $item->isActive(request());
-    $url = $item->resolveUrl();
+    $active = $atriumNav->isActive($item, request());
+    $url = $atriumNav->url($item, request());
     $hasChildren = $item->children !== [];
-    $childActive = collect($item->children)->contains(fn ($child) => $child->isActive(request()));
+    $childActive = $atriumNav->hasActiveChild($item, request());
 
     // What the rail shows beside this item on hover: its label, and a menu of
     // its children, since the rail itself has no room for either.
@@ -13,8 +14,8 @@
         'badge' => $badge,
         'children' => array_map(fn ($child) => [
             'label' => $child->label,
-            'url' => $child->resolveUrl() ?? '#',
-            'active' => $child->isActive(request()),
+            'url' => $atriumNav->url($child, request()) ?? '#',
+            'active' => $atriumNav->isActive($child, request()),
         ], $item->children),
     ];
 

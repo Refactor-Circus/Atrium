@@ -7,6 +7,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Events;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
 use RefactorCircus\Keystone\Contracts\ActionStartingEvent;
 
 /**
@@ -18,8 +19,7 @@ final class DashboardCreatingActionEvent implements ActionStartingEvent
     use SerializesModels;
 
     public function __construct(
-        /** @var array{name: string, is_shared?: bool} */
-        public array $data,
+        public CreateDashboardData $data,
         public ?Model $owner = null,
     ) {}
 }

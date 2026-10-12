@@ -10,12 +10,12 @@ Adapted from the `mono` standard of the same name, minus its Pennant feature-gat
 - `Action::execute(mixed ...$args)` delegates to your **`protected handle(...)`**. You implement `handle()`, callers call `execute()`.
 - Never make `handle()` public — one entry point keeps a place to add cross-cutting behavior later.
 - No static constructors (`::run()`/`::make()`). Resolve and invoke via `app(XAction::class)->execute(...)`.
+- Input is a `final readonly` `{Action}Data` in the domain's `Data/` (on `RefactorCircus\Keystone\Data\Data`), never an array: promoted constructor properties named in camelCase of the input keys, `T|Missing = new Missing` for partial updates, and `rules()` on the Data. `tests/ArchTest.php` rejects array input on `handle()`.
 
 ```php
 class CreateDashboardAction extends Action
 {
-    /** @param array{name: string, is_shared?: bool} $data */
-    protected function handle(array $data, ?Model $owner = null): DashboardModel
+    protected function handle(CreateDashboardData $data, ?Model $owner = null): DashboardModel
     {
         DashboardCreatingActionEvent::dispatch($data, $owner);
 
@@ -26,7 +26,7 @@ class CreateDashboardAction extends Action
         return $dashboard;
     }
 
-    private function perform(array $data, ?Model $owner): DashboardModel
+    private function perform(CreateDashboardData $data, ?Model $owner): DashboardModel
     {
         return DB::transaction(fn (): DashboardModel => DashboardModel::query()->create([...]));
     }
@@ -42,7 +42,7 @@ class CreateDashboardAction extends Action
 ## Transactions & events
 
 - `handle()` dispatches the **starting** event with the input, calls a private `perform()`, dispatches the **finished** event with the result, and returns it.
-- Wrap every **mutating** `perform()` body in `DB::transaction()`.
+- Wrap every **mutating** `perform()` body in `DB::transaction()`. `tests/ArchTest.php` flags an action that writes without one (Keystone's `Arch::writesOutsideTransactions()`).
 - Finished events implement `ActionFinishedEvent`, which extends `ShouldDispatchAfterCommit`, so they wait for the outermost transaction to commit and never fire on rollback. An action that throws fires its starting event and no finished event.
 - When a caller needs post-commit column values, `return $model->refresh();` **outside** the transaction.
 

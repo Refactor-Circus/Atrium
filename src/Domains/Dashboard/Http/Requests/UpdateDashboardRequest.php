@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Requests;
 
 use Illuminate\Http\RedirectResponse;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\UpdateDashboardAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\UpdateDashboardData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Http\Requests\Request;
 
@@ -21,17 +22,14 @@ class UpdateDashboardRequest extends Request
      */
     public function rules(): array
     {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'is_default' => ['sometimes', 'boolean'],
-        ];
+        return UpdateDashboardData::rules();
     }
 
     public function persist(): RedirectResponse
     {
         $dashboard = app(UpdateDashboardAction::class)->execute(
             $this->dashboard(),
-            $this->validated(),
+            UpdateDashboardData::fromValidated($this->validated()),
         );
 
         return redirect()->route('atrium.dashboard.show', $dashboard->slug);

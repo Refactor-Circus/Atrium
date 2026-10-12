@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
+use RefactorCircus\Atrium\Support\Tables;
 use RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents;
 
 /**
@@ -25,8 +26,6 @@ class DashboardModel extends Model
 {
     use DispatchesModelEvents;
 
-    protected $table = 'atrium_dashboards';
-
     protected $guarded = [];
 
     protected $casts = [
@@ -34,6 +33,11 @@ class DashboardModel extends Model
         'is_shared' => 'boolean',
         'sort' => 'integer',
     ];
+
+    public function getTable(): string
+    {
+        return Tables::name('dashboards');
+    }
 
     protected static function booted(): void
     {

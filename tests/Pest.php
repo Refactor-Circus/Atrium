@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use RefactorCircus\Atrium\Tests\BrowserTestCase;
+use RefactorCircus\Atrium\Tests\RenamedTablesTestCase;
 use RefactorCircus\Atrium\Tests\TestCase;
 
 // pest-plugin-browser removes its output directories with @rmdir() when it
@@ -16,6 +17,9 @@ foreach (['Traces', 'Screenshots', 'Screenshots/Sliders', 'Screenshots/ImageDiff
 }
 
 uses(TestCase::class)->in(__DIR__.'/Feature');
+
+// The Feature suite's dashboard flows again, with every table renamed.
+uses(RenamedTablesTestCase::class)->in(__DIR__.'/Modes/RenamedTables');
 
 // Browser tests need Atrium's published assets on disk so Alpine boots.
 uses(BrowserTestCase::class)->in(__DIR__.'/Browser');

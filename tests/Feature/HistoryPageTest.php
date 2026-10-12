@@ -118,3 +118,16 @@ it('links a history panel to the package audit log', function (): void {
         ->toContain('/atrium/history/billing?subject_type=')
         ->toContain('subject_id=7');
 });
+
+it('offers nothing for a package that turns its auditing off', function (): void {
+    billingTrail();
+    config()->set('billing.audit.enabled', false);
+
+    $this->get('/atrium/history/billing')->assertNotFound();
+
+    expect(Blade::render('<x-atrium::audit-trail source="billing" />'))->not->toContain('data-testid="audit-trail"');
+
+    config()->set('billing.audit.enabled', true);
+
+    expect(Blade::render('<x-atrium::audit-trail source="billing" />'))->toContain('data-testid="audit-trail"');
+});

@@ -12,7 +12,9 @@ use RefactorCircus\Keystone\Policies\Policy as BasePolicy;
  * Shared checks for the bundled policies.
  *
  * Each policy is registered from `atrium.policies`, so an application swaps
- * one by pointing its model at another class there.
+ * one by pointing its model at another class there. A model that lives on
+ * a dashboard follows whichever dashboard policy is registered through
+ * `allowsOn()` (refactor-circus/keystone's Policy).
  */
 abstract class Policy extends BasePolicy
 {
@@ -22,16 +24,5 @@ abstract class Policy extends BasePolicy
     protected function owns(Model $user, DashboardModel $dashboard): bool
     {
         return $dashboard->isOwnedBy($user);
-    }
-
-    /**
-     * Ask the Gate about the parent dashboard, so a model that lives on a
-     * dashboard follows whichever dashboard policy is registered.
-     *
-     * @param  array<int, mixed>  $arguments
-     */
-    protected function allowsOnDashboard(Model $user, string $ability, DashboardModel $dashboard, array $arguments = []): bool
-    {
-        return $this->allowsOn($user, $ability, $dashboard, $arguments);
     }
 }

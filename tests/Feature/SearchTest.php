@@ -285,6 +285,55 @@ it('returns an empty payload for a blank query', function (): void {
     $this->getJson('/atrium/search?q=')->assertOk()->assertJsonPath('data', []);
 });
 
+it('runs no source for a query shorter than the minimum length', function (): void {
+    $defaults = require __DIR__.'/../../config/atrium.php';
+
+    config()->set('atrium.search.min_length', $defaults['search']['min_length']);
+
+    $ran = 0;
+
+    app(SearchRegistry::class)->add(SearchSource::make('counted')->using(function (string $q) use (&$ran): array {
+        $ran++;
+
+        return [SearchResult::make('Hit', '/hit')];
+    }));
+
+    $this->getJson('/atrium/search?q=a')->assertOk()->assertJsonPath('data', []);
+    $this->getJson('/atrium/search?q='.urlencode(' a '))->assertOk()->assertJsonPath('data', []);
+
+    expect($ran)->toBe(0);
+
+    $this->getJson('/atrium/search?q=ab')->assertOk()->assertJsonPath('data.0.title', 'Hit');
+
+    config()->set('atrium.search.min_length', 1);
+
+    $this->getJson('/atrium/search?q=a')->assertOk()->assertJsonPath('data.0.title', 'Hit');
+
+    expect($ran)->toBe(2);
+});
+
+it('searches inside the request by default', function (): void {
+    $defaults = require __DIR__.'/../../config/atrium.php';
+
+    config()->set('atrium.search.concurrency', $defaults['search']['concurrency']);
+
+    expect(config('atrium.search.concurrency'))->toBe('sync');
+
+    Process::fake();
+
+    pidSources('first', 'second');
+
+    expect(searchTitles())->toBe([(string) getmypid(), (string) getmypid()]);
+
+    Process::assertNothingRan();
+});
+
+it('tells the search box the minimum query length', function (): void {
+    config()->set('atrium.search.min_length', 3);
+
+    $this->get('/atrium')->assertOk()->assertSee('minLength: 3', false);
+});
+
 it('runs sources in separate processes with the process driver', function (): void {
     Exceptions::fake();
 

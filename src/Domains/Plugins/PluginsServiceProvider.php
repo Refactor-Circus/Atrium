@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Plugins;
 
+use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Route;
+use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\ClearDiscoveredPluginsCommand;
+use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\DiscoverPluginsCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\MakePluginCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\PluginListCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Services\ComposerPluginDiscovery;
@@ -21,6 +25,7 @@ class PluginsServiceProvider extends ServiceProvider
         $this->app->singleton(ComposerPluginDiscovery::class, fn (Application $app): ComposerPluginDiscovery => new ComposerPluginDiscovery(
             $app->make(Filesystem::class),
             $app->basePath('vendor'),
+            $app->bootstrapPath('cache/atrium-plugins.php'),
         ));
 
         $this->app->singleton(PluginRegistry::class, function (Application $app): PluginRegistry {
@@ -38,9 +43,25 @@ class PluginsServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                ClearDiscoveredPluginsCommand::class,
+                DiscoverPluginsCommand::class,
                 MakePluginCommand::class,
                 PluginListCommand::class,
             ]);
+
+            $this->optimizes(
+                optimize: 'atrium:discover',
+                clear: 'atrium:clear-discovered',
+                key: 'atrium-plugins',
+            );
+
+            // Composer runs package:discover after every install and update,
+            // so the cached plugin list is rebuilt along with Laravel's own.
+            $this->app->make(Dispatcher::class)->listen(function (CommandFinished $event): void {
+                if ($event->command === 'package:discover' && $event->exitCode === 0) {
+                    $this->app->make(ComposerPluginDiscovery::class)->build();
+                }
+            });
         }
     }
 

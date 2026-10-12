@@ -51,7 +51,15 @@ class NavigationRegistry
      */
     public function grouped(Request $request): array
     {
-        $described = $this->groups($request);
+        return $this->groupItems($this->groups($request), $request);
+    }
+
+    /**
+     * @param  array<string, NavGroup>  $described
+     * @return array<string, array<int, NavItem>>
+     */
+    protected function groupItems(array $described, Request $request): array
+    {
         $groups = [];
 
         foreach ($this->items($request) as $item) {
@@ -80,7 +88,8 @@ class NavigationRegistry
         $single = [];
         $groups = [];
 
-        foreach ($this->grouped($request) as $name => $items) {
+        // Groups are worked out once and shared with the grouping below.
+        foreach ($this->groupItems($described, $request) as $name => $items) {
             if ($name === '') {
                 foreach ($items as $index => $item) {
                     // A page with sub-pages opens in the panel like a group,

@@ -47,14 +47,14 @@ A plugin is how anything appears in the dashboard. Generate one with `php artisa
 - `navigationGroups()` returns `NavGroup::make($name)` rules that hide a whole sidebar group
 - `features()` lists features that must all be on for the plugin to appear at all; its routes 404 otherwise
 - `routes()` registers routes inside Atrium's group, so the prefix, middleware, and route name prefix already apply
-- `widgets()` returns `WidgetDefinition` objects (`RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition`) offered in the widget picker
+- `widgets()` returns `WidgetDefinition` objects (`RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition`) offered in the widget picker; `->lazy()` renders a placeholder and fetches the body after the page loads (plain Blade only: scripts and Livewire in a lazy body do not boot)
 - `settings()` returns a `SettingsPanel` (`RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel`) for the settings page
-- `search()` returns a `SearchSource` (`RefactorCircus\Atrium\Domains\Search\Data\SearchSource`, results are `Data\SearchResult`) for the command palette. Give it a `label()` and `description()`: sources run concurrently (at most `atrium.search.concurrency_limit` at once when classification is off), a source that throws or exceeds its timeout (`atrium.search.timeout`, or `->timeout($seconds)`) is reported and skipped, results are capped by `atrium.search.results.per_source` and `.total`, and with `atrium.search.classification.enabled` and laravel/ai installed only the `atrium.search.classification.sources` most likely sources run, chosen from those labels and descriptions
+- `search()` returns a `SearchSource` (`RefactorCircus\Atrium\Domains\Search\Data\SearchSource`, results are `Data\SearchResult`) for the command palette. Give it a `label()` and `description()`: sources run with `atrium.search.concurrency` (`sync` by default; `process` runs them concurrently, at most `atrium.search.concurrency_limit` at once when classification is off, and is the only driver that enforces timeouts), queries shorter than `atrium.search.min_length` (2) run nothing, a source that throws or exceeds its timeout (`atrium.search.timeout`, or `->timeout($seconds)`) is reported and skipped, results are capped by `atrium.search.results.per_source` and `.total`, and with `atrium.search.classification.enabled` and laravel/ai installed only the `atrium.search.classification.sources` most likely sources run, chosen from those labels and descriptions
 - `authorize(Request $request)` hides the whole plugin when it returns false
 
 Atrium has no permission or feature-flag system of its own. `can()` asks Laravel's Gate unless the application calls `Atrium::resolvePermissionsUsing()`, and `feature()` is always on until something calls `Atrium::resolveFeaturesUsing()` (refactor-circus/pennantplus does, with Pennant). Guard other routes with the `atrium.feature:{features}` middleware.
 
-Register it one of two ways. Packages declare the class in their `composer.json` under `extra.atrium.plugins` and Atrium discovers it. Applications call `Atrium::plugin(BillingPlugin::class)` in a service provider's `boot()` method.
+Register it one of two ways. Packages declare the class in their `composer.json` under `extra.atrium.plugins` and Atrium discovers it (cached in `bootstrap/cache/atrium-plugins.php` by `atrium:discover`, which `package:discover` and `optimize` run; `optimize:clear` removes it). Applications call `Atrium::plugin(BillingPlugin::class)` in a service provider's `boot()` method.
 
 ### 4. Use the component library
 
@@ -91,7 +91,8 @@ The gate decides who reaches Atrium at all. Each dashboard request is then check
 ### 7. React to dashboard changes
 
 - Model events: `RefactorCircus\Atrium\Domains\Dashboard\Events\{Entity}{Hook}Event` (e.g. `DashboardCreatedEvent`, `DashboardWidgetDeletedEvent`), synchronous, with `$event->dashboard` / `$event->widget`, `model()` and `hook()`.
-- Action events: `RefactorCircus\Atrium\Domains\Dashboard\Events\*ActionEvent` pairs per action, a start event carrying the input (`DashboardLayoutSavingActionEvent`) and a finish event carrying the result (`DashboardLayoutSavedActionEvent`), which fires only after commit.
+- Actions take Data objects, never arrays: `app(CreateDashboardAction::class)->execute(new CreateDashboardData('Operations'), $user)`; also `UpdateDashboardData` (partial, fields left out stay) and `SaveDashboardLayoutData` (`new SaveDashboardLayoutData([new WidgetPlacementData('billing.revenue', gridWidth: 6)])`), in `RefactorCircus\Atrium\Domains\Dashboard\Data`. Use `XData::from($input)` to validate untrusted input.
+- Action events: `RefactorCircus\Atrium\Domains\Dashboard\Events\*ActionEvent` pairs per action, a start event carrying the input Data (`DashboardLayoutSavingActionEvent`) and a finish event carrying the result (`DashboardLayoutSavedActionEvent`), which fires only after commit.
 - Listen to a whole family through `RefactorCircus\Keystone\Contracts\ModelLifecycleEvent`, `ActionStartingEvent` or `ActionFinishedEvent`.
 
 ```php
@@ -104,7 +105,7 @@ In tests, fake only the events being asserted: `Event::fake([DashboardCreatedAct
 
 Read before executing:
 
-- `config/atrium.php` for `path`, `domain`, `middleware`, `gate`, `policies`, `discover`, `plugins`, `disabled`, `alpine`, `themes` and `theme`
+- `config/atrium.php` for `path`, `domain`, `middleware`, `gate`, `policies`, `tables` (table names, set before migrating), `discover`, `plugins`, `disabled`, `alpine`, `themes` and `theme`
 - the package README for the full plugin and component reference
 
 ## Key Behaviors

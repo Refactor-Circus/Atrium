@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Atrium;
+use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
+use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
+use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
 use RefactorCircus\Atrium\Tests\Fixtures\AlphaPlugin;
 
@@ -58,4 +62,65 @@ it('adds package styles to the head after its own stylesheet', function (): void
         ->not->toContain('width: 30rem')
         ->toContain('.billing-narrow { width: 8rem; }')
         ->and(strpos($head, 'billing.css'))->toBeGreaterThan(strpos($head, 'vendor/atrium/atrium.css'));
+});
+
+/**
+ * A navigation item that counts how often it is asked whether it is active
+ * and where it links, by label.
+ */
+class CountingNavItem extends NavItem
+{
+    /** @var array<string, int> */
+    public static array $active = [];
+
+    /** @var array<string, int> */
+    public static array $urls = [];
+
+    public function isActive(Request $request): bool
+    {
+        self::$active[$this->label] = (self::$active[$this->label] ?? 0) + 1;
+
+        return parent::isActive($request);
+    }
+
+    public function resolveUrl(): ?string
+    {
+        self::$urls[$this->label] = (self::$urls[$this->label] ?? 0) + 1;
+
+        return parent::resolveUrl();
+    }
+}
+
+it('works out each navigation item once per page', function (): void {
+    CountingNavItem::$active = CountingNavItem::$urls = [];
+
+    app(NavigationRegistry::class)
+        ->add(CountingNavItem::make('Reports')->url('/atrium/reports'))
+        ->add(CountingNavItem::make('Users')->url('/atrium/users')->group('People')->children([
+            CountingNavItem::make('Invites')->url('/atrium/users/invites'),
+        ]));
+
+    $this->get('/atrium')->assertOk()->assertSee('Invites');
+
+    expect(CountingNavItem::$active)->each->toBe(1)
+        ->and(CountingNavItem::$active)->toHaveKeys(['Reports', 'Users', 'Invites'])
+        // Once for the link, and once inside isActive() itself.
+        ->and(CountingNavItem::$urls)->each->toBe(2);
+});
+
+it('decides once per page whether the theme switcher shows', function (): void {
+    $asked = 0;
+
+    config()->set('atrium.themes.switcher_feature', 'theme-switcher');
+    app(Gatekeeper::class)->resolveFeaturesUsing(function (string $feature) use (&$asked): bool {
+        if ($feature === 'theme-switcher') {
+            $asked++;
+        }
+
+        return true;
+    });
+
+    $this->get('/atrium')->assertOk()->assertSee('data-testid="theme-switcher"', false);
+
+    expect($asked)->toBe(1);
 });

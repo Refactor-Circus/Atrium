@@ -8,6 +8,10 @@ use RefactorCircus\Atrium\Domains\Dashboard\Actions\CreateDashboardAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\DeleteDashboardAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\SaveDashboardLayoutAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\UpdateDashboardAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\UpdateDashboardData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\WidgetPlacementData;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardCreatedActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardCreatingActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardCreatingEvent;
@@ -18,6 +22,7 @@ use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardUpdatedActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardUpdatedEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardUpdatingActionEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardWidgetCreatedEvent;
+use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardWidgetCreatingEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
@@ -136,9 +141,9 @@ it('starts and finishes every action once, in order', function (): void {
     $starts = recordEvents(ActionStartingEvent::class);
     $stops = recordEvents(ActionFinishedEvent::class);
 
-    $dashboard = app(CreateDashboardAction::class)->execute(['name' => 'Ops'], actor());
-    app(UpdateDashboardAction::class)->execute($dashboard, ['name' => 'Renamed']);
-    app(SaveDashboardLayoutAction::class)->execute($dashboard, [['widget_key' => 'alpha.stats']]);
+    $dashboard = app(CreateDashboardAction::class)->execute(new CreateDashboardData('Ops'), actor());
+    app(UpdateDashboardAction::class)->execute($dashboard, new UpdateDashboardData(name: 'Renamed'));
+    app(SaveDashboardLayoutAction::class)->execute($dashboard, new SaveDashboardLayoutData([new WidgetPlacementData('alpha.stats')]));
     app(DeleteDashboardAction::class)->execute($dashboard);
 
     expect(collect($starts)->map(fn (object $event): string => class_basename($event))->all())->toBe([
@@ -186,23 +191,23 @@ it('carries the input on the start event and the result on the finish event', fu
 
     $user = actor();
 
-    $dashboard = app(CreateDashboardAction::class)->execute(['name' => 'Operations'], $user);
-    app(UpdateDashboardAction::class)->execute($dashboard, ['name' => 'Renamed']);
-    app(SaveDashboardLayoutAction::class)->execute($dashboard, [['widget_key' => 'alpha.stats', 'grid_width' => 6]]);
+    $dashboard = app(CreateDashboardAction::class)->execute(new CreateDashboardData('Operations'), $user);
+    app(UpdateDashboardAction::class)->execute($dashboard, new UpdateDashboardData(name: 'Renamed'));
+    app(SaveDashboardLayoutAction::class)->execute($dashboard, new SaveDashboardLayoutData([new WidgetPlacementData('alpha.stats', gridWidth: 6)]));
     app(DeleteDashboardAction::class)->execute($dashboard);
 
     expect($dashboard->isOwnedBy($user))->toBeTrue();
 
     Event::assertDispatched(
         DashboardCreatingActionEvent::class,
-        fn (DashboardCreatingActionEvent $event): bool => $event->data === ['name' => 'Operations'] && $event->owner?->is($user) === true,
+        fn (DashboardCreatingActionEvent $event): bool => $event->data->toArray() === ['name' => 'Operations', 'is_shared' => false] && $event->owner?->is($user) === true,
     );
     Event::assertDispatched(DashboardCreatedActionEvent::class, fn (DashboardCreatedActionEvent $event): bool => $event->dashboard->is($dashboard));
-    Event::assertDispatched(DashboardUpdatingActionEvent::class, fn (DashboardUpdatingActionEvent $event): bool => $event->data === ['name' => 'Renamed']);
+    Event::assertDispatched(DashboardUpdatingActionEvent::class, fn (DashboardUpdatingActionEvent $event): bool => $event->data->toArray() === ['name' => 'Renamed']);
     Event::assertDispatched(DashboardUpdatedActionEvent::class, fn (DashboardUpdatedActionEvent $event): bool => $event->dashboard->name === 'Renamed');
     Event::assertDispatched(
         DashboardLayoutSavingActionEvent::class,
-        fn (DashboardLayoutSavingActionEvent $event): bool => $event->widgets === [['widget_key' => 'alpha.stats', 'grid_width' => 6]],
+        fn (DashboardLayoutSavingActionEvent $event): bool => $event->data->widgets[0]->widgetKey === 'alpha.stats' && $event->data->widgets[0]->gridWidth === 6,
     );
     Event::assertDispatched(DashboardLayoutSavedActionEvent::class, fn (DashboardLayoutSavedActionEvent $event): bool => $event->widgetKeys === ['alpha.stats']);
     Event::assertDispatched(DashboardDeletedActionEvent::class, fn (DashboardDeletedActionEvent $event): bool => $event->dashboard->is($dashboard));
@@ -210,7 +215,7 @@ it('carries the input on the start event and the result on the finish event', fu
 
 it('creates a shared dashboard with no owner', function (): void {
     $dashboard = app(CreateDashboardAction::class)->execute(
-        ['name' => 'Company', 'is_shared' => true],
+        new CreateDashboardData('Company', isShared: true),
         actor('shared@example.com'),
     );
 
@@ -228,7 +233,7 @@ it('starts before the work and finishes only once it is committed', function ():
     $finished = recordEvents(DashboardCreatedActionEvent::class);
 
     DB::transaction(function () use ($finished): void {
-        app(CreateDashboardAction::class)->execute(['name' => 'Ops'], actor());
+        app(CreateDashboardAction::class)->execute(new CreateDashboardData('Ops'), actor());
 
         expect($finished)->toHaveCount(0);
     });
@@ -243,7 +248,7 @@ it('starts a create that rolled back but never finishes it', function (): void {
 
     try {
         DB::transaction(function (): void {
-            app(CreateDashboardAction::class)->execute(['name' => 'Doomed'], actor('rollback@example.com'));
+            app(CreateDashboardAction::class)->execute(new CreateDashboardData('Doomed'), actor('rollback@example.com'));
 
             throw new RuntimeException('caller aborts after the action');
         });
@@ -253,6 +258,27 @@ it('starts a create that rolled back but never finishes it', function (): void {
 
     expect(DashboardModel::query()->count())->toBe(0)
         ->and($starts)->toHaveCount(1)
+        ->and($stops)->toHaveCount(0);
+});
+
+it('rolls back a layout that fails part way and never finishes it', function (): void {
+    $dashboard = app(CreateDashboardAction::class)->execute(new CreateDashboardData('Ops'), actor());
+    app(SaveDashboardLayoutAction::class)->execute($dashboard, new SaveDashboardLayoutData([new WidgetPlacementData('alpha.stats')]));
+
+    $stops = recordEvents(DashboardLayoutSavedActionEvent::class);
+
+    Event::listen(DashboardWidgetCreatingEvent::class, function (DashboardWidgetCreatingEvent $event): void {
+        if ($event->widget->widget_key === 'alpha.broken') {
+            throw new RuntimeException('the second placement fails');
+        }
+    });
+
+    expect(fn (): DashboardModel => app(SaveDashboardLayoutAction::class)->execute($dashboard, new SaveDashboardLayoutData([
+        new WidgetPlacementData('alpha.chart'),
+        new WidgetPlacementData('alpha.broken'),
+    ])))->toThrow(RuntimeException::class);
+
+    expect($dashboard->widgets()->pluck('widget_key')->all())->toBe(['alpha.stats'])
         ->and($stops)->toHaveCount(0);
 });
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
+use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
+use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
 use RefactorCircus\Atrium\Tests\Fixtures\AlphaPlugin;
 use RefactorCircus\Atrium\Tests\Fixtures\BrowserPlugin;
 use Workbench\App\Models\User;
@@ -193,4 +195,17 @@ it('hides editing controls from a viewer who does not own the dashboard', functi
         ->assertSee('Alpha stats widget')
         ->assertMissing('@edit-layout')
         ->assertMissing('@remove-alpha-stats');
+});
+
+it('fetches a lazy widget after the page loads', function (): void {
+    app(WidgetRegistry::class)->add(WidgetDefinition::make('lazy.stats')->label('Lazy Stats')->view('alpha-stats')->lazy());
+
+    $user = browserUser();
+    browserDashboard($user, ['lazy.stats']);
+
+    $this->actingAs($user);
+
+    visit('/atrium')
+        ->assertPresent('@lazy-widget')
+        ->assertSee('Alpha stats widget');
 });

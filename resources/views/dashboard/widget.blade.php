@@ -38,10 +38,23 @@
         </div>
     @endif
 
-    @if ($definition?->component)
-        <x-dynamic-component :component="$definition->component"
-                             :attributes="new \Illuminate\View\ComponentAttributeBag($definition->resolveData($placement->settings ?? []))" />
-    @elseif ($definition?->view)
-        @include($definition->view, $definition->resolveData($placement->settings ?? []))
+    @if ($definition?->lazy)
+        {{-- Lazy: the page carries a placeholder, and the body is fetched
+             once the page is up. --}}
+        <div data-testid="lazy-widget"
+             x-data="{ html: null }"
+             x-init="fetch(@js(route('atrium.dashboards.widgets.show', [$placement->dashboard_id, $placement->id])), { headers: { 'Accept': 'text/html' } })
+                 .then((response) => response.ok ? response.text() : '')
+                 .then((body) => html = body)
+                 .catch(() => html = '')">
+            <template x-if="html === null">
+                <x-atrium::card>
+                    <x-atrium::skeleton :lines="3" />
+                </x-atrium::card>
+            </template>
+            <div x-html="html"></div>
+        </div>
+    @else
+        @include('atrium::dashboard.widget-body', ['placement' => $placement, 'definition' => $definition])
     @endif
 </div>

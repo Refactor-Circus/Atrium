@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Facades\Atrium;
+use RefactorCircus\Atrium\Support\Tables;
 use RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents;
 
 /**
@@ -25,8 +26,6 @@ class DashboardWidgetModel extends Model
 {
     use DispatchesModelEvents;
 
-    protected $table = 'atrium_dashboard_widgets';
-
     protected $guarded = [];
 
     protected $casts = [
@@ -37,6 +36,11 @@ class DashboardWidgetModel extends Model
         'grid_height' => 'integer',
         'sort' => 'integer',
     ];
+
+    public function getTable(): string
+    {
+        return Tables::name('dashboard_widgets');
+    }
 
     /**
      * @return BelongsTo<DashboardModel, $this>

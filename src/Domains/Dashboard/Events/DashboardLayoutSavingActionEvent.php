@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Keystone\Contracts\ActionStartingEvent;
 
@@ -19,7 +20,6 @@ final class DashboardLayoutSavingActionEvent implements ActionStartingEvent
 
     public function __construct(
         public DashboardModel $dashboard,
-        /** @var array<int, array<string, mixed>> */
-        public array $widgets,
+        public SaveDashboardLayoutData $data,
     ) {}
 }

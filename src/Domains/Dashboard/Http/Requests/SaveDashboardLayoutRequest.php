@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Requests;
 
 use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\SaveDashboardLayoutAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
@@ -33,22 +34,14 @@ class SaveDashboardLayoutRequest extends Request
      */
     public function rules(): array
     {
-        return [
-            'widgets' => ['array'],
-            'widgets.*.widget_key' => ['required', 'string'],
-            'widgets.*.grid_row' => ['integer', 'min:0'],
-            'widgets.*.grid_column' => ['integer', 'min:0'],
-            'widgets.*.grid_width' => ['integer', 'min:1'],
-            'widgets.*.grid_height' => ['integer', 'min:1'],
-            'widgets.*.settings' => ['array'],
-        ];
+        return SaveDashboardLayoutData::rules();
     }
 
     public function persist(): JsonResponse
     {
         $dashboard = app(SaveDashboardLayoutAction::class)->execute(
             $this->dashboard(),
-            $this->placements(),
+            SaveDashboardLayoutData::fromValidated(['widgets' => $this->placements()]),
         );
 
         return response()->json([

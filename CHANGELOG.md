@@ -5,9 +5,14 @@
 ### Breaking
 
 - Moved to the Refactor Circus organisation: the package is now `refactor-circus/atrium` with the PHP namespace `RefactorCircus\Atrium` (it was `jayi/atrium` and `JayI\Atrium`). Update `composer.json` requirements and `use` statements. Old class names are not kept as aliases, so stored values written under them - polymorphic `*_type` columns, audit subjects, Pennant feature names - need updating to the new names.
+- Actions take Data objects, not arrays: `CreateDashboardAction` takes a `CreateDashboardData`, `UpdateDashboardAction` an `UpdateDashboardData` (fields left out stay as they are), and `SaveDashboardLayoutAction` a `SaveDashboardLayoutData` whose `widgets` are `WidgetPlacementData` objects (`Domains\Dashboard\Data`). The requests' validation rules live on the Data, and the starting events carry it: `DashboardCreatingActionEvent::$data` and `DashboardUpdatingActionEvent::$data` are Data objects, and `DashboardLayoutSavingActionEvent` carries `$data` (its `widgets`) in place of `$widgets`.
+- `Domains\Dashboard\Policies\Policy::allowsOnDashboard()` is gone: policies defer to the parent dashboard with refactor-circus/keystone's `Policy::allowsOn()`, which takes the same arguments.
 
 ### Added
 
+- **Lazy widgets**: `WidgetDefinition::lazy()` renders a placeholder with the dashboard and fetches the widget's body afterwards from the new `atrium.dashboards.widgets.show` route (`GET {path}/dashboards/{dashboard}/widgets/{widget}`), which answers whoever may see the dashboard. Widgets stay eager unless marked lazy.
+- **Configurable table names**: both tables are named under the new `atrium.tables` config key (`dashboards`, `dashboard_widgets`) and read by the migrations and models through `Support\Tables` (on refactor-circus/keystone's `Database\Tables`). Rename them before migrating; keys a published config leaves out keep their default.
+- A package's audit log link, history page and `<x-atrium::audit-trail>` panels show only while the package audits (refactor-circus/keystone's `Package::audits()`: Keen installed and its `{key}.audit.enabled` on), not merely while an audit log is installed.
 - Four more themes - **Sunset**, **Forest**, **Midnight** and **Ledger** - and theme layouts: `Theme::layout('top')` (or `'layout' => 'top'` in config) lays the shell out with sections across a bar under the topbar and the current section's pages as tabs beneath, as Ledger does.
 - A two-level sidebar: a rail of sections (the app's own pages, then one icon per group) and a docked panel with the current section's pages. Clicking a section shows its pages without leaving the page, and hovering previews them. `NavGroup` gains `icon()` and `sort()` for its place in the rail. `Atrium::navigationSections()` lists the rail's entries.
 - A per-package audit log page at `atrium.history.show` (`/atrium/history/{package}`), with filters and paging, and `Plugin::historyNavItem()` to link it from a plugin's sidebar group. History panels link to it.
@@ -19,6 +24,9 @@
 
 ### Fixed
 
+- The search box cancels the search in flight when the query changes, so a slow, stale response can no longer replace the results of a newer query.
+- A missing record on an Atrium route (`atrium.*`), asked for as JSON, answers a plain `{"message": "Not found."}` 404 instead of Laravel's message naming the model class. Pages keep their usual 404.
+
 - A page beneath a navigation item now counts as that item's: an item on a resource's `*.index` route stays active on its `*.show` and `*.edit` pages, and a URL item on the paths beneath it. The sidebar's panel and Ledger's tabs no longer disappear on a record's own page.
 - Ledger's top bar no longer has a hover menu as well as its row of tabs.
 - Form controls no longer render an `id` twice when one is passed.
@@ -26,6 +34,17 @@
 - `form.input` and `form.select` no longer use `null` as an array offset when no `wrapper` is passed, which PHP 8.5 deprecates.
 
 ### Changed
+
+- `DashboardWidgetPolicy` asks the dashboard's policy through refactor-circus/keystone's `Policy::allowsOn()`, and its methods take the user as `Model&Authenticatable` (it was `Model`): an application subclass typed `Model $user` still works, but a model that is not `Authenticatable` is refused by the type.
+- The architecture tests now fail on a table named as a literal string and on a model without a policy in `atrium.policies`.
+- `tests/ArchTest.php` also checks that every action writes inside a transaction and that every model fires an event for every Eloquent lifecycle hook (refactor-circus/keystone's `Arch::writesOutsideTransactions()` and `Arch::modelEventGaps()`).
+- Updating a dashboard over HTTP may leave out its `name` and change only `is_default`.
+- **Faster global search by default**: `atrium.search.concurrency` now defaults to `sync`, running sources inside the request, instead of null (the application's default, usually `process`, which booted a PHP process per source on every keystroke). Set it to `process` for per-source timeouts and concurrency, or to null for the old behaviour.
+- The search box waits for `atrium.search.min_length` characters (new, 2 by default) before asking for results, and the search endpoint runs no source for a shorter query.
+- Discovered plugins are cached in `bootstrap/cache/atrium-plugins.php` instead of reading Composer's `installed.json` on every boot. `package:discover` and `optimize` rebuild the cache (new `atrium:discover` command), `optimize:clear` removes it (new `atrium:clear-discovered`), and without it discovery reads the packages live as before.
+- A page decides which plugins the request may see once (`PluginRegistry::authorized()` answers per request), builds the sidebar's sections from one pass over the groups and items, works out each navigation item's active state and URL once (`Domains\Navigation\Services\NavigationState`, a scoped service), asks whether the theme switcher shows once, and reads the visible dashboards once (`DashboardManager::pick()`).
+- An `audit.enabled` config key: set it to false to keep Atrium's own dashboard changes out of Keen's audit log.
+- Guests get 401 rather than 403 from Atrium's requests (refactor-circus/keystone's request base).
 
 - Atrium now stands on [refactor-circus/keystone](https://github.com/Refactor-Circus/Keystone), the shared runtime of the suite. The `Action` base, the `ActionStartingEvent`, `ActionFinishedEvent` and `ModelLifecycleEvent` contracts and the `DispatchesModelEvents` trait moved there: import them from `RefactorCircus\Keystone\...` instead of `RefactorCircus\Atrium\...`. Atrium registers itself as the `atrium` package.
 - Atrium now requires PHP 8.5. CI runs on PHP 8.5 only, and the development dependencies are raised to their latest releases (Playwright 1.64, Alpine.js 3.17.4).

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
@@ -100,4 +102,34 @@ it('shows a dashboard by its slug', function (): void {
         ->assertSee('<title>Company KPIs', false);
 
     $this->actingAs($user)->get(route('atrium.dashboard.show', 'missing'))->assertNotFound();
+});
+
+it('reads the visible dashboards once per page', function (): void {
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
+
+    DashboardModel::query()->create(['name' => 'Mine', 'owner_type' => $user->getMorphClass(), 'owner_id' => $user->getKey()]);
+    DashboardModel::query()->create(['name' => 'Company KPIs', 'is_shared' => true]);
+
+    $dashboards = (new DashboardModel)->getTable();
+    $reads = 0;
+
+    DB::listen(function (QueryExecuted $query) use ($dashboards, &$reads): void {
+        if (str_starts_with(strtolower($query->sql), 'select') && str_contains($query->sql, '"'.$dashboards.'"')) {
+            $reads++;
+        }
+    });
+
+    $this->actingAs($user)->get('/atrium')->assertOk()->assertSee('Company KPIs');
+
+    expect($reads)->toBe(1);
+});
+
+it('lists the dashboard made on a first visit', function (): void {
+    app()->detectEnvironment(fn (): string => 'local');
+
+    $user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
+
+    $this->actingAs($user)->get('/atrium')->assertOk()->assertViewHas('dashboards', fn ($dashboards): bool => $dashboards->count() === 1);
 });

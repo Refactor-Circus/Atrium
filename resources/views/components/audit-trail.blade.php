@@ -14,7 +14,8 @@
 {{--
     A package's own history, read from whichever audit log is installed
     through refactor-circus/keystone's AuditTrail. Renders nothing until one is
-    (refactor-circus/keen), so packages can place it unconditionally:
+    (refactor-circus/keen), or while the package turns its auditing off, so
+    packages can place it unconditionally:
 
         <x-atrium::audit-trail source="showroom" :subject="$product" />
 --}}
@@ -29,7 +30,8 @@
         'subject_id' => $subject === null ? null : (string) $subject->getKey(),
     ]));
 
-    $page = $allowed && $trail->available()
+    // Only while the package audits (Keen installed, its `audit.enabled` on).
+    $page = $allowed && ($package === null ? $trail->available() : $package->audits())
         ? $trail->entries(\RefactorCircus\Keystone\Audit\Data\AuditFilter::make()->source($source)->subject($subject)->scope($scope)->action($action)->limit((int) $limit))
         : null;
 @endphp

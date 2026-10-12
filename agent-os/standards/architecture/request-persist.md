@@ -25,13 +25,13 @@ class StoreDashboardRequest extends Request
 {
     public function rules(): array
     {
-        return ['name' => ['required', 'string', 'max:255']];
+        return CreateDashboardData::rules();
     }
 
     public function persist(): RedirectResponse
     {
         $dashboard = app(CreateDashboardAction::class)->execute(
-            $this->validated(),
+            CreateDashboardData::fromValidated($this->validated()),
             app(DashboardManager::class)->owner($this),
         );
 
@@ -43,7 +43,7 @@ class StoreDashboardRequest extends Request
 ## Rules
 
 - Naming: `Index`, `Store`, `Show`, `Update`, `Delete` + `{Entity}Request`.
-- `persist()` calls an Action via `app(XAction::class)->execute(...)`, passing `$this->validated()` and/or the route-bound model. **Never put database writes in a controller.**
+- `persist()` calls an Action via `app(XAction::class)->execute(...)`, passing `XData::fromValidated($this->validated())` and/or the route-bound model. `rules()` returns `XData::rules()`, so input is validated once; never call `XData::from()` in a request (ArchTest). **Never put database writes in a controller.**
 - Read-only requests omit `rules()`; the base defaults it to `[]`.
 - Authorize in `authorize()`, not in the controller, through the policies in `atrium.policies`: `$this->allows('create', DashboardModel::class)`, `$this->allows('update', $this->dashboard())`, `$this->allowsEach('delete', $placements)`. The route middleware's gate still runs first.
 - Route-bound models are resolved in a `protected` helper that aborts 404 when the binding is missing, so both `authorize()` and `persist()` share one resolution path.

@@ -88,7 +88,7 @@ abstract class Plugin implements PluginContract
                 $definition = app(PackageRegistry::class)->find($package);
                 $history = app(History::class);
 
-                return $definition !== null && $history->available() && $history->allows($definition, $request->user(), []);
+                return $definition !== null && $definition->audits() && $history->allows($definition, $request->user(), []);
             });
     }
 

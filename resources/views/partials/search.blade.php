@@ -23,7 +23,7 @@
          x-text="/Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl K'">⌘K</kbd>
 
     <div class="absolute inset-x-0 top-full z-30 mt-2 max-h-96 overflow-y-auto rounded-radius border border-outline bg-surface p-1 shadow-xl dark:border-outline-dark dark:bg-surface-dark"
-         x-show="open && query.length > 0" x-cloak x-transition.opacity.duration.100ms x-on:click.outside="close()">
+         x-show="open && query.trim().length >= minLength" x-cloak x-transition.opacity.duration.100ms x-on:click.outside="close()">
         <template x-if="results.length === 0 && ! loading">
             <p class="px-3 py-6 text-center text-sm text-on-surface dark:text-on-surface-dark">{{ __('atrium::atrium.no_results') }}</p>
         </template>
@@ -52,20 +52,46 @@
                     results: [],
                     loading: false,
                     open: false,
+                    minLength: @js(\RefactorCircus\Atrium\Domains\Search\Http\Controllers\SearchController::minLength()),
+                    controller: null,
+                    sequence: 0,
                     close() { this.open = false },
                     async run() {
-                        if (this.query.length === 0) { this.results = []; return }
+                        // A newer keystroke supersedes whatever is in flight.
+                        this.controller?.abort()
+                        this.controller = null
+                        const ticket = ++this.sequence
+                        const query = this.query.trim()
+
+                        if (query.length < this.minLength) {
+                            this.results = []
+                            this.loading = false
+                            return
+                        }
+
+                        const controller = new AbortController()
+                        this.controller = controller
                         this.loading = true
+
                         try {
                             const response = await fetch(
-                                @js(route('atrium.search')) + '?q=' + encodeURIComponent(this.query),
-                                { headers: { 'Accept': 'application/json' } }
+                                @js(route('atrium.search')) + '?q=' + encodeURIComponent(query),
+                                { headers: { 'Accept': 'application/json' }, signal: controller.signal }
                             )
                             const payload = await response.json()
+
+                            // Only the latest search may show its results.
+                            if (ticket !== this.sequence) { return }
+
                             this.results = payload.data ?? []
                             this.open = true
+                        } catch (error) {
+                            if (error.name !== 'AbortError') { throw error }
                         } finally {
-                            this.loading = false
+                            if (ticket === this.sequence) {
+                                this.loading = false
+                                this.controller = null
+                            }
                         }
                     },
                 }
