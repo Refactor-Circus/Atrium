@@ -31,15 +31,6 @@
         "boost:mcp"
       ]
     },
-    "herd": {
-      "command": "php",
-      "args": [
-        "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
-      ],
-      "env": {
-        "SITE_PATH": "${MONO_SITE_PATH}"
-      }
-    },
     "tinkerwell": {
       "command": "/Applications/Tinkerwell.app/Contents/Resources/tinkerwell/mcp/tinkerwell-mcp-arm64",
       "env": {
@@ -48,6 +39,7 @@
       }
     },
     "ray-app": {
+      "type": "http",
       "url": "http://localhost:2411/mcp"
     },
     "phpstorm": {

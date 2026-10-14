@@ -94,6 +94,16 @@
         ],
         "test:browser": [
             "vendor/bin/pest --testsuite=Browser"
+        ],
+        "local:install": [
+            "@php bin/composer-local.php",
+            "@putenv COMPOSER=composer.local.json",
+            "@composer install"
+        ],
+        "local:update": [
+            "@php bin/composer-local.php",
+            "@putenv COMPOSER=composer.local.json",
+            "@composer update"
         ]
     },
     "extra": {
