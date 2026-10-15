@@ -87,3 +87,22 @@ it('docks the current section in the panel and offers the rest from the rail', f
         ->toContain("x-data=\"atriumShell('group-main')\"")
         ->toMatch('/data-testid="nav-panel-section" data-section="group-people"/');
 });
+
+it('shows the sidebar toggle only while a section can be docked', function (): void {
+    $nav = app(NavigationRegistry::class);
+    $nav->add(NavItem::make('Home')->url('/atrium')->group('Main'));
+
+    $toggle = '/<div class="hidden shrink-0 py-3 lg:block" x-show="section !== null"\s*(x-cloak)?\s*>\s*<button type="button" data-testid="sidebar-toggle"/';
+
+    preg_match($toggle, $this->get('/atrium')->assertOk()->getContent(), $docked);
+
+    expect($docked)->not->toBeEmpty()
+        ->and($docked[1] ?? '')->toBe('');
+});
+
+it('cloaks the sidebar toggle when no section is current', function (): void {
+    app(NavigationRegistry::class)->add(NavItem::make('Users')->url('/users')->group('People'));
+
+    expect($this->get('/atrium')->assertOk()->getContent())
+        ->toMatch('/x-show="section !== null"\s*x-cloak\s*>\s*<button type="button" data-testid="sidebar-toggle"/');
+});

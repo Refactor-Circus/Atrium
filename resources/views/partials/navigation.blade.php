@@ -66,7 +66,9 @@
             @endforeach
         </nav>
 
-        <div class="hidden shrink-0 py-3 lg:block">
+        {{-- Collapsing only hides the docked panel, so with no section to
+             dock there is nothing for the toggle to do. --}}
+        <div class="hidden shrink-0 py-3 lg:block" x-show="section !== null" @if ($currentSection === null) x-cloak @endif>
             <button type="button" data-testid="sidebar-toggle"
                     class="{{ $railButton }} {{ $railIdle }}"
                     x-on:click="toggleCollapsed()"

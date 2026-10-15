@@ -86,6 +86,9 @@ it('collapses the sidebar to an icon rail and remembers it across pages', functi
         ->assertScript('document.documentElement.dataset.atriumSidebar', 'collapsed')
         ->navigate('/atrium/settings')
         ->assertScript('document.documentElement.dataset.atriumSidebar', 'collapsed')
+        // Settings belongs to no section, so there is no panel to reopen.
+        ->assertMissing('@sidebar-toggle')
+        ->navigate('/atrium')
         ->click('@sidebar-toggle')
         ->assertScript('document.documentElement.dataset.atriumSidebar === undefined', true);
 });
