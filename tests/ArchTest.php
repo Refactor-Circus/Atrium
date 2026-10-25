@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
-use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
 use RefactorCircus\Atrium\Support\Tables;
 use RefactorCircus\Keystone\Testing\Arch;
 
@@ -13,9 +12,11 @@ const ATRIUM_ACTIONS = [ATRIUM_DOMAINS.'/*/Actions/*.php', __DIR__.'/../src/Acti
 
 arch()->preset()->php();
 
-// SearchRegistry revives search results its own child processes wrote,
-// restricted to SearchResult, as Laravel's process concurrency driver does.
-arch()->preset()->security()->ignoring(SearchRegistry::class);
+arch()->preset()->security();
+
+arch('nothing is revived with unserialize()')
+    ->expect('unserialize')
+    ->not->toBeUsed();
 
 arch('it will not use dd(), ddd(), env(), or exit()')
     ->expect(['dd', 'ddd', 'env', 'exit'])

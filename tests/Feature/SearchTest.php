@@ -7,6 +7,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Concurrency\SyncDriver;
 use Illuminate\Console\Application;
 use Illuminate\Http\Request;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Exceptions;
@@ -15,9 +16,12 @@ use Laravel\Ai\AiServiceProvider;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
 use Orchestra\Testbench\Attributes\UsesVendor;
+use RefactorCircus\Atrium\AtriumServiceProvider;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
+use RefactorCircus\Atrium\Domains\Search\Exceptions\SearchSourceFailedException;
+use RefactorCircus\Atrium\Domains\Search\Exceptions\SearchSourceTimedOutException;
 use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
 use RefactorCircus\Atrium\Tests\Fixtures\FullPlugin;
 use RefactorCircus\Atrium\Tests\Fixtures\MultiSourcePlugin;
@@ -34,13 +38,29 @@ beforeEach(function (): void {
     // linked into it. Testbench removes that link after its own commands on
     // Windows, where the link is a junction is_symlink() does not recognise,
     // so make sure it is there for the children and tidy up afterwards.
+    $this->skeletonConfig = is_file(skeletonConfigPath()) ? file_get_contents(skeletonConfigPath()) : null;
+
     $this->vendor = new UsesVendor;
     $this->vendor->beforeEach($this->app);
 });
 
 afterEach(function (): void {
+    if (is_string($this->skeletonConfig)) {
+        file_put_contents(skeletonConfigPath(), $this->skeletonConfig);
+    } elseif (is_file(skeletonConfigPath())) {
+        unlink(skeletonConfigPath());
+    }
+
     $this->vendor->afterEach($this->app);
 });
+
+/**
+ * The configuration Testbench's skeleton app reads when run as `php artisan`.
+ */
+function skeletonConfigPath(): string
+{
+    return base_path('bootstrap/cache/testbench.yaml');
+}
 
 /**
  * Register sources that each return one result titled with their key.
@@ -78,10 +98,17 @@ function pidSources(string ...$keys): void
  * the simultaneous renames fails and takes that child down. One child first
  * leaves a manifest the others agree with. A real application and its
  * children share their providers, so this never arises outside the tests.
+ *
+ * The skeleton registers only the providers its own configuration names, so
+ * it is told to register Atrium's: the children run Atrium's
+ * atrium:search-source command, as an application with Atrium installed
+ * does. The beforeEach and afterEach hooks put the configuration back.
  */
 function useProcessDriver(): void
 {
     config()->set('atrium.search.concurrency', 'process');
+
+    file_put_contents(skeletonConfigPath(), "providers:\n  - ".AtriumServiceProvider::class."\n");
 
     Process::path(base_path())->run(Application::formatCommandString('--version'))->throw();
 }
@@ -214,6 +241,70 @@ function recordingDriver(): ArrayObject
     config()->set('atrium.search.concurrency', 'recording');
 
     return $runs;
+}
+
+/**
+ * Register a source whose one result sets every field.
+ */
+function fullResultSource(string $key): void
+{
+    app(SearchRegistry::class)->add(
+        SearchSource::make($key)->using(fn (string $q): array => [
+            SearchResult::make('Ada Lovelace', '/people/1')->subtitle('Analyst')->icon('user')->group('People'),
+        ]),
+    );
+}
+
+/**
+ * Register a source whose one result has only a title and a url.
+ */
+function bareResultSource(string $key): void
+{
+    app(SearchRegistry::class)->add(
+        SearchSource::make($key)->using(fn (string $q): array => [SearchResult::make('Grace Hopper', '/people/2')]),
+    );
+}
+
+/**
+ * Register sources of three results each, the first finishing last, so the
+ * order they come back in is not the order they finished in.
+ */
+function staggeredSources(string ...$keys): void
+{
+    foreach (array_values($keys) as $position => $key) {
+        $delay = (count($keys) - 1 - $position) * 300_000;
+
+        app(SearchRegistry::class)->add(
+            SearchSource::make($key)->using(function (string $q) use ($key, $delay): array {
+                usleep($delay);
+
+                return array_map(
+                    fn (int $i): SearchResult => SearchResult::make($key.' '.$i, '/'.$key.'/'.$i)->group($key),
+                    [1, 2, 3],
+                );
+            }),
+        );
+    }
+}
+
+/**
+ * Register a source that throws.
+ */
+function brokenSource(string $key): void
+{
+    app(SearchRegistry::class)->add(
+        SearchSource::make($key)->using(fn (string $q): array => throw new RuntimeException('Source down')),
+    );
+}
+
+/**
+ * What a healthy child writes for the given rows.
+ *
+ * @param  array<int, mixed>  $rows
+ */
+function childEnvelope(array $rows): string
+{
+    return (string) json_encode(['successful' => true, 'results' => $rows]);
 }
 
 /**
@@ -531,7 +622,7 @@ it('stops a source that runs past the timeout and keeps the others', function ()
     expect(searchTitles())->toBe(['quick'])
         ->and(microtime(true) - $started)->toBeLessThan(5);
 
-    Exceptions::assertReported(fn (RuntimeException $e): bool => $e->getMessage() === 'Search source [slow] timed out.');
+    Exceptions::assertReported(fn (SearchSourceTimedOutException $e): bool => $e->getMessage() === 'Search source [slow] timed out.');
 });
 
 it('lets a source override the default timeout', function (): void {
@@ -545,7 +636,7 @@ it('lets a source override the default timeout', function (): void {
 
     expect(searchTitles())->toBe(['patient']);
 
-    Exceptions::assertReported(fn (RuntimeException $e): bool => $e->getMessage() === 'Search source [hasty] timed out.');
+    Exceptions::assertReported(fn (SearchSourceTimedOutException $e): bool => $e->getMessage() === 'Search source [hasty] timed out.');
 });
 
 it('runs at most the configured number of processes at once', function (): void {
@@ -610,4 +701,184 @@ it('applies the concurrency limit when classification fails', function (): void 
 
     expect(searchTitles())->toHaveCount(4)
         ->and($runs->getArrayCopy())->toBe([2, 2]);
+});
+
+it('brings every field of a result back from a child process', function (): void {
+    Exceptions::fake();
+
+    useProcessDriver();
+
+    fullResultSource('people');
+
+    $results = app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x');
+
+    expect(reportedMessages())->toBe([]);
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0])->toBeInstanceOf(SearchResult::class)
+        ->and($results[0]->title)->toBe('Ada Lovelace')
+        ->and($results[0]->url)->toBe('/people/1')
+        ->and($results[0]->subtitle)->toBe('Analyst')
+        ->and($results[0]->icon)->toBe('user')
+        ->and($results[0]->group)->toBe('People');
+});
+
+it('leaves the optional fields empty for a bare result from a child process', function (): void {
+    Exceptions::fake();
+
+    useProcessDriver();
+
+    bareResultSource('people');
+
+    $results = app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x');
+
+    expect(reportedMessages())->toBe([]);
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->toArray())->toBe([
+            'title' => 'Grace Hopper',
+            'url' => '/people/2',
+            'subtitle' => null,
+            'icon' => null,
+            'group' => null,
+        ]);
+});
+
+it('keeps results in order within and across child processes', function (): void {
+    Exceptions::fake();
+
+    useProcessDriver();
+    config()->set('atrium.search.results.per_source', null);
+
+    staggeredSources('first', 'second');
+
+    $titles = searchTitles();
+
+    expect(reportedMessages())->toBe([]);
+
+    expect($titles)->toBe(['first 1', 'first 2', 'first 3', 'second 1', 'second 2', 'second 3']);
+});
+
+it('starts each child with atrium\'s own command', function (): void {
+    Process::fake(['*' => Process::result(childEnvelope([]))]);
+
+    config()->set('atrium.search.concurrency', 'process');
+
+    searchSources('one', 'two');
+
+    $registry = new class(app(PluginRegistry::class)) extends SearchRegistry
+    {
+        public function startedCommand(): string
+        {
+            return $this->childCommand();
+        }
+    };
+
+    expect($registry->startedCommand())->toBe(Application::formatCommandString('atrium:search-source'))
+        ->not->toContain('invoke-serialized-closure');
+
+    searchTitles();
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => $process->command === $registry->startedCommand(), 2);
+});
+
+it('drops malformed rows from a child and keeps the rest in order', function (): void {
+    Exceptions::fake();
+
+    Process::fake(['*' => Process::result(childEnvelope([
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['url' => '/no-title'],
+        ['title' => 'No url'],
+        ['title' => 42, 'url' => '/numeric-title'],
+        ['title' => 'List url', 'url' => ['/x']],
+        ['title' => 'Kept 2', 'url' => '/2'],
+        ['title' => 'Numeric subtitle', 'url' => '/s', 'subtitle' => 7],
+        ['title' => 'False icon', 'url' => '/i', 'icon' => false],
+        ['title' => 'List group', 'url' => '/g', 'group' => ['x']],
+        'not a row',
+        null,
+        ['title' => 'Kept 3', 'url' => '/3', 'subtitle' => null, 'icon' => null, 'group' => null],
+    ]))]);
+
+    config()->set('atrium.search.concurrency', 'process');
+
+    searchSources('crafted');
+
+    $results = app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x');
+
+    expect(array_map(fn (SearchResult $result): array => $result->toArray(), $results))->toBe([
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['title' => 'Kept 2', 'url' => '/2', 'subtitle' => null, 'icon' => null, 'group' => null],
+        ['title' => 'Kept 3', 'url' => '/3', 'subtitle' => null, 'icon' => null, 'group' => null],
+    ]);
+
+    Exceptions::assertNothingReported();
+});
+
+it('reports a source that throws in its child as a failed source', function (): void {
+    Exceptions::fake();
+
+    useProcessDriver();
+
+    searchSources('first');
+    brokenSource('broken');
+    searchSources('last');
+
+    expect(searchTitles())->toBe(['first', 'last']);
+
+    Exceptions::assertReported(fn (SearchSourceFailedException $e): bool => $e->sourceKey === 'broken'
+        && str_starts_with($e->getMessage(), 'Search source [broken] failed: Source down'));
+    Exceptions::assertNotReported(SearchSourceTimedOutException::class);
+});
+
+it('reports a child that fails as a failed source and keeps the others', function (string $output, string $errors, int $exitCode, array $reason): void {
+    Exceptions::fake();
+
+    Process::fake(['*' => Process::sequence([
+        Process::result($output, $errors, $exitCode),
+        Process::result(childEnvelope([['title' => 'healthy', 'url' => '/healthy']])),
+    ])]);
+
+    config()->set('atrium.search.concurrency', 'process');
+
+    searchSources('broken', 'healthy');
+
+    expect(searchTitles())->toBe(['healthy']);
+
+    Exceptions::assertReported(function (SearchSourceFailedException $e) use ($reason): bool {
+        foreach ($reason as $part) {
+            if (! str_contains($e->getMessage(), $part)) {
+                return false;
+            }
+        }
+
+        return $e->sourceKey === 'broken' && str_starts_with($e->getMessage(), 'Search source [broken] failed: ');
+    });
+    Exceptions::assertNotReported(SearchSourceTimedOutException::class);
+    expect(Exceptions::reported())->toHaveCount(1);
+})->with([
+    'a non-zero exit' => ['', 'Command "atrium:search-source" is not defined.', 1, ['exit code 1', 'Command "atrium:search-source" is not defined.']],
+    'unparseable output' => ['Fatal error', 'PHP Fatal error: Allowed memory size exhausted', 0, ['output: Fatal error', 'PHP Fatal error: Allowed memory size exhausted']],
+    'an unsuccessful envelope' => ['{"successful":false,"message":"The index is offline."}', 'Stack trace', 0, ['The index is offline.', 'Stack trace']],
+    'a truthy successful flag' => ['{"successful":1,"results":[]}', '', 0, ['exit code 0']],
+    'the framework\'s serialized result' => ['{"successful":true,"result":"a:0:{}"}', '', 0, ['exit code 0']],
+    'results that are not a list' => ['{"successful":true,"results":"none"}', '', 0, ['exit code 0']],
+]);
+
+it('reports a source that runs past its own timeout as timed out and keeps the others', function (): void {
+    Exceptions::fake();
+
+    useProcessDriver();
+    config()->set('atrium.search.timeout', 30);
+
+    sleepySource('slow', 10, timeout: 1);
+    sleepySource('quick', 0);
+
+    $started = microtime(true);
+
+    expect(searchTitles())->toBe(['quick'])
+        ->and(microtime(true) - $started)->toBeLessThan(5);
+
+    Exceptions::assertReported(fn (SearchSourceTimedOutException $e): bool => $e->sourceKey === 'slow'
+        && preg_match('/timed out/', $e->getMessage()) === 1);
 });
