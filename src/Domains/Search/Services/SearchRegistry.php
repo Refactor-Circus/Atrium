@@ -21,9 +21,11 @@ use Laravel\Ai\Classification\Choice;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
 use Laravel\SerializableClosure\SerializableClosure;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
+use RefactorCircus\Atrium\Domains\Search\Console\InvokeSearchSourceCommand;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
-use RuntimeException;
+use RefactorCircus\Atrium\Domains\Search\Exceptions\SearchSourceFailedException;
+use RefactorCircus\Atrium\Domains\Search\Exceptions\SearchSourceTimedOutException;
 use Throwable;
 
 class SearchRegistry
@@ -142,16 +144,17 @@ class SearchRegistry
 
     /**
      * The work of searching one source, as a closure that can be serialized
-     * into another process.
+     * into another process. A source that throws is reported and gives no
+     * results, unless the caller asks for the failure itself.
      *
-     * @return Closure(): array<int, SearchResult>
+     * @return Closure(bool=): array<int, SearchResult>
      */
     protected function task(SearchSource $source, string $query, mixed $user, ?string $root = null): Closure
     {
         $limit = config('atrium.search.results.per_source');
         $limit = is_int($limit) ? $limit : null;
 
-        return static function () use ($source, $query, $user, $limit, $root): array {
+        return static function (bool $throw = false) use ($source, $query, $user, $limit, $root): array {
             // Process and fork drivers run outside the request, where
             // nobody is signed in. Sources still need to know who asked.
             if ($user instanceof Authenticatable && ! Auth::check()) {
@@ -168,11 +171,44 @@ class SearchRegistry
             try {
                 return array_slice($source->results($query), 0, $limit);
             } catch (Throwable $e) {
+                if ($throw) {
+                    throw $e;
+                }
+
                 report($e);
 
                 return [];
             }
         };
+    }
+
+    /**
+     * A task as a child process runs it: its results go back as plain arrays
+     * through the container, where the atrium:search-source command reads
+     * them and writes them out as JSON. A source that throws fails the child,
+     * so the failure is reported here, under the source's key.
+     *
+     * @param  Closure(bool=): array<int, SearchResult>  $task
+     * @return Closure(): null
+     */
+    protected function childTask(Closure $task): Closure
+    {
+        return static function () use ($task): null {
+            app()->instance(InvokeSearchSourceCommand::RESULTS, array_values(array_map(
+                static fn (SearchResult $result): array => $result->toArray(),
+                $task(true),
+            )));
+
+            return null;
+        };
+    }
+
+    /**
+     * The command each child process runs.
+     */
+    protected function childCommand(): string
+    {
+        return Application::formatCommandString('atrium:search-source');
     }
 
     /**
@@ -183,13 +219,13 @@ class SearchRegistry
      * running one finishes, and its timeout starts with it.
      *
      * @param  array<int, SearchSource>  $sources
-     * @param  array<int, Closure(): array<int, SearchResult>>  $tasks
+     * @param  array<int, Closure(bool=): array<int, SearchResult>>  $tasks
      * @param  positive-int|null  $limit
      * @return array<int, array<int, SearchResult>>
      */
     protected function runInProcesses(array $sources, array $tasks, ?int $limit = null): array
     {
-        $command = Application::formatCommandString('invoke-serialized-closure');
+        $command = $this->childCommand();
 
         $queue = $tasks;
         $running = [];
@@ -202,7 +238,7 @@ class SearchRegistry
 
                 $pending = Process::path(base_path())->env([
                     '__LARAVEL_CONTEXT' => json_encode(Context::dehydrate()),
-                    'LARAVEL_INVOKABLE_CLOSURE' => base64_encode(serialize(new SerializableClosure($queue[$key]))),
+                    'LARAVEL_INVOKABLE_CLOSURE' => base64_encode(serialize(new SerializableClosure($this->childTask($queue[$key])))),
                 ]);
 
                 $running[$key] = (is_int($timeout) ? $pending->timeout($timeout) : $pending->forever())->start($command);
@@ -214,7 +250,7 @@ class SearchRegistry
                 try {
                     $process->ensureNotTimedOut();
                 } catch (ProcessTimedOutException $e) {
-                    report(new RuntimeException("Search source [{$sources[$key]->key}] timed out.", previous: $e));
+                    report(SearchSourceTimedOutException::timedOut($sources[$key], $e));
 
                     $results[$key] = [];
                     unset($running[$key]);
@@ -239,8 +275,8 @@ class SearchRegistry
     }
 
     /**
-     * Read a finished process's results, written by the framework's
-     * invoke-serialized-closure command.
+     * Read a finished process's results, written as JSON by the
+     * atrium:search-source command.
      *
      * @return array<int, SearchResult>
      */
@@ -255,21 +291,69 @@ class SearchRegistry
 
         $payload = json_decode($output, true);
 
-        if ($process->failed() || ! is_array($payload) || ($payload['successful'] ?? false) !== true || ! is_string($payload['result'] ?? null)) {
-            $reason = is_array($payload) && is_string($payload['message'] ?? null)
-                ? $payload['message']
-                : sprintf('exit code %s; output: %s; errors: %s', $process->exitCode() ?? 'none', Str::limit(trim($output), 500), Str::limit(trim($process->errorOutput()), 1000));
+        if ($process->failed() || ! is_array($payload) || ($payload['successful'] ?? false) !== true || ! is_array($payload['results'] ?? null)) {
+            $errors = Str::limit(trim($process->errorOutput()), 1000);
 
-            report(new RuntimeException("Search source [{$source->key}] failed: {$reason}"));
+            $reason = is_array($payload) && is_string($payload['message'] ?? null)
+                ? $payload['message'].($errors === '' ? '' : "; errors: {$errors}")
+                : sprintf('exit code %s; output: %s; errors: %s', $process->exitCode() ?? 'none', Str::limit(trim($output), 500), $errors);
+
+            report(SearchSourceFailedException::forSource($source, $reason));
 
             return [];
         }
 
-        // The payload comes from our own child process, and nothing but
-        // results may be revived from it.
-        $results = unserialize($payload['result'], ['allowed_classes' => [SearchResult::class]]);
+        $results = [];
 
-        return is_array($results) ? array_values(array_filter($results, fn (mixed $result): bool => $result instanceof SearchResult)) : [];
+        foreach ($payload['results'] as $row) {
+            if (is_array($row) && ($result = $this->result($row)) !== null) {
+                $results[] = $result;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Rebuild one result row, or null when the row is not one: it needs a
+     * string title and url, and its other fields must be strings when set.
+     *
+     * @param  array<array-key, mixed>  $row
+     */
+    private function result(array $row): ?SearchResult
+    {
+        $title = $row['title'] ?? null;
+        $url = $row['url'] ?? null;
+
+        if (! is_string($title) || ! is_string($url)) {
+            return null;
+        }
+
+        $subtitle = $row['subtitle'] ?? null;
+        $icon = $row['icon'] ?? null;
+        $group = $row['group'] ?? null;
+
+        foreach ([$subtitle, $icon, $group] as $field) {
+            if ($field !== null && ! is_string($field)) {
+                return null;
+            }
+        }
+
+        $result = SearchResult::make($title, $url);
+
+        if (is_string($subtitle)) {
+            $result->subtitle($subtitle);
+        }
+
+        if (is_string($icon)) {
+            $result->icon($icon);
+        }
+
+        if (is_string($group)) {
+            $result->group($group);
+        }
+
+        return $result;
     }
 
     /**
