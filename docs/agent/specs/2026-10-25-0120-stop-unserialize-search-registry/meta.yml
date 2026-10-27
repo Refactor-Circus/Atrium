@@ -1,0 +1,16 @@
+id: 2026-10-25-0120-stop-unserialize-search-registry
+title: Stop using unserialize in SearchRegistry
+status: merged
+pr: { number: 7, url: "https://github.com/Refactor-Circus/Atrium/pull/7" }
+review_passes: 2
+created: 2026-10-25
+ticket: { provider: github, key: "#6", url: "https://github.com/Refactor-Circus/Atrium/issues/6" }
+runs:
+  - { workflow: ring-master-factory, run_id: wf_0dc550c6-3dc, result: "escalated (group 2 build agent returned no result; group 1 committed 949b7c9); resumed", round: 0, date: 2026-10-25 }
+  - { workflow: ring-master-factory, run_id: wf_0dc550c6-3dc, result: "needs-decision (ringside check unavailable in worktree; groups 1-2 committed a79bd1d)", round: 1, date: 2026-10-25 }
+  - { workflow: ring-master-factory, run_id: wf_0088f0e6-06a, result: "escalated (gate red 3 rounds: runner denied ringside check in gate agent; composer test green, check passes by hand)", round: 3, date: 2026-10-26 }
+  - { workflow: ring-master-factory, run_id: wf_9c350efd-a53, result: "approved (rework from user note; gate green, 1 minor fixed in 3045384, round 2 clean)", round: 2, date: 2026-10-26 }
+standards:
+  refactor-circus/standards:
+    version: dev-main
+    reference: 2e6440f82ca5

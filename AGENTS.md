@@ -12,9 +12,9 @@ This repository is a Laravel package. Keep the package focused, idiomatic, and e
 
 ## Architecture Conventions
 
-These are recorded in full under `agent-os/standards/`; the short form:
+These are recorded in full in the global standards and under `docs/agent/standards/`; the short form:
 
-- **Code lives in domain modules.** `src/Domains/{Domain}/` (`Access`, `Dashboard`, `History`, `Navigation`, `Plugins`, `Search`, `Settings`, `Themes`, `Widgets`), namespace `RefactorCircus\Atrium\Domains\{Domain}`, each with a `{Domain}ServiceProvider` registered by `Domains\DomainServiceProvider`. Models are `{Entity}Model` in `Models/`; value objects in `Data/`; registries in `Services/`. Package-wide base classes, contracts and `Support/` stay at the top level. A moved model keeps its old class name as a morph alias. See `agent-os/standards/architecture/domain-modules.md`.
+- **Code lives in domain modules.** `src/Domains/{Domain}/` (`Access`, `Dashboard`, `History`, `Navigation`, `Plugins`, `Search`, `Settings`, `Themes`, `Widgets`), namespace `RefactorCircus\Atrium\Domains\{Domain}`, each with a `{Domain}ServiceProvider` registered by `Domains\DomainServiceProvider`. Models are `{Entity}Model` in `Models/`; value objects in `Data/`; registries in `Services/`. Package-wide base classes, contracts and `Support/` stay at the top level. A moved model keeps its old class name as a morph alias. See `architecture/domain-modules` (global standard) and `docs/agent/standards/atrium/domains.md`.
 - **Actions own mutating logic.** Extend `RefactorCircus\Keystone\Actions\Action`, implement a `protected handle()` with a concrete return type, and let callers use `execute()`. Action input is a `final readonly` `{Action}Data` in the domain's `Data/` (on `RefactorCircus\Keystone\Data\Data`), never an array: fields are promoted constructor properties (camelCase of the input keys; `T|Missing = new Missing` for partial updates), `rules()` lives on the Data, and the starting event carries it. Requests' `rules()` return `XData::rules()` and `persist()` builds with `XData::fromValidated($this->validated())` - never `XData::from()` in a request; untrusted input elsewhere uses `XData::from()`, which validates, and code that vouches for its values uses `new XData(...)`. Nested input is nested Data (`#[ListOf(WidgetPlacementData::class)]`), checked by the parent's rules under its key (`widgets.*.widget_key`). `tests/ArchTest.php` checks this with Keystone's `Testing\Arch`, along with the event pair on every action, writes only inside a transaction, and a `{Entity}{Hook}Event` for every model hook. `handle()` dispatches a starting `{Subject}{Verb-ing}ActionEvent` with the input, runs the work in a private `perform()` wrapped in `DB::transaction()`, then dispatches the finished `{Subject}{Verb-ed}ActionEvent` with the result.
 - **Requests own validation, authorization, and the call into an action.** Extend `RefactorCircus\Atrium\Http\Requests\Request` and implement `persist()`. Controllers only `return $request->persist();` and never contain database calls.
 - **Events are final classes using `Dispatchable` and `SerializesModels`.** Action events live in the domain's `Events/` and implement `RefactorCircus\Keystone\Contracts\ActionStartingEvent` or `ActionFinishedEvent` (after commit); every action has one of each. Model events live beside them, are named `{Entity}{Hook}Event`, implement `RefactorCircus\Keystone\Contracts\ModelLifecycleEvent`, and are mapped by the `RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents` trait every model uses.
@@ -35,7 +35,7 @@ These are recorded in full under `agent-os/standards/`; the short form:
 - Styling tokens are design tokens in `resources/css/atrium.css` (`--color-primary`, `--color-on-surface`, and so on). Themes (`Domains\Themes`) set those tokens at runtime, light and `-dark` together, on `:root[data-atrium-theme]`; never hard-code a colour a theme should own. `config('atrium.theme')` still retunes the built-in `atrium` theme.
 - Run `npm run build:css` after changing any Blade file, and commit the compiled `public/atrium.css`. The build regenerates the `@source` list, so new views are picked up automatically.
 - Test hooks use `data-testid` attributes, which the browser suite selects with `@name`.
-- **Atrium owns every component and style of the first-party suite.** Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom ship no stylesheet and no component namespace; their views use `x-atrium::*` components and the utility safelist in `resources/css/atrium.css` only, checked by `RefactorCircus\Atrium\Testing\AtriumStyles`. When a package screen needs new UI, add a generic component here. `Atrium::css()`, `Atrium::stylesheet()` and custom component namespaces remain for third-party packages. See `agent-os/standards/frontend/components.md`.
+- **Atrium owns every component and style of the first-party suite.** Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom ship no stylesheet and no component namespace; their views use `x-atrium::*` components and the utility safelist in `resources/css/atrium.css` only, checked by `RefactorCircus\Atrium\Testing\AtriumStyles`. When a package screen needs new UI, add a generic component here. `Atrium::css()`, `Atrium::stylesheet()` and custom component namespaces remain for third-party packages. See `docs/agent/standards/atrium/components.md`.
 
 ## Quick Commands
 
@@ -55,3 +55,11 @@ These are recorded in full under `agent-os/standards/`; the short form:
 - `package-release`: use when preparing changelog, release notes, tags, or GitHub release workflow changes.
 - `package-compatibility`: use when reviewing code, dependencies, or CI against the PHP and Laravel support matrix.
 - `package-generate-skill`: use when updating the bundled Boost skill from the package implementation, README, and examples.
+
+<!-- ring-master:start -->
+## Ring Master
+
+- Specs, product docs and local standards live in `docs/agent/`. Shared standards come from `vendor/` through `docs/agent/standards.index.yml`; read the matching standards before changing code.
+- Workflow: `/ring-master-shape-spec` → `/ring-master-write-spec` → `/ring-master-create-tasks` → `/ring-master-implement` → `/ring-master-verify-spec`.
+- Done means `composer test` passes. When work must break a standard, add a row to `docs/agent/standards-feedback.md`.
+<!-- ring-master:end -->
