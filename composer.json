@@ -22,6 +22,8 @@
         "laravel/framework": "^13.35"
     },
     "require-dev": {
+        "amphp/dns": "^2.1.2",
+        "amphp/socket": "^2.3.1",
         "larastan/larastan": "^3.13",
         "laravel/ai": "^1.2",
         "laravel/pao": "^1.1.5",
@@ -34,7 +36,8 @@
         "pestphp/pest-plugin-type-coverage": "^5.0.3",
         "phpstan/extension-installer": "^1.4.3",
         "refactor-circus/ringside": "dev-main",
-        "refactor-circus/standards": "dev-main"
+        "refactor-circus/standards": "dev-main",
+        "symfony/translation": "^6.4.3 || ^7.0.3 || ^8.0"
     },
     "suggest": {
         "laravel/ai": "Required to classify global search queries and only run the most relevant search sources (^1.0).",
