@@ -37,3 +37,34 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: "the history screen should be moved to keen."
 - Date: 2026-10-29
 - Raised by: user, during spec review
+
+## D-015: How do resolver and view failures affect the host screen? (Q-004)
+- Choice: Isolate sections and row slots: report once per request, skip the section, and the screen still returns 200. Propagate failures in the open tab's panel.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review (risk)
+
+## D-016: Does Plugin::historyNavItem() move to Keen? (Q-008)
+- Choice: Yes. Keen adds a History nav item for every package that audits, and plugins stop calling `historyNavItem()`, which Atrium removes.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review (scope)
+
+## D-017: Suite principle: packages have no knowledge of each other (answer to Q-003)
+- Choice: Atrium has no knowledge of Keen. Keen's functionality is purely plug and play. No package has knowledge of another. Companion packages may be suggested but not required. Integrations are done through simple config.
+- Rationale: In the user's words: "atrium should have no knowledge of keen. keens functionality should be purely plug and play, no package should have knowledge of another. we can suggest companion packages but no require them. itegrations should be done via simple config"
+- Consequence for this spec: `Screen::audits()`, `AuditedSubject`, `ScreenExtensions::audited()` and criterion 10 are removed. The registry instead supports wildcard screen targets (`*`, `{package}.*`), and screens declare only generic facts: key (from which the package is derived), record, tabs and slots. Q-003 no longer applies.
+- Date: 2026-10-29
+- Raised by: spec review (testability), Q-003
+
+## D-018: Which hard requirements may a package have?
+- Choice: Keystone only. Every other suite package, Atrium included, is a `suggest`. A package's UI loads only when Atrium is present, as Keen, Polycart and PennantPlus already do. Roster, Cortex, Impex and Showroom drop `require refactor-circus/atrium`. Guardian suggests Roster and integrates through Roster's seams and config.
+- Rationale: Accepted the recommendation, applying D-017.
+- Date: 2026-10-29
+- Raised by: user, following D-017
+
+## D-019: What shape does "integration via simple config" take?
+- Choice: The registrant ships editable defaults in its own config. Example: `config/cortex.php` `atrium.redirect_domains.screens => ['roster.organization' => 'tab', 'roster.user' => 'aside']`. A default only takes effect when the target screen exists, and the app may change or empty the list. Code never names another package; only the editable config does.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: user, following D-017

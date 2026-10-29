@@ -198,3 +198,14 @@ These decisions extend scope. The numbered criteria above still apply; where the
   - A CHANGELOG note points to Keen.
   - Criterion 17's "audit.entries stays" no longer applies.
   - Still open: whether `Plugin::historyNavItem()` moves to Keen.
+
+## Addendum (2026-10-29): no package knows another (D-015 to D-019)
+
+- **D-017, criterion 10 replaced.** Atrium has no audit concept: `Screen::audits()`, `AuditedSubject`, `ScreenExtensions::audited()` and the `history` standard slot are removed. Instead:
+  - `tab()` and `section()` accept a wildcard screen target: `*` for every screen, or `{package}.*` for every screen of one package. Wildcard registrations come after exact ones, in registration order.
+  - `Screen` exposes `key`, `package` (the key's first segment), `record` (nullable) and `kind` (`detail` or `list`, set by `Screen::standard()`), so wildcard registrants can decide visibility in `authorize()` or skip in `resolve()`.
+  - Test: a `*` section renders on two different test-host screens and receives each screen's `Screen` value. A `test.*` section renders only on `test.*` screens.
+- **D-015, failures.** A section or row section whose resolver or view throws is reported once per request per key, rendered as nothing, and the screen returns 200. A throwing open-tab panel propagates. Tests cover both.
+- **D-016, history nav.** `Plugin::historyNavItem()` is removed from Atrium; Keen adds the History nav items.
+- **D-018.** Atrium itself requires only Keystone (unchanged). The README states the suite rule: every suite package requires only Keystone, and Atrium is suggested.
+- **D-019.** The README's "Screen extensions" section documents the config-defaults pattern for registrants targeting another package's screens: an editable config list of target screens and slots, applied only when the target screen exists.
