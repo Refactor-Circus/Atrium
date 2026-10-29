@@ -1,9 +1,9 @@
 id: 2026-10-29-2037-screen-extensions-registry
 title: 'Screen extensions registry'
-status: needs-decision
+status: written
 created: '2026-10-29 20:37'
 standards:
   refactor-circus/standards:
     version: dev-main
     reference: a5b675396232
-review_passes: 1
+review_passes: 2

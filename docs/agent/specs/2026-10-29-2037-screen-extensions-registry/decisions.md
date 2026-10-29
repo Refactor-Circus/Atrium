@@ -68,3 +68,51 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: Accepted the recommendation.
 - Date: 2026-10-29
 - Raised by: user, following D-017
+
+## D-020: Rewrite the spec in place, or keep the addenda as overrides?
+- Choice: Rewrite the criteria, Goal and Design in place; keep the addenda only as a short changelog
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-021: Which Atrium screens does this spec declare?
+- Choice: Every Atrium page that has a controller view, listed by key in the spec: dashboard (`/`), named dashboard (`d/{slug}`), widget detail, settings index and settings panel
+- Rationale: Accepted the recommendation, applying D-013.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-022: Same key registered twice on one target
+- Choice: Throw `InvalidArgumentException` in local and testing. In production, report once, skip the later registration and keep the app running.
+- Rationale: Accepted the recommendation. A throw in boot() would take down every route and command.
+- Date: 2026-10-29
+- Raised by: spec review recheck (risk)
+
+## D-023: A wildcard and an exact registration with the same key on one screen
+- Choice: The exact registration wins. The wildcard duplicate is skipped and reported once per request.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (risk)
+
+## D-024: What renders around an open registered tab?
+- Choice: The tab's panel replaces the host's page content. `header.actions` always renders; `before`, `after` and `aside` render only on built-in tabs.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-025: How do closures receive the Screen?
+- Choice: `Screen` is passed as a trailing argument to every `authorize` and `resolve` closure
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
+
+## D-026: Wildcard grammar and duplicate scope
+- Choice: Only `*` and `{package}.*`. Duplicates are checked per target string at boot; cross-target clashes are resolved at render time by D-023 and reported once.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
+
+## D-027: Test reset API names
+- Choice: `ScreenExtensions::snapshot(): array` and `restore(array $snapshot)`. The `ResetsScreenExtensions` trait snapshots once after boot and restores after each test. `flush()` stays for the registry's own unit tests.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
