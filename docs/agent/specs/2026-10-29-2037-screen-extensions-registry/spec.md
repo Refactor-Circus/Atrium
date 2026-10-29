@@ -1,0 +1,173 @@
+# Screen extensions registry
+
+## Goal
+
+Any package can add tabs and sections to any Atrium screen by registering them from its own `boot()`. Host screens declare where those extensions may go and stop checking whether other packages are installed. Tabs and sections render the same way in every Atrium theme and layout.
+
+## Acceptance criteria
+
+### Registry and definitions
+
+1. `RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions` is bound as a singleton (`app(ScreenExtensions::class) === app(ScreenExtensions::class)`) and is reachable as `Atrium::screens()`. It supports these registration methods:
+   - `tab(string $screen, TabDefinition)`
+   - `section(string $screen, string $slot, SectionDefinition)`
+   - `audited(SectionDefinition)`
+
+   Each returns the registry, for chaining. A registration for a screen key that no installed package declares is stored and never renders, with no error. A unit test registers for `missing.screen` and asserts that nothing throws and that a declared screen with another key is unaffected.
+2. `TabDefinition::make($key)` and `SectionDefinition::make($key)` live in `Domains\Screens\Data`.
+   - **Fluent setters:** both have `label()`, `icon()` (tabs only), `view()` / `component()` (setting one clears the other), `resolve(Closure)`, `permission(string)`, `authorize(Closure)` and `public()`.
+   - **Readable state:** `key`, `label`, `icon`, `view`, `component`, `permission` and `public` are `public private(set)`. `label` defaults to the key, a tab's `icon` defaults to `squares-2x2`, and `public` defaults to `false`.
+   - **Private closures:** `resolver` and `authorize` are private, and reading either from outside throws `Error`.
+
+   Unit tests cover the view/component exclusivity and assert that writing any property throws `Error`.
+3. **Registration validation.**
+   - Keys must match `^[a-z0-9][a-z0-9._-]*$`, or construction throws `InvalidArgumentException`. Tests cover an accepted `acme.billing`, and reject uppercase, a space, a slash and an empty key.
+   - Registration also throws `InvalidArgumentException` for:
+     - a duplicate key on the same screen (for tabs) or the same screen and slot (for sections), with a message naming the key and the screen
+     - a definition with neither a view nor a component
+     - a screen key that doesn't match `^[a-z0-9-]+\.[a-z0-9.-]+$` (`{package}.{screen}`)
+   - The registry stores a clone, so later fluent calls on the caller's instance change nothing. A test mutates the original after registering it and asserts that the registered copy is unchanged.
+   - Keys are cast with `(string)` wherever they are read back. A test registers the keys `123` and `007` and asserts that `?tab=007` reaches the view as the string `'007'`.
+4. `ScreenExtensions::flush()` forgets everything and is documented as for tests only; nothing can be unregistered at runtime. Atrium's `TestCase` and the published testing helper call it in `beforeEach` and `afterEach`. A unit test registers a tab, a section and an audited section, calls `flush()`, and asserts that all three listings are empty.
+
+### Screen declarations
+
+5. A host renders a screen by building `Screen::make(string $key)` (`Domains\Screens\Data\Screen`). Its setters are:
+   - `record(?Model)`
+   - `tabs(array $builtIn)`, where each built-in entry gives its key, label and icon, in order
+   - `defaultTab(string)`
+   - `slots(string ...$names)`
+   - `rowSlots(string ...$names)`
+   - `access(Closure(string $permission, Request, ?Model $record): bool)`
+   - `audits(string $package, ?Model $subject = null, ?Model $scope = null, ?string $action = null, string $slot = 'history')`
+
+   It then passes the screen to `ScreenExtensions::resolve(Screen, Request): ResolvedScreen`.
+   - **Reserved tab keys:** registering a tab whose key is one of the screen's built-in keys renders nothing, and resolving reports it once per request through `report()` with an `InvalidArgumentException` naming the key and the screen. The registry can't know a screen's built-ins at `boot()`, so the clash is caught at resolve time. Tested.
+   - **Permission checks:** a definition's `permission()` is checked only through the screen's `access` closure. A screen without one treats every `permission()` tab or section as hidden. Tested.
+6. `ResolvedScreen` exposes:
+   - `tabs` (visible tabs in order: the built-ins as given, then registered tabs in registration order)
+   - `openTab` (string)
+   - `openRegisteredTab` (`?TabDefinition`)
+   - `sections(string $slot): list<SectionDefinition>` (visible, in registration order)
+   - `rowSections(string $slot, Model $row): list<SectionDefinition>`
+   - `data(TabDefinition|SectionDefinition, ?Model $record = null): array` (the resolver's output, computed on first call and memoized for the request)
+
+   Resolving reads `?tab=` only as a string; `?tab[]=x` counts as absent. The open tab is chosen this way:
+   - **Absent or unknown key:** `defaultTab`, or the first built-in if none is set, with a 200. Registered tabs are never the default.
+   - **Visible registered tab:** that tab.
+   - **Registered tab the viewer can't see:** a 403 HTTP exception.
+7. **Visibility.**
+   - A tab or section is visible only when:
+     - its `permission()` passes the screen's `access` closure
+     - its `authorize(fn (Request, ?Model $record): bool)` returns `true`
+     - both pass, when it has both
+     - with neither, only after `public()`
+   - A throwing `authorize` closure counts as a denial and is reported once per request per screen and key.
+   - Results are memoized per request in `ScreenVisibility`, bound with `scoped()` and keyed by screen, record key, slot and extension key. Results never live on the registry or the definitions.
+   - Tests cover, for both tabs and sections: permission only, closure only, `public()`, neither (hidden), both passing, one failing, and a throwing closure (reported exactly once, closure called exactly once, screen returns 200). Two sequential requests with `app()->forgetScopedInstances()` between them and different viewers each evaluate visibility afresh.
+8. **Order of evaluation.**
+   - Hosts call `resolve()` only after their own screen authorization. The README states this, and a test-host screen denied with a 403 asserts that no `authorize` closure or resolver runs (both counted).
+   - Resolvers run only when `data()` is called: for the open registered tab, and for each section the component renders. A counting resolver on a hidden tab, an unopened tab, a hidden section and a section in a slot the view doesn't render is never called.
+   - On the component path, resolver data reaches the view as a single `data` prop. On the view path it is spread first, with the host's variables (`screen`, the record under `record`, and `tab`) spread over it, so the host's variables win. A test returns `screen`, `record` and `tab` from a resolver and asserts that the host's values win.
+
+### Per-row slots
+
+9. A `rowSlots()` slot renders once per row: `<x-atrium::screen-sections :screen="$resolved" slot="actions" :row="$run" />`.
+   - Inside a row slot, the section's `authorize` closure and resolver receive that row's model, and visibility is memoized per row key.
+   - A feature test renders a three-row table with a section whose `authorize` admits only the second row, and asserts:
+     - the section markup appears exactly once, in that row
+     - `authorize` was called three times and the resolver once
+     - a second render of the same rows in the same request makes no further calls
+   - A section registered on a row slot and rendered without `:row` throws `InvalidArgumentException`; so does a normal slot rendered with `:row`. Tested.
+
+### Audited screens (capability)
+
+10. `audited(SectionDefinition)` registers a section for every screen that calls `audits(...)`. It renders in the slot the screen named (default `history`) and is visible only when that screen declares an audited subject.
+    - The section's resolver and view receive an `AuditedSubject` value (`package`, `subject`, `scope`, `action`) instead of the record.
+    - A screen without `audits()` never renders it, and its `authorize` and resolver are never called. Tested with counting closures.
+    - A screen that declares `audits()` but doesn't render the named slot also doesn't call them. Tested.
+
+### Rendering components
+
+11. `x-atrium::screen-tabs :screen="$resolved"` renders a `<nav>` of `x-atrium::icon-button` links:
+    - each link goes to `?tab={key}`, keeping the current query string except `page`
+    - each has `data-testid="tab-{key}"`
+    - the open tab gets `aria-current="page"` and the primary variant; the others get neither
+    - labels are escaped, and a test registers a label containing markup to prove it
+    - an icon name that Atrium doesn't know (`Icons::has()`) falls back to `squares-2x2`. The test compares the rendered icon markup with a `squares-2x2` tab's.
+    - when the screen has fewer than two visible tabs, it renders nothing
+
+    Labels for built-in tabs are given by the host, so Atrium translates nothing.
+12. `x-atrium::screen-tab-panel :screen="$resolved"` renders the open registered tab's view or component per criterion 8. `x-atrium::screen-sections :screen="$resolved" slot="..." [:row="$model"]` renders the slot's visible sections in registration order. Each section is wrapped in an element with `data-testid="section-{key}"` and passes through any `class` attribute given to the component. With no visible sections it renders nothing, so the host's layout is unchanged.
+
+### Themes and layouts
+
+13. The new components use only design tokens and utilities from Atrium's compiled safelist. `AtriumStyles::missingClasses()` and `inlineStyles()` are empty for them, and `public/atrium.css` is rebuilt.
+14. In both layouts the tab bar scrolls horizontally (`overflow-x-auto`, no wrap) on narrow screens, and never wraps beneath or overlaps the top layout's `top-tabs` row.
+15. A browser test (`tests/Browser/ScreenExtensionsTest.php`) renders a workbench test-host screen with:
+    - two built-in tabs
+    - twelve registered tabs, one with a long label
+    - a section in a normal slot
+    - a section in a row slot
+    - an audited section
+
+    For each built-in theme (`atrium`, `harbor`, `sunset`, `forest`, `midnight`, `ledger`), in both layouts (`sidebar`, `top`) and in light and dark mode, it asserts that:
+    - every tab is reachable: the last tab can be scrolled into view and clicked, and opens with `aria-current="page"`
+    - the open tab's computed background differs from an idle tab's
+    - no tab overlaps the `top-tabs` row, compared by bounding boxes in the top layout
+    - the sections render
+
+    It saves a screenshot per theme, layout and mode under `tests/Browser/Screenshots/screen-extensions/`.
+
+### Documentation and architecture
+
+16. The README gains a "Screen extensions" section with:
+    - registration examples for a tab, a section, a row section and an audited section
+    - the host-side `Screen` declaration example
+    - the boot-only rule and `vendor.key` keys
+    - the evaluation order
+    - the theme contract (token-only, nothing per theme)
+
+    The Boost skill under `resources/boost/skills` gets the same. A docs test checks for the exact strings `ScreenExtensions::class`, `vendor.key`, `boot()` and `rowSlots(` inside each file's "Screen extensions" section.
+17. `x-atrium::audit-trail` is removed from Atrium (moved to Keen, D-007). `x-atrium::audit.entries` stays, and `history/show` still renders. The CHANGELOG notes the removal and points to Keen.
+18. `tests/ArchTest.php` passes: the new classes are final with strict types, the value objects use `public private(set)`, and the domain has a `ScreensServiceProvider` registered by `Domains\DomainServiceProvider`. Done means `composer test` and `composer test:browser` pass.
+
+## Design
+
+**Domain `Domains/Screens`** (`ScreensServiceProvider`, following atrium/domains):
+
+- **`Data`:**
+  - `TabDefinition`, `SectionDefinition`. Both are final and share a `Concerns\DefinesExtension` trait for the key, label, view/component, resolver, permission, authorize and public, plus `allows(Request, ?Model, Closure $access): bool` and `resolveData(mixed $record): array`.
+  - `Screen`: the host declaration, built per request.
+  - `ResolvedScreen`.
+  - `AuditedSubject` (`package`, `?Model subject`, `?Model scope`, `?string action`).
+- **`Services`:**
+  - `ScreenExtensions`: singleton; registrations only, keyed `[screen][key]`, `[screen][slot][key]` and `[audited][key]`.
+  - `ScreenVisibility`: `scoped()`; holds the memo of answers, resolved data and reported keys.
+- **Views:** `resources/views/components/screen-tabs.blade.php`, `screen-tab-panel.blade.php` and `screen-sections.blade.php`.
+- **Facade:** `Atrium::screens()` returns the registry.
+
+Roster's `Tabs`/`TabDefinition`/`TabVisibility` are the source. The behaviour is carried over, and the changes are:
+
+- the screen is a string key, not a method
+- permissions go through the host's `access` closure, not Roster's `ScreenAccess`
+- the record may be null on list screens
+- there are sections, row slots and the audited capability
+
+Atrium's own `Support\ScreenAccess` stays as it is: hosts may use it inside their `access` closure.
+
+No config, migrations, routes, events or MCP surface. The registry is code-only, registered from `boot()`.
+
+## Out of scope
+
+- Moving any package's screens onto the registry. Each package has its own spec: Roster, Showroom, Polycart, PennantPlus, Cortex, Impex, Keen and Guardian.
+- Nav items, whole pages, `historyNavItem()` and the history page (section B).
+- Ordering controls, priorities, badges, async tab bodies, and per-tab routes.
+- Translating registered labels.
+- Overriding, hiding or reordering a host's built-in tabs.
+
+## Risks and open questions
+
+- Reserved built-in keys are only known at resolve time, so a clash is reported per request rather than thrown at boot. Vendor-prefixed keys (D-008) make this unlikely.
+- `x-atrium::audit-trail`'s removal breaks every package that still uses it inline, until its host spec lands. Order: Atrium, then Keen, then the hosts. Merges should be grouped, or Atrium could keep the component for one release with a deprecation note. Spec review should decide.
+- The browser matrix (6 themes × 2 layouts × 2 modes = 24 renders) adds suite time, so it may need to run as one test with a loop rather than 24 tests.
