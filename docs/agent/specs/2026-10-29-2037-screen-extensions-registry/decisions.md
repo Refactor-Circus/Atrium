@@ -116,3 +116,14 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: Accepted the recommendation.
 - Date: 2026-10-29
 - Raised by: spec review recheck (testability)
+
+## D-028: A `*` and a `{package}.*` registration use the same key on one screen
+- Choice: The more specific target wins: the exact key, then `{package}.*`, then `*`. The less specific duplicate is skipped and reported once per request.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: the in-place rewrite (gap in D-023/D-026)
+
+## D-029: Approval
+- Choice: Approved for tasks and the factory
+- Date: 2026-10-29
+- Raised by: spec review (approval)

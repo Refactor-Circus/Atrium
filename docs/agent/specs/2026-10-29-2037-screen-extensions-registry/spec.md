@@ -23,7 +23,7 @@ Any package can add tabs and sections to any screen that declares itself with `S
    The registry stores a clone: a test mutates the caller's instance after registering and asserts the stored copy is unchanged. Keys are read back as strings: a test registers `123` and `007` and asserts `?tab=007` reaches the view as `'007'`.
 4. **Duplicates.**
    - **Same key on the same target string (D-022, D-026):** in the `local` and `testing` environments, registration throws `InvalidArgumentException` naming the key and the target. In any other environment it reports the exception once through `report()`, skips the later registration and keeps the first. Tests cover both environments for tabs and sections (same target and slot).
-   - **Same key across targets on one screen (D-023):** the exact registration wins; the wildcard duplicate is skipped and reported once per request. Tested for tabs and sections, with a page rendering the slot twice still reporting once.
+   - **Same key across targets on one screen (D-023, D-028):** the more specific target wins. The order is the exact key, then `{package}.*`, then `*`. Each less specific duplicate is skipped and reported once per request. Tested for tabs and sections in all three pairings (exact vs `pkg.*`, exact vs `*`, `pkg.*` vs `*`), with a page rendering the slot twice still reporting once.
 5. **Test reset (D-010, D-011, D-027).**
    - `ScreenExtensions::snapshot(): array` returns the current registrations and `restore(array $snapshot)` replaces them with a snapshot.
    - The published Pest trait `RefactorCircus\Atrium\Testing\ResetsScreenExtensions` (beside `Testing\AtriumStyles`) takes one snapshot after the application boots and restores it after each test. Atrium's own `TestCase` uses it.
@@ -159,3 +159,4 @@ No config, migrations, routes, events or MCP surface; the registry is code-only,
 - D-025: `Screen` is the trailing argument to every `authorize` and `resolve` closure (criteria 2, 11).
 - D-026: wildcard grammar limited to `*` and `{package}.*`; duplicates checked per target string at boot (criteria 3, 4).
 - D-027: `snapshot(): array` and `restore(array)` named (criterion 5).
+- D-028: same key across wildcard levels: the more specific target wins (exact, then `{package}.*`, then `*`).
