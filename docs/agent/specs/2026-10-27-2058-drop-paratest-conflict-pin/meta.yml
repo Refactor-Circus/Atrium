@@ -1,0 +1,16 @@
+id: 2026-10-27-2058-drop-paratest-conflict-pin
+title: Drop the paratest conflict pin
+status: merged
+pr: { number: 11, url: https://github.com/Refactor-Circus/Atrium/pull/11 }
+review_passes: 1
+created: 2026-10-27
+ticket: { provider: github, key: "#10", url: https://github.com/Refactor-Circus/Atrium/issues/10 }
+standards:
+  refactor-circus/standards:
+    version: dev-main
+    reference: a5b675396232
+runs:
+  - { workflow: ring-master-factory, run_id: wf_e32eacbd-4eb, result: approved, round: 1, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_3ddb3b4b-291, result: needs-decision, round: 1, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_c0d7c2c5-b10, result: escalated, round: 0, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_a1c67793-af8, result: needs-decision, round: 0, date: 2026-10-27 }

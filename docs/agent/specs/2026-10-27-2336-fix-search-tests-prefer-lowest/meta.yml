@@ -1,0 +1,15 @@
+id: 2026-10-27-2336-fix-search-tests-prefer-lowest
+title: Fix SearchTest process-driver failures under --prefer-lowest
+status: done
+review_passes: 2
+created: 2026-10-27
+ticket: { provider: github, key: "#12", url: https://github.com/Refactor-Circus/Atrium/issues/12 }
+standards:
+  refactor-circus/standards:
+    version: dev-main
+    reference: a5b675396232
+runs:
+  - { workflow: ring-master-factory, run_id: wf_fddb6112-e22, result: needs-decision, round: 0, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_0b46d35c-889, result: needs-decision, round: 0, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_6cbfe90c-7be, result: needs-decision, round: 0, date: 2026-10-28 }
+  - { workflow: ring-master-factory, run_id: wf_f551b907-516, result: needs-decision, round: 1, date: 2026-10-28 }
