@@ -12,3 +12,15 @@
 - 1.3 (`vendor/bin/pest` green) is unticked: there is no record that the previous agent ran the suite.
 - Two related edits by the previous agent sit outside the group's file list and are left uncommitted in the worktree: `phpstan.neon.dist` adds `tests/TestCase.php` to the analysed paths, so PHPStan analyses the published `ResetsScreenExtensions` trait through its one user instead of reporting it unused; and `docs/agent/standards-feedback.md` records `Screen::kind()` taking a string (with `Screen::DETAIL`/`Screen::LIST`) rather than an enum, because the spec fixes `kind('detail'|'list')` and `standard(string $key, string $kind)`. `composer analyse` likely needs the `phpstan.neon.dist` change.
 - `AGENTS.md` and the group 5 bullet reformat in `tasks.md` are not group 1 changes and are left as found.
+
+## Group 1
+
+Retry to finish 1.3. Nothing had run the group's tests before this, so this pass ran them.
+
+**Files.** `tests/Feature/Screens/VisibilityTest.php` (fixed); also `phpstan.neon.dist` and `docs/agent/standards-feedback.md`, which are outside the group's file list (see Deviations).
+
+**Tests.** `vendor/bin/pest tests/Unit/Screens tests/Feature/Screens` first failed 4 of 172 tests, all in `VisibilityTest`: "hides an extension whose authorize closure throws" and "evaluates afresh for another viewer", for both the tab and the section case. The bug was in the tests, not in `ScreenVisibility`. Each test registered its counting closure inside an arrow function (`fn ($d) => $d->authorize(function () use (&$calls) { ... })`). An arrow function captures `$calls` by value, so the counter the inner closure incremented was the arrow function's copy and the test always saw 0. Both registrations are now plain closures that capture `use (&$calls)` / `use (&$asked, &$resolved)`. After the fix, all 172 pass (392 assertions). `pint --test` passes on every group 1 file, and `phpstan analyse` passes with 0 errors. The full suite was not run here; the gate runs it.
+
+**Deviations.**
+- `phpstan.neon.dist` adds `tests/TestCase.php` to the analysed paths, and this group needs it. Without it, PHPStan reports `trait.unused` on the published `Testing\ResetsScreenExtensions` trait (checked against a copy of the config without that path) and `composer analyse` fails. With it, PHPStan analyses the trait through its one user.
+- `docs/agent/standards-feedback.md` records the `data/value-objects` deviation: `Screen::kind()` takes a string, with `Screen::DETAIL`/`Screen::LIST` constants, instead of an enum, because the spec fixes `kind('detail'|'list')` and `Screen::standard(string $key, string $kind)`.

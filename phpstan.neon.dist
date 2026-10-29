@@ -5,4 +5,6 @@ parameters:
         - config
         - database
         - tests/Fixtures/Billing
+        # Analyses the published Testing\ResetsScreenExtensions trait through its user.
+        - tests/TestCase.php
     tmpDir: build/phpstan

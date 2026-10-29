@@ -8,7 +8,7 @@ criteria: 1, 2, 3, 4, 5, 6, 7, 8, 11
 
 - [x] 1.1 Write tests: singleton and `Atrium::screens()`; definition setters, defaults, `Error` on writes and closure reads, view/component exclusivity, trailing `Screen` argument; key, slot and target validation (including all the D-026 rejects); clone on register and string keys (`123`, `007`); duplicates per environment (local/testing throw; production reports once and keeps the first); cross-target precedence exact > `pkg.*` > `*` in all three pairings; `snapshot()`/`restore()`/`flush()` and the trait's two-test behaviour; `Screen::make`/`standard()` (package derivation, both kinds' slots, synthetic `overview`); `resolve()` tab ordering, reserved keys (exact and `*`), `?tab=` handling (string only, unknown key 200, hidden key 403); the visibility matrix, throwing `authorize` reported once, memo keyed by morph class plus key or the model itself, `forgetScopedInstances()` between viewers; wildcard matching (`*`, `test.*`), with resolve-level tests only
 - [x] 1.2 Implement `Domains/Screens`: `DefinesExtension`, `TabDefinition`, `SectionDefinition`, `Screen`, `ResolvedScreen` (`data()` memoized through `ScreenVisibility`), `ScreenExtensions` (registrations keyed by target and slot, the environment-aware duplicate rule, merging exact, `{package}.*` and `*` at resolve), `ScreenVisibility` (`scoped()`), and `ScreensServiceProvider` registered in `DomainServiceProvider`; `Atrium::screens()` on the class and the facade; `Testing\ResetsScreenExtensions`, used by `tests/TestCase.php`
-- [ ] 1.3 Run vendor/bin/pest; all green
+- [x] 1.3 Run vendor/bin/pest; all green
 
 ## Group 2: Rendering components and the test-host screen
 package: Atrium

@@ -91,11 +91,15 @@ it('hides an extension whose authorize closure throws, reporting it once and cal
     Exceptions::fake();
     $calls = 0;
 
-    visibilityRegister($kind, fn (TabDefinition|SectionDefinition $d): mixed => $d->authorize(function () use (&$calls): bool {
-        $calls++;
+    // A plain closure, not an arrow function: an arrow function would capture
+    // $calls by value and the counter would never reach the test.
+    visibilityRegister($kind, function (TabDefinition|SectionDefinition $d) use (&$calls): mixed {
+        return $d->authorize(function () use (&$calls): bool {
+            $calls++;
 
-        throw new RuntimeException('authorize failed');
-    }));
+            throw new RuntimeException('authorize failed');
+        });
+    });
 
     Route::get('screen-test', function (Request $request) use ($kind) {
         $first = visibilityResolve(request: $request);
@@ -232,17 +236,19 @@ it('evaluates afresh for another viewer once the scoped instances are forgotten'
     $asked = 0;
     $resolved = 0;
 
-    visibilityRegister($kind, fn (TabDefinition|SectionDefinition $d): mixed => $d
-        ->authorize(function (Request $request) use (&$asked): bool {
-            $asked++;
+    visibilityRegister($kind, function (TabDefinition|SectionDefinition $d) use (&$asked, &$resolved): mixed {
+        return $d
+            ->authorize(function (Request $request) use (&$asked): bool {
+                $asked++;
 
-            return $request->user()?->getAuthIdentifier() === 1;
-        })
-        ->resolve(function () use (&$resolved): array {
-            $resolved++;
+                return $request->user()?->getAuthIdentifier() === 1;
+            })
+            ->resolve(function () use (&$resolved): array {
+                $resolved++;
 
-            return [];
-        }));
+                return [];
+            });
+    });
 
     $ada = new User;
     $ada->id = 1;
