@@ -47,6 +47,9 @@ In scope:
 - D-003: Keen's audit trail is added by capability. Screens declare an audited subject, and Keen registers one section that attaches to any screen that declares one. The registry therefore needs a "for every screen declaring X" registration form, alongside the per-screen-key form. (User, 2026-10-29.)
 - D-004: every theme and both layouts must handle dynamic tabs, enforced by browser tests across all themes and layouts. (User, 2026-10-29.)
 - D-005: this replaces section A of the cross-package audit (tabs and sections gated on another package). Section B is out of scope: nav items, whole pages, `historyNavItem()`, the history page and `atrium.keen.*` route checks.
+- D-006: the registry supports per-row section slots: a slot rendered once per table row, with that row's record as the section's record, the resolver and `authorize` running per row, and the visibility memo keyed by row record. Impex's run link on `showroom.transfers` needs this. (User, 2026-10-29.)
+- D-007: `x-atrium::audit-trail` moves out of Atrium into Keen (Keen spec). `x-atrium::audit.entries` stays in Atrium, because Atrium's own history page (`resources/views/history/show.blade.php:17`) renders it. (User, 2026-10-29.)
+- D-008: keys registered on another package's screen are vendor-prefixed (`guardian.sso`, `keen.activity`, `cortex.mcp`), so they never clash with a host's reserved built-in keys while both exist. The README recommends `vendor.key`, and these first-party registrations follow it.
 
 ## Context
 
