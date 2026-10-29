@@ -13,6 +13,7 @@ use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
+use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
 use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
@@ -35,7 +36,17 @@ class Atrium
         protected Gatekeeper $gatekeeper,
         protected StyleRegistry $styles,
         protected ThemeRegistry $themes,
+        protected ScreenExtensions $screens,
     ) {}
+
+    /**
+     * The tabs and sections packages add to screens. Register from a
+     * provider's `boot()`: `Atrium::screens()->tab('roster.user', ...)`.
+     */
+    public function screens(): ScreenExtensions
+    {
+        return $this->screens;
+    }
 
     /**
      * Offer a theme in the dashboard's theme switcher, or replace the one

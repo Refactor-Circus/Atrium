@@ -10,6 +10,7 @@ use RefactorCircus\Atrium\Domains\Dashboard\DashboardServiceProvider;
 use RefactorCircus\Atrium\Domains\History\HistoryServiceProvider;
 use RefactorCircus\Atrium\Domains\Navigation\NavigationServiceProvider;
 use RefactorCircus\Atrium\Domains\Plugins\PluginsServiceProvider;
+use RefactorCircus\Atrium\Domains\Screens\ScreensServiceProvider;
 use RefactorCircus\Atrium\Domains\Search\SearchServiceProvider;
 use RefactorCircus\Atrium\Domains\Settings\SettingsServiceProvider;
 use RefactorCircus\Atrium\Domains\Themes\ThemesServiceProvider;
@@ -28,6 +29,7 @@ class DomainServiceProvider extends ServiceProvider
         HistoryServiceProvider::class,
         NavigationServiceProvider::class,
         PluginsServiceProvider::class,
+        ScreensServiceProvider::class,
         SearchServiceProvider::class,
         SettingsServiceProvider::class,
         ThemesServiceProvider::class,

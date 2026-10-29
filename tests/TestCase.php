@@ -10,10 +10,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RefactorCircus\Atrium\AtriumServiceProvider;
+use RefactorCircus\Atrium\Testing\ResetsScreenExtensions;
 
 abstract class TestCase extends Orchestra
 {
     use RefreshDatabase;
+    use ResetsScreenExtensions;
     use WithLaravelMigrations;
 
     protected function getPackageProviders($app): array
@@ -33,11 +35,11 @@ abstract class TestCase extends Orchestra
         $this->app->detectEnvironment(fn (): string => $environment);
 
         $this->app->make(ConsoleKernel::class);
-        $this->app['env'] = $environment;
+        $this->app->instance('env', $environment);
 
         $this->beforeApplicationDestroyed(function (): void {
             $this->app->detectEnvironment(fn (): string => 'testing');
-            $this->app['env'] = 'testing';
+            $this->app->instance('env', 'testing');
         });
     }
 
