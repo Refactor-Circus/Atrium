@@ -127,3 +127,17 @@ Run 4, after D-033. This finishes `row.actions` on `atrium.settings` and the gro
 `pint --test` passes on the changed files, and `composer analyse` reports 0 errors. The full suite was not run here; the gate runs it.
 
 **Deviations.** None. `mt-3` is already in the compiled `public/atrium.css`.
+
+## Group 3
+
+Run 5, a retry for 3.1 (the per-row `row.actions` test), 3.2 (`SettingsPanelRow` and per-row rendering) and 3.3. Run 4 (`a403788`) had already committed all of it and ticked 3.1 to 3.3, so this run changed no code.
+
+**Files.** None changed beyond this note. Checked against D-031 and D-033:
+- `src/Domains/Settings/Data/SettingsPanelRow.php` is final, has strict types, and is an unsaved Eloquent model keyed by the panel key that carries the `SettingsPanel`.
+- `SettingsController::index()` passes one row per panel.
+- `settings/index` renders `screen-sections slot="row.actions" :row="$row"` once per panel card.
+- The arch test "action input validates itself" scans `Data/` only for subclasses of Keystone's `Data`, so the stand-in doesn't trip it.
+
+**Tests.** `AtriumScreensTest`, `ArchTest` and `SettingsTest` pass (56 tests, 293 assertions). The full suite was not run here; the gate runs it.
+
+**Deviations.** None.
