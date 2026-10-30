@@ -254,3 +254,11 @@ One more `docs` reference turned up. The generated `docs/agent/standards.index.y
 - Nit (architecture/domain-modules): `DefinesExtension` moved from `src/Domains/Screens/Data/Concerns/` to `src/Domains/Screens/Concerns/` (namespace `RefactorCircus\Atrium\Domains\Screens\Concerns`). That is the domain-level `Concerns/` folder the standard lists, as `Domains/Access/Concerns` already uses. `TabDefinition` and `SectionDefinition` import it from there. The trait is internal to the two definitions and is not named in the README, the skill or the CHANGELOG. `tasks.md` still lists the old path in group 1's file list, which records what that group built.
 
 **Tests.** `composer test:unit` passes (589 tests, 1760 assertions). `composer lint:check` passes, and `composer analyse` reports 0 errors.
+
+## Rework round 2
+
+**Fixed.**
+- Minor (gate, criterion 16): I ran the `public/atrium.css` done-step again. `npm run build:css` registered 62 Blade files as sources. The compiled `public/atrium.css` came out byte-identical to the committed file, which is also identical to `main`'s, so the file has no diff to commit. The three new components use only classes that the compiled safelist already holds, and `AtriumStylesTest`/`ScreenStylesTest` assert that. Removing the audit components' `@source` lines dropped no compiled class. The only stylesheet change against `main` is the regenerated `@source` list in `resources/css/atrium.css`, which group 6 committed.
+- Same finding (criterion 22): `composer test:browser` now runs. It passes 46 tests with 824 assertions: the 24 `ScreenExtensionsTest` matrix cases and the existing browser suite. The run left no tracked file changed, because the screenshots are gitignored.
+
+**Tests.** `composer test:unit` passes (589 tests, 1760 assertions). `composer test:browser` passes (46 tests, 824 assertions).
