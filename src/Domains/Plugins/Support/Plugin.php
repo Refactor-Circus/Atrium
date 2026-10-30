@@ -6,13 +6,9 @@ namespace RefactorCircus\Atrium\Domains\Plugins\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin as PluginContract;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
-use RefactorCircus\Atrium\Support\Icons;
-use RefactorCircus\Keystone\Audit\History;
-use RefactorCircus\Keystone\Packages\PackageRegistry;
 use Throwable;
 
 /**
@@ -69,27 +65,6 @@ abstract class Plugin implements PluginContract
         } catch (Throwable) {
             return false;
         }
-    }
-
-    /**
-     * A navigation item for a package's own audit log, at
-     * `atrium.history.show`. It shows only while an audit log (refactor-circus/keen) is
-     * installed and the user may read the package's history, as the
-     * package's history endpoint decides:
-     *
-     *     $this->historyNavItem('roster')->group(__('Roster'))->sort(50),
-     */
-    protected function historyNavItem(string $package): NavItem
-    {
-        return NavItem::make(__('atrium::atrium.audit_log'))
-            ->icon(Icons::svg('clipboard-document-list'))
-            ->route('atrium.history.show', ['package' => $package])
-            ->authorize(function (Request $request) use ($package): bool {
-                $definition = app(PackageRegistry::class)->find($package);
-                $history = app(History::class);
-
-                return $definition !== null && $definition->audits() && $history->allows($definition, $request->user(), []);
-            });
     }
 
     public function navigation(): array

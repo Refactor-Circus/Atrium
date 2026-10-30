@@ -40,9 +40,6 @@
 
 /* @atrium-sources */
 @source '../views/components/alert.blade.php';
-@source '../views/components/audit-trail.blade.php';
-@source '../views/components/audit/changes.blade.php';
-@source '../views/components/audit/entries.blade.php';
 @source '../views/components/avatar.blade.php';
 @source '../views/components/badge.blade.php';
 @source '../views/components/banner.blade.php';
@@ -91,7 +88,6 @@
 @source '../views/dashboard/switcher.blade.php';
 @source '../views/dashboard/widget-body.blade.php';
 @source '../views/dashboard/widget.blade.php';
-@source '../views/history/show.blade.php';
 @source '../views/layouts/app.blade.php';
 @source '../views/partials/appearance.blade.php';
 @source '../views/partials/nav-item.blade.php';
