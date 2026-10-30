@@ -70,6 +70,9 @@
 @source '../views/components/page-header.blade.php';
 @source '../views/components/pagination.blade.php';
 @source '../views/components/progress.blade.php';
+@source '../views/components/screen-sections.blade.php';
+@source '../views/components/screen-tab-panel.blade.php';
+@source '../views/components/screen-tabs.blade.php';
 @source '../views/components/search-input.blade.php';
 @source '../views/components/section.blade.php';
 @source '../views/components/skeleton.blade.php';

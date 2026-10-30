@@ -58,7 +58,7 @@ depends on: 3, 4, 5
 files: README.md, resources/boost/skills/atrium-development/SKILL.md, CLAUDE.md, docs/agent/standards/atrium/domains.md, CHANGELOG.md, tests/Feature/DocsTest.php, tests/ArchTest.php, public/atrium.css, composer.json
 criteria: 16, 20, 21, 22
 
-- [ ] 6.1 Write the docs test (the "Screen extensions" section exists in the README and the Boost skill, containing `boot()`, `403`, `vendor.key`, `Keystone` and `config`). Extend `ArchTest`: the Screens classes are final with strict types, the value objects use `public private(set)`, `ScreensServiceProvider` is registered, and `composer.json` requires only Keystone among suite packages.
-- [ ] 6.2 Write the README and Boost "Screen extensions" section, covering every bullet in criterion 21, including the config-defaults example. Update `CLAUDE.md` and `domains.md` (add Screens, drop History). Write the `CHANGELOG.md` entries for the new registry and the history-removal upgrade note, naming each removed route, class, method and component and pointing to Keen.
-- [ ] 6.3 Run `npm run build:css` and commit `public/atrium.css`. Grep the workspace for `atrium.history`, `x-atrium::audit` and `historyNavItem` and record the results for the PR.
-- [ ] 6.4 Run vendor/bin/pest, composer test and composer test:browser; all green
+- [x] 6.1 Write the docs test (the "Screen extensions" section exists in the README and the Boost skill, containing `boot()`, `403`, `vendor.key`, `Keystone` and `config`). Extend `ArchTest`: the Screens classes are final with strict types, the value objects use `public private(set)`, `ScreensServiceProvider` is registered, and `composer.json` requires only Keystone among suite packages.
+- [x] 6.2 Write the README and Boost "Screen extensions" section, covering every bullet in criterion 21, including the config-defaults example. Update `CLAUDE.md` and `domains.md` (add Screens, drop History). Write the `CHANGELOG.md` entries for the new registry and the history-removal upgrade note, naming each removed route, class, method and component and pointing to Keen.
+- [x] 6.3 Run `npm run build:css` and commit `public/atrium.css`. Grep the workspace for `atrium.history`, `x-atrium::audit` and `historyNavItem` and record the results for the PR.
+- [x] 6.4 Run vendor/bin/pest, composer test and composer test:browser; all green

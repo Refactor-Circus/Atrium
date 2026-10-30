@@ -2,7 +2,14 @@
 
 declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
+use RefactorCircus\Atrium\Domains\DomainServiceProvider;
+use RefactorCircus\Atrium\Domains\Screens\Data\ResolvedScreen;
+use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
+use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
+use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
+use RefactorCircus\Atrium\Domains\Screens\ScreensServiceProvider;
 use RefactorCircus\Atrium\Support\Tables;
+use RefactorCircus\Atrium\Testing\ResetsScreenExtensions;
 use RefactorCircus\Keystone\Testing\Arch;
 
 const ATRIUM_DOMAINS = __DIR__.'/../src/Domains';
@@ -78,6 +85,53 @@ arch('every model has a policy in the config')
         Arch::domainClasses('RefactorCircus\Atrium', ATRIUM_DOMAINS, 'Models'),
         (require __DIR__.'/../config/atrium.php')['policies'],
     ))
+    ->toBeEmpty();
+
+arch('the screens classes are final')
+    ->expect('RefactorCircus\Atrium\Domains\Screens')
+    ->classes()
+    ->toBeFinal();
+
+arch('the screens code declares strict types')
+    ->expect(['RefactorCircus\Atrium\Domains\Screens', ResetsScreenExtensions::class])
+    ->toUseStrictTypes();
+
+arch('the screens value objects expose their state as public private(set)')
+    ->expect(fn (): array => array_values(array_map(
+        fn (ReflectionProperty $property): string => $property->class.'::$'.$property->name,
+        array_filter(
+            array_merge(...array_map(
+                fn (string $class): array => new ReflectionClass($class)->getProperties(ReflectionProperty::IS_PUBLIC),
+                [Screen::class, TabDefinition::class, SectionDefinition::class, ResolvedScreen::class],
+            )),
+            // Closures stay private, so only meaningful state is readable.
+            fn (ReflectionProperty $property): bool => ! $property->isPrivateSet()
+                || ($property->getType() instanceof ReflectionNamedType && $property->getType()->getName() === Closure::class),
+        ),
+    )))
+    ->toBeEmpty();
+
+arch('the screens domain provider is registered by the domain provider')
+    ->expect(fn (): array => new ReflectionProperty(DomainServiceProvider::class, 'providers')->getDefaultValue())
+    ->toContain(ScreensServiceProvider::class);
+
+arch('atrium requires only keystone among the suite packages')
+    ->expect(fn (): array => array_values(array_filter(
+        array_keys(json_decode((string) file_get_contents(__DIR__.'/../composer.json'), true)['require']),
+        fn (string $package): bool => str_starts_with($package, 'refactor-circus/'),
+    )))
+    ->toBe(['refactor-circus/keystone']);
+
+arch('the history screen and audit components left for Keen')
+    ->expect(fn (): array => array_values(array_filter(
+        [
+            ATRIUM_DOMAINS.'/History',
+            __DIR__.'/../resources/views/history',
+            __DIR__.'/../resources/views/components/audit-trail.blade.php',
+            __DIR__.'/../resources/views/components/audit',
+        ],
+        file_exists(...),
+    )))
     ->toBeEmpty();
 
 arch('tables are named through Tables, never as literals')

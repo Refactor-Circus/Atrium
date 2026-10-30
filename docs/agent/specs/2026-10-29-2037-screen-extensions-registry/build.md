@@ -180,3 +180,53 @@ Run 2, a retry of 5.1 to 5.3. Run 1 (`fb8ad25`) had already committed all of it 
 **Tests.** `pint --test` passes on the four group files (`tests/Pest.php` included). The suite and `composer test:browser` were not run here; the gate runs them.
 
 **Deviations.** None beyond run 1's `tests/Pest.php` change, recorded above.
+
+## Group 6
+
+**Files.**
+- `tests/ArchTest.php` gains these rules:
+  - The `Domains\Screens` classes are final.
+  - `Domains\Screens` and `Testing\ResetsScreenExtensions` declare strict types.
+  - Every public property of `Screen`, `TabDefinition`, `SectionDefinition` and `ResolvedScreen` is `public private(set)`, and none of them is a `Closure`.
+  - `ScreensServiceProvider` is in `DomainServiceProvider::$providers`.
+  - `composer.json`'s `require` lists `refactor-circus/keystone` and no other `refactor-circus/*` package.
+  - The History domain, `views/history`, `audit-trail` and `components/audit` no longer exist. This is criterion 20's arch test.
+- Added `tests/Feature/DocsTest.php`:
+  - The `## Screen extensions` section of the README and of the Boost skill contains `boot()`, `403`, `vendor.key`, `Keystone` and `config`, plus a marker for each bullet of criterion 21.
+  - The README, the skill, `CLAUDE.md` and `domains.md` mention no `atrium.history`, `x-atrium::audit`, `audit-trail`, `historyNavItem` or `history/{package}`.
+  - `CLAUDE.md` and `domains.md` list `Screens` and not `History`.
+  - `CHANGELOG.md` names each removed route, class, method and component, Keen and `ScreenExtensions`.
+- `README.md`:
+  - New "Screen extensions" section, covering registration (tab, section, row section, `*` section), targets, keys, rendering, visibility, closures and evaluation order, opening tabs (403 versus 200), what renders around an open tab, failures, the theme contract, writing through your own routes, duplicates per environment and across targets, declaring a screen with `Screen::standard()` plus its Blade layout, the suite rule, the config-defaults pattern with an example, and the `ResetsScreenExtensions` trait.
+  - Removed "A package's own audit log" (`historyNavItem`, `audit-trail`) and the History components line.
+  - Added the Screens components and a `Screens` row in the package layout table.
+- `resources/boost/skills/atrium-development/SKILL.md` has the same "Screen extensions" content in compact form. The front-matter description, the component list and the domain list in the anti-patterns are updated, and two anti-patterns are new: registering outside `boot()` or naming another package's screens in code, and requiring a suite package.
+- `CLAUDE.md` is a symlink to `AGENTS.md`, so the edit went to `AGENTS.md`. The domain list has `Screens` and drops `History`, and a new "Screens declare themselves" convention says Atrium requires only Keystone and has no audit concept.
+- `docs/agent/standards/atrium/domains.md` lists `Screens` and drops History in the front matter and the list. New lines describe the Screens domain and say History belongs to Keen.
+- `CHANGELOG.md`:
+  - Breaking: an upgrade note naming the `atrium.history.show` route, `HistoryServiceProvider`, `HistoryController`, the `atrium::history.show` view, `x-atrium::audit-trail`, `x-atrium::audit.entries`, `x-atrium::audit.changes`, the rest of `components/audit/` with its `@source` lines, and `Plugin::historyNavItem()`. It points to refactor-circus/keen and says to merge as a group.
+  - Added: the registry, Atrium's declared screens and `ResetsScreenExtensions`.
+  - Removed: the unreleased Added and Fixed entries that announced the history page, `historyNavItem()` and the audit components, which the note now supersedes.
+- `npm run build:css` left `public/atrium.css` byte-identical, because the new components' classes were already compiled. It did add the `@source` lines for `screen-sections`, `screen-tab-panel` and `screen-tabs` to `resources/css/atrium.css`, which is committed.
+
+**Workspace grep (6.3), for the PR.** Pattern: `atrium\.history|x-atrium::audit|historyNavItem`. Excluded: `vendor`, `node_modules`, `.git`, `storage` and `specs`.
+- **This worktree:** only `CHANGELOG.md` (the upgrade note), `tests/Feature/HistoryRemovedTest.php` and `tests/Feature/DocsTest.php` (both assert the removal), plus this spec's own files. Nothing in `src`, `resources`, `docs/agent/standards`, the README or the Boost skill.
+- **Main checkouts (on `main`, before the grouped merge):**
+  - Atrium: 7 files (the history view, `audit-trail`, `Plugin.php`, README, CHANGELOG, two tests). This job removes them.
+  - Cortex: 10 files.
+  - Impex: 10.
+  - Keen: 6.
+  - PennantPlus: 6.
+  - Polycart: 8.
+  - Roster: 9.
+  - Showroom: 16.
+
+  In each of these packages the matches are its plugin's `historyNavItem()` call, its views' `x-atrium::audit-trail`, a `HistoryNavigationTest`, and its docs.
+  - Keystone, Ringside, Standards and Stretch: none.
+- **Sibling job worktrees** (`Cortex--…-register-roster-redirect-domains`, `Impex--…-register-showroom-run-link`, `Keen--…-history-section-by-capability`, `PennantPlus--…`, `Polycart--…`, `Roster--…-adopt-atrium-screen-registry`, `Showroom--…`): the same files still match. Those packages must drop the references in their own specs before the grouped merge (D-009).
+
+**Tests.** I wrote the tests first. Only `tests/ArchTest.php` and `tests/Feature/DocsTest.php` ran here: 31 tests and 92 assertions, all passing. `pint --test` passes on both. I didn't run `vendor/bin/pest`, `composer test` or `composer test:browser`; the gate runs them (6.4 is ticked for the gate).
+
+**Deviations.**
+- `AGENTS.md` (the target of the `CLAUDE.md` symlink) is the file actually edited. It already had an unrelated uncommitted line from a ringside sync ("Keep this checkout on `main`…"). Only this group's hunks are committed; that line is left uncommitted.
+- `resources/css/atrium.css` is outside the group's file list. `npm run build:css` regenerates its `@source` list, and this commit includes the result.
