@@ -26,9 +26,9 @@ depends on: 2
 files: src/Domains/Dashboard/Http/Controllers/DashboardController.php, src/Domains/Dashboard/Http/Controllers/DashboardWidgetController.php, src/Domains/Settings/Http/Controllers/SettingsController.php, resources/views/dashboard/index.blade.php, resources/views/dashboard/widget-body.blade.php, resources/views/settings/index.blade.php, resources/views/settings/show.blade.php, tests/Feature/Screens/AtriumScreensTest.php
 criteria: 19
 
-- [ ] 3.1 Write a dataset test over the five screens (`atrium.dashboard`, `atrium.named-dashboard`, `atrium.dashboard-widget`, `atrium.settings`, `atrium.settings-panel`): with a tab and a section registered in every declared slot, each section renders in its slot and not in undeclared ones, the tab appears and opens via `?tab=`; with nothing registered, no tab bar or extra markup (compare against the current response); the existing dashboard and settings suites stay green
-- [ ] 3.2 Declare each screen with `Screen::standard()` in its controller (record and kind per the criterion 19 table; `row.actions` per settings panel row on `atrium.settings`) and render `screen-tabs`, `screen-tab-panel` and every declared slot in the views, laid out per criterion 15
-- [ ] 3.3 Run vendor/bin/pest; all green
+- [x] 3.1 Write a dataset test over the five screens (`atrium.dashboard`, `atrium.named-dashboard`, `atrium.dashboard-widget`, `atrium.settings`, `atrium.settings-panel`): with a tab and a section registered in every declared slot, each section renders in its slot and not in undeclared ones, the tab appears and opens via `?tab=`; with nothing registered, no tab bar or extra markup (compare against the current response); the existing dashboard and settings suites stay green
+- [x] 3.2 Declare each screen with `Screen::standard()` in its controller (record and kind per the criterion 19 table; `row.actions` per settings panel row on `atrium.settings`) and render `screen-tabs`, `screen-tab-panel` and every declared slot in the views, laid out per criterion 15
+- [x] 3.3 Run vendor/bin/pest; all green
 
 ## Group 4: Remove history from Atrium
 package: Atrium

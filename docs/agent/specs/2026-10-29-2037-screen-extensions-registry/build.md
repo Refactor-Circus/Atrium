@@ -105,3 +105,25 @@ Run 3, after D-031 and D-032. D-032 is built. D-031 is stopped before any code b
 **Left.**
 - D-031 (`row.actions` per settings panel row) is not built. D-031 places the stand-in at `Domains\Settings\Models\SettingsPanelRowModel` and says its policy entry keeps the every-model-has-a-policy arch test passing. It doesn't cover the arch test "every model fires an event for every lifecycle hook" (`Arch::modelEventGaps()` over every `Domains/*/Models/*.php`, per models/lifecycle-events). A stand-in at that path fails that test unless it uses `DispatchesModelEvents` and ten `Domains\Settings\Events\SettingsPanelRow{Hook}Event` classes exist. None of those events would ever fire, because the model is never saved. Adding them creates public event classes, and exempting the stand-in changes `tests/ArchTest.php` (group 6's file) and breaks a standard. That choice is returned to the user as a decision. The model, its policy, the `atrium.policies` entry, the per-row rendering and the per-row test all wait on it.
 - 3.1 and 3.2 stay unticked until `row.actions` is built, and 3.3 stays unticked with them.
+
+## Group 3
+
+Run 4, after D-033. This finishes `row.actions` on `atrium.settings` and the group.
+
+**Files.**
+- Added `src/Domains/Settings/Data/SettingsPanelRow.php`. It is a final Eloquent model with strict types, and it is never saved. Its string primary key `key` holds the panel's key, it has no incrementing key or timestamps, and it carries the panel as `public private(set) SettingsPanel $panel`. Rows are built with `SettingsPanelRow::for($panel)`. It sits in `Data/`, not `Models/`, so it has no policy entry, no lifecycle events and no arch-test exemption (D-033).
+- `src/Domains/Settings/Http/Controllers/SettingsController.php`: `index()` passes `rows`, one `SettingsPanelRow` per visible panel. It still passes `panels` as well, so views that hosts have already published keep working.
+- `resources/views/settings/index.blade.php`: iterates `rows`. Each panel card renders `x-atrium::screen-sections :screen="$resolved" slot="row.actions" :row="$row" class="mt-3"` under its button. The cards sit inside the built-in branch, so row sections don't render while a registered tab is open (criterion 15).
+- `tests/Feature/Screens/AtriumScreensTest.php`:
+  - The dataset's settings index now expects `row.actions` as a rendered slot (the full plugin's panel is its one row), placed after the page content. The open-tab case now also asserts that `row.actions` is hidden and its resolver never runs.
+  - New test: three panel rows (`alpha`, `beta`, `full`) with a section that admits only `beta`. The markup appears once, in `beta`'s card. `authorize` ran three times, each time with that row's `SettingsPanelRow` (key, panel key and the `Screen`), and the resolver ran once.
+  - New test: rendering fresh `SettingsPanelRow` instances for the same panels twice in one request makes no further calls. This shows the memo is keyed by the panel key, not the object.
+  - New test: a row is unsaved, keyed by the panel key, and carries the panel.
+
+**Tests.** Written before the code. They use `SettingsPanelRow`, which didn't exist yet, but they were not run until the code was in. These pass:
+- `AtriumScreensTest`: 35 tests, 264 assertions.
+- `SettingsTest`, `ArchTest` and `AtriumStylesTest`: 34 tests.
+
+`pint --test` passes on the changed files, and `composer analyse` reports 0 errors. The full suite was not run here; the gate runs it.
+
+**Deviations.** None. `mt-3` is already in the compiled `public/atrium.css`.

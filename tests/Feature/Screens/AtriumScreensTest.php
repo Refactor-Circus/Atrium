@@ -2,12 +2,19 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
+use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
+use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
+use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanelRow;
+use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
 use RefactorCircus\Atrium\Facades\Atrium;
@@ -84,13 +91,13 @@ dataset('atrium screens', [
         ['header.actions', 'before', 'aside', 'after'],
         ['row.actions'],
     ],
-    // `row.actions` is declared on the settings index but not yet rendered:
-    // a settings panel is not a model, and a row slot's row must be one.
+    // The full plugin's panel is the settings index's one row, so its
+    // `row.actions` section renders, and resolves, once.
     'the settings index' => [
         'atrium.settings',
         fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.settings'),
         'Full Settings',
-        ['header.actions', 'before', 'after'],
+        ['header.actions', 'before', 'row.actions', 'after'],
         ['aside'],
     ],
     'a settings panel' => [
@@ -113,12 +120,13 @@ it('renders each registered section in its own slot and none in an undeclared on
     }
 
     // Header actions, then the tab bar, then the page with `before` above
-    // it, `aside` beside it and `after` below it.
+    // it, its rows' actions in it, `aside` beside it and `after` below it.
     $response->assertSeeInOrder([
         'data-testid="section-acme.header.actions"',
         'data-testid="screen-tabs"',
         'data-testid="section-acme.before"',
         $content,
+        ...(in_array('row.actions', $slots, true) ? ['data-testid="section-acme.row.actions"'] : []),
         ...(in_array('aside', $slots, true) ? ['data-testid="section-acme.aside"'] : []),
         'data-testid="section-acme.after"',
     ], false);
@@ -223,6 +231,101 @@ it('asks the Gate about the screen record, or with no arguments when there is no
     'the settings index' => ['atrium.settings', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.settings'), ''],
     'a settings panel' => ['atrium.settings-panel', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.settings.show', 'full'), ''],
 ]);
+
+/**
+ * A row section on the settings index admitting only the `beta` panel's row,
+ * recording what its closures receive.
+ *
+ * @param  list<array{string, mixed, ?string, string}>  $asked
+ * @param  list<mixed>  $resolved
+ */
+function atriumScreensSettingsRowSection(array &$asked, array &$resolved): SectionDefinition
+{
+    return SectionDefinition::make('acme.row-action')
+        ->view('screens.marker')
+        ->authorize(function (Request $request, ?Model $record, Screen $screen) use (&$asked): bool {
+            $asked[] = [get_debug_type($record), $record?->getKey(), $record instanceof SettingsPanelRow ? $record->panel->key : null, $screen->key];
+
+            return $record?->getKey() === 'beta';
+        })
+        ->resolve(function (?Model $record, Screen $screen) use (&$resolved): array {
+            $resolved[] = $record?->getKey();
+
+            return ['marker' => 'row action'];
+        });
+}
+
+/**
+ * The settings index's markup for one panel's card, from its link to the next
+ * panel's link (or the end).
+ */
+function atriumScreensSettingsRow(string $html, string $panel, ?string $next): string
+{
+    $start = strrpos($html, 'href="'.route('atrium.settings.show', $panel).'"');
+
+    expect($start)->not->toBeFalse();
+
+    $end = $next === null ? false : strrpos($html, 'href="'.route('atrium.settings.show', $next).'"');
+
+    return substr($html, (int) $start, $end === false ? null : $end - (int) $start);
+}
+
+it('renders row.actions once per settings panel row, with that row as the record', function (): void {
+    app(SettingsRegistry::class)
+        ->add(SettingsPanel::make('alpha')->label('Alpha')->sort(1))
+        ->add(SettingsPanel::make('beta')->label('Beta')->sort(2));
+
+    $asked = [];
+    $resolved = [];
+
+    Atrium::screens()->section('atrium.settings', 'row.actions', atriumScreensSettingsRowSection($asked, $resolved));
+
+    $html = (string) $this->actingAs($this->user)->get(route('atrium.settings'))->assertOk()->getContent();
+
+    // The rows are the panels in order: alpha, beta, then the full plugin's.
+    expect(substr_count($html, 'data-testid="section-acme.row-action"'))->toBe(1)
+        ->and(atriumScreensSettingsRow($html, 'beta', 'full'))->toContain('data-testid="section-acme.row-action"')
+        ->and(atriumScreensSettingsRow($html, 'beta', 'full'))->toContain('row action on atrium.settings')
+        ->and(atriumScreensSettingsRow($html, 'alpha', 'beta'))->not->toContain('row action')
+        ->and(atriumScreensSettingsRow($html, 'full', null))->not->toContain('row action')
+        ->and($asked)->toBe([
+            [SettingsPanelRow::class, 'alpha', 'alpha', 'atrium.settings'],
+            [SettingsPanelRow::class, 'beta', 'beta', 'atrium.settings'],
+            [SettingsPanelRow::class, 'full', 'full', 'atrium.settings'],
+        ])
+        ->and($resolved)->toBe(['beta']);
+});
+
+it('remembers each settings panel row\'s answer and data when the rows render again in the request', function (): void {
+    $asked = [];
+    $resolved = [];
+
+    Atrium::screens()->section('atrium.settings', 'row.actions', atriumScreensSettingsRowSection($asked, $resolved));
+
+    $screen = Atrium::screens()->resolve(Screen::standard('atrium.settings', Screen::LIST), request());
+    $template = '<x-atrium::screen-sections :screen="$screen" slot="row.actions" :row="$row" />';
+
+    // Each pass builds new rows, so only the panel key ties them together.
+    foreach ([1, 2] as $pass) {
+        foreach (['alpha', 'beta', 'full'] as $key) {
+            $html = Blade::render($template, ['screen' => $screen, 'row' => SettingsPanelRow::for(SettingsPanel::make($key))]);
+
+            expect(str_contains($html, 'row action'))->toBe($key === 'beta');
+        }
+    }
+
+    expect(array_column($asked, 1))->toBe(['alpha', 'beta', 'full'])
+        ->and($resolved)->toBe(['beta']);
+});
+
+it('keys an unsaved settings panel row by its panel key and carries the panel', function (): void {
+    $panel = SettingsPanel::make('billing')->label('Billing');
+    $row = SettingsPanelRow::for($panel);
+
+    expect($row->getKey())->toBe('billing')
+        ->and($row->panel)->toBe($panel)
+        ->and($row->exists)->toBeFalse();
+});
 
 it('serves a widget body unchanged while nothing is registered', function (): void {
     $html = (string) $this->actingAs($this->user)

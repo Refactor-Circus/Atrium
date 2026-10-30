@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
+use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanelRow;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 
 class SettingsController
@@ -21,12 +22,16 @@ class SettingsController
 
     public function index(Request $request): View
     {
+        $panels = $this->settings->panels($request);
+
         /** @var view-string $view */
         $view = 'atrium::settings.index';
 
         return view($view, [
             'resolved' => $this->screens->resolve($this->access(Screen::standard('atrium.settings', Screen::LIST)), $request),
-            'panels' => $this->settings->panels($request),
+            'panels' => $panels,
+            // Each panel as the model its `row.actions` sections receive.
+            'rows' => array_map(SettingsPanelRow::for(...), $panels),
         ]);
     }
 
