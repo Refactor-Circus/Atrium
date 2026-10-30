@@ -164,3 +164,4 @@ No config, migrations, routes, events or MCP surface; the registry is code-only,
 - D-031: settings panel rows render `row.actions` with an unsaved `SettingsPanelRowModel` stand-in per panel (criterion 19).
 - D-032: Atrium's screens declare a Gate-based `access()` closure (criterion 19).
 - D-033: the stand-in is `Domains\Settings\Data\SettingsPanelRow` (not under Models/, no policy entry), superseding D-031's location.
+- D-034: `Screen::reserve(string ...$keys)` reserves tab keys the viewer may not open; reserved keys follow the reserved-key rule, never render and `?tab=` cannot open them (criteria 6, 7).

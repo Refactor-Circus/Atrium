@@ -151,3 +151,9 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: The user chose this to keep the extra surface minimal.
 - Date: 2026-10-29
 - Raised by: build (group 3)
+
+## D-034: Screen::reserve() for keys the viewer may not open
+- Choice: Screen::reserve() for keys the viewer may not open; reserved, not rendered, not openable; added for Roster adopt D-031 at the user's request (2026-10-30)
+- Rationale: Roster must reserve the keys of built-in tabs the current viewer may not open without rendering them, so a registered tab using one is skipped and reported and shown to no one.
+- Date: 2026-10-30
+- Raised by: user
