@@ -2,6 +2,7 @@ id: 2026-10-29-2037-screen-extensions-registry
 title: 'Screen extensions registry'
 status: in-review
 created: '2026-10-29 20:37'
+pr: { number: 16, url: https://github.com/Refactor-Circus/Atrium/pull/16 }
 standards:
   refactor-circus/standards:
     version: dev-main
