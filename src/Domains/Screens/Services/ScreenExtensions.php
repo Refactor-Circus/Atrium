@@ -179,7 +179,9 @@ final class ScreenExtensions
      *
      * Of two registrations with one key, the more specific target wins
      * (exact, then `{package}.*`, then `*`), and a registered tab may not
-     * use a built-in key; what is skipped is reported once per request.
+     * use a built-in or `reserve()`d key; what is skipped is reported once
+     * per request. A reserved key is never a tab, so `?tab=` naming one
+     * opens the default.
      *
      * @throws AccessDeniedHttpException for `?tab=` naming a registered tab the viewer may not see
      */
@@ -189,7 +191,7 @@ final class ScreenExtensions
         $targets = [$screen->key, $screen->package.'.*', '*'];
         $builtIn = array_map(fn (TabDefinition $tab): string => $tab->key, $screen->tabs);
 
-        $registered = $this->merge($screen, $visibility, 'tab', array_map(fn (string $target): array => $this->tabs[$target] ?? [], array_combine($targets, $targets)), $builtIn);
+        $registered = $this->merge($screen, $visibility, 'tab', array_map(fn (string $target): array => $this->tabs[$target] ?? [], array_combine($targets, $targets)), [...$builtIn, ...$screen->reserved]);
 
         $visible = array_values(array_filter(
             $registered,
@@ -272,7 +274,7 @@ final class ScreenExtensions
 
                 if (in_array($key, $reserved, true)) {
                     $visibility->report("reserved\0{$screen->key}\0{$kind}\0{$key}\0{$target}", new InvalidArgumentException(
-                        "Screen [{$screen->key}] skips the {$kind} [{$key}] registered for [{$target}]: it is a built-in tab key. Prefix registered keys with a vendor, such as vendor.key.",
+                        "Screen [{$screen->key}] skips the {$kind} [{$key}] registered for [{$target}]: it is a built-in or reserved tab key. Prefix registered keys with a vendor, such as vendor.key.",
                     ));
 
                     continue;

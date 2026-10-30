@@ -23,7 +23,8 @@ use Workbench\App\Models\User;
  * `test.host` is a detail screen with a record and `test.list` a list screen
  * with three rows; either takes another screen key as its parameter. Tests
  * shape it through config: `screen-host.tabs` (built-in tabs, as
- * `Screen::tabs()` takes them) and `screen-host.slots` (extra slots the page
+ * `Screen::tabs()` takes them), `screen-host.reserved` (tab keys passed to
+ * `Screen::reserve()`) and `screen-host.slots` (extra slots the page
  * declares and never renders). Defining the `viewScreenHost` gate makes the
  * host authorize through it.
  */
@@ -71,7 +72,11 @@ final class ScreenHostController
         /** @var list<string> $slots */
         $slots = config('screen-host.slots', []);
 
+        /** @var list<string> $reserved */
+        $reserved = config('screen-host.reserved', []);
+
         $screen->tabs($tabs)
+            ->reserve(...$reserved)
             ->slots(...$slots)
             ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
                 ->allows($permission, $record === null ? [] : [$record]));

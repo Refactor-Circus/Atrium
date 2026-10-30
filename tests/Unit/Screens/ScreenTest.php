@@ -96,6 +96,20 @@ it('rejects a built-in tab without a valid key, or the same key twice', function
     'twice' => [[['key' => 'members'], ['key' => 'members']]],
 ]);
 
+it('reserves tab keys without making them tabs, once each and in order', function (): void {
+    $screen = Screen::make('test.screen')->tabs([['key' => 'members']]);
+
+    expect($screen->reserved)->toBe([])
+        ->and($screen->reserve('secrets', 'audit')->reserve('secrets', 'members'))->toBe($screen)
+        ->and($screen->reserved)->toBe(['secrets', 'audit', 'members'])
+        ->and(array_map(fn (TabDefinition $tab): string => $tab->key, $screen->tabs))->toBe(['members']);
+});
+
+it('rejects a reserved key outside the key pattern', function (string $key): void {
+    expect(fn () => Screen::make('test.screen')->reserve('fine', $key))
+        ->toThrow(InvalidArgumentException::class, "[{$key}]");
+})->with(['Upper', 'a b', '', '.dot', '-dash', "x\n"]);
+
 it('remembers the default tab and the record', function (): void {
     $record = new class extends Model {};
     $screen = Screen::make('test.screen')->defaultTab('teams')->record($record);
@@ -133,6 +147,7 @@ it('refuses writes to its state from outside', function (string $property, mixed
     'tabs' => ['tabs', []],
     'slots' => ['slots', []],
     'rowSlots' => ['rowSlots', []],
+    'reserved' => ['reserved', []],
 ]);
 
 it('keeps the access closure private', function (): void {

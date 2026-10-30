@@ -11,8 +11,8 @@ use InvalidArgumentException;
 
 /**
  * A screen declaring itself to the extension registry, built by its host per
- * request: its key (`{package}.{screen}`), record, kind, built-in tabs and
- * the slots packages may add sections to. The host passes it to
+ * request: its key (`{package}.{screen}`), record, kind, built-in tabs,
+ * reserved tab keys and the slots packages may add sections to. The host passes it to
  * `ScreenExtensions::resolve()` after its own authorization.
  *
  * It states only generic facts, so packages can extend it without the host
@@ -66,6 +66,15 @@ final class Screen
      * names none of them.
      */
     public private(set) ?string $defaultTab = null;
+
+    /**
+     * Tab keys reserved without a tab, such as built-in tabs this viewer may
+     * not open: a registered tab with one is skipped and reported, as for a
+     * built-in key. They never render and `?tab=` cannot open them.
+     *
+     * @var list<string>
+     */
+    public private(set) array $reserved = [];
 
     /** @var list<string> */
     public private(set) array $slots = [];
@@ -157,6 +166,27 @@ final class Screen
     public function defaultTab(string $key): self
     {
         $this->defaultTab = $key;
+
+        return $this;
+    }
+
+    /**
+     * Reserve tab keys without rendering them, after any already reserved:
+     * the keys of built-in tabs this viewer may not open. A registered tab
+     * with one is skipped and reported, as for a built-in key, so it shows
+     * to no one, and `?tab=` naming one opens the default tab.
+     */
+    public function reserve(string ...$keys): static
+    {
+        foreach ($keys as $key) {
+            if (preg_match(self::NAME_PATTERN, $key) !== 1) {
+                throw new InvalidArgumentException("Reserved tab key [{$key}] on screen [{$this->key}] must match ".self::NAME_PATTERN.'.');
+            }
+
+            if (! in_array($key, $this->reserved, true)) {
+                $this->reserved[] = $key;
+            }
+        }
 
         return $this;
     }

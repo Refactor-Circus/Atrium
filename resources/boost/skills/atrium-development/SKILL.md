@@ -155,6 +155,7 @@ Every closure takes the `Screen` last: `authorize(fn (Request $request, ?Model $
 
 - `?tab={key}` opens a tab. An absent or unknown key opens the default tab (200); a registered tab the viewer cannot see answers 403. That 403-versus-200 difference reveals which keys exist, which is accepted, so never put secrets in a key.
 - The tab bar shows with two or more visible tabs. A screen without built-in tabs gets `overview`; registered tabs follow the built-ins and are never the default. Atrium translates no labels.
+- `$screen->reserve('salaries')` reserves keys of built-in tabs this viewer may not open: a registered tab with one is skipped and reported, as for a built-in key; reserved keys never render, and `?tab=` naming one opens the default (200).
 - An open registered tab's panel replaces the host's page content: `header.actions` always renders, `before`, `after`, `aside` and row slots only on a built-in tab.
 - A failing section renders nothing, is reported once per request, and the page answers 200; a failing open tab panel gives a 500.
 - Theme contract: the components use only design tokens and safelisted utilities, the same in every theme and layout, with nothing per theme. Keep registered views to the same, checked with `AtriumStyles`.

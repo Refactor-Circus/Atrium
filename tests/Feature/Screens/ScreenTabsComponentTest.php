@@ -131,3 +131,14 @@ it('renders nothing with fewer than two visible tabs', function (): void {
         ->assertDontSee('data-testid="screen-tabs"', false)
         ->assertDontSee('data-testid="tab-details"', false);
 });
+
+it('does not render reserved keys, or a registered tab using one', function (): void {
+    config(['screen-host.reserved' => ['secrets', 'acme.billing']]);
+    Atrium::screens()->tab('test.host', TabDefinition::make('acme.billing')->label('Billing')->view('screens.marker')->public());
+
+    $this->get(route('test.host', ['tab' => 'secrets']))
+        ->assertOk()
+        ->assertSee('data-testid="tab-details"', false)
+        ->assertDontSee('data-testid="tab-secrets"', false)
+        ->assertDontSee('data-testid="tab-acme.billing"', false);
+});

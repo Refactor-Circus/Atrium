@@ -185,6 +185,8 @@ A tab opens through `?tab={key}`. An absent or unknown key opens the host's defa
 
 The tab bar shows only when two or more tabs are visible. A screen with no built-in tabs gets one, `overview`, holding the page. Registered tabs follow the built-in ones (exact registrations first, then wildcard ones, each in registration order) and are never the default. Built-in labels come from the host; Atrium translates nothing.
 
+A host that leaves out a built-in tab the viewer may not open still reserves its key with `$screen->reserve('salaries')`: a registered tab using a reserved key is skipped and reported, as for a built-in key, so it shows to no one. Reserved keys never render, and `?tab=` naming one opens the default tab with a 200. They match the same key pattern; an invalid one throws.
+
 ### What renders around an open registered tab
 
 The tab's panel replaces the host's page content. `header.actions` always renders; `before`, `after`, `aside` and row slots render only while a built-in tab is open.

@@ -126,6 +126,37 @@ describe('tabs', function (): void {
         'every screen, a host tab' => ['*', 'members'],
     ]);
 
+    it('skips and reports once a registered tab using a reserved key, and never shows it', function (string $target): void {
+        Exceptions::fake();
+
+        Atrium::screens()->tab($target, resolveTab('x', 'Registered'));
+
+        $screen = fn (): Screen => Screen::make('test.screen')->tabs([['key' => 'members']])->reserve('x');
+
+        $first = resolveScreen($screen());
+        resolveScreen($screen(), '/?tab=x');
+
+        expect(resolveKeys($first->tabs))->toBe(['members']);
+
+        Exceptions::assertReportedCount(1);
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), '[x]')
+            && str_contains($exception->getMessage(), '[test.screen]'));
+    })->with([
+        'exact' => ['test.screen'],
+        'every screen' => ['*'],
+    ]);
+
+    it('answers 200 with the default tab for a reserved key', function (): void {
+        Atrium::screens()->tab('test.screen', resolveTab('x'));
+        resolveRoute(fn (): Screen => Screen::make('test.screen')->tabs([['key' => 'members'], ['key' => 'teams']])->defaultTab('teams')->reserve('x'));
+
+        $this->get('/screen-test?tab=x')
+            ->assertOk()
+            ->assertJsonPath('open', 'teams')
+            ->assertJsonPath('registered', null)
+            ->assertJsonPath('tabs', ['members', 'teams']);
+    });
+
     it('never makes a registered tab the default', function (): void {
         Atrium::screens()->tab('test.screen', resolveTab('acme.first'));
 
