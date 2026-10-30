@@ -24,3 +24,42 @@ Retry to finish 1.3. Nothing had run the group's tests before this, so this pass
 **Deviations.**
 - `phpstan.neon.dist` adds `tests/TestCase.php` to the analysed paths, and this group needs it. Without it, PHPStan reports `trait.unused` on the published `Testing\ResetsScreenExtensions` trait (checked against a copy of the config without that path) and `composer analyse` fails. With it, PHPStan analyses the trait through its one user.
 - `docs/agent/standards-feedback.md` records the `data/value-objects` deviation: `Screen::kind()` takes a string, with `Screen::DETAIL`/`Screen::LIST` constants, instead of an enum, because the spec fixes `kind('detail'|'list')` and `Screen::standard(string $key, string $kind)`.
+
+## Group 4
+
+Built in the `--g4` worktree on `ring-master/2026-10-29-2037-screen-extensions-registry--g4`.
+
+**Files.**
+- Added `tests/Feature/HistoryRemovedTest.php`: `GET /atrium/history/billing` is 404 even with an auditing package and an installed audit trail, and `atrium.history.show` is not a route; `HistoryController` and `HistoryServiceProvider` don't load, and `src/Domains/History`, `history/show`, `audit-trail` and `components/audit/` don't exist; `method_exists(Plugin::class, 'historyNavItem')` is false; no `@source` line in `atrium.css` names `audit` or `history/`.
+- Deleted `src/Domains/History/` (provider, `routes.php`, `HistoryController`), `resources/views/history/show.blade.php`, `resources/views/components/audit-trail.blade.php`, `resources/views/components/audit/` (`entries`, `changes`), `tests/Feature/HistoryPageTest.php` and `tests/Feature/AuditComponentsTest.php`.
+- Edited `resources/css/atrium.css` (dropped the four `@source` lines) and `src/Domains/Plugins/Support/Plugin.php` (removed `historyNavItem()` and its now unused imports).
+
+**Tests.** The new test was written before the deletions. The suite was not run here; the gate runs it.
+
+**Deviations.** These files are outside the group's list:
+- `src/Domains/DomainServiceProvider.php`: dropped `HistoryServiceProvider`, as task 4.2 says.
+- `tests/Feature/DomainLayoutTest.php`: dropped `HistoryServiceProvider` from its provider dataset. Without this the test can't load the class.
+- `lang/en/atrium.php`: removed the 24 `audit_*` keys. Only the deleted views and `historyNavItem()` used them. Keen ships its own.
+- `config/atrium.php`: in the `audit` comment, the claim that Atrium shows each package's history now says Keen does it.
+- `docs/agent/standards/atrium/components.md`: dropped `audit-trail`, `audit.entries` and `audit.changes` from the generic pieces.
+
+**Left for group 6** (it owns these files): `README.md` lines 96, 101 and 173 (`historyNavItem`, `x-atrium::audit-trail`, the History components list); `History` in `CLAUDE.md`, in `docs/agent/standards/atrium/domains.md` and in that standard's description in `docs/agent/standards.index.yml`; rebuilding `public/atrium.css`; the `CHANGELOG.md` upgrade note. The Boost skill had no references.
+
+## Group 2
+
+Built in the `--g2` worktree on `ring-master/2026-10-29-2037-screen-extensions-registry--g2` (commit `667f2d8`).
+
+**Files.**
+- Components: `resources/views/components/screen-tabs.blade.php` (a `flex ... overflow-x-auto` `<nav data-testid="screen-tabs">` of `x-atrium::icon-button` links built with `request()->fullUrlWithQuery(['page' => null, 'tab' => $key])`, primary variant and `aria-current="page"` on the open tab only, unknown icons fall back to `squares-2x2`, nothing below two tabs), `screen-sections.blade.php` (visible sections in order, each wrapped in `data-testid="section-{key}"` with any `class`, each rendered into a buffer and isolated), `screen-tab-panel.blade.php` (the open registered tab in `data-testid="tab-panel-{key}"`, with failures left to propagate).
+- Workbench: `workbench/app/Atrium/ScreenHost/ScreenHostController.php` (`detail` → `test.host`, `list` → `test.list` with three keyed rows; both take another screen key as `{screen?}`; it authorizes through the `viewScreenHost` gate when one is defined, then declares `Screen::standard()`, adds the built-in tabs from `config('screen-host.tabs')` and the extra slots from `config('screen-host.slots')`, and resolves; `register()` loads the routes and the `workbench::` views into a feature test's app), `workbench/resources/views/screen-host.blade.php` (laid out per criterion 15), `workbench/routes/web.php`.
+- Tests (all in `tests/Feature/Screens/`): `EvaluationOrderTest`, `RowSlotsTest`, `WildcardRenderingTest`, `FailureIsolationTest`, `ScreenTabsComponentTest`, `ScreenSectionsComponentTest`, `OpenRegisteredTabTest`, `ScreenStylesTest`.
+
+**Tests.** Written before the components. The group's test files and the rest of `tests/Feature/Screens` (99 tests, 383 assertions) pass, as do `tests/ArchTest.php`, `AtriumStylesTest` and `ComponentLibraryTest`. `pint --test` passes on the new PHP files. The full suite was not run here; the gate runs it.
+
+**Deviations.**
+- These files are outside the group's list. They are shared fixtures in `tests/Fixtures/views`, which is already on the test view path (testing/test-layers puts shared fixtures there): `screens/marker.blade.php`, `screens/spread.blade.php`, `screens/throws.blade.php` and the anonymous component `components/screen-probe.blade.php`.
+- Section isolation snapshots the view factory's state and restores it when a section fails. When a view throws, Laravel's `View::render()` calls `flushState()`, which empties the enclosing page's component stack, and the page then fails with a 500. A buffer alone cannot isolate the failure.
+- `flex-nowrap` is not in the compiled `public/atrium.css`, so the nav does not use it. A flex row's default `flex-wrap` is already `nowrap`, which is what criterion 17 measures.
+- A section's failure is passed to `report()`, which reports it once per request per screen and key through `ScreenVisibility::report()`. Laravel's handler does not log `HttpException`s, so an `abort()` inside a section is isolated but never logged. The test asserts isolation only for that case.
+- `ConvertEmptyStringsToNull` turns a bare query key such as `b` in `?q[]=a&b` into null, and the URL helper then leaves it out of the tab links. The test asserts the escaped `q%5B0%5D=a`.
+- View-path data: `screen` is the `Screen`, `record` is the screen's record or the row, and `tab` is the open tab's key (`ResolvedScreen::openTab`). The component path gets only `data`. This is returned to the user as a decision.

@@ -16,9 +16,9 @@ depends on: 1
 files: resources/views/components/screen-tabs.blade.php, resources/views/components/screen-tab-panel.blade.php, resources/views/components/screen-sections.blade.php, workbench/app/Atrium/ScreenHost/ScreenHostController.php, workbench/resources/views/screen-host.blade.php, workbench/routes/web.php, tests/Feature/Screens/ScreenTabsComponentTest.php, tests/Feature/Screens/ScreenSectionsComponentTest.php, tests/Feature/Screens/RowSlotsTest.php, tests/Feature/Screens/WildcardRenderingTest.php, tests/Feature/Screens/FailureIsolationTest.php, tests/Feature/Screens/OpenRegisteredTabTest.php, tests/Feature/Screens/EvaluationOrderTest.php, tests/Feature/Screens/ScreenStylesTest.php
 criteria: 9, 10, 11, 12, 13, 14, 15, 16
 
-- [ ] 2.1 Write tests against a workbench test-host screen (detail and list variants, with routes `test.host` and `test.list`): host denied with 403 runs no closures; resolvers only run through `data()`; view-path spread order (host's `screen`, `record` and `tab` win); component path gets one `data` prop; row slots (three rows, only the second admitted, call counts, re-render memo, misuse throws, undeclared slot never runs); a `*` section on two screens, `test.*` on `test.a` but not `other.screen`, a `*` tab opening via `?tab=`; failure isolation (markup then throw leaves nothing, reported once across three rows, throwing panel gives 500); tab bar links (query kept except `page`/`tab`, escaping, `data-testid`, `aria-current` and the primary variant only on the open tab, escaped labels, unknown icon falls back to `squares-2x2`, nothing with fewer than 2 visible tabs); sections wrapper, order, `class` passthrough, empty slot; criterion 15's layout around an open registered tab; `AtriumStyles::missingClasses()`/`inlineStyles()` empty for the new components
-- [ ] 2.2 Implement the three components (tab bar as a non-wrapping `overflow-x-auto` nav of `x-atrium::icon-button`; buffered, isolated section rendering; panel rendering per criterion 9) and the workbench test-host controller, view and routes
-- [ ] 2.3 Run vendor/bin/pest; all green
+- [x] 2.1 Write tests against a workbench test-host screen (detail and list variants, with routes `test.host` and `test.list`): host denied with 403 runs no closures; resolvers only run through `data()`; view-path spread order (host's `screen`, `record` and `tab` win); component path gets one `data` prop; row slots (three rows, only the second admitted, call counts, re-render memo, misuse throws, undeclared slot never runs); a `*` section on two screens, `test.*` on `test.a` but not `other.screen`, a `*` tab opening via `?tab=`; failure isolation (markup then throw leaves nothing, reported once across three rows, throwing panel gives 500); tab bar links (query kept except `page`/`tab`, escaping, `data-testid`, `aria-current` and the primary variant only on the open tab, escaped labels, unknown icon falls back to `squares-2x2`, nothing with fewer than 2 visible tabs); sections wrapper, order, `class` passthrough, empty slot; criterion 15's layout around an open registered tab; `AtriumStyles::missingClasses()`/`inlineStyles()` empty for the new components
+- [x] 2.2 Implement the three components (tab bar as a non-wrapping `overflow-x-auto` nav of `x-atrium::icon-button`; buffered, isolated section rendering; panel rendering per criterion 9) and the workbench test-host controller, view and routes
+- [x] 2.3 Run vendor/bin/pest; all green
 
 ## Group 3: Declare Atrium's own screens
 package: Atrium
@@ -36,9 +36,9 @@ depends on: 1
 files: src/Domains/History/HistoryServiceProvider.php, src/Domains/History/routes.php, src/Domains/History/Http/Controllers/HistoryController.php, resources/views/history/show.blade.php, resources/views/components/audit-trail.blade.php, resources/views/components/audit/, resources/css/atrium.css, src/Domains/Plugins/Support/Plugin.php, tests/Feature/HistoryPageTest.php, tests/Feature/AuditComponentsTest.php, tests/Feature/HistoryRemovedTest.php
 criteria: 20
 
-- [ ] 4.1 Write `HistoryRemovedTest`: `GET history/{package}` returns 404; the controller and the audit component files don't exist; `method_exists(Plugin::class, 'historyNavItem')` is false; `atrium.css` has no `audit` `@source`
-- [ ] 4.2 Delete the History domain (and its entry in `DomainServiceProvider`'s provider list, which this group edits after group 1 has merged), `history/show`, `audit-trail`, the `components/audit/` directory, the `@source` lines and `Plugin::historyNavItem()`; delete `HistoryPageTest` and `AuditComponentsTest`; grep `src`, `resources`, `docs` and the workbench for leftover references
-- [ ] 4.3 Run vendor/bin/pest; all green
+- [x] 4.1 Write `HistoryRemovedTest`: `GET history/{package}` returns 404; the controller and the audit component files don't exist; `method_exists(Plugin::class, 'historyNavItem')` is false; `atrium.css` has no `audit` `@source`
+- [x] 4.2 Delete the History domain (and its entry in `DomainServiceProvider`'s provider list, which this group edits after group 1 has merged), `history/show`, `audit-trail`, the `components/audit/` directory, the `@source` lines and `Plugin::historyNavItem()`; delete `HistoryPageTest` and `AuditComponentsTest`; grep `src`, `resources`, `docs` and the workbench for leftover references
+- [x] 4.3 Run vendor/bin/pest; all green
 
 Note: group 4 also edits `src/Domains/DomainServiceProvider.php` to drop `HistoryServiceProvider`, so it runs after group 1, never in parallel with it.
 
@@ -48,15 +48,7 @@ depends on: 2, 3
 files: tests/Browser/ScreenExtensionsTest.php, workbench/app/Atrium/ScreenHost/ScreenHostPlugin.php, workbench/app/Providers/WorkbenchServiceProvider.php
 criteria: 17, 18
 
-- [ ] 5.1 Write `ScreenExtensionsTest` as a Pest dataset over 6 themes x `sidebar`/`top` x light/dark (24 named cases). Each case renders the test host with 2 built-in tabs, 12 registered tabs (one long label), a normal-slot section and a row-slot section, then asserts:
-  - the last tab scrolls into view, clicks, and has `aria-current="page"`
-  - the open tab's computed background differs from an idle tab's
-  - the nav has `overflow-x` auto or scroll and `flex-wrap: nowrap`, its links `white-space: nowrap`, and all links share one top offset
-  - in the top layout, no tab overlaps `top-tabs`
-  - both sections render
-  - a screenshot is saved per case
-
-  Add a workbench plugin with pages so that `top-tabs` exists.
+- [ ] 5.1 Write `ScreenExtensionsTest` as a Pest dataset over 6 themes x `sidebar`/`top` x light/dark (24 named cases). Each case renders the test host with 2 built-in tabs, 12 registered tabs (one long label), a normal-slot section and a row-slot section, then asserts: the last tab scrolls into view, clicks, and has `aria-current="page"`; the open tab's computed background differs from an idle tab's; the nav has `overflow-x` auto or scroll and `flex-wrap: nowrap`, its links `white-space: nowrap`, and all links share one top offset; in the top layout, no tab overlaps `top-tabs`; both sections render; a screenshot is saved per case Add a workbench plugin with pages so that `top-tabs` exists.
 - [ ] 5.2 Fix any theme or layout issue the matrix exposes, using tokens only
 - [ ] 5.3 Run vendor/bin/pest and composer test:browser; all green
 

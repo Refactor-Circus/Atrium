@@ -127,3 +127,9 @@ D-001 to D-008 are recorded in `shape.md`.
 - Choice: Approved for tasks and the factory
 - Date: 2026-10-29
 - Raised by: spec review (approval)
+
+## D-030: Types of the host variables a registered view receives
+- Choice: `screen` is the `Screen` (the same object closures receive), `record` is the screen's record or the row, and `tab` is the open tab's key string (`ResolvedScreen::openTab`). Components get only the `data` prop.
+- Rationale: Accepted the recommendation, which matches what group 2 built and tested.
+- Date: 2026-10-29
+- Raised by: build (group 2)

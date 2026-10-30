@@ -160,3 +160,4 @@ No config, migrations, routes, events or MCP surface; the registry is code-only,
 - D-026: wildcard grammar limited to `*` and `{package}.*`; duplicates checked per target string at boot (criteria 3, 4).
 - D-027: `snapshot(): array` and `restore(array)` named (criterion 5).
 - D-028: same key across wildcard levels: the more specific target wins (exact, then `{package}.*`, then `*`).
+- D-030: view variables are `screen` (the `Screen`), `record` and `tab` (the open key as a string); components get only `data` (criterion 9).
