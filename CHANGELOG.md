@@ -1,6 +1,8 @@
 # Release Notes
 
-## [Unreleased](https://github.com/Refactor-Circus/Atrium/commits/main)
+## [Unreleased](https://github.com/Refactor-Circus/Atrium/compare/v0.1.0...main)
+
+## [v0.1.0](https://github.com/Refactor-Circus/Atrium/commits/v0.1.0) - 2026-10-30
 
 ### Breaking
 
@@ -169,8 +171,3 @@
 - The sidebar collapses to an icon rail with hover labels and child flyouts, folds its groups, and expands child items in place.
 - Dark mode is built in, with a light / dark / system switcher in the topbar. Search focuses with ⌘K / Ctrl K.
 - Requires `laravel/framework` instead of `illuminate/support`, since the package uses form requests, events, queues and views from the framework.
-
-
-## [v0.1.0](https://github.com/Refactor-Circus/Atrium/compare/...v0.1.0) - 202x-xx-xx
-
-Initial pre-release.

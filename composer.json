@@ -18,7 +18,7 @@
     ],
     "require": {
         "php": "^8.5",
-        "refactor-circus/keystone": "dev-main",
+        "refactor-circus/keystone": "^0.1",
         "laravel/framework": "^13.35"
     },
     "require-dev": {
