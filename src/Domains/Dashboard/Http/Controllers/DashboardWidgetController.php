@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Services\DashboardManager;
@@ -33,7 +35,12 @@ class DashboardWidgetController
 
         abort_if($definition === null, 404);
 
-        $screen = Screen::standard('atrium.dashboard-widget', Screen::DETAIL)->record($widget);
+        // Extensions' `permission()`s are Gate abilities, asked about the
+        // widget.
+        $screen = Screen::standard('atrium.dashboard-widget', Screen::DETAIL)
+            ->record($widget)
+            ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
+                ->allows($permission, $record ? [$record] : []));
 
         /** @var view-string $view */
         $view = 'atrium::dashboard.widget-body';

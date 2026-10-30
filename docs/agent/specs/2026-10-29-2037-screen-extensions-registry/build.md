@@ -87,3 +87,21 @@ Partly built. Four screens are complete. The settings index's `row.actions` is w
 **Left.**
 - `row.actions` on `atrium.settings` is declared, because `Screen::standard(..., 'list')` declares it, but it is not rendered per settings panel row. A settings panel is a `SettingsPanel` value object, not a model. `ResolvedScreen::rowSections()`, `data()` and `x-atrium::screen-sections :row` all take a `Model`, so rendering it needs a choice about the public contract. That choice is returned to the user as a decision. The dataset leaves `row.actions` out of the settings index's expected slots until it is settled. 3.1 and 3.2 stay unticked for this reason, and 3.3 stays unticked with them.
 - No Atrium screen sets `access()`, so `permission()` extensions are hidden on all five (criterion 8's default). Which permission check Atrium's screens should use is returned to the user as a decision.
+
+## Group 3
+
+Run 3, after D-031 and D-032. D-032 is built. D-031 is stopped before any code because it conflicts with an arch test (see Left).
+
+**Files.**
+- `src/Domains/Dashboard/Http/Controllers/DashboardController.php`, `DashboardWidgetController.php` and `src/Domains/Settings/Http/Controllers/SettingsController.php`: all five screens (`atrium.dashboard`, `atrium.named-dashboard`, `atrium.dashboard-widget`, `atrium.settings`, `atrium.settings-panel`) declare the D-032 `access()` closure, `Gate::forUser($request->user())->allows($permission, $record ? [$record] : [])`. `SettingsController` shares it between its two screens through a protected `access(Screen)` method.
+- `tests/Feature/Screens/AtriumScreensTest.php`: two new tests.
+  - On every screen, a `permission()` tab and `header.actions` section show while the Gate allows the ability and are hidden while it denies it (10 cases).
+  - The Gate gets the screen's record as its one argument: the dashboard on both dashboard screens and the widget on the widget screen. It gets no arguments on the two settings screens (5 cases).
+
+**Tests.** Written before the code. The "allowed" cases fail without `access()`, because criterion 8 hides every `permission()` extension on a screen that has none. `AtriumScreensTest` passes (32 tests, 237 assertions). `pint --test` passes on the changed files and `composer analyse` reports 0 errors. The full suite was not run here; the gate runs it.
+
+**Deviations.** None.
+
+**Left.**
+- D-031 (`row.actions` per settings panel row) is not built. D-031 places the stand-in at `Domains\Settings\Models\SettingsPanelRowModel` and says its policy entry keeps the every-model-has-a-policy arch test passing. It doesn't cover the arch test "every model fires an event for every lifecycle hook" (`Arch::modelEventGaps()` over every `Domains/*/Models/*.php`, per models/lifecycle-events). A stand-in at that path fails that test unless it uses `DispatchesModelEvents` and ten `Domains\Settings\Events\SettingsPanelRow{Hook}Event` classes exist. None of those events would ever fire, because the model is never saved. Adding them creates public event classes, and exempting the stand-in changes `tests/ArchTest.php` (group 6's file) and breaks a standard. That choice is returned to the user as a decision. The model, its policy, the `atrium.policies` entry, the per-row rendering and the per-row test all wait on it.
+- 3.1 and 3.2 stay unticked until `row.actions` is built, and 3.3 stays unticked with them.

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
@@ -174,6 +175,54 @@ it('renders no tab bar or extra markup while nothing is registered', function (s
         ->not->toContain('data-testid="section-')
         ->not->toContain('data-testid="screen-aside"');
 })->with('atrium screens');
+
+it('shows a permission() extension only while the Gate allows it', function (bool $allowed, string $screen, Closure $url, string $content): void {
+    Gate::define('acme.see', fn (User $user, mixed ...$arguments): bool => $allowed);
+
+    Atrium::screens()
+        ->tab($screen, TabDefinition::make('acme.gated-tab')->label('Gated')->view('screens.marker')->permission('acme.see'))
+        ->section($screen, 'header.actions', SectionDefinition::make('acme.gated')->view('screens.marker')->permission('acme.see')
+            ->resolve(fn (): array => ['marker' => 'the gated section']));
+
+    $response = $this->actingAs($this->user)->get($url($this->dashboard, $this->widget))
+        ->assertOk()
+        ->assertSee($content);
+
+    if ($allowed) {
+        $response->assertSee('data-testid="section-acme.gated"', false)
+            ->assertSee('the gated section on '.$screen)
+            ->assertSee('data-testid="tab-acme.gated-tab"', false);
+    } else {
+        $response->assertDontSee('data-testid="section-acme.gated"', false)
+            ->assertDontSee('the gated section')
+            ->assertDontSee('data-testid="tab-acme.gated-tab"', false);
+    }
+})->with([
+    'allowed' => [true],
+    'denied' => [false],
+])->with('atrium screens');
+
+it('asks the Gate about the screen record, or with no arguments when there is none', function (string $screen, Closure $url, string $expected): void {
+    $received = [];
+
+    Gate::define('acme.see', function (User $user, mixed ...$arguments) use (&$received): bool {
+        $received[] = array_map(fn (mixed $argument): string => get_debug_type($argument), $arguments);
+
+        return true;
+    });
+
+    Atrium::screens()->section($screen, 'header.actions', SectionDefinition::make('acme.gated')->view('screens.marker')->permission('acme.see'));
+
+    $this->actingAs($this->user)->get($url($this->dashboard, $this->widget))->assertOk();
+
+    expect($received)->toBe([$expected === '' ? [] : [$expected]]);
+})->with([
+    'the dashboard' => ['atrium.dashboard', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.dashboard'), DashboardModel::class],
+    'a named dashboard' => ['atrium.named-dashboard', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.dashboard.show', $dashboard->slug), DashboardModel::class],
+    'a dashboard widget' => ['atrium.dashboard-widget', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.dashboards.widgets.show', [$dashboard->id, $widget->id]), DashboardWidgetModel::class],
+    'the settings index' => ['atrium.settings', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.settings'), ''],
+    'a settings panel' => ['atrium.settings-panel', fn (DashboardModel $dashboard, DashboardWidgetModel $widget): string => route('atrium.settings.show', 'full'), ''],
+]);
 
 it('serves a widget body unchanged while nothing is registered', function (): void {
     $html = (string) $this->actingAs($this->user)

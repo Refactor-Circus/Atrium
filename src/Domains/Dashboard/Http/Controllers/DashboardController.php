@@ -6,7 +6,9 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\CreateDashboardAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
 use RefactorCircus\Atrium\Domains\Dashboard\Services\DashboardManager;
@@ -62,8 +64,12 @@ class DashboardController
 
         // `/` and `d/{slug}` are separate screens, so a package can extend
         // one without the other.
+        // Extensions' `permission()`s are Gate abilities, asked about the
+        // dashboard.
         $screen = Screen::standard($slug === null ? 'atrium.dashboard' : 'atrium.named-dashboard', Screen::DETAIL)
-            ->record($current);
+            ->record($current)
+            ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
+                ->allows($permission, $record ? [$record] : []));
 
         /** @var view-string $view */
         $view = 'atrium::dashboard.index';
