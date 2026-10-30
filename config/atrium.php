@@ -102,12 +102,11 @@ return [
     |--------------------------------------------------------------------------
     |
     | Atrium keeps no audit log of its own. With refactor-circus/keen
-    | installed, Keen records every dashboard change Atrium makes, and
-    | Atrium shows each package's history while that package audits.
+    | installed, Keen records every dashboard change Atrium makes and shows
+    | each package's history.
     |
     | enabled: Set to false to keep Atrium's own dashboard changes out of the
-    |          audit log even while Keen is installed. Other packages' history
-    |          follows their own `audit.enabled`.
+    |          audit log even while Keen is installed.
     |
     */
 

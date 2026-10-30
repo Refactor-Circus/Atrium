@@ -16,7 +16,7 @@ Atrium owns every Blade component and every style of the first-party suite; othe
 
 ## Existing generic pieces
 
-- `description-list`, bare form controls (`bare`), input `prefix`/`suffix`, `form.combobox`, `search-input`, `chip`, `banner` (`standalone` for host-app pages), `form.actions`, `flash`, `guest`, `audit-trail`, `audit.entries`, `audit.changes`.
+- `description-list`, bare form controls (`bare`), input `prefix`/`suffix`, `form.combobox`, `search-input`, `chip`, `banner` (`standalone` for host-app pages), `form.actions`, `flash`, `guest`.
 
 ## Enforcement
 
