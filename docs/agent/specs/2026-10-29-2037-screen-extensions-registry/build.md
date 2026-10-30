@@ -141,3 +141,23 @@ Run 5, a retry for 3.1 (the per-row `row.actions` test), 3.2 (`SettingsPanelRow`
 **Tests.** `AtriumScreensTest`, `ArchTest` and `SettingsTest` pass (56 tests, 293 assertions). The full suite was not run here; the gate runs it.
 
 **Deviations.** None.
+
+## Group 5
+
+**Files.**
+- Added `workbench/app/Atrium/ScreenHost/ScreenHostPlugin.php`. It is a final plugin keyed `screen-host`, with a `Screen host` navigation group whose two pages are `test.host` and `test.list`. The top layout draws a group with pages as a `top-tabs` row, so the matrix has a row to check for overlap.
+- `workbench/app/Providers/WorkbenchServiceProvider.php` registers the plugin for `composer serve`.
+- Added `tests/Browser/ScreenExtensionsTest.php`. It runs the dataset `screen extension looks`, 6 themes x `sidebar`/`top` x light/dark, as 24 named cases (`with data set "ledger top dark"`).
+  - **Setup.** Each case registers the plugin with `ScreenHostController::register()` and renders `test.list`. The page has the built-in tabs `details` and `activity`, and twelve public registered tabs, `acme.tab-1` to `acme.tab-12`. The last one has the long label. There is a section in `before` and one in the `row.actions` row slot.
+  - **Theme, layout and mode.** The theme comes from `atrium.themes.default`. The case sets the theme's layout on the registry's `Theme` before the visit. The mode comes from `inDarkMode()`/`inLightMode()`. The test asserts `data-atrium-theme`, `data-atrium-layout` and `.dark` match the case. In the top layout it also asserts the sidebar is hidden and the `group-screen-host` `top-tabs` row is visible. In the sidebar layout it asserts the sidebar is visible and the top nav is hidden.
+  - **Sections.** The `before` section renders once. The row section renders three times, once per row, including in `row-2`.
+  - **Tab bar.** These are asserted before and after the last tab opens. The links come in order: built-ins first, then the registered tabs. The nav's computed `overflow-x` is `auto` or `scroll`, and its `flex-wrap` is `nowrap`. Every link's `white-space` is `nowrap`. All links share one rounded top offset. In the top layout, exactly one `top-tabs` row is on screen and no tab's box overlaps it. In the sidebar layout there is none.
+  - **Last tab.** After `scrollIntoView`, the last tab lies inside the nav's box and the viewport. A click opens it with `aria-current="page"`, `details` loses `aria-current`, and its panel renders. With the pointer moved onto the panel, the open tab's computed background is not transparent and differs from both `details` and `acme.tab-1`.
+  - **Screenshot.** One per case, taken on the built-in tab: `tests/Browser/Screenshots/screen-extensions/{theme}-{layout}-{mode}.png`.
+
+**Tests.** The test was written before the plugin existed. `vendor/bin/pest tests/Browser/ScreenExtensionsTest.php` passes 24 tests (744 assertions), and passes again on a second run. `pint --test` passes on every changed file. Only this file ran: the full suite and `composer test:browser` were not run here, because the gate runs them.
+
+**5.2.** The matrix exposed no theme or layout issue in any of the 24 cases. I looked through the screenshots and nothing is clipped, wrapped or overlapping. No component or stylesheet changed.
+
+**Deviations.**
+- `tests/Pest.php` is outside the group's file list. At boot, pest-plugin-browser's `Screenshot::cleanup()` unlinks every entry in `tests/Browser/Screenshots` and then removes the directory. It can't unlink the `screen-extensions` subdirectory, so it can't remove `Screenshots` either. Each failure raises a suppressed warning, and `failOnWarning` fails the run: the second run of the file passed 24 tests and still exited 1 with 2 warnings. `Pest.php` now empties and removes `Screenshots/screen-extensions` before the plugin boots, outside parallel workers so they never race to delete it. The test makes the directory again. With this change, back-to-back runs exit 0.

@@ -48,9 +48,9 @@ depends on: 2, 3
 files: tests/Browser/ScreenExtensionsTest.php, workbench/app/Atrium/ScreenHost/ScreenHostPlugin.php, workbench/app/Providers/WorkbenchServiceProvider.php
 criteria: 17, 18
 
-- [ ] 5.1 Write `ScreenExtensionsTest` as a Pest dataset over 6 themes x `sidebar`/`top` x light/dark (24 named cases). Each case renders the test host with 2 built-in tabs, 12 registered tabs (one long label), a normal-slot section and a row-slot section, then asserts: the last tab scrolls into view, clicks, and has `aria-current="page"`; the open tab's computed background differs from an idle tab's; the nav has `overflow-x` auto or scroll and `flex-wrap: nowrap`, its links `white-space: nowrap`, and all links share one top offset; in the top layout, no tab overlaps `top-tabs`; both sections render; a screenshot is saved per case Add a workbench plugin with pages so that `top-tabs` exists.
-- [ ] 5.2 Fix any theme or layout issue the matrix exposes, using tokens only
-- [ ] 5.3 Run vendor/bin/pest and composer test:browser; all green
+- [x] 5.1 Write `ScreenExtensionsTest` as a Pest dataset over 6 themes x `sidebar`/`top` x light/dark (24 named cases). Each case renders the test host with 2 built-in tabs, 12 registered tabs (one long label), a normal-slot section and a row-slot section, then asserts: the last tab scrolls into view, clicks, and has `aria-current="page"`; the open tab's computed background differs from an idle tab's; the nav has `overflow-x` auto or scroll and `flex-wrap: nowrap`, its links `white-space: nowrap`, and all links share one top offset; in the top layout, no tab overlaps `top-tabs`; both sections render; a screenshot is saved per case Add a workbench plugin with pages so that `top-tabs` exists.
+- [x] 5.2 Fix any theme or layout issue the matrix exposes, using tokens only
+- [x] 5.3 Run vendor/bin/pest and composer test:browser; all green
 
 ## Group 6: Documentation, architecture and build
 package: Atrium

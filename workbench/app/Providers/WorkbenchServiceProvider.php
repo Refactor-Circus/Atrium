@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use RefactorCircus\Atrium\Facades\Atrium;
 use Workbench\App\Atrium\DemoData;
 use Workbench\App\Atrium\DemoPlugin;
+use Workbench\App\Atrium\ScreenHost\ScreenHostPlugin;
 use Workbench\App\Http\Middleware\SignInWorkbenchUser;
 use Workbench\App\Models\User;
 
@@ -37,8 +38,10 @@ class WorkbenchServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'workbench');
 
         // Installed packages are discovered from their composer.json; the
-        // workbench app is the host, so it registers its plugin explicitly.
+        // workbench app is the host, so it registers its plugins explicitly.
+        // The screen host's pages are the screen-extensions test screens.
         Atrium::plugin(DemoPlugin::class);
+        Atrium::plugin(ScreenHostPlugin::class);
 
         // The workbench dashboard is open so `composer serve` is usable
         // without logging in. A real application defines a real gate.
