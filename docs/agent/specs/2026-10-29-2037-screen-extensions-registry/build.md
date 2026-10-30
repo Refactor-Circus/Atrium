@@ -161,3 +161,22 @@ Run 5, a retry for 3.1 (the per-row `row.actions` test), 3.2 (`SettingsPanelRow`
 
 **Deviations.**
 - `tests/Pest.php` is outside the group's file list. At boot, pest-plugin-browser's `Screenshot::cleanup()` unlinks every entry in `tests/Browser/Screenshots` and then removes the directory. It can't unlink the `screen-extensions` subdirectory, so it can't remove `Screenshots` either. Each failure raises a suppressed warning, and `failOnWarning` fails the run: the second run of the file passed 24 tests and still exited 1 with 2 warnings. `Pest.php` now empties and removes `Screenshots/screen-extensions` before the plugin boots, outside parallel workers so they never race to delete it. The test makes the directory again. With this change, back-to-back runs exit 0.
+
+## Group 5
+
+Run 2, a retry of 5.1 to 5.3. Run 1 (`fb8ad25`) had already committed all of it and ticked 5.1 to 5.3, so this run changed no code.
+
+**Files.** None changed beyond this note. Checked against criteria 17 and 18:
+- `tests/Browser/ScreenExtensionsTest.php` runs a Pest dataset of 24 named cases (6 themes x `sidebar`/`top` x light/dark). Each case renders `test.list` with 2 built-in tabs, 12 public registered tabs (the last with a long label), a `before` section and a `row.actions` section.
+- Each case asserts these:
+  - The theme, layout and mode match the case.
+  - Both sections render, the row section once in each row.
+  - The nav's `overflow-x` is `auto` or `scroll` and its `flex-wrap` is `nowrap`. Every link's `white-space` is `nowrap`, and all links share one top offset. These are checked before and after the last tab opens.
+  - In the top layout no tab overlaps the one visible `top-tabs` row.
+  - The last tab scrolls into view, opens on a click with `aria-current="page"`, and, with the pointer on the panel, has a background that differs from the idle tabs'.
+  - A screenshot is saved to `tests/Browser/Screenshots/screen-extensions/{theme}-{layout}-{mode}.png`. That path is gitignored.
+- `ScreenHostPlugin` gives the top layout its `top-tabs` row. `WorkbenchServiceProvider` registers it for `composer serve`. The test suites boot only `AtriumServiceProvider`, so this registration doesn't affect them.
+
+**Tests.** `pint --test` passes on the four group files (`tests/Pest.php` included). The suite and `composer test:browser` were not run here; the gate runs them.
+
+**Deviations.** None beyond run 1's `tests/Pest.php` change, recorded above.
