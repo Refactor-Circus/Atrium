@@ -230,3 +230,19 @@ Run 2, a retry of 5.1 to 5.3. Run 1 (`fb8ad25`) had already committed all of it 
 **Deviations.**
 - `AGENTS.md` (the target of the `CLAUDE.md` symlink) is the file actually edited. It already had an unrelated uncommitted line from a ringside sync ("Keep this checkout on `main`…"). Only this group's hunks are committed; that line is left uncommitted.
 - `resources/css/atrium.css` is outside the group's file list. `npm run build:css` regenerates its `@source` list, and this commit includes the result.
+
+## Group 6
+
+Run 2, a retry of 6.1 to 6.4. Run 1 (`6877adc`) had already committed all of it and ticked 6.1 to 6.4, so this run changed no committed code.
+
+**Files.** Only this note changed. I checked run 1's work against criteria 16, 20, 21 and 22:
+- `DocsTest` and the new `ArchTest` rules are as listed above.
+- `composer.json` requires `refactor-circus/keystone` and no other suite package.
+- `npm run build:css` leaves `public/atrium.css` byte-identical again.
+- A grep of `src`, `resources`, `docs/agent/standards`, the README and the workbench finds no `atrium.history`, `x-atrium::audit`, `historyNavItem` or `audit-trail`. Run 1's workspace grep for the PR stands.
+
+One more `docs` reference turned up. The generated `docs/agent/standards.index.yml` still described `atrium/domains` with `History` and without `Screens`, because run 1 edited `domains.md` without rebuilding the index, and `ringside check` failed. Running `ringside sync` in the worktree rebuilt it, and `ringside check` now passes. The index is gitignored, so there is nothing to commit for it. The sync also rewrote the uncommitted `AGENTS.md` ringside line, which stays uncommitted as before.
+
+**Tests.** `tests/Feature/DocsTest.php` and `tests/ArchTest.php` pass (31 tests, 92 assertions). `pint --test` passes on both files, and `phpstan analyse` reports 0 errors. I didn't run `vendor/bin/pest`, `composer test` or `composer test:browser`; the gate runs them.
+
+**Deviations.** None in the worktree. Outside it, my first `ringside check` and `ringside sync` ran in the workspace root (`/Users/jay/Projects/packages`), because the shell's cwd resets between calls. The sync regenerated the workspace's own ringside outputs: `docs/agent/standards.index.yml`, `docs/agent/standards.summary.md` and 14 `.claude/skills/ring-master-*/SKILL.md` files. Those are generated files, and the workspace is not a git repo.
