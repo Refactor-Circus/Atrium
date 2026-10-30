@@ -145,3 +145,9 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: Accepted the recommendation. It works for screens without a record.
 - Date: 2026-10-29
 - Raised by: build (group 3)
+
+## D-033: Where the settings-row stand-in lives
+- Choice: `Domains\Settings\Data\SettingsPanelRow`, an unsaved Eloquent model kept out of `Models/`. Neither model arch test scans it, so it needs no lifecycle events, no policy entry and no exemption. This supersedes D-031's namespace and policy entry; the rest of D-031 stands.
+- Rationale: The user chose this to keep the extra surface minimal.
+- Date: 2026-10-29
+- Raised by: build (group 3)

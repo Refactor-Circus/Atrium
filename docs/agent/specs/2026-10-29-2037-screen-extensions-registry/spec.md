@@ -163,3 +163,4 @@ No config, migrations, routes, events or MCP surface; the registry is code-only,
 - D-030: view variables are `screen` (the `Screen`), `record` and `tab` (the open key as a string); components get only `data` (criterion 9).
 - D-031: settings panel rows render `row.actions` with an unsaved `SettingsPanelRowModel` stand-in per panel (criterion 19).
 - D-032: Atrium's screens declare a Gate-based `access()` closure (criterion 19).
+- D-033: the stand-in is `Domains\Settings\Data\SettingsPanelRow` (not under Models/, no policy entry), superseding D-031's location.
