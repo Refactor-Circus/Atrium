@@ -246,3 +246,11 @@ One more `docs` reference turned up. The generated `docs/agent/standards.index.y
 **Tests.** `tests/Feature/DocsTest.php` and `tests/ArchTest.php` pass (31 tests, 92 assertions). `pint --test` passes on both files, and `phpstan analyse` reports 0 errors. I didn't run `vendor/bin/pest`, `composer test` or `composer test:browser`; the gate runs them.
 
 **Deviations.** None in the worktree. Outside it, my first `ringside check` and `ringside sync` ran in the workspace root (`/Users/jay/Projects/packages`), because the shell's cwd resets between calls. The sync regenerated the workspace's own ringside outputs: `docs/agent/standards.index.yml`, `docs/agent/standards.summary.md` and 14 `.claude/skills/ring-master-*/SKILL.md` files. Those are generated files, and the workspace is not a git repo.
+
+## Rework round 1
+
+**Fixed.**
+- Minor (changelog): the History upgrade note in `CHANGELOG.md` now lists the 24 removed `atrium::atrium.audit_*` translation keys by name. It tells a view or a published `lang/vendor/atrium` file that still uses them to take Keen's strings instead.
+- Nit (architecture/domain-modules): `DefinesExtension` moved from `src/Domains/Screens/Data/Concerns/` to `src/Domains/Screens/Concerns/` (namespace `RefactorCircus\Atrium\Domains\Screens\Concerns`). That is the domain-level `Concerns/` folder the standard lists, as `Domains/Access/Concerns` already uses. `TabDefinition` and `SectionDefinition` import it from there. The trait is internal to the two definitions and is not named in the README, the skill or the CHANGELOG. `tasks.md` still lists the old path in group 1's file list, which records what that group built.
+
+**Tests.** `composer test:unit` passes (589 tests, 1760 assertions). `composer lint:check` passes, and `composer analyse` reports 0 errors.

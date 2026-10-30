@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Screens\Data;
 
-use RefactorCircus\Atrium\Domains\Screens\Data\Concerns\DefinesExtension;
+use RefactorCircus\Atrium\Domains\Screens\Concerns\DefinesExtension;
 
 /**
  * A section a package adds to a slot of one screen, a package's screens or

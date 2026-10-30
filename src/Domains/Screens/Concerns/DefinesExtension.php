@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RefactorCircus\Atrium\Domains\Screens\Data\Concerns;
+namespace RefactorCircus\Atrium\Domains\Screens\Concerns;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;

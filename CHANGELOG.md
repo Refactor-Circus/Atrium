@@ -12,7 +12,8 @@
   - the `History` domain: `RefactorCircus\Atrium\Domains\History\HistoryServiceProvider` (no longer registered by `Domains\DomainServiceProvider`) and `RefactorCircus\Atrium\Domains\History\Http\Controllers\HistoryController`;
   - the `atrium::history.show` view (`resources/views/history/show.blade.php`);
   - the `x-atrium::audit-trail` component, `x-atrium::audit.entries`, `x-atrium::audit.changes` and the rest of `resources/views/components/audit/`, with their `@source` lines in `resources/css/atrium.css`;
-  - `RefactorCircus\Atrium\Domains\Plugins\Support\Plugin::historyNavItem()`: stop calling it from a plugin's `navigation()`; Keen adds the links.
+  - `RefactorCircus\Atrium\Domains\Plugins\Support\Plugin::historyNavItem()`: stop calling it from a plugin's `navigation()`; Keen adds the links;
+  - the 24 `atrium::atrium.audit_*` translation keys (`audit_history`, `audit_empty`, `audit_when`, `audit_action`, `audit_subject`, `audit_actor`, `audit_surface`, `audit_source_app`, `audit_none`, `audit_system`, `audit_no_changes`, `audit_field`, `audit_before`, `audit_after`, `audit_view_all`, `audit_log`, `audit_log_for`, `audit_action_hint`, `audit_subject_type`, `audit_subject_id`, `audit_filter`, `audit_clear`, `audit_newest`, `audit_older`): a view or a published `lang/vendor/atrium` file that still uses them should take Keen's strings instead.
 
 ### Added
 
