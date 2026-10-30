@@ -133,3 +133,15 @@ D-001 to D-008 are recorded in `shape.md`.
 - Rationale: Accepted the recommendation, which matches what group 2 built and tested.
 - Date: 2026-10-29
 - Raised by: build (group 2)
+
+## D-031: row.actions per settings panel row when panels aren't models
+- Choice: Wrap each panel in an unsaved stand-in Eloquent model, `Domains\Settings\Models\SettingsPanelRowModel`, keyed by the panel key and carrying the panel, so registrants receive it as `$record` and the memo by morph class plus key applies. The Screens contract doesn't change. The stand-in gets a policy entry in `atrium.policies`, deferring to the settings screen's own authorization, so the every-model-has-a-policy arch test holds.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: build (group 3)
+
+## D-032: The access() closure on Atrium's own screens
+- Choice: Laravel Gate: `Gate::forUser($request->user())->allows($permission, $record ? [$record] : [])`, as the workbench test host does
+- Rationale: Accepted the recommendation. It works for screens without a record.
+- Date: 2026-10-29
+- Raised by: build (group 3)

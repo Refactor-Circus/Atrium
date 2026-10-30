@@ -161,3 +161,5 @@ No config, migrations, routes, events or MCP surface; the registry is code-only,
 - D-027: `snapshot(): array` and `restore(array)` named (criterion 5).
 - D-028: same key across wildcard levels: the more specific target wins (exact, then `{package}.*`, then `*`).
 - D-030: view variables are `screen` (the `Screen`), `record` and `tab` (the open key as a string); components get only `data` (criterion 9).
+- D-031: settings panel rows render `row.actions` with an unsaved `SettingsPanelRowModel` stand-in per panel (criterion 19).
+- D-032: Atrium's screens declare a Gate-based `access()` closure (criterion 19).
