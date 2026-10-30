@@ -63,3 +63,27 @@ Built in the `--g2` worktree on `ring-master/2026-10-29-2037-screen-extensions-r
 - A section's failure is passed to `report()`, which reports it once per request per screen and key through `ScreenVisibility::report()`. Laravel's handler does not log `HttpException`s, so an `abort()` inside a section is isolated but never logged. The test asserts isolation only for that case.
 - `ConvertEmptyStringsToNull` turns a bare query key such as `b` in `?q[]=a&b` into null, and the URL helper then leaves it out of the tab links. The test asserts the escaped `q%5B0%5D=a`.
 - View-path data: `screen` is the `Screen`, `record` is the screen's record or the row, and `tab` is the open tab's key (`ResolvedScreen::openTab`). The component path gets only `data`. This is returned to the user as a decision.
+
+## Group 3
+
+Partly built. Four screens are complete. The settings index's `row.actions` is waiting on a decision (see Left).
+
+**Files.**
+- `src/Domains/Dashboard/Http/Controllers/DashboardController.php`: after its own 404, declares `Screen::standard('atrium.dashboard' | 'atrium.named-dashboard', 'detail')` with the dashboard as its record, and passes `resolved` to the view.
+- `src/Domains/Dashboard/Http/Controllers/DashboardWidgetController.php`: after its 404s, declares `atrium.dashboard-widget` (detail, with the widget as its record) and passes it as `widgetScreen`. It is not passed as `resolved` because the dashboard page includes `widget-body` inline for widgets that are not lazy, and the dashboard's own `$resolved` would leak into that include.
+- `src/Domains/Settings/Http/Controllers/SettingsController.php`: `atrium.settings` (list, no record) and, after the 404, `atrium.settings-panel` (detail, no record).
+- Views (`dashboard/index`, `dashboard/widget-body`, `settings/index`, `settings/show`) are laid out per criterion 15. `header.actions` goes in the page header's actions, and the tab bar sits under the header. An open registered tab's panel replaces the page content. `before` and `after` render above and below that content. `aside` is a `lg:grid-cols-3` column (`data-testid="screen-aside"`) that renders only when it has a visible section. The dashboard also hides its edit-layout buttons and save status while a registered tab is open. The settings pages add the page header's actions slot only when `header.actions` has a visible section. As a result, with nothing registered, no wrapper, tab bar or empty actions container renders.
+- `tests/Feature/Screens/AtriumScreensTest.php`: a dataset over the five screens:
+  - A section in every slot renders in its slot, in order (header actions, then the tab bar, `before`, the page content, `aside`, `after`), and its resolver runs once.
+  - A section in an undeclared slot never renders, and its resolver never runs.
+  - The tab appears beside `overview` and opens through `?tab=`, showing only `header.actions` and the panel.
+  - With nothing registered, there is no tab bar, tab, section or aside markup.
+  - Two further tests: a widget body with nothing registered is byte-for-byte the widget's own view (trimmed), and the dashboard's inline widget bodies never render `atrium.dashboard-widget` sections.
+
+**Tests.** Written before the code. `AtriumScreensTest` passes (17 tests, 177 assertions). `SettingsTest`, `LazyWidgetTest`, `DashboardRoutesTest`, `DashboardLayoutTest`, `DashboardPersistenceTest`, `AtriumStylesTest` and `ArchTest` also pass (75 tests). `pint --test` and `composer analyse` pass. The full suite was not run here; the gate runs it.
+
+**Deviations.** None. Every class used is already in the compiled `public/atrium.css`.
+
+**Left.**
+- `row.actions` on `atrium.settings` is declared, because `Screen::standard(..., 'list')` declares it, but it is not rendered per settings panel row. A settings panel is a `SettingsPanel` value object, not a model. `ResolvedScreen::rowSections()`, `data()` and `x-atrium::screen-sections :row` all take a `Model`, so rendering it needs a choice about the public contract. That choice is returned to the user as a decision. The dataset leaves `row.actions` out of the settings index's expected slots until it is settled. 3.1 and 3.2 stay unticked for this reason, and 3.3 stays unticked with them.
+- No Atrium screen sets `access()`, so `permission()` extensions are hidden on all five (criterion 8's default). Which permission check Atrium's screens should use is returned to the user as a decision.
