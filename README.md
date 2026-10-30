@@ -84,22 +84,6 @@ class BillingPlugin extends Plugin
 - `RefactorCircus\Atrium\Support\ScreenAccess::allows('billing', 'refund', $invoice)` asks a package's policies exactly as its JSON API and MCP tools do, honouring its `authorization` switch. Use it to hide controls.
 - The `RefactorCircus\Atrium\Http\Controllers\Concerns\AuthorizesScreens` trait gives a screen controller `$this->authorizeScreen('refund', $invoice)`, which answers 403 the same way for the package the controller belongs to.
 
-### A package's own audit log
-
-With an audit log installed ([refactor-circus/keen](https://github.com/Refactor-Circus/Keen)), every package has its own log at `/atrium/history/{package}`: its entries, newest first, filtered by action or record. Add a link to it in your plugin's sidebar group:
-
-```php
-public function navigation(): array
-{
-    return [
-        // ...
-        $this->historyNavItem('billing')->group('Billing')->sort(90),
-    ];
-}
-```
-
-The link and the page show only while an audit log is installed and the user may read the package's history, as its history endpoint decides. `<x-atrium::audit-trail>` panels link to the same page.
-
 ### Registering the plugin
 
 Packages declare their plugin in `composer.json` and Atrium discovers it on install:
@@ -123,6 +107,192 @@ Atrium::plugin(BillingPlugin::class);
 Host applications stay in control. Add plugin classes to `plugins` in `config/atrium.php`, list keys under `disabled` to hide a discovered plugin, or set `discover` to `false` to turn discovery off entirely.
 
 Discovered plugins are cached in `bootstrap/cache/atrium-plugins.php`, as Laravel caches its package manifest, so a request does not read Composer's `installed.json`. `package:discover` (which Composer runs after every install and update) and `optimize` rebuild it, `atrium:discover` rebuilds it by hand, and `optimize:clear` (or `atrium:clear-discovered`) removes it. Without the file, plugins are read from the installed packages on every boot, as before.
+
+## Screen extensions
+
+Any package can add tabs and sections to any screen that declares itself, without the screen knowing the package exists. A screen declares only generic facts: its key (`{package}.{screen}`), its record, its kind, its built-in tabs and its slots. Atrium declares its own pages: `atrium.dashboard` (`/`), `atrium.named-dashboard` (`d/{slug}`), `atrium.dashboard-widget`, `atrium.settings` and `atrium.settings-panel`.
+
+### Registering tabs and sections
+
+Register from a service provider's `boot()`, and only there. The registry lasts for the process and nothing can be unregistered, so a registration made during a request would leak into the next one. Each registration is copied, so changing your definition afterwards changes nothing.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
+use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
+use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
+use RefactorCircus\Atrium\Facades\Atrium;
+
+public function boot(): void
+{
+    Atrium::screens()
+        // A tab on one screen, opened with ?tab=acme.invoices.
+        ->tab('crm.customer', TabDefinition::make('acme.invoices')
+            ->label('Invoices')
+            ->icon('banknotes')
+            ->view('acme::screens.invoices')
+            ->permission('acme.invoices.view')
+            ->resolve(fn (?Model $record, Screen $screen): array => [
+                'invoices' => Invoice::forCustomer($record)->latest()->get(),
+            ]))
+
+        // A section in one slot of one screen.
+        ->section('crm.customer', 'aside', SectionDefinition::make('acme.balance')
+            ->component('acme::balance')
+            ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $request->user()?->can('view', $record) === true)
+            ->resolve(fn (?Model $record, Screen $screen): array => ['balance' => Balance::of($record)]))
+
+        // A row section: rendered once per row of a list screen, with the row as $record.
+        ->section('crm.customers', 'row.actions', SectionDefinition::make('acme.row-balance')
+            ->view('acme::screens.row-balance')
+            ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $record instanceof Customer))
+
+        // A wildcard section: every screen that declares the slot. Return early.
+        ->section('*', 'aside', SectionDefinition::make('acme.notes')
+            ->view('acme::screens.notes')
+            ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $screen->kind === Screen::DETAIL
+                && $record !== null
+                && $request->user()?->can('acme.notes', $record) === true));
+}
+```
+
+- **Targets.** An exact screen key (`crm.customer`), every screen of one package (`{package}.*`, such as `crm.*`), or every screen (`*`). A `*` tab joins every declared screen; a `*` section joins every screen declaring its slot. A section on a slot the screen does not declare never renders and its closures never run, and a registration for a screen no installed package declares is kept and never renders, with no error.
+- **Keys.** Prefix every key with your vendor, as `vendor.key` (`acme.invoices`). Keys go into `?tab=`, `data-testid` and URLs, and match `^[a-z0-9][a-z0-9._-]*$`. A registered tab may not reuse a built-in tab key (`overview` included): it is skipped and reported.
+- **Rendering.** Give each tab or section a `view()` or a `component()` (setting one clears the other). A view receives the resolver's data with the host's `screen` (the `Screen`), `record` and `tab` (the open tab's key) over it, so the host's values win. A component receives the resolver's data as one `data` prop.
+- **Who sees it.** Extensions are hidden by default. One shows only when its `permission()` passes the screen's `access` closure, its `authorize()` closure returns `true`, both pass when it has both, or it is `public()`. A screen without an `access` closure hides every `permission()` extension. An `authorize()` that throws counts as a denial and is reported once per request.
+
+### Closures and evaluation order
+
+Every closure receives the `Screen` last:
+
+```php
+->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => ...)
+->resolve(fn (?Model $record, Screen $screen): array => [...])
+```
+
+`$record` is the screen's record (null on screens without one), or the row inside a row slot.
+
+1. The host authorizes the request itself. Nothing of yours runs on a page the viewer may not open.
+2. The host resolves the screen. Each registered tab's visibility is checked, then each section's when its slot renders, once per row in a row slot.
+3. Resolvers run only for what renders: the open registered tab and each visible section in a rendered slot. Answers and data are remembered for the request, per screen, slot, extension and record.
+
+Wildcard and row-slot closures run on every matching screen or row, so keep them cheap: return early on `$screen->key` or `$screen->kind` before any query.
+
+### Opening tabs
+
+A tab opens through `?tab={key}`. An absent or unknown key opens the host's default tab with a 200. A registered tab the viewer cannot see answers 403. That 403-versus-200 difference reveals which tab keys exist, which is accepted: never put anything secret in a key.
+
+The tab bar shows only when two or more tabs are visible. A screen with no built-in tabs gets one, `overview`, holding the page. Registered tabs follow the built-in ones (exact registrations first, then wildcard ones, each in registration order) and are never the default. Built-in labels come from the host; Atrium translates nothing.
+
+A host that leaves out a built-in tab the viewer may not open still reserves its key with `$screen->reserve('salaries')`: a registered tab using a reserved key is skipped and reported, as for a built-in key, so it shows to no one. Reserved keys never render, and `?tab=` naming one opens the default tab with a 200. They match the same key pattern; an invalid one throws.
+
+### What renders around an open registered tab
+
+The tab's panel replaces the host's page content. `header.actions` always renders; `before`, `after`, `aside` and row slots render only while a built-in tab is open.
+
+A section renders into a buffer: one whose resolver or view throws renders nothing, is reported once per request, and the page still answers 200. An open registered tab's panel that throws fails the page (500), as the page itself would.
+
+The tab bar and the sections use only Atrium's design tokens and safelisted utilities, so they look the same in every theme and layout, and a theme sets nothing for them. Keep your views to the same contract and check them with `AtriumStyles` (see [Package styles](#package-styles)).
+
+A section renders inside the host's page, but it writes through your own routes and your own authorization: forms in it post to your routes, and your requests authorize them. The host only decided who may open the page.
+
+### Duplicates
+
+- **The same key twice on one target** (the same target string, and for sections the same slot): registration throws `InvalidArgumentException` naming the key and the target in the `local` and `testing` environments. In production, and any other environment, it reports the exception once through `report()`, skips the later registration and keeps the first, rather than taking down every route and command from `boot()`.
+- **The same key on one screen through different targets**: the more specific target wins: the exact key, then `{package}.*`, then `*`. Each less specific duplicate is skipped and reported once per request.
+
+### Declaring a screen
+
+A host declares a screen per request with `Screen::standard()`, which gives the standard slots: `header.actions`, `before` and `after`, plus `aside` on a `detail` screen or the row slot `row.actions` on a `list` screen. Add more with `slots()` and `rowSlots()`. Resolve it only after your own authorization:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
+use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
+
+public function show(Request $request, Invoice $invoice, ScreenExtensions $screens): View
+{
+    $this->authorizeScreen('view', $invoice);
+
+    $screen = Screen::standard('acme.invoice', Screen::DETAIL)
+        ->record($invoice)
+        ->tabs([
+            ['key' => 'details', 'label' => __('Details'), 'icon' => 'document-text'],
+            ['key' => 'payments', 'label' => __('Payments'), 'icon' => 'banknotes'],
+        ])
+        ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
+            ->allows($permission, $record ? [$record] : []));
+
+    return view('acme::invoices.show', [
+        'invoice' => $invoice,
+        'resolved' => $screens->resolve($screen, $request),
+    ]);
+}
+```
+
+```blade
+<x-atrium::page-header :title="$invoice->number">
+    @if ($resolved->sections('header.actions') !== [])
+        <x-slot:actions>
+            <x-atrium::screen-sections :screen="$resolved" slot="header.actions" />
+        </x-slot:actions>
+    @endif
+</x-atrium::page-header>
+
+<x-atrium::screen-tabs :screen="$resolved" />
+
+@if ($resolved->openRegisteredTab !== null)
+    <x-atrium::screen-tab-panel :screen="$resolved" />
+@else
+    <x-atrium::screen-sections :screen="$resolved" slot="before" />
+
+    {{-- Your page, for the built-in tab $resolved->openTab. --}}
+
+    <x-atrium::screen-sections :screen="$resolved" slot="aside" />
+    <x-atrium::screen-sections :screen="$resolved" slot="after" />
+@endif
+```
+
+On a list screen, render the row slot inside each row: `<x-atrium::screen-sections :screen="$resolved" slot="row.actions" :row="$customer" />`.
+
+### Packages know nothing of each other
+
+Atrium requires only [Keystone](https://github.com/Refactor-Circus/Keystone) among the suite's packages; every other suite package is a `suggest`, never a requirement, and a package's Atrium UI loads only when Atrium is installed. So a package's code never names another package's screens. It ships editable defaults in its own config instead, and the application changes or empties the list:
+
+```php
+// config/acme.php
+'atrium' => [
+    'screens' => [
+        // The target screen => 'tab', or the slot to add a section to.
+        'crm.customer' => 'tab',
+        'crm.contact' => 'aside',
+    ],
+],
+```
+
+```php
+// AcmeServiceProvider::boot(); Atrium is suggested, so it may be missing.
+if (class_exists(Atrium::class)) {
+    foreach (config('acme.atrium.screens', []) as $target => $slot) {
+        $slot === 'tab'
+            ? Atrium::screens()->tab($target, $this->invoicesTab())
+            : Atrium::screens()->section($target, $slot, $this->balanceSection());
+    }
+}
+```
+
+A default takes effect only when its target screen exists: a registration for a screen nobody declares never renders.
+
+### Testing
+
+Registrations made in a test would otherwise outlive it. Use `RefactorCircus\Atrium\Testing\ResetsScreenExtensions` on your test case: it snapshots the registry once the application has booted, keeping every provider's `boot()` registrations, and restores the snapshot after each test.
+
+```php
+uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
+```
 
 ## Managing Pennant feature flags
 
@@ -170,7 +340,7 @@ Available components:
 
 **Forms**: `form.input` (with `prefix` and `suffix` slots), `form.textarea`, `form.select`, `form.checkbox`, `form.radio`, `form.file`, `form.combobox`, `form.actions`. Pass `bare` to an input, textarea, select or checkbox for the control alone, such as in a table cell.
 
-**History**: `audit-trail` (a package's or one record's history, from the installed audit log), `audit.entries`, `audit.changes`
+**Screens**: `screen-tabs`, `screen-sections` and `screen-tab-panel`, which render a declared screen's extensions (see [Screen extensions](#screen-extensions))
 
 ### Screen conventions
 
@@ -540,6 +710,7 @@ The code is organised into domain modules under `src/Domains/{Domain}`, namespac
 | `Dashboard` | `Models\DashboardModel` and `Models\DashboardWidgetModel`, their policies, actions, events, requests and controllers, and `Services\DashboardManager` |
 | `Navigation` | `Data\NavItem`, `Data\NavGroup` and `Services\NavigationRegistry` |
 | `Plugins` | The `Contracts\Plugin` contract, the `Support\Plugin` base class, `Services\PluginRegistry`, Composer discovery and the plugin commands |
+| `Screens` | `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, `Services\ScreenExtensions` (the registry behind `Atrium::screens()`) and `Services\ScreenVisibility` |
 | `Search` | `Data\SearchSource`, `Data\SearchResult`, `Services\SearchRegistry` and the search endpoint |
 | `Settings` | `Data\SettingsPanel`, `Services\SettingsRegistry` and the settings pages |
 | `Widgets` | `Data\WidgetDefinition` and `Services\WidgetRegistry` |

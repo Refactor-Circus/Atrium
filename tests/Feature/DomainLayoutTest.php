@@ -8,7 +8,6 @@ use RefactorCircus\Atrium\Domains\Dashboard\DashboardServiceProvider;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
-use RefactorCircus\Atrium\Domains\History\HistoryServiceProvider;
 use RefactorCircus\Atrium\Domains\Navigation\NavigationServiceProvider;
 use RefactorCircus\Atrium\Domains\Plugins\PluginsServiceProvider;
 use RefactorCircus\Atrium\Domains\Search\SearchServiceProvider;
@@ -22,7 +21,6 @@ it('registers every domain service provider', function (string $provider): void 
     DomainServiceProvider::class,
     AccessServiceProvider::class,
     DashboardServiceProvider::class,
-    HistoryServiceProvider::class,
     NavigationServiceProvider::class,
     PluginsServiceProvider::class,
     SearchServiceProvider::class,

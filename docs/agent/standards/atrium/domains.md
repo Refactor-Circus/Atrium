@@ -1,5 +1,5 @@
 ---
-description: "Atrium's domains (Access, Dashboard, History, Navigation, Plugins, Search, Settings, Themes, Widgets), its top-level package-wide code, domain providers on Atrium\\Support\\ServiceProvider loading routes with loadDashboardRoutesFrom(), and the Dashboard morph aliases."
+description: "Atrium's domains (Access, Dashboard, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code, domain providers on Atrium\\Support\\ServiceProvider loading routes with loadDashboardRoutesFrom(), and the Dashboard morph aliases."
 tags: [atrium, domains, service-providers, routes, morph-aliases]
 kind: convention
 ---
@@ -10,8 +10,10 @@ Complements [[domain-modules]]: Atrium's code sits in nine fixed domains whose p
 
 ## Domains
 
-- `Access`, `Dashboard`, `History`, `Navigation`, `Plugins`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
+- `Access`, `Dashboard`, `Navigation`, `Plugins`, `Screens`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
 - A new domain is added to this list and its provider to `Domains\DomainServiceProvider::$providers`.
+- `Screens` holds the screen extensions registry: `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, the `Services\ScreenExtensions` singleton (`Atrium::screens()`) and the `scoped()` `Services\ScreenVisibility`. It registers no routes; its components are `screen-tabs`, `screen-sections` and `screen-tab-panel`.
+- Atrium has no History domain and no audit concept: the history screen, its components and its nav item belong to refactor-circus/keen.
 
 ## Top level
 

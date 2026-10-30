@@ -1,0 +1,15 @@
+id: 2026-10-29-2037-screen-extensions-registry
+title: 'Screen extensions registry'
+status: in-review
+created: '2026-10-29 20:37'
+pr: { number: 16, url: https://github.com/Refactor-Circus/Atrium/pull/16 }
+standards:
+  refactor-circus/standards:
+    version: dev-main
+    reference: a5b675396232
+review_passes: 2
+runs:
+  - { workflow: ring-master-factory, run_id: wf_5e15100d-418, result: "needs-decision at build: view variable types (D-030); groups 1, 2, 4 built; 2 and 4 merged by hand from --g2/--g4", round: 0, date: 2026-10-29 }
+  - { workflow: ring-master-factory, run_id: wf_88f65899-8fd, result: "needs-decision at build: settings rows (D-031), access closure (D-032)", round: 0, date: 2026-10-29 }
+  - { workflow: ring-master-factory, run_id: wf_d8cb821c-79e, result: "needs-decision at build: stand-in location (D-033)", round: 0, date: 2026-10-29 }
+  - { workflow: ring-master-factory, run_id: wf_e6044f1d-330, result: "escalated at review round 3: rounds exhausted; one minor finding (browser suite and CSS rebuild unverified), verified by hand; approved as is by the user", round: 3, date: 2026-10-29 }

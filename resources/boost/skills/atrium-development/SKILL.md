@@ -3,7 +3,8 @@ name: atrium-development
 description: >
   Configure and apply the Atrium dashboard package in Laravel applications,
   including the authorization gate, dashboard policies, events, plugins,
-  widgets, dashboards, and the shared Blade component library.
+  widgets, dashboards, screen extensions (tabs and sections added to any
+  declared screen), and the shared Blade component library.
 license: MIT
 metadata:
   author: Jay Fletcher
@@ -63,7 +64,7 @@ Screens follow one convention: actions are `<x-atrium::icon-button icon="…" :l
 
 Components are namespaced Blade components that work anywhere, in the dashboard shell or in the application's own pages, with no Livewire dependency:
 
-`card`, `stat`, `table` (with `table.row`, `table.cell`), `button`, `icon-button`, `icon`, `status-dot`, `badge`, `alert`, `modal`, `dropdown`, `tabs`, `tab-panel`, `empty-state`, `page-header`, `section`, `form.input`, `form.select`, `form.textarea`, `form.checkbox`.
+`card`, `stat`, `table` (with `table.row`, `table.cell`), `button`, `icon-button`, `icon`, `status-dot`, `badge`, `alert`, `modal`, `dropdown`, `tabs`, `tab-panel`, `empty-state`, `page-header`, `section`, `form.input`, `form.select`, `form.textarea`, `form.checkbox`, and for declared screens `screen-tabs`, `screen-sections` and `screen-tab-panel` (see Screen extensions).
 
 ```blade
 <x-atrium::card title="Revenue">
@@ -101,6 +102,104 @@ Event::listen(DashboardCreatedActionEvent::class, fn ($event) => Log::info('Dash
 
 In tests, fake only the events being asserted: `Event::fake([DashboardCreatedActionEvent::class])`.
 
+## Screen extensions
+
+Any package can add tabs and sections to any screen that declares itself, without the screen knowing the package exists. A screen declares only its key (`{package}.{screen}`), record, kind, built-in tabs and slots. Atrium's own declared screens are `atrium.dashboard`, `atrium.named-dashboard`, `atrium.dashboard-widget`, `atrium.settings` and `atrium.settings-panel`.
+
+### Register from boot() only
+
+Register through `Atrium::screens()` (`RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions`) from a service provider's `boot()`, never during a request: the registry lasts for the process and nothing can be unregistered. Registration keeps a copy of the definition.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
+use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
+use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
+use RefactorCircus\Atrium\Facades\Atrium;
+
+Atrium::screens()
+    // A tab on one screen, opened with ?tab=acme.invoices.
+    ->tab('crm.customer', TabDefinition::make('acme.invoices')
+        ->label('Invoices')
+        ->icon('banknotes')
+        ->view('acme::screens.invoices')
+        ->permission('acme.invoices.view')
+        ->resolve(fn (?Model $record, Screen $screen): array => ['invoices' => Invoice::forCustomer($record)->get()]))
+    // A section in one slot of one screen.
+    ->section('crm.customer', 'aside', SectionDefinition::make('acme.balance')
+        ->component('acme::balance')
+        ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $request->user()?->can('view', $record) === true))
+    // A row section: once per row of a list screen, the row as $record.
+    ->section('crm.customers', 'row.actions', SectionDefinition::make('acme.row-balance')
+        ->view('acme::screens.row-balance')
+        ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $record instanceof Customer))
+    // A wildcard section on every screen declaring the slot: return early.
+    ->section('*', 'aside', SectionDefinition::make('acme.notes')
+        ->view('acme::screens.notes')
+        ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $screen->kind === Screen::DETAIL
+            && $record !== null
+            && $request->user()?->can('acme.notes', $record) === true));
+```
+
+- Targets: an exact key (`crm.customer`), `{package}.*` (every screen of one package) or `*` (every screen). A registration for a screen nobody declares never renders, with no error; a section on an undeclared slot never runs its closures.
+- Keys: always `vendor.key` (`acme.invoices`), matching `^[a-z0-9][a-z0-9._-]*$`. A registered tab may not reuse a built-in tab key (`overview` included); it is skipped and reported.
+- Rendering: `view()` or `component()` (one clears the other). A view gets the resolver's data with the host's `screen` (the `Screen`), `record` and `tab` (the open key) over it; a component gets one `data` prop.
+- Visibility is default-deny: `permission()` (asked through the screen's `access` closure; a screen without one hides it), `authorize()`, both when both are set, or `public()`. A throwing `authorize()` is a denial, reported once per request.
+
+### Closures and evaluation order
+
+Every closure takes the `Screen` last: `authorize(fn (Request $request, ?Model $record, Screen $screen): bool)` and `resolve(fn (?Model $record, Screen $screen): array)`. `$record` is the screen's record, or the row inside a row slot. The host authorizes first and resolves the screen only then; tab visibility is checked at resolve, section visibility when the slot renders (per row in a row slot); resolvers run only for the open registered tab and each rendered section; answers and data are memoized per request. Wildcard and row-slot closures run on every matching screen or row, so keep them cheap: return early on `$screen->key` or `$screen->kind`.
+
+### Tabs, panels and failures
+
+- `?tab={key}` opens a tab. An absent or unknown key opens the default tab (200); a registered tab the viewer cannot see answers 403. That 403-versus-200 difference reveals which keys exist, which is accepted, so never put secrets in a key.
+- The tab bar shows with two or more visible tabs. A screen without built-in tabs gets `overview`; registered tabs follow the built-ins and are never the default. Atrium translates no labels.
+- `$screen->reserve('salaries')` reserves keys of built-in tabs this viewer may not open: a registered tab with one is skipped and reported, as for a built-in key; reserved keys never render, and `?tab=` naming one opens the default (200).
+- An open registered tab's panel replaces the host's page content: `header.actions` always renders, `before`, `after`, `aside` and row slots only on a built-in tab.
+- A failing section renders nothing, is reported once per request, and the page answers 200; a failing open tab panel gives a 500.
+- Theme contract: the components use only design tokens and safelisted utilities, the same in every theme and layout, with nothing per theme. Keep registered views to the same, checked with `AtriumStyles`.
+- A section renders inside the host's page but writes through the registrant's own routes and authorization.
+
+### Duplicates
+
+- Same key twice on one target string (and slot): throws `InvalidArgumentException` in `local` and `testing`; in production and any other environment it is reported once through `report()`, the later one is skipped and the first kept.
+- Same key on one screen through different targets: the more specific wins (exact, then `{package}.*`, then `*`); the rest are skipped and reported once per request.
+
+### Declaring a screen (host side)
+
+```php
+$screen = Screen::standard('acme.invoice', Screen::DETAIL) // header.actions, before, after, aside
+    ->record($invoice)
+    ->tabs([['key' => 'details', 'label' => __('Details'), 'icon' => 'document-text']])
+    ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
+        ->allows($permission, $record ? [$record] : []));
+
+$resolved = app(ScreenExtensions::class)->resolve($screen, $request); // after the host's own authorization
+```
+
+`Screen::standard($key, Screen::LIST)` gives `header.actions`, `before`, `after` and the row slot `row.actions`; add more with `slots()` / `rowSlots()`. In the view render `<x-atrium::screen-tabs :screen="$resolved" />`, then `<x-atrium::screen-tab-panel :screen="$resolved" />` when `$resolved->openRegisteredTab !== null`, otherwise `<x-atrium::screen-sections :screen="$resolved" slot="before" />` (and `aside`, `after`) around the page; `header.actions` always; a row slot per row with `:row="$model"`.
+
+### Suite rule and config defaults
+
+Atrium requires only Keystone (`refactor-circus/keystone`) among the suite packages; every other suite package is a `suggest`, and a package's Atrium UI loads only when Atrium is installed. A package never names another package's screens in code: it ships editable defaults in its own config, applied only when the target screen exists, which the application may change or empty.
+
+```php
+// config/acme.php
+'atrium' => ['screens' => ['crm.customer' => 'tab', 'crm.contact' => 'aside']],
+
+// AcmeServiceProvider::boot()
+if (class_exists(Atrium::class)) {
+    foreach (config('acme.atrium.screens', []) as $target => $slot) {
+        $slot === 'tab'
+            ? Atrium::screens()->tab($target, $this->invoicesTab())
+            : Atrium::screens()->section($target, $slot, $this->balanceSection());
+    }
+}
+```
+
+In tests, use `RefactorCircus\Atrium\Testing\ResetsScreenExtensions` on the test case: it snapshots the registry after boot and restores it after each test.
+
 ## Rules, References, and Templates
 
 Read before executing:
@@ -128,5 +227,7 @@ Read before executing:
 - do not register plugin routes outside the plugin's `routes()` method, which would skip Atrium's middleware and prefix
 - do not require a Tailwind build in the host app; the shipped stylesheet is self-contained
 - do not bypass the policies by writing dashboards directly in a controller; call the actions, and check `$user->can(...)` first
+- do not register screen extensions outside a provider's `boot()`, give them keys without a vendor prefix, or hard-code another package's screen keys in a package's code; read them from the package's own config
+- do not require another suite package to integrate with it; suggest it and integrate through screens and config
 - do not use the pre-release `Atrium\Atrium` namespace or its `Events\Dashboard\*`, `Events\DashboardWidget\*` and `Events\Actions\*` classes
-- do not use the pre-domain class names (`RefactorCircus\Atrium\Plugins\Plugin`, `RefactorCircus\Atrium\Navigation\NavItem`, `RefactorCircus\Atrium\Models\Dashboard`, `RefactorCircus\Atrium\Events\Model\*`, `RefactorCircus\Atrium\Events\Action\*` and so on); every class now lives in a domain module under `RefactorCircus\Atrium\Domains\{Access,Dashboard,Navigation,Plugins,Search,Settings,Widgets}`, with value objects in `Data\`, registries in `Services\` and models named `*Model`
+- do not use the pre-domain class names (`RefactorCircus\Atrium\Plugins\Plugin`, `RefactorCircus\Atrium\Navigation\NavItem`, `RefactorCircus\Atrium\Models\Dashboard`, `RefactorCircus\Atrium\Events\Model\*`, `RefactorCircus\Atrium\Events\Action\*` and so on); every class now lives in a domain module under `RefactorCircus\Atrium\Domains\{Access,Dashboard,Navigation,Plugins,Screens,Search,Settings,Themes,Widgets}`, with value objects in `Data\`, registries in `Services\` and models named `*Model`

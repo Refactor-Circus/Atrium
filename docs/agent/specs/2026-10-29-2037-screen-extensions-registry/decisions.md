@@ -1,0 +1,159 @@
+# Decisions
+
+D-001 to D-008 are recorded in `shape.md`.
+
+## D-009: How should x-atrium::audit-trail leave Atrium while hosts still use it inline?
+- Choice: Remove it now, and merge Atrium, Keen and the hosts as a group
+- Rationale: Accepted the recommendation. Breaking changes are fine because nothing is on Packagist yet.
+- Date: 2026-10-29
+- Raised by: spec review (scope, risk)
+
+## D-010: How does the test reset treat registrations made in boot()?
+- Choice: Take a snapshot after boot and restore it after each test; keep flush() for the registry's own unit tests
+- Rationale: Accepted the recommendation. A plain flush would wipe consumers' boot() registrations.
+- Date: 2026-10-29
+- Raised by: spec review (testability)
+
+## D-011: What shape should the published testing helper take?
+- Choice: A Pest trait `Testing\ResetsScreenExtensions` that registers the beforeEach/afterEach hooks
+- Rationale: Accepted the recommendation. It sits alongside the existing `Testing\AtriumStyles`.
+- Date: 2026-10-29
+- Raised by: spec review (scope)
+
+## D-012: Should the browser theme matrix be a dataset or one looped test?
+- Choice: A Pest dataset, with one test per theme, layout and mode combination
+- Rationale: Accepted the recommendation. Each failure names its combination.
+- Date: 2026-10-29
+- Raised by: spec review (testability)
+
+## D-013: Do Atrium's own screens adopt Screen::make in this spec? (Q-002)
+- Choice: Yes, and more broadly: every Atrium screen in every package declares itself with `Screen::make`, gets a tab bar, and declares the standard slots. Atrium's own screens are declared in this spec: dashboard, named dashboard, widget detail, settings index and settings panel. Each package's spec declares that package's screens.
+- Rationale: "update all screen across all packages to have support for slots/tab bars".
+- Date: 2026-10-29
+- Raised by: spec review (scope)
+
+## D-014: Where does the history screen live?
+- Choice: In Keen. `history/{package}` (`HistoryController`, `history/show`) moves from Atrium to Keen, along with `x-atrium::audit.entries`, since nothing else in Atrium would use it. This supersedes D-007's "audit.entries stays in Atrium". Atrium's history route, controller, view and component are removed in this spec.
+- Rationale: "the history screen should be moved to keen."
+- Date: 2026-10-29
+- Raised by: user, during spec review
+
+## D-015: How do resolver and view failures affect the host screen? (Q-004)
+- Choice: Isolate sections and row slots: report once per request, skip the section, and the screen still returns 200. Propagate failures in the open tab's panel.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review (risk)
+
+## D-016: Does Plugin::historyNavItem() move to Keen? (Q-008)
+- Choice: Yes. Keen adds a History nav item for every package that audits, and plugins stop calling `historyNavItem()`, which Atrium removes.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review (scope)
+
+## D-017: Suite principle: packages have no knowledge of each other (answer to Q-003)
+- Choice: Atrium has no knowledge of Keen. Keen's functionality is purely plug and play. No package has knowledge of another. Companion packages may be suggested but not required. Integrations are done through simple config.
+- Rationale: In the user's words: "atrium should have no knowledge of keen. keens functionality should be purely plug and play, no package should have knowledge of another. we can suggest companion packages but no require them. itegrations should be done via simple config"
+- Consequence for this spec: `Screen::audits()`, `AuditedSubject`, `ScreenExtensions::audited()` and criterion 10 are removed. The registry instead supports wildcard screen targets (`*`, `{package}.*`), and screens declare only generic facts: key (from which the package is derived), record, tabs and slots. Q-003 no longer applies.
+- Date: 2026-10-29
+- Raised by: spec review (testability), Q-003
+
+## D-018: Which hard requirements may a package have?
+- Choice: Keystone only. Every other suite package, Atrium included, is a `suggest`. A package's UI loads only when Atrium is present, as Keen, Polycart and PennantPlus already do. Roster, Cortex, Impex and Showroom drop `require refactor-circus/atrium`. Guardian suggests Roster and integrates through Roster's seams and config.
+- Rationale: Accepted the recommendation, applying D-017.
+- Date: 2026-10-29
+- Raised by: user, following D-017
+
+## D-019: What shape does "integration via simple config" take?
+- Choice: The registrant ships editable defaults in its own config. Example: `config/cortex.php` `atrium.redirect_domains.screens => ['roster.organization' => 'tab', 'roster.user' => 'aside']`. A default only takes effect when the target screen exists, and the app may change or empty the list. Code never names another package; only the editable config does.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: user, following D-017
+
+## D-020: Rewrite the spec in place, or keep the addenda as overrides?
+- Choice: Rewrite the criteria, Goal and Design in place; keep the addenda only as a short changelog
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-021: Which Atrium screens does this spec declare?
+- Choice: Every Atrium page that has a controller view, listed by key in the spec: dashboard (`/`), named dashboard (`d/{slug}`), widget detail, settings index and settings panel
+- Rationale: Accepted the recommendation, applying D-013.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-022: Same key registered twice on one target
+- Choice: Throw `InvalidArgumentException` in local and testing. In production, report once, skip the later registration and keep the app running.
+- Rationale: Accepted the recommendation. A throw in boot() would take down every route and command.
+- Date: 2026-10-29
+- Raised by: spec review recheck (risk)
+
+## D-023: A wildcard and an exact registration with the same key on one screen
+- Choice: The exact registration wins. The wildcard duplicate is skipped and reported once per request.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (risk)
+
+## D-024: What renders around an open registered tab?
+- Choice: The tab's panel replaces the host's page content. `header.actions` always renders; `before`, `after` and `aside` render only on built-in tabs.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (scope)
+
+## D-025: How do closures receive the Screen?
+- Choice: `Screen` is passed as a trailing argument to every `authorize` and `resolve` closure
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
+
+## D-026: Wildcard grammar and duplicate scope
+- Choice: Only `*` and `{package}.*`. Duplicates are checked per target string at boot; cross-target clashes are resolved at render time by D-023 and reported once.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
+
+## D-027: Test reset API names
+- Choice: `ScreenExtensions::snapshot(): array` and `restore(array $snapshot)`. The `ResetsScreenExtensions` trait snapshots once after boot and restores after each test. `flush()` stays for the registry's own unit tests.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: spec review recheck (testability)
+
+## D-028: A `*` and a `{package}.*` registration use the same key on one screen
+- Choice: The more specific target wins: the exact key, then `{package}.*`, then `*`. The less specific duplicate is skipped and reported once per request.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: the in-place rewrite (gap in D-023/D-026)
+
+## D-029: Approval
+- Choice: Approved for tasks and the factory
+- Date: 2026-10-29
+- Raised by: spec review (approval)
+
+## D-030: Types of the host variables a registered view receives
+- Choice: `screen` is the `Screen` (the same object closures receive), `record` is the screen's record or the row, and `tab` is the open tab's key string (`ResolvedScreen::openTab`). Components get only the `data` prop.
+- Rationale: Accepted the recommendation, which matches what group 2 built and tested.
+- Date: 2026-10-29
+- Raised by: build (group 2)
+
+## D-031: row.actions per settings panel row when panels aren't models
+- Choice: Wrap each panel in an unsaved stand-in Eloquent model, `Domains\Settings\Models\SettingsPanelRowModel`, keyed by the panel key and carrying the panel, so registrants receive it as `$record` and the memo by morph class plus key applies. The Screens contract doesn't change. The stand-in gets a policy entry in `atrium.policies`, deferring to the settings screen's own authorization, so the every-model-has-a-policy arch test holds.
+- Rationale: Accepted the recommendation.
+- Date: 2026-10-29
+- Raised by: build (group 3)
+
+## D-032: The access() closure on Atrium's own screens
+- Choice: Laravel Gate: `Gate::forUser($request->user())->allows($permission, $record ? [$record] : [])`, as the workbench test host does
+- Rationale: Accepted the recommendation. It works for screens without a record.
+- Date: 2026-10-29
+- Raised by: build (group 3)
+
+## D-033: Where the settings-row stand-in lives
+- Choice: `Domains\Settings\Data\SettingsPanelRow`, an unsaved Eloquent model kept out of `Models/`. Neither model arch test scans it, so it needs no lifecycle events, no policy entry and no exemption. This supersedes D-031's namespace and policy entry; the rest of D-031 stands.
+- Rationale: The user chose this to keep the extra surface minimal.
+- Date: 2026-10-29
+- Raised by: build (group 3)
+
+## D-034: Screen::reserve() for keys the viewer may not open
+- Choice: Screen::reserve() for keys the viewer may not open; reserved, not rendered, not openable; added for Roster adopt D-031 at the user's request (2026-10-30)
+- Rationale: Roster must reserve the keys of built-in tabs the current viewer may not open without rendering them, so a registered tab using one is skipped and reported and shown to no one.
+- Date: 2026-10-30
+- Raised by: user

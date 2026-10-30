@@ -1,0 +1,1 @@
+<p>screen={{ $screen instanceof \RefactorCircus\Atrium\Domains\Screens\Data\Screen ? $screen->key : 'lost' }};record={{ $record instanceof \Illuminate\Database\Eloquent\Model ? $record->name : 'lost' }};tab={{ $tab }};extra={{ $extra }}</p>
