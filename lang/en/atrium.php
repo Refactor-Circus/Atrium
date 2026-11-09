@@ -9,6 +9,8 @@ return [
     'collapse_sidebar' => 'Collapse sidebar',
     'expand_sidebar' => 'Expand sidebar',
     'appearance' => 'Appearance',
+    'account' => 'Account',
+    'sign_out' => 'Sign out',
     'theme_light' => 'Light',
     'theme_dark' => 'Dark',
     'theme_system' => 'System',

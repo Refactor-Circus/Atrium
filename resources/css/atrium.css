@@ -76,6 +76,8 @@
 @source '../views/components/search-input.blade.php';
 @source '../views/components/section.blade.php';
 @source '../views/components/skeleton.blade.php';
+@source '../views/components/slide-over-link.blade.php';
+@source '../views/components/slide-over.blade.php';
 @source '../views/components/spinner.blade.php';
 @source '../views/components/stat.blade.php';
 @source '../views/components/status-dot.blade.php';
@@ -99,6 +101,7 @@
 @source '../views/partials/theme-switcher.blade.php';
 @source '../views/partials/theme.blade.php';
 @source '../views/partials/top-navigation.blade.php';
+@source '../views/partials/user-menu.blade.php';
 @source '../views/settings/index.blade.php';
 @source '../views/settings/show.blade.php';
 

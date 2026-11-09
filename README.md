@@ -334,7 +334,7 @@ Available components:
 
 **Layout and content**: `card`, `section`, `page-header`, `empty-state`, `stat`, `table` (with `table.row` and `table.cell`), `description-list` (with `description-list.item`), `pagination`, `breadcrumbs`, `guest` (a standalone page outside the shell)
 
-**Controls**: `button`, `icon-button`, `icon`, `badge`, `status-dot`, `chip`, `kbd`, `avatar`, `toggle`, `tooltip`, `dropdown`, `modal`, `tabs`, `tab-panel`, `search-input`
+**Controls**: `button`, `icon-button`, `icon`, `badge`, `status-dot`, `chip`, `kbd`, `avatar`, `toggle`, `tooltip`, `dropdown`, `modal`, `slide-over` (with `slide-over-link`), `tabs`, `tab-panel`, `search-input`
 
 **Feedback**: `alert`, `flash` (the session status and first error), `banner` (with `banner.button`), `progress`, `spinner`, `skeleton`
 
