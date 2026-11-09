@@ -18,11 +18,19 @@ use Symfony\Component\Console\Output\OutputInterface;
  * closure the parent sent, in this process. That closure hands its rows back
  * through the container under RESULTS, so the framework's serialized return
  * value is never read: only JSON leaves this process.
+ *
+ * From Laravel 13.40 the framework command frames its JSON in a signed
+ * envelope (`@@LARAVEL-CONCURRENCY-V1@@{base64}@@{hmac}@@`), keyed by
+ * LARAVEL_CONCURRENCY_HMAC_KEY. This command sets that key for the call and
+ * unwraps the envelope; earlier versions write the JSON bare.
  */
 class InvokeSearchSourceCommand extends Command
 {
     /** The container key the closure binds its rows under. */
     public const string RESULTS = SearchRegistry::class.'@results';
+
+    /** The environment variable the framework signs its result envelope with. */
+    private const string ENVELOPE_KEY = 'LARAVEL_CONCURRENCY_HMAC_KEY';
 
     protected $signature = 'atrium:search-source';
 
@@ -35,6 +43,10 @@ class InvokeSearchSourceCommand extends Command
         $this->laravel->forgetInstance(self::RESULTS);
 
         $buffer = new BufferedOutput;
+        $key = bin2hex(random_bytes(32));
+
+        $_SERVER[self::ENVELOPE_KEY] = $_ENV[self::ENVELOPE_KEY] = $key;
+        putenv(self::ENVELOPE_KEY.'='.$key);
 
         // Whatever the source prints would land on stdout beside the envelope.
         ob_start();
@@ -43,11 +55,32 @@ class InvokeSearchSourceCommand extends Command
             Artisan::call('invoke-serialized-closure', [], $buffer);
         } finally {
             ob_end_clean();
+
+            unset($_SERVER[self::ENVELOPE_KEY], $_ENV[self::ENVELOPE_KEY]);
+            putenv(self::ENVELOPE_KEY);
         }
 
-        $this->output->write($this->encode($this->envelope($buffer->fetch())), false, OutputInterface::OUTPUT_RAW);
+        $this->output->write($this->encode($this->envelope($this->unframe($buffer->fetch(), $key))), false, OutputInterface::OUTPUT_RAW);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The framework's JSON: the payload of its signed envelope when it framed
+     * one, else the output as written (before Laravel 13.40). An envelope
+     * whose signature does not match reads as no result.
+     */
+    private function unframe(string $output, string $key): string
+    {
+        if (preg_match('/@@LARAVEL-CONCURRENCY-V1@@([A-Za-z0-9+\/=]*)@@([a-f0-9]{64})@@/', $output, $frame) !== 1) {
+            return $output;
+        }
+
+        if (! hash_equals(hash_hmac('sha256', $frame[1], $key), $frame[2])) {
+            return '';
+        }
+
+        return (string) base64_decode($frame[1], true);
     }
 
     /**

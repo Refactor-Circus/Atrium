@@ -118,3 +118,29 @@ it('renders components outside the dashboard shell', function (): void {
         ->toContain('Works')
         ->not->toContain('<aside');
 });
+
+it('renders a slide-over closed by default, with its content marked for loading', function (): void {
+    $html = render('<x-atrium::slide-over name="orders" title="SO-1">Order body</x-atrium::slide-over>');
+
+    expect($html)->toContain('data-slide-over="orders"')
+        ->toContain('data-slide-over-content="orders"')
+        ->toContain('data-slide-over-title="SO-1"')
+        ->toContain('Order body')
+        ->toContain('role="dialog"')
+        ->toContain('if (false)');
+});
+
+it('renders a slide-over open, with where closing goes back to', function (): void {
+    $html = render('<x-atrium::slide-over name="orders" :open="true" close-url="https://app.test/orders">Order body</x-atrium::slide-over>');
+
+    expect($html)->toContain('if (true)')
+        ->toContain("closeUrl: 'https:\\/\\/app.test\\/orders'");
+});
+
+it('renders a slide-over link that loads its href into the named panel', function (): void {
+    $html = render('<x-atrium::slide-over-link name="orders" href="/orders?record=SO-1">SO-1</x-atrium::slide-over-link>');
+
+    expect($html)->toContain('href="/orders?record=SO-1"')
+        ->toContain('atrium-slide-over-load')
+        ->toContain('SO-1');
+});

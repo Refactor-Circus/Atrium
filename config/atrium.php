@@ -64,6 +64,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sign Out
+    |--------------------------------------------------------------------------
+    |
+    | The name of the app's logout route (a POST route, as Laravel's starter
+    | kits define it). The top bar's account menu signs out through it. Null,
+    | or a route the app does not define, hides the menu.
+    |
+    */
+
+    'logout_route' => 'logout',
+
+    /*
+    |--------------------------------------------------------------------------
     | Policies
     |--------------------------------------------------------------------------
     |
