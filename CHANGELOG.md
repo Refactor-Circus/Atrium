@@ -7,6 +7,10 @@
 - `slide-over` component, with `slide-over-link`: a panel that slides in from the right over the page, opened and closed by its URL's query string, so a row can open its record in place and the link can be shared.
 - An account menu in the top bar: the signed-in user's initials, name and email, and Sign out, which posts to the app's logout route (`atrium.logout_route`, default `logout`). Hidden for guests, and when that route is null or not defined.
 
+### Fixed
+
+- Search sources run in child processes returned no results on Laravel 13.40 and later, whose `invoke-serialized-closure` command frames its result in a signed envelope. `atrium:search-source` now unwraps it, and still reads the bare JSON earlier versions write.
+
 ## [v0.1.0](https://github.com/Refactor-Circus/Atrium/commits/v0.1.0) - 2026-10-30
 
 ### Breaking
