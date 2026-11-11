@@ -28,7 +28,7 @@
         "laravel/ai": "^1.2",
         "laravel/pao": "^1.1.5",
         "laravel/pennant": "^1.26",
-        "laravel/pint": "^1.32.1",
+        "laravel/pint": "^1.32.1, !=1.32.2",
         "orchestra/testbench": "^11.3",
         "pestphp/pest": "^5.3.4",
         "pestphp/pest-plugin-browser": "^5.1.2",
