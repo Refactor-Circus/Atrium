@@ -1,0 +1,61 @@
+- id: Q-001
+  question: How is the Nuxt layer distributed to host apps?
+  options:
+    - "Git extends from the repo tag (github:refactor-circus/atrium/nuxt/layer#v2.0.0), no registry"
+    - Publish @refactor-circus/atrium-nuxt to GitHub Packages
+  recommendation: "Git extends from the repo tag (github:refactor-circus/atrium/nuxt/layer#v2.0.0), no registry"
+  evidence: "spec.md Risks; no registry needed, layer version tied to the Composer tag; private repos need GIGET_AUTH"
+  source: spec-review
+- id: Q-002
+  question: Where do the Nuxt checks (typecheck, build, Vitest) run?
+  options:
+    - "composer test:nuxt script; CI runs it as its own job; composer test stays PHP-only"
+    - "composer test includes them (script calls pnpm), one command gates everything"
+    - "Separate CI job only, no composer script"
+  recommendation: "composer test:nuxt script; CI runs it as its own job; composer test stays PHP-only"
+  evidence: "spec.md AC 22 and 24; scope and testability critics both raised it; Node in composer test breaks PHP-only environments"
+  source: spec-review
+- id: Q-003
+  question: Is layer localization (i18n) in scope for v2.0.0?
+  options:
+    - "Out of scope: shell sends server-translated labels, layer strings are English"
+    - "In scope: layer ships i18n with locale files"
+  recommendation: "Out of scope: shell sends server-translated labels, layer strings are English"
+  evidence: "v1 has lang files; spec is silent; adding i18n widens an already large release"
+  source: spec-review
+- id: Q-004
+  question: How is version skew between the Composer API and the Nuxt layer handled?
+  options:
+    - "Shell response carries an API version; layer warns on mismatch"
+    - "Pin the layer ref to the same tag and document it, no runtime check"
+    - No handling
+  recommendation: "Shell response carries an API version; layer warns on mismatch"
+  evidence: "API and layer are installed separately in hosts and seven sibling packages; mismatches fail confusingly"
+  source: spec-review
+- id: Q-005
+  question: What happens at boot when a v1 config still has the removed keys (path, domain, middleware, alpine, logout_route)?
+  options:
+    - Log a deprecation warning at boot
+    - Ignore silently and document in the CHANGELOG
+    - Throw at boot outside production
+  recommendation: Log a deprecation warning at boot
+  evidence: "A host's auth guard left in the old middleware key would be silently dropped, leaving only the Authorize gate"
+  source: spec-review
+- id: Q-006
+  question: How does the layout save treat placements missing from the payload, and orphaned placements?
+  options:
+    - "Omitted placements deleted, orphans kept"
+    - "Omitted placements deleted, orphans deleted too"
+    - "Omitted placements kept; deletion is a separate endpoint"
+  recommendation: "Omitted placements deleted, orphans kept"
+  evidence: "spec.md Design (Placements); a stale client could lose data; keeping orphans survives a disabled plugin"
+  source: spec-review
+- id: Q-007
+  question: How do we guard against API and layer contract drift in tests?
+  options:
+    - "PHP tests write JSON fixtures that Vitest tests and TypeScript types are checked against"
+    - "Workbench-booted smoke test runs the playground against the real API"
+    - Manual verification through the playground only
+  recommendation: "PHP tests write JSON fixtures that Vitest tests and TypeScript types are checked against"
+  evidence: "AC 21-22 have no automated link between API payloads and the layer's hand-written types"
+  source: spec-review

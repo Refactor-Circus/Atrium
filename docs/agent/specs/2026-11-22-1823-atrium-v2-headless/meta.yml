@@ -1,6 +1,6 @@
 id: 2026-11-22-1823-atrium-v2-headless
 title: 'Atrium v2 headless'
-status: written
+status: needs-decision
 created: '2026-11-22 18:23'
 release: v2.0.0
 spike: { branch: spike/v2-headless, commit: 2607d9a, worktree: ../Atrium--v2-headless }
@@ -8,3 +8,4 @@ standards:
   refactor-circus/standards:
     version: dev-main
     reference: a5b675396232
+review_passes: 1
