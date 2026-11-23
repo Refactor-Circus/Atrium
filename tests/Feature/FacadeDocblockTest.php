@@ -67,7 +67,7 @@ it('has one @method tag per public Atrium method, with the same parameters', fun
 
 it('documents no removed method', function (string $method): void {
     expect(facadeMethodTags())->not->toHaveKey($method);
-})->with(['css', 'stylesheet']);
+})->with(['css', 'stylesheet', 'path', 'url']);
 
 it('points the facade at Atrium', function (): void {
     expect((string) new ReflectionClass(AtriumFacade::class)->getDocComment())->toContain('@see \\'.Atrium::class);

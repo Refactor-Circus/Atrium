@@ -130,7 +130,7 @@ class NavItem
      * Whether the request is this item's page or a page beneath it: an
      * item on a resource's `*.index` route stays active on the resource's
      * other routes (`*.show`, `*.edit`), and an item with a URL on the paths
-     * beneath it - except the dashboard root, which every page is beneath.
+     * beneath it - except the site root, which every page is beneath.
      */
     public function isActive(Request $request): bool
     {
@@ -168,8 +168,6 @@ class NavItem
             return true;
         }
 
-        $root = trim((string) config('atrium.path', 'atrium'), '/');
-
-        return $path !== '' && $path !== $root && str_starts_with($current, $path.'/');
+        return $path !== '' && str_starts_with($current, $path.'/');
     }
 }

@@ -141,7 +141,3 @@ it('keeps a url item active on the paths beneath it', function (): void {
     expect($item->isActive(requestFor('/reports/sales/2026')))->toBeTrue()
         ->and($item->isActive(requestFor('/reportsx')))->toBeFalse();
 });
-
-it('never treats the dashboard root as the parent of every page', function (): void {
-    expect(NavItem::make('Home')->url('/atrium')->isActive(requestFor('/atrium/settings')))->toBeFalse();
-});
