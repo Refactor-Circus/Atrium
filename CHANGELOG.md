@@ -1,11 +1,83 @@
 # Release Notes
 
-## [Unreleased](https://github.com/Refactor-Circus/Atrium/compare/v0.1.0...main)
+## [Unreleased](https://github.com/Refactor-Circus/Atrium/compare/v2.0.0...main)
+
+## [v2.0.0](https://github.com/Refactor-Circus/Atrium/compare/v0.1.0...v2.0.0) - Unreleased
+
+Atrium is headless. The Composer package serves the dashboard as a JSON API, and a Nuxt 4 layer in this repository (`nuxt/layer`) renders it. The Blade dashboard is removed, not kept beside it: there is no compatibility shim and no Blade fallback. Suite packages that require Atrium `^1` (or the `^0.1` releases) keep working against those releases until they move to `^2`; nothing on `^2` renders without the Nuxt layer.
+
+### Upgrading from v1
+
+Work through these in order.
+
+1. **Require the new release** and refresh caches: `composer require refactor-circus/atrium:^2`, then `php artisan optimize:clear`.
+2. **Run the new migration**: `php artisan migrate`. `add_uuid_and_version_to_atrium_dashboards` adds a unique, non-null `uuid` to every widget placement (backfilling existing rows in chunks) and a `version` to every dashboard. It reads the table names from `atrium.tables`, so renamed tables are migrated too, and its `down()` drops both columns. CI runs it on SQLite; it is written for MySQL and Postgres as well.
+3. **Replace the removed config keys.** Republish (`php artisan vendor:publish --tag=atrium-config --force`) or edit `config/atrium.php` by hand:
+
+   | Removed key | Replacement |
+   | --- | --- |
+   | `atrium.path` | `atrium.routes.prefix` (default `atrium/api`) for the API; the SPA's own URL is the host's, and `atrium.client_path` (default `/`) must match the path it is served from. |
+   | `atrium.domain` | None: serve the API from the application's domain and the SPA from wherever the host likes. |
+   | `atrium.middleware` | `atrium.routes.middleware` (default `['api', Authorize::class]`). It does **not** inherit the old key: add your guard (`auth:sanctum`, `auth:api`, ...) before `Authorize::class`, which stays last. Without a guard every route answers 401. |
+   | `atrium.alpine` | None: the layer bundles everything it needs. |
+   | `atrium.logout_route` | None: signing out belongs to the host's SPA. The shell sends the user's name and email. |
+
+   `atrium.routes.enabled` (default `true`) turns every route off. While any removed key is still present, Atrium logs one warning per process naming it.
+4. **Clean up published files.** Delete `resources/views/vendor/atrium` (published with the `atrium-views` tag) and `public/vendor/atrium` (published with the `atrium-assets` tag). Neither tag exists any more, and nothing reads those folders. The `atrium-config`, `atrium-lang` and `atrium-migrations` tags are unchanged.
+5. **Choose your auth.** Atrium ships no authentication. Cookie auth (Sanctum's SPA flow) needs the host's CORS (`paths`, `supports_credentials`) and CSRF setup; token auth sends the `Authorization` header from the layer's auth adapter, and the host owns where the token is stored. See the README's "Authentication".
+6. **Install the front end.** Extend the layer from a Nuxt 4 app with `extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0']` (pin a commit SHA in production), set `runtimeConfig.public.atrium.apiBase` to the API, and register a Vue component for every widget, screen extension and settings panel key with `$atrium.widget(...)`, `$atrium.extension(...)` and `$atrium.settingsPanel(...)`. See the README's "The Nuxt layer".
+7. **Update your plugins and packages** as listed below: icons become Iconify names, `view()` becomes a client component key, and plugin routes return JSON.
+
+#### Routes
+
+Every route answers JSON under `atrium.routes.prefix` and `atrium.routes.middleware`. Dashboards are bound by slug (`{dashboard:slug}`) and placements by uuid (`{widget:uuid}`, scoped to the dashboard), never by id.
+
+| v1 | v2 |
+| --- | --- |
+| `atrium.dashboard` (`GET {path}/`, the dashboard page) | Removed. `atrium.dashboards.default` (`GET dashboard`) returns the default dashboard as JSON, or `{"data": null}`, and never creates one: the layer creates the first with `POST dashboards`. |
+| `atrium.dashboard.show` (`GET {path}/d/{slug}`) | Removed. `atrium.dashboards.show` (`GET dashboards/{dashboard:slug}`). |
+| `atrium.dashboards.store`, `.update`, `.destroy`, `.layout` (`{dashboard}` by id) | Same names, bound by `{dashboard:slug}`. `update` and `layout` require the dashboard's `version` and answer 409 when it is stale. `destroy` answers 204. |
+| `atrium.dashboards.widgets.show` (HTML for a lazy widget, `{widget}` by id) | Same name, `GET dashboards/{dashboard:slug}/widgets/{widget:uuid}`, answering the placement as JSON. |
+| `atrium.settings` (`GET {path}/settings`) | Renamed `atrium.settings.index` (`GET settings`). |
+| `atrium.settings.show` | Same name, JSON. |
+| `atrium.search` | Same name, JSON; a `q` shorter than `atrium.search.min_length` now answers 422 instead of an empty list. |
+| (none) | New: `atrium.shell` (`GET shell`), `atrium.dashboards.index` (`GET dashboards`), `atrium.widgets.index` (`GET widgets`). |
+| Plugin routes, named `atrium.{name}` under `{path}/` | Under `plugins/{key}`, named `atrium.plugins.{key}.{name}`: name a route by its operation only (`->name('index')` serves `atrium.plugins.{key}.index`), and return JSON. Update `route()` calls and nav items that named the old routes. |
+
+#### Removed, with their replacements
+
+- **The Blade UI.** `resources/views` (the shell, every page and the whole `x-atrium::` component library: `x-atrium::layout`, `card`, `table`, `screen-tabs`, `screen-sections`, `screen-tab-panel` and the rest), `resources/css`, `resources/icons` (the Heroicons set) and the compiled `public/atrium.*` files (`atrium.css`, `atrium.js`, `alpine.js`). Replacement: the Nuxt layer's components (Nuxt UI 4) in your SPA. Package screens become Vue pages that read your plugin's JSON routes.
+- **The npm CSS build.** `package.json`, `package-lock.json`, `bin/build-css.mjs` and `npm run build:css` (Tailwind and Alpine), and the `build:css` and `test:browser` Composer scripts. Replacement: the layer's pnpm workspace in `nuxt/` and `composer test:nuxt`.
+- **`RefactorCircus\Atrium\Support\StyleRegistry`, `Atrium::css()` and `Atrium::stylesheet()`.** Replacement: styles live in your Nuxt app or layer.
+- **`RefactorCircus\Atrium\Testing\AtriumStyles`.** Replacement: none; packages ship Vue components instead of Blade views.
+- **`RefactorCircus\Atrium\Support\Icons` (`Support\Icons`, `Icons::svg()`, `Icons::register()`) and inline SVG icons.** Replacement: Iconify names such as `i-lucide-home`, passed to `icon()` on `NavItem`, `NavGroup`, `WidgetDefinition`, `TabDefinition`, `SettingsPanel`, `SearchResult` and `Theme`. Each setter throws `InvalidArgumentException` for anything else (`lucide:home`, `i-home`, SVG markup). Heroicons names map to `i-heroicons-*` once the host installs `@iconify-json/heroicons`, or to the bundled `i-lucide-*` set. `TabDefinition::DEFAULT_ICON` is now `i-lucide-layout-grid`.
+- **`view()` on `WidgetDefinition`, `SettingsPanel`, `TabDefinition`, `SectionDefinition` and the `DefinesExtension` trait.** Replacement: `component()`, which now names the client component key the layer looks up in `$atrium.widget()`, `$atrium.extension()` or `$atrium.settingsPanel()` (it used to name a Blade component). It defaults to the definition's key, so most definitions drop the call. A tab or section no longer needs a view or a component to register.
+- **`Atrium::path()` and `Atrium::url()`**, and their facade `@method` lines. Replacement: `route('atrium.…')` for API URLs; the SPA's URLs are the host's. `NavItem::isActive()` no longer reads `atrium.path`.
+- **The Blade controllers and requests.** `Domains\Dashboard\Http\Controllers\DashboardCrudController` (its store, update and destroy are now on `DashboardController`), the HTML responses of `DashboardController`, `DashboardWidgetController`, `SettingsController` and `SearchController`, and the first-visit auto-create of a dashboard. Replacement: the JSON controllers on the same routes, each a single `return $request->persist();`, with `{Verb}{Entity}Request` classes (`ShowDashboardRequest`, `IndexDashboardRequest`, `ShowDefaultDashboardRequest`, `ShowDashboardWidgetRequest`, `IndexWidgetRequest`, `ShowShellRequest`, `IndexSearchResultRequest`, `IndexSettingsPanelRequest`, `ShowSettingsPanelRequest`).
+- **`RefactorCircus\Atrium\Http\Controllers\Concerns\AuthorizesScreens`** (`authorizeScreen()`). Replacement: authorize in your request's `authorize()`, or ask `Support\ScreenAccess::allows()`.
+- **`Support\ServiceProvider::loadDashboardRoutesFrom()` and `dashboardRouteAttributes()`.** Replacement: `loadApiRoutesFrom()`, Keystone's API group from `atrium.routes.*`, with JSON rendering forced.
+- **`DashboardManager::pick()`, `DashboardManager::isVisible()` and `DashboardManager::canModify()`**, and the `$slug` argument of `DashboardManager::current()`. Replacement: `findVisible($request, $slug)`, `current($request)` (which never creates a dashboard) and `abilities($dashboard, $request)` (`['update' => bool, 'delete' => bool]`, sent as `meta.abilities`).
+- **The `atrium` view namespace and Blade component namespace**, and the `atrium-views` and `atrium-assets` publish tags (see step 4).
+- **The browser suite.** `tests/Browser`, `tests/BrowserTestCase.php` (`BrowserTestCase`), the Playwright dependency and the `browser-tests` workflow. Replacement: Vitest component tests in `nuxt/layer/test`, run by `composer test:nuxt`.
+- **The `slide-over` component and the top bar's account menu**, added after v0.1.0, never reached a release and go with the Blade UI.
+
+#### Changed behavior
+
+- **Layout saves are full layouts.** `SaveDashboardLayoutAction` no longer deletes and recreates every placement. A `WidgetPlacementData` with a `uuid` updates that placement in place, one without is created, and a placement the layout leaves out is deleted, except orphans (placements whose widget is no longer registered), which are kept. A `uuid` from another dashboard fails validation (422). A v1-style payload with no uuids therefore replaces every non-orphan placement with new ones, with new uuids.
+- **Optimistic locking.** `SaveDashboardLayoutData` and `UpdateDashboardData` take a `version`, required over HTTP; a stale one throws a `ValidationException` with status 409, keyed `version`, and changes nothing. Code that vouches for the dashboard's state may leave it out. Every update and layout save moves the dashboard's `version` on, and `DashboardResource` sends it.
+- **Reads never write.** No GET request creates a dashboard; `GET dashboard` answers `{"data": null}` for a user with none.
+- **Guests get 401 JSON** from `Authorize` itself, on every route and whatever the `Accept` header, even with no guard configured; a user the gate refuses gets 403. `Authorize` runs before route model binding.
+- **Resolver output must be JSON-serializable.** Every widget, tab, section and settings panel resolver's output passes through `Support\JsonData::check()`. A closure, an `Htmlable` or another non-serializable object, a cycle or too deep a structure throws `RefactorCircus\Atrium\Exceptions\UnserializableDataException` (status 500). Outside `local` and `testing`, a failing eager resolver no longer fails the response: that placement, tab, section or panel is sent with `data: null` and an `error`, and the exception is reported.
+- **Links are `{path, external}`.** Navigation items and search results are sent with `link`, computed by `Support\ClientPath` against `atrium.client_path` and the host of `app.url`; a `javascript:`, `data:`, `//host` or other unsafe URL is sent as `link: null`.
 
 ### Added
 
-- `slide-over` component, with `slide-over-link`: a panel that slides in from the right over the page, opened and closed by its URL's query string, so a row can open its record in place and the link can be shared.
-- An account menu in the top bar: the signed-in user's initials, name and email, and Sign out, which posts to the app's logout route (`atrium.logout_route`, default `logout`). Hidden for guests, and when that route is null or not defined.
+- The JSON API: `ShellResource`, `DashboardResource` and `DashboardWidgetResource` (beside the models, in `Domains\Dashboard\Resources`), `WidgetDefinitionResource`, `ResolvedScreenResource`, `SettingsPanelResource` and `SearchResultResource`, all on Keystone's `JsonResource`.
+- `nuxt/layer` (`@refactor-circus/atrium-nuxt` 2.0.0): the shell, navigation, ⌘K search, theme switching, the dashboard grid editor and switcher, settings pages and screens, the `$atrium` registry (`auth()`, `widget()`, `extension()`, `settingsPanel()`), an unregistered-component fallback, an error card for failed placements, locale files (`en`) with `@nuxtjs/i18n`, locally bundled `lucide` icons, and a version-mismatch banner. `nuxt/playground` runs it against the workbench.
+- `Atrium::API_VERSION` (`2.0`), sent in the shell as `api_version`.
+- `Theme::icon()`, and `WidgetDefinition::component()` and `SettingsPanel::component()`.
+- `composer test:nuxt` and the `nuxt` CI job: a frozen pnpm install, typecheck, build, Vitest, and a build of a fresh consumer app against a copy of the layer.
+- Contract fixtures in `nuxt/layer/test/fixtures`, compared by the PHP suite on every run and rewritten only with `UPDATE_FIXTURES=1`.
 
 ### Fixed
 
