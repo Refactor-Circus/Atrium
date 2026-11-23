@@ -1,0 +1,209 @@
+{
+    "key": "impex",
+    "label": "Impex",
+    "api_base": "/impex",
+    "features": [
+        "RefactorCircus\\Atrium\\Integrations\\Impex\\ImpexFeature"
+    ],
+    "navigation": [
+        {
+            "label": "Runs",
+            "icon": "i-lucide-circle-play",
+            "group": "Impex",
+            "sort": 10,
+            "link": {
+                "path": "/impex/runs",
+                "external": false
+            },
+            "badge": null,
+            "live": {
+                "key": "impex.active-runs",
+                "options": {}
+            },
+            "children": []
+        },
+        {
+            "label": "Messages",
+            "icon": "i-lucide-inbox",
+            "group": "Impex",
+            "sort": 20,
+            "link": {
+                "path": "/impex/messages",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Flows",
+            "icon": "i-lucide-list-ordered",
+            "group": "Impex",
+            "sort": 30,
+            "link": {
+                "path": "/impex/flows",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Channels",
+            "icon": "i-lucide-radio-tower",
+            "group": "Impex",
+            "sort": 40,
+            "link": {
+                "path": "/impex/channels",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Subscriptions",
+            "icon": "i-lucide-rss",
+            "group": "Impex",
+            "sort": 50,
+            "link": {
+                "path": "/impex/subscriptions",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        }
+    ],
+    "widgets": [
+        {
+            "key": "impex.run-status",
+            "label": "Run status",
+            "description": "How many runs sit in each state right now.",
+            "icon": "i-lucide-activity",
+            "component": "impex.run-status",
+            "lazy": false,
+            "default_size": {
+                "width": 6,
+                "height": 2
+            },
+            "min_size": {
+                "width": 1,
+                "height": 1
+            },
+            "data": {}
+        },
+        {
+            "key": "impex.recent-failures",
+            "label": "Recent failures",
+            "description": "Runs that failed most recently.",
+            "icon": "i-lucide-circle-x",
+            "component": "impex.recent-failures",
+            "lazy": false,
+            "default_size": {
+                "width": 6,
+                "height": 2
+            },
+            "min_size": {
+                "width": 1,
+                "height": 1
+            },
+            "data": {}
+        },
+        {
+            "key": "impex.message-volume",
+            "label": "Message volume",
+            "description": "Messages recorded over the last day.",
+            "icon": "i-lucide-arrow-left-right",
+            "component": "impex.message-volume",
+            "lazy": false,
+            "default_size": {
+                "width": 3,
+                "height": 1
+            },
+            "min_size": {
+                "width": 1,
+                "height": 1
+            },
+            "data": {}
+        }
+    ],
+    "settings": {
+        "key": "impex",
+        "label": "Impex",
+        "description": "Retention, limits and artifact storage for the workflow engine.",
+        "icon": "i-lucide-arrow-left-right",
+        "component": "impex",
+        "data": {}
+    },
+    "search_sources": [
+        {
+            "key": "impex",
+            "integration": "impex",
+            "label": "Impex runs",
+            "icon": "i-lucide-circle-play"
+        }
+    ],
+    "screens": [
+        {
+            "key": "impex.runs",
+            "kind": "list",
+            "path": "/impex/runs",
+            "subject_type": null
+        },
+        {
+            "key": "impex.run",
+            "kind": "detail",
+            "path": "/impex/runs/:run",
+            "subject_type": null
+        },
+        {
+            "key": "impex.flows",
+            "kind": "list",
+            "path": "/impex/flows",
+            "subject_type": null
+        },
+        {
+            "key": "impex.messages",
+            "kind": "list",
+            "path": "/impex/messages",
+            "subject_type": null
+        },
+        {
+            "key": "impex.message",
+            "kind": "detail",
+            "path": "/impex/messages/:message",
+            "subject_type": null
+        },
+        {
+            "key": "impex.channels",
+            "kind": "list",
+            "path": "/impex/channels",
+            "subject_type": null
+        },
+        {
+            "key": "impex.channel-create",
+            "kind": "detail",
+            "path": "/impex/channels/create",
+            "subject_type": null
+        },
+        {
+            "key": "impex.channel",
+            "kind": "detail",
+            "path": "/impex/channels/:name",
+            "subject_type": null
+        },
+        {
+            "key": "impex.subscriptions",
+            "kind": "list",
+            "path": "/impex/subscriptions",
+            "subject_type": null
+        },
+        {
+            "key": "impex.subscription",
+            "kind": "detail",
+            "path": "/impex/subscriptions/:subscription",
+            "subject_type": null
+        }
+    ]
+}
