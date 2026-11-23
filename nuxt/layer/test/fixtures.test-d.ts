@@ -1,12 +1,19 @@
 import { describe, expectTypeOf, it } from 'vitest'
+import type { components, operations } from '../app/client/schema'
 import type {
+  AtriumDashboard,
   AtriumDashboardResponse,
   AtriumIntegration,
   AtriumNavLive,
+  AtriumPlacement,
+  AtriumSearchResult,
   AtriumSearchSource,
   AtriumSettingsIndexResponse,
   AtriumSettingsPanelResponse,
-  AtriumShellResponse
+  AtriumShellResponse,
+  AtriumWidgetDefinition,
+  ScreenData,
+  Shell
 } from '../app/types/atrium'
 import dashboard from './fixtures/dashboard.json'
 import screen from './fixtures/screen.json'
@@ -36,6 +43,8 @@ type Sent<T> = T extends readonly (infer Item)[]
     ? { [K in keyof T as [Exclude<T[K], undefined>] extends [never] ? never : K]: Sent<Exclude<T[K], undefined>> }
     : T
 
+type Schemas = components['schemas']
+
 describe('the API contract fixtures', () => {
   it('shell.json is a shell response', () => {
     expectTypeOf<Sent<typeof shell>>().toExtend<AtriumShellResponse>()
@@ -64,5 +73,44 @@ describe('the API contract fixtures', () => {
 
   it('settings.json is the settings list response with its screen', () => {
     expectTypeOf<Sent<typeof settings>>().toExtend<AtriumSettingsIndexResponse>()
+  })
+})
+
+/*
+ * The public types are aliases of the client generated from openapi.json
+ * (AC 75), so the fixtures also satisfy the generated responses themselves:
+ * a resource whose `schema()` drifts from what it sends fails here.
+ */
+type Json<Operation extends keyof operations, Status extends keyof operations[Operation]['responses']> =
+  operations[Operation]['responses'][Status] extends { content: { 'application/json': infer Body } } ? Body : never
+
+describe('the API contract fixtures against the generated client', () => {
+  it('shell.json and shell-integrations.json are atrium.shell answers', () => {
+    expectTypeOf<Sent<typeof shell>>().toExtend<Json<'atrium.shell', 200>>()
+    expectTypeOf<Sent<typeof shellIntegrations>>().toExtend<Json<'atrium.shell', 200>>()
+    expectTypeOf<Sent<typeof shell>['data']>().toExtend<Schemas['ShellResource']>()
+  })
+
+  it('dashboard.json is an atrium.dashboards.show answer', () => {
+    expectTypeOf<Sent<typeof dashboard>>().toExtend<Json<'atrium.dashboards.show', 200>>()
+  })
+
+  it('screen.json and screen-tab.json are atrium.settings.show answers', () => {
+    expectTypeOf<Sent<typeof screen>>().toExtend<Json<'atrium.settings.show', 200>>()
+    expectTypeOf<Sent<typeof screenTab>>().toExtend<Json<'atrium.settings.show', 200>>()
+  })
+
+  it('settings.json is an atrium.settings.index answer', () => {
+    expectTypeOf<Sent<typeof settings>>().toExtend<Json<'atrium.settings.index', 200>>()
+  })
+
+  it('keeps the public names as aliases of the generated schemas', () => {
+    expectTypeOf<AtriumDashboard>().toEqualTypeOf<Schemas['DashboardResource']>()
+    expectTypeOf<AtriumPlacement>().toEqualTypeOf<Schemas['DashboardWidgetResource']>()
+    expectTypeOf<AtriumWidgetDefinition>().toEqualTypeOf<Schemas['WidgetDefinitionResource']>()
+    expectTypeOf<AtriumSearchResult>().toEqualTypeOf<Schemas['SearchResultResource']>()
+    // A nav item's `live` is optional on the items a live resolver returns.
+    expectTypeOf<Omit<Shell, 'navigation'>>().toExtend<Omit<Schemas['ShellResource'], 'navigation'>>()
+    expectTypeOf<ScreenData>().toExtend<Omit<Schemas['ResolvedScreenResource'], 'path' | 'subject_type' | 'record'>>()
   })
 })

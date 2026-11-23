@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Resources;
 
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Http\Request;
+use Illuminate\JsonSchema\Types\Type;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
 
@@ -48,6 +50,38 @@ final class DashboardWidgetResource extends JsonResource
         $this->resolved = $resolved;
 
         return $this;
+    }
+
+    /**
+     * A placement as `toArray()` sends it. `data` and `error` are not
+     * required: a lazy placement on the dashboard has no `data` key, and only
+     * an isolated failure sends `error`.
+     *
+     * @return array<string, Type>
+     */
+    public static function schema(JsonSchema $schema): array
+    {
+        $cell = fn (): Type => $schema->integer()->nullable()->required();
+
+        return [
+            'uuid' => $schema->string()->required(),
+            'key' => $schema->string()->description('The widget definition key.')->required(),
+            'component' => $schema->string()->nullable()->description('The registered component; null for an orphaned placement.')->required(),
+            'title' => $schema->string()->nullable()->required(),
+            'icon' => $schema->string()->nullable()->description('An Iconify name.')->required(),
+            'lazy' => $schema->boolean()->required(),
+            'grid' => $schema->object([
+                'row' => $cell(),
+                'column' => $cell(),
+                'width' => $cell(),
+                'height' => $cell(),
+            ])->required(),
+            'settings' => $schema->object()->description('The placement\'s settings, a JSON object.')->required(),
+            'data' => $schema->object()->nullable()->description('The resolved data; absent on a lazy placement, null when it failed or is not available.'),
+            'error' => $schema->object([
+                'message' => $schema->string()->required(),
+            ])->description('Present only when resolving failed and was isolated.'),
+        ];
     }
 
     /**

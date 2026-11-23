@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Domains\Screens\Http\Resources;
 
 use Closure;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\JsonSchema\Types\Type;
 use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Screens\Data\ResolvedScreen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
@@ -74,6 +76,44 @@ final class ResolvedScreenResource extends JsonResource
         $this->rows = $rows;
 
         return $this;
+    }
+
+    /**
+     * A resolved screen as `toArray()` sends it. `path`, `subject_type` and
+     * `record` come only with a screen a suite integration declares.
+     * `sections` holds each slot's sections by slot name, and `rows` each
+     * row's row-slot sections by row key, then slot: every section has the
+     * shape of a tab's `key`, `label`, `component`, `data` and `error`.
+     *
+     * @return array<string, Type>
+     */
+    public static function schema(JsonSchema $schema): array
+    {
+        $extension = fn (): array => [
+            'key' => $schema->string()->required(),
+            'label' => $schema->string()->required(),
+            'component' => $schema->string()->nullable()->description('The registered component; null on a built-in tab.')->required(),
+            'data' => $schema->object()->nullable()->description('Absent on a tab that is not open; null when it failed.'),
+            'error' => $schema->object([
+                'message' => $schema->string()->required(),
+            ])->description('Present only when resolving failed and was isolated.'),
+        ];
+
+        return [
+            'key' => $schema->string()->required(),
+            'kind' => $schema->string()->required(),
+            'path' => $schema->string()->description('The layer route of a declared screen.'),
+            'subject_type' => $schema->string()->nullable()->description('The morph alias of a declared screen\'s record.'),
+            'record' => $schema->string()->nullable()->description('The record key a declared screen was asked for.'),
+            'open_tab' => $schema->string()->required(),
+            'tabs' => $schema->array()->items($schema->object([
+                ...$extension(),
+                'icon' => $schema->string()->nullable()->description('An Iconify name.')->required(),
+                'built_in' => $schema->boolean()->description('A tab the page renders itself.')->required(),
+            ]))->required(),
+            'sections' => $schema->object()->description('Each slot\'s sections, by slot name.')->required(),
+            'rows' => $schema->object()->description('Each row\'s row-slot sections, by row key, then slot.')->required(),
+        ];
     }
 
     /**

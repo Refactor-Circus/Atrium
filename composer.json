@@ -22,6 +22,7 @@
         "laravel/framework": "^13.35"
     },
     "require-dev": {
+        "dedoc/scramble": "^0.13.55",
         "larastan/larastan": "^3.13",
         "laravel/ai": "^1.2",
         "laravel/pao": "^1.1.5",
@@ -91,10 +92,14 @@
             "@test:types",
             "@test:unit"
         ],
+        "openapi:export": [
+            "@php vendor/bin/testbench workbench:openapi openapi.json"
+        ],
         "test:nuxt": [
             "Composer\\Config::disableProcessTimeout",
             "node nuxt/layer/test/fixtures-present.mjs",
             "pnpm -C nuxt install --frozen-lockfile",
+            "pnpm -C nuxt generate:client --check",
             "pnpm -C nuxt typecheck",
             "pnpm -C nuxt build",
             "pnpm -C nuxt test",
