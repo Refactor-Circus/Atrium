@@ -15,3 +15,9 @@ runs:
     result: needs-decision
     round: 0
     date: 2026-11-23
+  - workflow: ring-master-factory
+    run_id: wf_dac4e63f-2fb
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "groups 3 and 4 implementers hit max_turns without reporting; partial work committed as WIP on their group branches (6d1e713, a2fca62); relaunched with implementer max_turns 160"
