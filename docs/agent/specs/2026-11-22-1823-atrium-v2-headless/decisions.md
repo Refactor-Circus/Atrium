@@ -41,3 +41,39 @@
 - Rationale: The user took the recommendation.
 - Date: 2026-11-22
 - Raised by: spec review (testability)
+
+## D-008: How does layout save guard against a stale client overwriting a newer layout?
+- Choice: Optimistic lock: the client sends the dashboard's version, a mismatch returns 409 and the layer reloads
+- Rationale: Recommended; D-006 makes the payload the full layout, so a stale save would silently delete placements.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (risk)
+
+## D-009: What happens when an eager widget's resolver throws or fails JsonData::check()?
+- Choice: Isolate in production only (placement gets data null plus error, logged); 500 in local and testing
+- Rationale: Recommended; one broken plugin widget must not make the dashboard unloadable.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (risk)
+
+## D-010: Where does the layer get Iconify icon data?
+- Choice: Bundle lucide locally; hosts add @iconify-json packs or opt in to the remote Iconify API
+- Rationale: Recommended; works offline and under a strict CSP, and doesn't leak icon usage.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (risk)
+
+## D-011: Which locales ship in v2.0.0?
+- Choice: English only; the i18n mechanism plus a second locale used only in Vitest
+- Rationale: Recommended; bounds the D-003 scope.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (scope)
+
+## D-012: What happens to the atrium.theme config key?
+- Choice: Keep it; its values go out as the built-in theme's properties in the shell
+- Rationale: Recommended.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (scope)
+
+## D-013: How does ClientPath decide same-host, and what does it return for rejected forms?
+- Choice: Same host means the host of config('app.url'); a rejected form returns null and the link is omitted
+- Rationale: Recommended; the request host is the API's, not the SPA's.
+- Date: 2026-11-22
+- Raised by: spec review pass 2 (testability)

@@ -23,3 +23,27 @@ Changed:
 - Out of scope: added e2e/browser suite, CORS/CSRF/host auth, OpenAPI, rate limiting and v1 shim. Layer i18n was not added because it is an open question.
 
 Not applied (they would settle open questions): decide where Node checks run or ban pnpm from `composer test`; fail loudly at boot on removed config keys; layout-save semantics for omitted uuids and orphans; a shared contract check between API and layer; layer i18n; distribution.
+
+### Round 1 revision (findings pass)
+
+Revised `spec.md` again. Left alone, because they touch the open questions: the `ClientPath` return value for a rejected form and its same-host rule, the observable status and body when eager or lazy data fails `JsonData::check()`, the `atrium.theme` key, Iconify data and icon assets, locale coverage, and the stale-client guard on layout save.
+
+Changed:
+- Out of scope: names the intended behavior changes (no write on read, client-side first-dashboard create, full-layout save with orphans kept, placement uuids). Added 1.x backports, pagination, HTTP caching, URL versioning, RTL and a11y. Distribution now says git `extends`. Reason: the boundary contradicted AC 6, 9, 20 and 30.
+- AC 4: added `locale` and `api_version` to the shell field list. Reason: the exact-structure test would otherwise omit them.
+- AC 22, 24 and Risks: inlined D-001 and D-002 (`composer test:nuxt`, done means both gates pass) and removed the resolved distribution risk. Added Vitest cases for noopener, locale switch, nav link and badge, layout payload, settings and screen rendering, Iconify render and the version banner. Added the host-consumption rules (no `workspace:` deps, no imports outside the layer) and a temp-directory consumer build step. Reason: stale wording, and unpinned behavior could regress silently.
+- AC 7, 8: `data` is absent for lazy placements; exact shapes for the null default, `layout` and `destroy`.
+- AC 9: orphan lazy request returns 404; chunking is tested with more rows than a chunk; the MySQL/Postgres check is a PR template item; a no-uuid payload is stated to delete and recreate non-orphan placements, with the end state pinned by a test.
+- AC 30: delete, update and create share one `DB::transaction()`, and a failure leaves old placements intact.
+- AC 13: depth limit and cycle guard throw `UnserializableDataException`; models serialize through `toArray()`.
+- AC 14: added bypass forms to the rejected table, `ClientPath` never throws, the layer refuses links not starting with `/` or http(s), and the server enforces `search.min_length` with 422.
+- AC 16: CSS scripts and deps removed from `package.json`; a test keeps the token guard under `workbench/`; `export-ignore` for `nuxt/`.
+- AC 23: pre-merge sibling check (tag range, not `dev-main`, CI), grep output recorded in the PR, checklist items named with an owner.
+- AC 25: document pinning to a commit SHA and protecting `v*` tags.
+- AC 28: Pest test that `Atrium::API_VERSION` matches the layer `package.json` major.minor.
+- AC 29: warning is once per process at `warning` level, naming the keys, tested with `Log::spy()`; `routes.middleware` is not inherited.
+- AC 31: fixtures are generated in memory with seeded uuids and frozen time and compared; writing needs `UPDATE_FIXTURES=1`; `composer test:nuxt` fails when the fixtures directory is missing.
+
+## Pass 2: max_passes reached
+
+The recheck confirmed that D-001 to D-007 are in `spec.md`, and applied the findings listed above. It raised 8 new questions, which were deduplicated to 6. The user answered all of them directly: D-008 to D-013, recorded as AC 32 to 37.

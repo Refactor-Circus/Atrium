@@ -32,6 +32,8 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
    - themes: default, switchable, and each theme's properties
    - settings panel summaries
    - `search.min_length`
+   - `locale` (the app's current locale, AC 27)
+   - `api_version` (AC 28)
 
    A test asserts the exact JSON structure against `ShellResource`, including every theme field (as exposed by the theme definition) and every settings panel summary field (`key`, `label`, `icon`, `component`), not only key presence.
 5. Responses by auth state:
@@ -48,15 +50,17 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
 7. A dashboard is serialized by a `final` `DashboardResource` beside the model, in `Domains/Dashboard/Resources/`, extending Keystone's `JsonResource`.
    - It exposes `slug`, `name`, `is_default` and `widgets`.
    - It does not expose the internal `id`.
-   - Each widget placement exposes `uuid`, `key`, `component`, `title`, `icon`, `lazy`, `grid` and `settings`, plus `data` when the placement isn't lazy.
+   - Each widget placement exposes `uuid`, `key`, `component`, `title`, `icon`, `lazy`, `grid` and `settings`, plus `data` when the placement isn't lazy. For a lazy placement `data` is absent, not null.
+   - A test asserts the exact shape for the populated case and for the null default (`{"data": null}`, which has no `meta`).
    - Orphaned placements (no definition) have `component: null`.
-8. Abilities go in the response's `meta.abilities` (`update`, `delete`), never inside the resource body. `show`, `default`, `store` and `update` include them.
+8. Abilities go in the response's `meta.abilities` (`update`, `delete`), never inside the resource body. `show`, `default`, `store` and `update` include them. `layout` returns the same `DashboardResource` with the same `meta.abilities`; `destroy` returns 204 with no body. A test asserts the exact shape of each.
 9. Each placement has a `uuid` column, unique, generated on create, plus a migration. Lazy widget URLs and layout payloads identify placements only by `uuid`:
    - A placement in another dashboard returns 404 (scoped binding).
    - A layout payload with a foreign uuid fails validation (422).
-   - The migration uses the configurable `atrium.tables` key (never a literal table name), backfills existing rows in chunks, and has a working `down()`.
-   - A test seeds v1 placements without uuids, runs the migration, and asserts every row has a distinct non-null uuid and the column is unique and not null. It passes with default and renamed tables (the `RenamedTables` suite). CI covers SQLite. MySQL and Postgres are covered by a documented manual check in the PR.
-   - A v1-style layout payload with no uuids still creates placements.
+   - An orphaned placement (no definition) renders with `component: null` and is never lazy. A `widgets.show` request for one returns 404, and a test asserts it.
+   - The migration uses the configurable `atrium.tables` key (never a literal table name), backfills existing rows, and has a working `down()`.
+   - A test seeds v1 placements without uuids, runs the migration, and asserts every row has a distinct non-null uuid and the column is unique and not null. It passes with default and renamed tables (the `RenamedTables` suite). A second test seeds more rows than one backfill chunk and asserts all get uuids. CI covers SQLite. MySQL and Postgres are a checklist item in the PR template, confirmed by the PR author before merge.
+   - A v1-style layout payload with no uuids is accepted. Under full-layout semantics (AC 30) its placements are all new: against an existing dashboard it deletes every non-orphan placement and recreates them with new uuids, so their lazy URLs change. A test fixes this end state, pinning the response and the DB row counts.
 10. Store, update, destroy and layout each go through a `{Verb}{Entity}Request` whose `persist()` calls the existing action:
     - store returns 201 with a `DashboardResource`
     - update and layout return 200 with a `DashboardResource`
@@ -73,9 +77,12 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
 12. `Plugin::routes()` registers its routes inside Atrium's API group, named `atrium.plugins.{key}.*`. The plugin's feature-gate middleware still runs: a disabled plugin's route returns 404. A test asserts every route named `atrium.*` carries the group's middleware, with `Authorize` last.
 13. Every resolver's output passes through `JsonData::check()`. Data containing an `Htmlable`, a closure or a non-serializable object throws `UnserializableDataException`, which is `final`, extends `AtriumException`, and is built with `::forValue($owner, $path, $value)`. The message has the format `Widget [orders] returned unserializable data at [rows.0.cell]: Closure`, and the exception's status is 500.
     - Accepted types: scalars, arrays, `JsonSerializable`, `Arrayable`, `BackedEnum` and `DateTimeInterface`. Everything else (`Htmlable`, closures, other objects) is rejected. A test covers each rejected type and each accepted type, including a Carbon, an Enum, an Eloquent model and a Collection.
+    - Resolver output is walked with a depth limit and a cycle guard. Exceeding the limit or finding a cycle throws `UnserializableDataException`. Models serialize through `toArray()` (so `$hidden` applies), and the docs recommend returning resources. A cyclic-structure test and a depth-limit test cover this.
     - Eager `data` that fails throws loudly, intended in every environment. A lazy widget's failure affects only its own `widgets.show` response: a test shows a failing lazy widget does not break the dashboard payload.
 14. `search` results carry `link: {path, external}`, computed by `ClientPath` relative to the API's client base (`atrium.client_path`, default `/`).
-    - `ClientPath` allows only http(s) absolute URLs and relative paths. It rejects other schemes (`javascript:`, `data:`) and `//host` forms. A unit test table covers input to `{path, external}`: a root and a non-root `client_path`, a same-host URL outside `client_path`, null, query strings, fragments, and each rejected form.
+    - `ClientPath` allows only http(s) absolute URLs and relative paths. It rejects other schemes (`javascript:`, `data:`) and `//host` forms. A unit test table covers input to `{path, external}`: a root and a non-root `client_path`, a same-host URL outside `client_path`, null, query strings, fragments, and each rejected form. The rejected forms include these bypasses: `/\host`, `\\host`, leading whitespace or control characters (`java\nscript:`), mixed-case schemes, `http:host` and userinfo URLs (`https://client.example@evil.test`). `ClientPath` never throws on a bad value.
+    - The layer refuses to render a link whose path doesn't start with `/` or http(s).
+    - The search request enforces `search.min_length`: a shorter `q` returns 422, and a test asserts it.
     - The layer sets `rel="noopener noreferrer"` on external links.
 15. Icons are Iconify name strings, validated by the pattern `^i-[a-z0-9]+(-[a-z0-9]+)+$`. Inline SVG and `Support\Icons` are gone, and the `icon()` setters on `NavItem`, `NavGroup`, `WidgetDefinition`, `TabDefinition`, `SettingsPanel`, `SearchResult` and theme swatches throw `InvalidArgumentException` at definition time for a value that isn't an Iconify name. Tests: `i-lucide-home` passes; `lucide:home`, inline SVG and `i-home` fail.
 
@@ -86,10 +93,10 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
     - `StyleRegistry`, `Atrium::css()` / `stylesheet()`, `Testing\AtriumStyles`
     - Blade controllers and requests
     - `tests/Browser`, `BrowserTestCase`
-    - the npm CSS build
+    - the npm CSS build: the CSS scripts and CSS-only dependencies are gone from `package.json`
     - the config keys `path`, `domain`, `middleware`, `alpine` and `logout_route`
 
-    The `Atrium` facade's `@method` docblock matches its methods. Tests: a reflection test compares the `@method` tags to the facade's public methods, and a removal test asserts the deleted files, classes and config keys are absent.
+    The `Atrium` facade's `@method` docblock matches its methods. Tests: a reflection test compares the `@method` tags to the facade's public methods, and a removal test asserts the deleted files, classes, config keys and `package.json` CSS scripts and dependencies are absent. An Arch or file test asserts the workbench token guard class exists only under `workbench/`, and the composer archive rules (`.gitattributes` `export-ignore`) exclude `nuxt/`, `workbench/` and the tests from the dist.
 17. `ArchTest` fails if `src/` calls `view(`, references `Illuminate\View`, or uses `Blade::`.
 
 **Config**
@@ -124,8 +131,17 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
     - a tab switch sending `?tab=`
     - theme switching
     - ⌘K search calling `atrium.search` and rendering `link.path` and `external`
+    - `rel="noopener noreferrer"` on external links
+    - a locale switch driven by the shell `locale` (AC 27)
+    - nav rendering with `link` and `badge`
+    - the grid editor sending the layout payload (uuids and layout fields)
+    - the settings panel and screen section rendering
+    - the Iconify icon render
+    - the version-mismatch banner (AC 28), with equal, minor-mismatch and major-mismatch cases
 
-    The purely visual parts (layout, grid editing feel) are checked manually. The gate that runs these Node checks is the one chosen in the open question on where the Nuxt checks run, and the spec is not final until it is named. `pnpm-lock.yaml` is committed, Node and pnpm are pinned (`packageManager`, `.nvmrc`), and the pinned versions are copied into the repo.
+    The purely visual parts (layout, grid editing feel) are checked manually. These Node checks run in `composer test:nuxt` (AC 26). `pnpm-lock.yaml` is committed, Node and pnpm are pinned (`packageManager`, `.nvmrc`), and the pinned versions are copied into the repo.
+    - Hosts consume `nuxt/layer` through giget from a subdirectory, so the lockfile pins only the monorepo. `nuxt/layer/package.json` has no `workspace:` dependencies, and the layer imports nothing outside `nuxt/layer`.
+    - `composer test:nuxt` includes a step that copies `nuxt/layer` into an empty temp directory, installs it and builds a minimal consumer app against it.
 
 **Docs and gate**
 
@@ -136,8 +152,9 @@ Atrium v2.0.0 stops rendering HTML. It serves its dashboard as a JSON API, and a
     - the local standards `atrium/components` and `atrium/domains`, which describe the API + layer model
     - the README states that cookie auth needs CORS and CSRF setup, token auth needs the `Authorization` header, token storage belongs to the host, and the workbench token guard must not be copied into production
 
-    The CHANGELOG upgrade guide also lists the removed config keys, the published-view cleanup (`resources/views/vendor/atrium`), the route-name changes and the new migration step. A Pest test asserts every removed symbol, config key and route from AC 16 appears in the v2.0.0 CHANGELOG section. The other doc updates are a manual checklist. The sibling packages' Atrium constraints are confirmed to be `^1`, so none auto-upgrades.
-24. `composer test` passes: phpstan, pint, type coverage 100%, Pest. This is the PHP gate. The Node checks of AC 22 must also pass in the gate named for them (open question), and done means both pass.
+    The CHANGELOG upgrade guide also lists the removed config keys, the published-view cleanup (`resources/views/vendor/atrium`), the route-name changes and the new migration step. A Pest test asserts every removed symbol, config key and route from AC 16 appears in the v2.0.0 CHANGELOG section. The other doc updates are a manual checklist. The manual checklist items are named in the PR description, each with its owner (the PR author).
+    - Before merging to main, for each of the 7 sibling `composer.json` files and their CI, confirm Atrium is required by tag range (`^1`) and not `dev-main`, and that no CI resolves Atrium from the main checkout. The grep output is recorded in the PR. Don't merge until every sibling is confirmed or the missing tags are cut.
+24. `composer test` passes: phpstan, pint, type coverage 100%, Pest. This is the PHP gate. Done means `composer test` and `composer test:nuxt` (AC 26) both pass.
 
 ## Design
 
@@ -186,8 +203,11 @@ Pinned versions are copied from the spike into the repo (lockfile and `packageMa
 - Migrating Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Each gets its own spec, waiting on this one.
 - Shipping an auth implementation, OAuth server, or login UI.
 - SSR, and server-side rendering of plugin components.
-- Publishing the layer to a registry. How it is distributed is decided in spec review.
-- Any change to dashboard, widget, theme or settings behavior beyond its transport.
+- Publishing the layer to a registry. It is distributed by git `extends` (D-001).
+- Any change to dashboard, widget, theme or settings behavior beyond its transport, except these intended changes: no write on read (AC 6), client-side first-dashboard create (AC 20), full-layout save semantics with orphans kept (AC 30), and placement uuids (AC 9). Anything else is transport-only.
+- Security or bug fixes for the 1.x line. Suite packages left on `^1` keep working, but backports are not part of this spec.
+- API pagination, HTTP caching and ETags, and URL-based API versioning beyond `api_version`.
+- RTL support and accessibility audits of the layer.
 - Any browser or end-to-end suite beyond Vitest. `tests/Browser` is deleted with no replacement.
 - CORS, CSRF and host-side auth configuration belong to the host. Atrium documents them only.
 - An OpenAPI spec or generated API docs.
@@ -196,11 +216,6 @@ Pinned versions are copied from the spike into the repo (lockfile and `packageMa
 
 ## Risks and open questions
 
-- **Layer distribution** (open for spec review). Two options:
-  - Nuxt `extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0']`. This needs no registry, and private repos need a `GIGET_AUTH` token.
-  - Publish `@refactor-circus/atrium-nuxt` to GitHub Packages.
-
-  The recommendation is git `extends`.
 - **Placement uuid migration:** existing v1 installs need the backfill. The migration must work on SQLite, MySQL and Postgres.
 - **`atrium.client_path`** is a new key. It must match the base URL the host serves the SPA from, or nav and search links break. Default `/`.
 - **CI:** adding Node to the package CI raises run time, so a separate job is likely.
@@ -214,6 +229,7 @@ See `decisions.md`, D-001 to D-007. Where these conflict with the acceptance cri
     - The README documents this, including `GIGET_AUTH` for private repos.
     - The playground extends the local `../layer` path.
     - Nothing is published to a registry.
+    - The README documents pinning to a commit SHA for production, because a `v*` tag is mutable. The release process protects `v*` tags.
 26. **Node gate (D-002):** `composer test:nuxt` runs `pnpm -C nuxt install --frozen-lockfile`, typecheck, build and Vitest.
     - CI runs it as its own job.
     - `composer test` stays PHP-only.
@@ -227,13 +243,39 @@ See `decisions.md`, D-001 to D-007. Where these conflict with the acceptance cri
 28. **Version skew (D-004):** the shell includes `api_version`, a constant on `Atrium` that matches the release major.minor.
     - The layer compares it with its own package version and shows a non-blocking warning (console plus a dismissible banner) on a major or minor mismatch.
     - Vitest covers the warning.
-29. **Removed config keys (D-005):** at boot, Atrium logs one warning per request lifecycle when any of `path`, `domain`, `middleware`, `alpine` or `logout_route` is present in `config('atrium')`.
+    - A Pest test asserts `Atrium::API_VERSION` equals the major.minor in `nuxt/layer/package.json`, so the release version and the constant cannot drift.
+29. **Removed config keys (D-005):** at boot, Atrium logs one warning per process (not per request) at the `warning` level when any of `path`, `domain`, `middleware`, `alpine` or `logout_route` is present in `config('atrium')`.
     - The warning names the keys and points to `atrium.routes.middleware`.
-    - A test asserts the log entry.
+    - A test uses `Log::spy()`, asserts one entry whose message names each removed key present, and asserts no second entry after a second provider boot.
+    - `routes.middleware` is not inherited from the old `middleware` key. A host that dropped nothing is protected by the default `Authorize` alone (fail-closed 401).
 30. **Layout save (D-006):** `PUT dashboards/{dashboard:slug}/layout` treats the payload as the full layout.
     - Placements whose `uuid` is absent from the payload are deleted.
     - Orphaned placements (no registered definition) are never deleted by a layout save, even when omitted.
     - Tests cover omit-deletes, orphan-kept and new-without-uuid.
-31. **Contract fixtures (D-007):** PHP feature tests write the JSON payloads of `shell`, a dashboard, a resolved screen and settings to `nuxt/layer/test/fixtures/*.json`.
-    - A Pest test fails when a committed fixture is stale.
+    - Delete, update and create run inside the action's single `DB::transaction()`. A test asserts a validation or write failure leaves the old placements intact.
+31. **Contract fixtures (D-007):** PHP feature tests generate the JSON payloads of `shell`, a dashboard, a resolved screen and settings in memory, using seeded deterministic uuids and frozen time, and compare them with `nuxt/layer/test/fixtures/*.json`.
+    - The default run only compares and fails on a diff. Writing is opt-in with `UPDATE_FIXTURES=1` (the regeneration command), never on a plain run.
+    - `composer test:nuxt` fails if the fixtures directory is missing.
     - Vitest type-checks each fixture against the layer's TS types (`satisfies`) and renders the components from them.
+
+## Addendum 2026-11-22 (pass 2): spec review decisions
+
+See `decisions.md`, D-008 to D-013. Where these conflict with the criteria above, they win.
+
+32. **Stale layout guard (D-008):** `DashboardResource` exposes `version`, an integer that every layout or meta update increments (a new column, added in the AC 9 migration).
+    - `PUT .../layout` and `PUT dashboards/{dashboard:slug}` require `version`.
+    - A mismatch returns 409 and changes nothing. The layer then reloads the dashboard and tells the user.
+    - Tests cover a match, a mismatch, and two writes in sequence.
+33. **Eager widget failure (D-009):** outside `local` and `testing`, when an eager resolver throws or fails `JsonData::check()`, that placement is returned with `data: null` and `error: {message: "Widget failed to load"}`, and the exception is reported.
+    - The rest of the response is 200.
+    - In `local` and `testing`, the exception propagates (500).
+    - Screen tabs, sections and settings panels follow the same rule.
+    - The layer renders an error card for a placement that has `error`.
+    - Tests cover both environments.
+34. **Icon data (D-010):** the layer depends on `@iconify-json/lucide` and configures `icon.serverBundle` for local collections, with remote fetch off by default.
+    - Hosts add `@iconify-json/*` packs, or set an opt-in layer option to allow the Iconify API.
+    - An unknown icon renders a fallback, not an error.
+    - Vitest covers the fallback.
+35. **Locales (D-011):** v2.0.0 ships only `en`. A second locale exists only as a Vitest fixture.
+36. **Theme key (D-012):** `atrium.theme` stays, and its values are sent in the shell as the built-in `atrium` theme's properties. A test changes the config and asserts the shell payload.
+37. **ClientPath (D-013):** a URL counts as same-host when its host matches `parse_url(config('app.url'), PHP_URL_HOST)`. A rejected form (`javascript:`, `data:`, `//host` and the other forms in AC 14) returns `null`, and the nav item or search result is then sent with `link: null`.
