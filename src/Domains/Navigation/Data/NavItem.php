@@ -8,7 +8,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Access\Concerns\Gated;
+use RefactorCircus\Atrium\Support\Iconify;
 
 class NavItem
 {
@@ -22,6 +24,7 @@ class NavItem
     /** @var array<string, mixed> */
     private array $routeParameters = [];
 
+    /** An Iconify name, such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
     public private(set) ?string $group = null;
@@ -61,9 +64,12 @@ class NavItem
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }

@@ -72,13 +72,13 @@ it('rejects an unknown kind', function (): void {
 
 it('keeps the built-in tabs in order, with their labels and icons', function (): void {
     $screen = Screen::make('test.screen')->tabs([
-        ['key' => 'members', 'label' => 'Members', 'icon' => 'users'],
+        ['key' => 'members', 'label' => 'Members', 'icon' => 'i-lucide-users'],
         ['key' => 'teams', 'label' => 'Teams'],
     ]);
 
     expect(array_map(fn (TabDefinition $tab): array => [$tab->key, $tab->label, $tab->icon], $screen->tabs))->toBe([
-        ['members', 'Members', 'users'],
-        ['teams', 'Teams', 'squares-2x2'],
+        ['members', 'Members', 'i-lucide-users'],
+        ['teams', 'Teams', TabDefinition::DEFAULT_ICON],
     ]);
 });
 

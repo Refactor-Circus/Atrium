@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Domains\Themes\Data;
 
 use InvalidArgumentException;
+use RefactorCircus\Atrium\Support\Iconify;
 
 /**
  * One look for the dashboard: values for the design tokens in
@@ -36,6 +37,9 @@ class Theme
 
     /** A colour that stands for the theme in the switcher. */
     public private(set) ?string $swatch = null;
+
+    /** An Iconify name shown with the swatch in the switcher, such as `i-lucide-sun`. */
+    public private(set) ?string $icon = null;
 
     /**
      * How the shell is laid out from the `lg` breakpoint up: `sidebar` (a
@@ -85,6 +89,16 @@ class Theme
     public function swatch(?string $swatch): static
     {
         $this->swatch = $swatch;
+
+        return $this;
+    }
+
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-sun`
+     */
+    public function icon(string $icon): static
+    {
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }

@@ -18,8 +18,8 @@ depends on: 1
 files: src/Domains/Navigation/Data/NavItem.php, src/Domains/Navigation/Data/NavGroup.php, src/Domains/Widgets/Data/WidgetDefinition.php, src/Domains/Screens/Data/TabDefinition.php, src/Domains/Screens/Data/SectionDefinition.php, src/Domains/Screens/Concerns/DefinesExtension.php, src/Domains/Settings/Data/SettingsPanel.php, src/Domains/Search/Data/SearchResult.php, src/Domains/Themes/Data/Theme.php, tests/Unit/ExtensionContractTest.php
 criteria: 11, 15
 
-- [ ] 2.1 Write tests: `component()` defaults to the key and can be overridden; `view()` is absent (reflection) on every listed definition; each `icon()` setter throws `InvalidArgumentException` for a non-Iconify value, and the theme swatch icons do the same
-- [ ] 2.2 Remove `view()`, and add `component` as `public private(set)` with a fluent setter. `icon()` setters validate through `Iconify::assert()`. Drop inline-SVG support.
+- [x] 2.1 Write tests: `component()` defaults to the key and can be overridden; `view()` is absent (reflection) on every listed definition; each `icon()` setter throws `InvalidArgumentException` for a non-Iconify value, and the theme swatch icons do the same
+- [x] 2.2 Remove `view()`, and add `component` as `public private(set)` with a fluent setter. `icon()` setters validate through `Iconify::assert()`. Drop inline-SVG support.
 - [ ] 2.3 Run vendor/bin/pest; all green
 
 ## Group 3: Dashboard and widget API

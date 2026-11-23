@@ -36,3 +36,27 @@ Pint and PHPStan pass on the changed files. The test suite was not run here, as 
 
 - `src/Support/ClientPath.php`: a same-host URL whose path starts with `//` (`https://app.test//evil.test`) now returns null whatever `client_path` is. Before, with a non-root `client_path` it fell outside the client path and came back as an external link, so `ClientPathTest`'s rejected-forms case failed for `/admin`. The root case already returned null.
 - The group's test files (`tests/Unit/Support/*`, `ConfigTest`, `RemovedConfigKeysTest`, `JsonDataResolveTest`) pass: 108 tests. Pint and PHPStan pass on the changed file. The full suite was not run here; the gate runs it.
+
+## Group 2
+
+Extension contract and icons on definitions. Criteria 11, 15.
+
+### Files
+
+- `src/Domains/Widgets/Data/WidgetDefinition.php`, `src/Domains/Settings/Data/SettingsPanel.php`, `src/Domains/Screens/Concerns/DefinesExtension.php` (so `TabDefinition` and `SectionDefinition`): `view` (property and setter) removed. `component` is `public private(set) string`, set to the key in the constructor, with a fluent `component(string)` setter that no longer clears anything. Docblocks describe the client component key instead of Blade.
+- `src/Domains/Navigation/Data/NavItem.php`, `NavGroup.php`, `WidgetDefinition`, `SettingsPanel`, `src/Domains/Screens/Data/TabDefinition.php`, `src/Domains/Search/Data/SearchResult.php`: `icon()` stores `Iconify::assert($icon)`, so a non-Iconify value (inline SVG included) throws `InvalidArgumentException` at definition time.
+- `TabDefinition::DEFAULT_ICON` is now `i-lucide-layout-grid` (lucide's counterpart of `squares-2x2`).
+- `src/Domains/Themes/Data/Theme.php`: new `public private(set) ?string $icon` with a validated `icon()` setter, the icon shown with the swatch in the switcher. Theme had no icon before; AC 15 lists theme swatches among the `icon()` setters, so this adds it. `swatch` stays a colour.
+- `src/Domains/Screens/Data/SectionDefinition.php`: no change needed; it gets everything through `DefinesExtension`.
+
+### Tests
+
+- `tests/Unit/ExtensionContractTest.php` (63 tests): `component` defaults to the key and is overridden fluently on widgets, panels, tabs and sections; it is public with a private setter, typed `string`, and refuses outside writes; reflection finds no `view` method or property on the four definitions or `DefinesExtension`; every `icon()` setter (nav item, nav group, widget, tab, settings panel, search result, theme swatch) accepts `i-lucide-home` and rejects `lucide:home`, inline SVG, `i-home` and the v1 name `squares-2x2`; the tab's default icon is an Iconify name; the other icons start unset.
+- `tests/Unit` passes in the worktree (260 tests). Pint and PHPStan pass on the changed files. The full suite was not run here, as instructed.
+
+### Deviations and notes
+
+- Touched outside the group's file list:
+  - `src/Domains/Screens/Services/ScreenExtensions.php` (group 4): removed `assertRenders()`, which read the removed `view` property and is moot now that `component` always has a value.
+  - `tests/Unit/Screens/TabDefinitionTest.php`, `SectionDefinitionTest.php`, `ScreenExtensionsTest.php`, `ScreenTest.php` (no group owns them): they pinned `view()`, a nullable `component`, the "needs a view() or a component()" error and v1 icon names. They now pin the new contract.
+- The full suite is expected to fail after this group, and 2.3 is left unticked. The Blade UI and the Blade-era tests that groups 3, 4, 5 and 6 rewrite or delete still call `->view()` (about 25 test files and the fixture plugins in `tests/Fixtures`), pass v1 icon names or SVG (`NavigationSectionsTest`, `SearchTest`, `ScreenTabsComponentTest`, the workbench's `Icons::svg()`), and render `$definition->component` as a Blade component (`dashboard/widget-body`, `settings/show`, `components/screen-tab-panel`, `components/screen-sections`), which is now always the definition key. Keeping them green would mean doing group 6's Blade removal now. Returned as a decision.

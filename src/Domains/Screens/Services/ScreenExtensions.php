@@ -63,14 +63,13 @@ final class ScreenExtensions
     /**
      * Add a tab to the target's screens.
      *
-     * @throws InvalidArgumentException for a bad target, a tab with neither a view nor a component, or (in local and testing) a key the target already has
+     * @throws InvalidArgumentException for a bad target, or (in local and testing) a key the target already has
      */
     public function tab(string $target, TabDefinition $tab): self
     {
         $this->assertTarget($target);
 
         $tab = clone $tab;
-        $this->assertRenders('Tab', $tab, $target);
 
         if (isset($this->tabs[$target][$tab->key])) {
             $this->duplicate(new InvalidArgumentException("Tab [{$tab->key}] is already registered for [{$target}]."));
@@ -87,7 +86,7 @@ final class ScreenExtensions
      * Add a section to a slot of the target's screens. It renders only on
      * screens declaring that slot.
      *
-     * @throws InvalidArgumentException for a bad target or slot, a section with neither a view nor a component, or (in local and testing) a key the target's slot already has
+     * @throws InvalidArgumentException for a bad target or slot, or (in local and testing) a key the target's slot already has
      */
     public function section(string $target, string $slot, SectionDefinition $section): self
     {
@@ -98,7 +97,6 @@ final class ScreenExtensions
         }
 
         $section = clone $section;
-        $this->assertRenders('Section', $section, $target);
 
         if (isset($this->sections[$target][$slot][$section->key])) {
             $this->duplicate(new InvalidArgumentException("Section [{$section->key}] is already registered for [{$target}] in slot [{$slot}]."));
@@ -304,13 +302,6 @@ final class ScreenExtensions
         }
 
         throw new InvalidArgumentException("Screen extension target [{$target}] must be an exact screen key ({package}.{screen}), {package}.* or *.");
-    }
-
-    private function assertRenders(string $kind, TabDefinition|SectionDefinition $extension, string $target): void
-    {
-        if ($extension->view === null && $extension->component === null) {
-            throw new InvalidArgumentException("{$kind} [{$extension->key}] registered for [{$target}] needs a view() or a component().");
-        }
     }
 
     /**

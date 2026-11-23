@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Search\Data;
 
+use InvalidArgumentException;
+use RefactorCircus\Atrium\Support\Iconify;
+
 class SearchResult
 {
     public private(set) ?string $subtitle = null;
 
+    /** An Iconify name, such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
     public private(set) ?string $group = null;
@@ -29,9 +33,12 @@ class SearchResult
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }

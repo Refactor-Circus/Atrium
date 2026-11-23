@@ -6,6 +6,8 @@ namespace RefactorCircus\Atrium\Domains\Settings\Data;
 
 use Closure;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use RefactorCircus\Atrium\Support\Iconify;
 
 class SettingsPanel
 {
@@ -13,11 +15,14 @@ class SettingsPanel
 
     public private(set) ?string $description = null;
 
+    /** An Iconify name, such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
-    public private(set) ?string $view = null;
-
-    public private(set) ?string $component = null;
+    /**
+     * The key the client renders the panel with: the component registered
+     * for it in the layer's `$atrium.settingsPanel()`. The panel key by default.
+     */
+    public private(set) string $component;
 
     public private(set) int $sort = 100;
 
@@ -30,6 +35,7 @@ class SettingsPanel
     final public function __construct(public readonly string $key)
     {
         $this->label = $key;
+        $this->component = $key;
     }
 
     public static function make(string $key): static
@@ -51,25 +57,23 @@ class SettingsPanel
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }
 
-    public function view(string $view): static
-    {
-        $this->view = $view;
-        $this->component = null;
-
-        return $this;
-    }
-
+    /**
+     * Render the panel with the client component registered under this key,
+     * instead of the panel key.
+     */
     public function component(string $component): static
     {
         $this->component = $component;
-        $this->view = null;
 
         return $this;
     }

@@ -17,12 +17,12 @@ afterEach(fn () => Container::setInstance(null));
 
 function unitTab(string $key): TabDefinition
 {
-    return TabDefinition::make($key)->view('acme::'.$key)->public();
+    return TabDefinition::make($key)->public();
 }
 
 function unitSection(string $key): SectionDefinition
 {
-    return SectionDefinition::make($key)->view('acme::'.$key)->public();
+    return SectionDefinition::make($key)->public();
 }
 
 /**
@@ -75,11 +75,13 @@ it('accepts slot names like header.actions and rejects others', function (): voi
     }
 });
 
-it('refuses a definition with neither a view nor a component', function (): void {
-    expect(fn () => (new ScreenExtensions)->tab('test.screen', TabDefinition::make('acme.a')->public()))
-        ->toThrow(InvalidArgumentException::class, 'acme.a')
-        ->and(fn () => (new ScreenExtensions)->section('test.screen', 'before', SectionDefinition::make('acme.b')->public()))
-        ->toThrow(InvalidArgumentException::class, 'acme.b');
+it('accepts a definition that names no component, which renders by its key', function (): void {
+    $screens = (new ScreenExtensions)
+        ->tab('test.screen', TabDefinition::make('acme.a')->public())
+        ->section('test.screen', 'before', SectionDefinition::make('acme.b')->public());
+
+    expect($screens->tabs('test.screen')[0]->component)->toBe('acme.a')
+        ->and($screens->sections('test.screen', 'before')[0]->component)->toBe('acme.b');
 });
 
 it('stores a copy, so later changes to the caller\'s instance change nothing', function (): void {

@@ -6,6 +6,8 @@ namespace RefactorCircus\Atrium\Domains\Widgets\Data;
 
 use Closure;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use RefactorCircus\Atrium\Support\Iconify;
 
 /**
  * A widget type a plugin makes available.
@@ -23,11 +25,14 @@ class WidgetDefinition
 
     public private(set) ?string $description = null;
 
+    /** An Iconify name, such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
-    public private(set) ?string $view = null;
-
-    public private(set) ?string $component = null;
+    /**
+     * The key the client renders the widget with: the component registered
+     * for it in the layer's `$atrium.widget()`. The definition key by default.
+     */
+    public private(set) string $component;
 
     public private(set) int $defaultWidth = 4;
 
@@ -48,6 +53,7 @@ class WidgetDefinition
     final public function __construct(public readonly string $key)
     {
         $this->label = $key;
+        $this->component = $key;
     }
 
     public static function make(string $key): static
@@ -69,31 +75,23 @@ class WidgetDefinition
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }
 
     /**
-     * Render the widget with a Blade view.
-     */
-    public function view(string $view): static
-    {
-        $this->view = $view;
-        $this->component = null;
-
-        return $this;
-    }
-
-    /**
-     * Render the widget with a Blade or Livewire component.
+     * Render the widget with the client component registered under this key,
+     * instead of the definition key.
      */
     public function component(string $component): static
     {
         $this->component = $component;
-        $this->view = null;
 
         return $this;
     }
@@ -115,11 +113,8 @@ class WidgetDefinition
     }
 
     /**
-     * Render a placeholder with the page and fetch the widget's body
-     * afterwards, so a slow widget does not hold up the dashboard. The body
-     * arrives as HTML: Alpine in it starts, but its scripts do not run and
-     * Livewire components in it are not booted, so keep lazy widgets to
-     * plain Blade.
+     * Send the widget without its data and let the client fetch the data
+     * afterwards, so a slow widget does not hold up the dashboard.
      */
     public function lazy(bool $lazy = true): static
     {
@@ -129,7 +124,7 @@ class WidgetDefinition
     }
 
     /**
-     * Resolve the data passed to the view or component when rendering.
+     * Resolve the data sent to the widget's component.
      *
      * @param  Closure(array<string, mixed>): array<string, mixed>  $resolver
      */

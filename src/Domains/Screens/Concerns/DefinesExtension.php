@@ -11,8 +11,8 @@ use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 
 /**
- * What tabs and sections share: a key, a label, a view or a component, the
- * data resolver and who may see it.
+ * What tabs and sections share: a key, a label, the client component that
+ * renders it, the data resolver and who may see it.
  *
  * An extension is hidden unless it says who may see it: a `permission()` the
  * screen's `access` closure grants, an `authorize()` closure answering true
@@ -30,9 +30,11 @@ trait DefinesExtension
 
     public private(set) string $label;
 
-    public private(set) ?string $view = null;
-
-    public private(set) ?string $component = null;
+    /**
+     * The key the client renders the extension with: the component registered
+     * for it in the layer's `$atrium.extension()`. The extension key by default.
+     */
+    public private(set) string $component;
 
     public private(set) ?string $permission = null;
 
@@ -52,6 +54,7 @@ trait DefinesExtension
 
         $this->key = $key;
         $this->label = $key;
+        $this->component = $key;
     }
 
     public static function make(string $key): static
@@ -67,30 +70,19 @@ trait DefinesExtension
     }
 
     /**
-     * Render with a Blade view, instead of any component.
-     */
-    public function view(string $view): static
-    {
-        $this->view = $view;
-        $this->component = null;
-
-        return $this;
-    }
-
-    /**
-     * Render with a Blade component, instead of any view.
+     * Render with the client component registered under this key, instead
+     * of the extension key.
      */
     public function component(string $component): static
     {
         $this->component = $component;
-        $this->view = null;
 
         return $this;
     }
 
     /**
-     * The data the view or component gets. Runs only when the extension
-     * renders, after the viewer's access is checked.
+     * The data the component gets. Runs only when the extension is resolved,
+     * after the viewer's access is checked.
      *
      * @param  Closure(?Model, Screen): array<string, mixed>  $resolver
      */
