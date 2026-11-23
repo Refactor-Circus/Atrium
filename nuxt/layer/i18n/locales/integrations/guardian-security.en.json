@@ -1,1 +1,59 @@
-{}
+{
+  "guardian": {
+    "security": {
+      "title": "My security",
+      "two_factor": {
+        "title": "Two-factor authentication",
+        "on": "On",
+        "off": "Off",
+        "required": "Required for your account.",
+        "deadline": "Set it up by {deadline}."
+      },
+      "sessions": {
+        "title": "Sessions",
+        "current": "This session",
+        "unknown": "Unknown browser",
+        "revoke": "Sign out",
+        "others": "Sign out everywhere else",
+        "also_tokens": "Also revoke my API tokens",
+        "confirm_revoke": "Sign this session out?",
+        "confirm_others": "Sign out every other session?",
+        "confirm_others_tokens": "Sign out every other session and revoke all your API tokens?",
+        "revoked": "Signed out {count} sessions and revoked {tokens} API tokens."
+      },
+      "devices": {
+        "title": "Devices",
+        "unnamed": "Unknown device",
+        "forget": "Forget",
+        "none": "No devices yet.",
+        "confirm_forget": "Forget this device? Signing in from it will count as a new device."
+      },
+      "tokens": {
+        "title": "API tokens",
+        "not_enabled": "API tokens are not enabled on this site.",
+        "none": "No API tokens.",
+        "name": "Name",
+        "abilities": "Abilities",
+        "every_ability": "Everything (*)",
+        "expires_at": "Expires on",
+        "expiry_hint": "No later than {date}.",
+        "expiry_too_late": "Tokens may last at most {days} days.",
+        "issue": "Issue token",
+        "plain_once": "Copy this token now. It will not be shown again.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "done": "Done",
+        "expires": "expires {date}",
+        "no_expiry": "never expires",
+        "revoke": "Revoke",
+        "confirm_revoke": "Revoke the token \"{name}\"? Anything using it stops working."
+      },
+      "activity": {
+        "title": "Recent activity",
+        "none": "No security events yet.",
+        "older": "Older",
+        "newer": "Newer"
+      }
+    }
+  }
+}

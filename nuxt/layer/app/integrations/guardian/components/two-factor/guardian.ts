@@ -1,7 +1,7 @@
-import { ref } from 'vue'
-import type { Ref } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
+import type { Ref, ShallowRef, WatchSource } from 'vue'
 import type { components } from '../../client/schema'
-import { AtriumIntegrationError, type AtriumIntegrationClient } from '../../../../composables/useAtriumIntegration'
+import { AtriumIntegrationError, useAtriumIntegration, type AtriumIntegrationClient } from '../../../../composables/useAtriumIntegration'
 import { isInternalPath } from '../../../../utils/atriumLink'
 import { atriumStatus } from '../../../../utils/atriumStatus'
 
@@ -199,4 +199,72 @@ export function useGuardianAction(): GuardianAction {
   }
 
   return { busy, status, code, errors, forbidden, retryAfter, message, run, error, reset }
+}
+
+/** Laravel's page paginator, as Guardian's paged lists answer. */
+export interface GuardianPage<T> {
+  data: T[]
+  meta?: { current_page?: number, last_page?: number, total?: number }
+}
+
+/** Laravel's cursor paginator, as Guardian's security events answer. */
+export interface GuardianCursorPage<T> {
+  data: T[]
+  meta?: { next_cursor?: string | null, prev_cursor?: string | null }
+}
+
+/** The Guardian client of a shell screen, signed by the app's auth adapter; null while Guardian is not active. */
+export function useGuardian(): GuardianClient | null {
+  return useAtriumIntegration('guardian').client
+}
+
+export interface GuardianLoad<T> {
+  client: GuardianClient | null
+  data: ShallowRef<T | null>
+  /** True only while there is nothing to show yet, so a reload keeps forms mounted */
+  pending: Ref<boolean>
+  failed: Ref<boolean>
+  /** The HTTP status of a failed load: 403 shows no access, 404 not found, 501 not enabled */
+  status: Ref<number | null>
+  reload: () => Promise<void>
+}
+
+/**
+ * Loads what a screen, or one of its blocks, shows from Guardian, and again
+ * on `reload()` or whenever `source` changes. Each block loads on its own,
+ * so one block's 403 leaves the others working.
+ */
+export function useGuardianLoad<T>(load: (client: GuardianClient) => Promise<T>, source?: WatchSource, client: GuardianClient | null = useGuardian()): GuardianLoad<T> {
+  const data = shallowRef<T | null>(null)
+  const pending = ref(true)
+  const failed = ref(false)
+  const status = ref<number | null>(null)
+
+  async function reload(): Promise<void> {
+    if (!client) {
+      pending.value = false
+      return
+    }
+
+    pending.value = data.value === null
+
+    try {
+      data.value = await load(client)
+      failed.value = false
+      status.value = null
+    } catch (error) {
+      failed.value = true
+      status.value = atriumStatus(error)
+    } finally {
+      pending.value = false
+    }
+  }
+
+  if (source) {
+    watch(source, () => void reload(), { deep: true })
+  }
+
+  void reload()
+
+  return { client, data, pending, failed, status, reload }
 }

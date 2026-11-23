@@ -1442,3 +1442,29 @@ Two-factor responses, challenge and setup pages (AC 83 to 87).
 
 - Vitest: the group's suites are 5 files and 69 tests. `composer test:nuxt` passed every step: Vitest 125 files, 1175 tests, no type errors, and the consumer build.
 - `composer test:unit`: 1405 tests, all passed.
+
+## Group 32
+
+My security page (AC 88).
+
+### Files
+
+- `pages/guardian/security/index.vue`: `guardian.security`, framed by `<AtriumIntegrationScreen>`, reading the token options from `atrium.screens.show` as the Showroom transfers page does (D-042).
+- `integrations/guardian/components/security/`: `security.ts` (types, `securityOptions()`, `latestExpiry()`, `expiryOf()`), and the five sections `SecurityTwoFactor` (status plus the group 31 components), `SecuritySessions`, `SecurityDevices`, `SecurityTokens` and `SecurityActivity`, each with its own load and 403.
+- Shared, beside group 31's helpers: `useGuardian()`, `useGuardianLoad()`, `GuardianPage`, `GuardianCursorPage` (`two-factor/guardian.ts`) and `two-factor/GuardianState.vue`, with its two strings in `guardian.en.json`. Groups 33 to 36 reuse them.
+- `guardian-security.en.json` filled.
+- Tests: `test/integrations/guardian/support.ts` (the screen answer with the fixture's options, a page mounter, `confirmWith`, page and cursor fixtures) and `test/integrations/guardian/security/security.test.ts`.
+
+### Decisions
+
+- D-067 (the `tokens: true` body, the expiry bound, page sizes and cursor paging).
+
+### Deviations
+
+- `two-factor/guardian.ts`, `two-factor/GuardianState.vue` and `guardian.en.json` are outside the group's file list; they hold what every Guardian screen shares.
+- The checkboxes are native inputs, as elsewhere in the layer.
+
+### Tests
+
+- Vitest: the group's suite is 1 file and 22 tests. `composer test:nuxt` passed every step: Vitest 126 files, 1197 tests, no type errors, and the consumer build.
+- `composer test:unit`: 1405 tests, all passed.

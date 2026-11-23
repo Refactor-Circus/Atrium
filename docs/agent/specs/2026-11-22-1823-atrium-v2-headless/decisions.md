@@ -477,3 +477,12 @@
 - Rationale: Offering a method the user cannot use only produces a 422. Refusing the two-factor pages as targets avoids a redirect loop.
 - Date: 2026-11-23
 - Raised by: implement (group 31); default chosen because no user was available
+
+## D-067: How does the security page send "also revoke my API tokens" and bound a token's expiry?
+- Choice:
+  - "Sign out everywhere else" sends no body; with the option ticked it sends `{tokens: true}` in the `DELETE` body. Guardian's schema lists `tokens` as a query parameter, but the request reads its input either way, and a body matches AC 88's wording.
+  - The expiry is a date input whose `max` is today plus `token_max_lifetime_days`; a later day is refused in the page without calling Guardian, and a picked day is sent as the end of that day in ISO 8601. A null lifetime (D-063) sets no limit. Guardian still validates both.
+  - Sessions, devices and events load 50 at a time (`per_page`), and events page by cursor with "older" and "newer".
+- Rationale: The conservative reading of AC 88. Users rarely have more than 50 sessions or devices, and the shared state per section keeps one 403 from hiding the others.
+- Date: 2026-11-23
+- Raised by: implement (group 32); default chosen because no user was available

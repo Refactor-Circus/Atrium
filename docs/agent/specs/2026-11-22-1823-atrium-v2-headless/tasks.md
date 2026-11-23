@@ -339,9 +339,9 @@ depends on: 31
 files: nuxt/layer/app/pages/guardian/security/**, nuxt/layer/app/integrations/guardian/components/security/**, nuxt/layer/i18n/locales/integrations/guardian-security.en.json, nuxt/layer/test/integrations/guardian/security/**
 criteria: 88
 
-- [ ] 32.1 Write Vitest tests for `guardian.security`, asserting method, path and body for every call: the two-factor status with the group 31 components; sessions: the current one flagged; revoke one; "sign out everywhere else", with and without `tokens: true`; confirmations; devices: list, and forget with a confirmation; API tokens: list; issue, with abilities from the option and `expires_at` capped at the maximum lifetime; the plain token shown once and absent from storage; revoke; the 501 "not enabled" state; recent activity, with cursor paging; each section's own 403 leaving the others working; the page exists for the screen key.
-- [ ] 32.2 Write the page and the section components, reusing `components/two-factor/`.
-- [ ] 32.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 32.1 Write Vitest tests for `guardian.security`, asserting method, path and body for every call: the two-factor status with the group 31 components; sessions: the current one flagged; revoke one; "sign out everywhere else", with and without `tokens: true`; confirmations; devices: list, and forget with a confirmation; API tokens: list; issue, with abilities from the option and `expires_at` capped at the maximum lifetime; the plain token shown once and absent from storage; revoke; the 501 "not enabled" state; recent activity, with cursor paging; each section's own 403 leaving the others working; the page exists for the screen key.
+- [x] 32.2 Write the page and the section components, reusing `components/two-factor/`.
+- [x] 32.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 33: Roles, permissions, role assignments and the user security screen
 depends on: 30

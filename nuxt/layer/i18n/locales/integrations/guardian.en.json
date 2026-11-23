@@ -1,1 +1,8 @@
-{}
+{
+  "guardian": {
+    "state": {
+      "not_found": "This record was not found.",
+      "load_failed": "Guardian could not be loaded."
+    }
+  }
+}
