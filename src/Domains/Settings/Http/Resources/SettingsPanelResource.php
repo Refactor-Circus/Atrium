@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Settings\Http\Resources;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Support\JsonData;
@@ -36,6 +37,17 @@ final class SettingsPanelResource extends JsonResource
         $this->withData = true;
 
         return $this;
+    }
+
+    /**
+     * The panel, always under `data`. Laravel leaves a payload that has its
+     * own `data` key unwrapped, and an opened panel's data is that key.
+     *
+     * @param  Request  $request
+     */
+    public function toResponse($request): JsonResponse
+    {
+        return new JsonResponse(['data' => $this->resolve($request)] + $this->with($request) + $this->additional);
     }
 
     /**

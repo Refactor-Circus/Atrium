@@ -740,7 +740,7 @@ it('drops malformed rows from a child and keeps the rest in order', function ():
     Exceptions::fake();
 
     Process::fake(['*' => Process::result(childEnvelope([
-        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'i-lucide-star', 'group' => 'Group'],
         ['url' => '/no-title'],
         ['title' => 'No url'],
         ['title' => 42, 'url' => '/numeric-title'],
@@ -761,7 +761,7 @@ it('drops malformed rows from a child and keeps the rest in order', function ():
     $results = app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x');
 
     expect(array_map(fn (SearchResult $result): array => $result->toArray(), $results))->toBe([
-        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'i-lucide-star', 'group' => 'Group'],
         ['title' => 'Kept 2', 'url' => '/2', 'subtitle' => null, 'icon' => null, 'group' => null],
         ['title' => 'Kept 3', 'url' => '/3', 'subtitle' => null, 'icon' => null, 'group' => null],
     ]);
