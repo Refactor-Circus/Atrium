@@ -393,3 +393,12 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
 - The shell sends each theme's `layout` (`sidebar` or `top`), but the bundled layer renders the sidebar layout for every theme, Ledger included. The README says so rather than promising the `top` layout.
 - The spec names `^1` as the siblings' tag range, but Atrium's only release so far is v0.1.0. The PR template accepts `^1` or the pre-2 range a sibling actually uses (such as `^0.1`), and the CHANGELOG intro mentions both.
 - The changelog-updater action in `update-changelog.yml` may add a second v2.0.0 heading when the release is published, because the section is already written. The PR template has a post-release check for this.
+
+### Retry
+
+- The retry found 9.1 to 9.4 finished and committed in `874f845`, with no uncommitted work, and changed no code or docs. I reviewed that commit against the tasks and AC 23, 24 and 25:
+  - The CHANGELOG `## [v2.0.0]` section names every AC 16 path, class, config key and route, plus `Atrium::path()`/`url()` (D-016), the `resources/views/vendor/atrium` and `public/vendor/atrium` cleanup, and the `add_uuid_and_version_to_atrium_dashboards` migration step.
+  - The README covers Installation, Authentication (cookie auth with CORS and CSRF, the `Authorization` header, host-owned token storage, the workbench guard, the `APP_ENV=local` warning) and The Nuxt layer (`extends`, `GIGET_AUTH`, SHA pinning, `client_path`, icon packs).
+  - The README's layer examples match the layer code: `runtimeConfig.public.atrium.apiBase`, the chainable `$atrium` registry and the `icon.serverBundle`/`fallbackToApi` options.
+  - The PR template has the MySQL/Postgres, sibling `^1` grep, protected `v*` tag and manual doc items, each with its owner.
+- Pint `--test` passes on `DocsTest.php` and `ChangelogUpgradeTest.php`. PHPStan does not analyse `tests/`. The suite was not run, as instructed: the gate runs `composer test` and `composer test:nuxt` for 9.4.
