@@ -27,7 +27,7 @@ export const RUN_STATUSES: readonly ImpexRunStatus[] = ['pending', 'running', 'w
 export const RUN_TRIGGERS: readonly Schemas['RunTrigger'][] = ['api', 'mcp', 'command', 'schedule', 'channel', 'code', 'child']
 
 /** The transports a channel form offers: the v2 API lists none (D-032). */
-export const CHANNEL_TRANSPORTS = ['http', 'mail', 'file'] as const
+export const CHANNEL_TRANSPORTS: readonly string[] = ['http', 'mail', 'file']
 
 export const CHANNEL_DIRECTIONS: readonly Schemas['Direction'][] = ['inbound', 'outbound']
 export const CHANNEL_STATUSES: readonly Schemas['ChannelStatus'][] = ['active', 'disabled']

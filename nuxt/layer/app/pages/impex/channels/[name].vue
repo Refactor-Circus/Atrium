@@ -104,14 +104,14 @@ async function destroy(): Promise<void> {
               <UButton variant="outline" icon="i-lucide-key-round" :loading="action.busy.value" data-testid="impex-channel-rotate" @click="rotateSecret">
                 {{ t('impex.channel.rotate_secret') }}
               </UButton>
-              <UButton v-if="!confirmingDelete" variant="outline" color="error" icon="i-lucide-trash-2" data-testid="impex-channel-delete" @click="confirmingDelete = true">
+              <UButton v-if="!confirmingDelete" variant="outline" color="error" icon="i-lucide-trash-2" data-testid="impex-channel-delete" @click="() => { confirmingDelete = true }">
                 {{ t('impex.channel.delete') }}
               </UButton>
               <template v-else>
                 <UButton color="error" icon="i-lucide-trash-2" :loading="action.busy.value" data-testid="impex-channel-delete-confirm" @click="destroy">
                   {{ t('impex.channel.delete_confirm') }}
                 </UButton>
-                <UButton variant="ghost" data-testid="impex-channel-delete-cancel" @click="confirmingDelete = false">
+                <UButton variant="ghost" data-testid="impex-channel-delete-cancel" @click="() => { confirmingDelete = false }">
                   {{ t('impex.common.cancel') }}
                 </UButton>
               </template>

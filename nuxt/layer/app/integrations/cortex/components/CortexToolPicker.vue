@@ -40,7 +40,7 @@ const visible = computed(() => props.tools.filter(shows))
     </div>
 
     <div v-if="tags.length" class="flex flex-wrap gap-2" data-testid="cortex-picker-tags">
-      <UButton size="xs" :variant="tag === null ? 'solid' : 'outline'" color="neutral" :label="t('cortex.tools.all_tags')" @click="tag = null" />
+      <UButton size="xs" :variant="tag === null ? 'solid' : 'outline'" color="neutral" :label="t('cortex.tools.all_tags')" @click="() => { tag = null }" />
       <UButton
         v-for="option in tags"
         :key="option"
@@ -49,7 +49,7 @@ const visible = computed(() => props.tools.filter(shows))
         color="neutral"
         :label="option"
         :data-testid="`cortex-picker-tag-${option}`"
-        @click="tag = tag === option ? null : option"
+        @click="() => { tag = tag === option ? null : option }"
       />
     </div>
 

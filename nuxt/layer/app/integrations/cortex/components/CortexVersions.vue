@@ -113,7 +113,7 @@ void loadVersions()
                 :icon="expanded === version.version ? 'i-lucide-eye-off' : 'i-lucide-eye'"
                 :label="expanded === version.version ? t('cortex.versions.hide') : t('cortex.versions.view')"
                 :data-testid="`cortex-view-${version.version}`"
-                @click="expanded = expanded === version.version ? null : version.version"
+                @click="() => { expanded = expanded === version.version ? null : version.version }"
               />
               <UButton
                 v-if="version.version !== published"

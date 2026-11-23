@@ -86,7 +86,8 @@ async function sendSignal(): Promise<void> {
       signal.name = ''
       signal.payload = ''
       await reload()
-      return answer.data === null ? t('impex.run.signal_ignored') : t('impex.run.signal_sent')
+      // A finished run answers with a message and no signal.
+      return 'data' in answer && answer.data ? t('impex.run.signal_sent') : t('impex.run.signal_ignored')
     }
   )
 }

@@ -13,6 +13,7 @@ import CortexPage from '../../integrations/cortex/components/CortexPage.vue'
  */
 const { t } = useI18n()
 const action = useCortexAction()
+const busy = action.busy
 
 const domain = ref('')
 
@@ -49,7 +50,7 @@ async function remove(entry: CortexRedirectDomain): Promise<void> {
             <UFormField :label="t('cortex.redirect_domains.domain')" :hint="t('cortex.redirect_domains.domain_hint')" :error="action.error('domain')" class="w-80" required>
               <UInput v-model="domain" placeholder="https://claude.ai" class="w-full" data-testid="cortex-domain" />
             </UFormField>
-            <UButton type="submit" icon="i-lucide-plus" :label="t('cortex.redirect_domains.add')" :loading="action.busy.value" data-testid="cortex-add-domain" />
+            <UButton type="submit" icon="i-lucide-plus" :label="t('cortex.redirect_domains.add')" :loading="busy" data-testid="cortex-add-domain" />
           </form>
         </UCard>
 
