@@ -298,19 +298,28 @@ export function i18nKeysIn(source: string): string[] {
   return [...keys]
 }
 
-/** Whether the nested `messages` hold a string (or plural) at the dotted `key`. */
+/**
+ * Whether the nested `messages` hold a string (or plural) at the dotted `key`.
+ * Locale files imported in the Nuxt environment, and the loaded locale
+ * messages, hold each string precompiled to a message AST (`{type: 0, body}`)
+ * rather than as the string itself; either counts.
+ */
 export function hasI18nKey(messages: unknown, key: string): boolean {
   let node: unknown = messages
 
   for (const part of key.split('.')) {
-    if (typeof node !== 'object' || node === null || !(part in node)) {
+    if (typeof node !== 'object' || node === null || !(part in node) || isCompiledMessage(node)) {
       return false
     }
 
     node = (node as Record<string, unknown>)[part]
   }
 
-  return typeof node === 'string'
+  return typeof node === 'string' || isCompiledMessage(node)
+}
+
+function isCompiledMessage(node: unknown): boolean {
+  return typeof node === 'object' && node !== null && (node as { type?: unknown }).type === 0 && 'body' in node
 }
 
 function readJson(path: string): unknown {

@@ -134,11 +134,15 @@ describe('⌘K fan-out', () => {
   })
 
   it('applies the link guard to source results', async () => {
-    atrium.searchSource('cortex', async () => [
-      { title: 'Sneaky', subtitle: null, icon: null, group: null, link: { path: 'javascript:alert(1)', external: false } },
-      { title: 'Elsewhere', subtitle: null, icon: null, group: null, link: { path: '//evil.test/x', external: true } },
-      { title: 'Docs', subtitle: null, icon: null, group: null, link: { path: 'https://docs.example.com', external: true } }
-    ])
+    // Two sources, as each adds at most search.per_source (2) results.
+    atrium
+      .searchSource('cortex', async () => [
+        { title: 'Sneaky', subtitle: null, icon: null, group: null, link: { path: 'javascript:alert(1)', external: false } },
+        { title: 'Elsewhere', subtitle: null, icon: null, group: null, link: { path: '//evil.test/x', external: true } }
+      ])
+      .searchSource('impex', async () => [
+        { title: 'Docs', subtitle: null, icon: null, group: null, link: { path: 'https://docs.example.com', external: true } }
+      ])
 
     const search = await withSetup(() => useAtriumSearch())
     await search.search('xx')

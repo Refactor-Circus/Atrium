@@ -127,10 +127,7 @@ describe('the integration route middleware', () => {
     await useShell(integrationShell([integrationEntry('cortex', { active: false })]))
     const calls = watchPackageApis(PACKAGES)
 
-    await useRouter().push('/cortex/virtual-agents')
-    await settle()
-
-    const wrapper = await mountSuspended(DefaultLayout, { slots: { default: () => h(CortexPage) } })
+    const wrapper = await mountSuspended(DefaultLayout, { route: '/cortex/virtual-agents', slots: { default: () => h(CortexPage) } })
     await settle()
 
     expect(wrapper.find('[data-testid="atrium-integration-unavailable"]').attributes('data-reason')).toBe('inactive')
@@ -183,11 +180,12 @@ describe('the public layout', () => {
     await useShell(integrationShell([integrationEntry('roster')]))
     mockPackageApi('roster', { 'GET /invitations/{token}': reply(401) } as never)
 
+    // Taken before navigating: withSetup() mounts at `/`, leaving the page.
+    const roster = (await withSetup(() => useAtriumIntegration('roster'))).client!
+
     const router = useRouter()
     router.addRoute({ path: '/test-public-page', component: CortexPage, meta: { atrium: { public: true } } })
     await router.push('/test-public-page')
-
-    const roster = (await withSetup(() => useAtriumIntegration('roster'))).client!
     await (roster as unknown as { GET: (path: string, init: unknown) => Promise<unknown> }).GET('/invitations/{token}', { params: { path: { token: 'x' } } })
 
     expect(onUnauthorized).not.toHaveBeenCalled()
@@ -238,9 +236,7 @@ describe('<AtriumIntegrationScreen>', () => {
 
   it('fetches atrium.screens.show with its key, record and the open tab', async () => {
     api.mockResolvedValue({ data: screenPayload })
-    await useRouter().replace({ query: { tab: 'acme.audit' } })
-
-    await mountSuspended(AtriumIntegrationScreen, { props: { screenKey: 'cortex.virtual-agent', record: 'triage' } })
+    await mountSuspended(AtriumIntegrationScreen, { route: { query: { tab: 'acme.audit' } }, props: { screenKey: 'cortex.virtual-agent', record: 'triage' } })
     await settle()
 
     expect(api).toHaveBeenCalledWith('/screens/cortex.virtual-agent', { query: { record: 'triage', tab: 'acme.audit' } })

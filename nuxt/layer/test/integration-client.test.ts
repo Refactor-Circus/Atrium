@@ -1,5 +1,6 @@
 import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { enableAutoUnmount } from '@vue/test-utils'
 import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
 import {
   integrationData,
@@ -226,6 +227,10 @@ describe('integrationData()', () => {
 })
 
 describe('useIntegrationQuery()', () => {
+  // A mounted widget keeps its shared request alive (D-029), so each test's
+  // widgets are unmounted after it, as leaving the dashboard would.
+  enableAutoUnmount(afterEach)
+
   beforeEach(async () => {
     await useShell(integrationShell([integrationEntry('impex'), integrationEntry('polycart', { active: false })]))
   })
