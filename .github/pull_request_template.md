@@ -47,10 +47,10 @@ Before merging a breaking release to `main`, each of the 7 sibling packages (Cor
 
 ### Suite integration clients (D-020) and Keystone (D-037)
 
-The layer vendors each suite package's generated client types in `nuxt/layer/app/integrations/{pkg}/client/` until the packages' v2 tags exist. Do these once every one of Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom has its v2 tag, in this order:
+The layer vendors each suite package's generated client types in `nuxt/layer/app/integrations/{pkg}/client/` until the packages' v2 tags exist. Do these once every one of Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom has its v2 tag, in this order:
 
 - [ ] Confirmed Polycart's `.gitattributes` no longer has `/client export-ignore` in the tagged release (and that no other package export-ignores `/client`): a pnpm git install reads the tag's archive, which would otherwise lack the client. Owner: PR author.
-- [ ] Switched every vendored client to a pnpm git dependency in `nuxt/layer/package.json`, `"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"`, updated `nuxt/pnpm-lock.yaml`, switched the imports to each client's `create{Pkg}Client`, and removed the vendored `client/` folders, `nuxt/scripts/sync-clients.mjs`, the `sync:clients` script and `VendoredClientsTest`; `composer test:nuxt` passes. Owner: PR author.
+- [ ] Switched every vendored client (D-020: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom) to a pnpm git dependency in `nuxt/layer/package.json`, `"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"`, updated `nuxt/pnpm-lock.yaml`, switched the imports to each client's `create{Pkg}Client`, and removed the vendored `client/` folders, `nuxt/scripts/sync-clients.mjs`, the `sync:clients` script and `VendoredClientsTest`; `composer test:nuxt` passes. Owner: PR author.
 - [ ] Widened the `refactor-circus/keystone` constraint in `composer.json` to include the Keystone release that drops its built-in `atrium` surface prefix (D-037), and `composer test` passes against it. Owner: PR author.
 
 ### Manual documentation checks
@@ -61,6 +61,6 @@ The CHANGELOG upgrade guide is checked by Pest (`tests/Feature/ChangelogUpgradeT
 - [ ] CHANGELOG: the upgrade guide lists every removed API with its replacement, the removed config keys, the published-file cleanup, the route changes and the migration step. Owner: PR author.
 - [ ] Boost skill (`resources/boost/skills/atrium-development/SKILL.md`) matches the README. Owner: PR author.
 - [ ] `CLAUDE.md` (the architecture and frontend sections). Owner: PR author.
-- [ ] README "Suite integrations": detection and `enabled`, the API base and the Polycart and Roster APIs behind auth, Pennant flags, the hook keys, the Nuxt routes, the vendored clients, Atrium's `openapi.json` and client, and the parity departures. Owner: PR author.
+- [ ] README "Suite integrations": detection and `enabled`, the API base and the Polycart and Roster APIs behind auth, Pennant flags, the hook keys, the Nuxt routes, the vendored clients, Atrium's `openapi.json` and client, the parity departures, and the Guardian part (its API behind auth, `scope_types`, the two-factor middleware and pages, the deadline header through CORS, token drivers, passkeys and `$atrium.responseHandler()`). Owner: PR author.
 - [ ] CHANGELOG "Suite integrations": every replaced package key, every `// Not ported (D-032)` item in the layer, the parity changes and the D-020 release step. Owner: PR author.
 - [ ] Local standards `atrium/components`, `atrium/domains` and `atrium/integrations` (`docs/agent/standards/atrium/`), and `docs/agent/standards.index.yml` regenerated from them (`vendor/bin/ringside sync`). Owner: PR author.

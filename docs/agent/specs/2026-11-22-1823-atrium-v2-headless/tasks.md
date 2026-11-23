@@ -385,7 +385,7 @@ depends on: 29, 30, 31, 32, 33, 34, 35, 36
 files: README.md, CHANGELOG.md, CLAUDE.md, resources/boost/**, docs/agent/standards/atrium/integrations.md, .github/pull_request_template.md, tests/Feature/DocsTest.php, tests/Feature/ChangelogUpgradeTest.php
 criteria: 100, 101
 
-- [ ] 37.1 Write tests: `DocsTest`: the README's Guardian keys: `guardian.routes.enabled`, `scope_types`, `guardian.two-factor`, `guardian.session`, `Guardian-Two-Factor-Deadline`, `rp_id`, `guardian.tokens.driver`, `atrium.integrations.guardian.screens` and `responseHandler`; `ChangelogUpgradeTest`: `roster.roles`, `roster.role` and `roster.permissions`, each with its Guardian replacement; `guardian.access`; `responseHandler`; `uqr`.
-- [ ] 37.2 Write the README's Guardian part of "Suite integrations", and the CHANGELOG v2.0.0 entries. The CHANGELOG collects Guardian's `// Not ported (D-032)` items and the removed Roster screens and nav items.
-- [ ] 37.3 Update the Boost skill, `CLAUDE.md` and the local standard `atrium/integrations` (response handlers, shell-less pages, roles in Guardian). Add Guardian to the PR template's D-020 release item.
-- [ ] 37.4 Run composer test, composer test:nuxt and vendor/bin/pest; all green
+- [x] 37.1 Write tests: `DocsTest`: the README's Guardian keys: `guardian.routes.enabled`, `scope_types`, `guardian.two-factor`, `guardian.session`, `Guardian-Two-Factor-Deadline`, `rp_id`, `guardian.tokens.driver`, `atrium.integrations.guardian.screens` and `responseHandler`; `ChangelogUpgradeTest`: `roster.roles`, `roster.role` and `roster.permissions`, each with its Guardian replacement; `guardian.access`; `responseHandler`; `uqr`.
+- [x] 37.2 Write the README's Guardian part of "Suite integrations", and the CHANGELOG v2.0.0 entries. The CHANGELOG collects Guardian's `// Not ported (D-032)` items and the removed Roster screens and nav items.
+- [x] 37.3 Update the Boost skill, `CLAUDE.md` and the local standard `atrium/integrations` (response handlers, shell-less pages, roles in Guardian). Add Guardian to the PR template's D-020 release item.
+- [x] 37.4 Run composer test, composer test:nuxt and vendor/bin/pest; all green

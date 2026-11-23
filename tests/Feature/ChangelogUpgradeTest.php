@@ -130,7 +130,7 @@ it('points hosts at the Nuxt layer and their own auth', function (): void {
 
 it('names the suite integrations', function (): void {
     expect(changelogUpgradeSection())
-        ->toContain('Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
+        ->toContain('Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
         ->toContain('`atrium.integrations`')
         ->toContain('`atrium.integrations.{pkg}.enabled`')
         ->toContain('`atrium.integrations.{pkg}.api_base`')
@@ -228,6 +228,7 @@ it('lists the v1 actions left out of each integration (D-032)', function (string
     expect($matches[1])->toContain('**'.$heading.'**');
 })->with([
     ['integrations/cortex/index.ts', 'Cortex'],
+    ['integrations/guardian/index.ts', 'Guardian SSO and SCIM'],
     ['integrations/impex/index.ts', 'Impex'],
     ['integrations/keen/index.ts', 'Keen'],
     ['integrations/pennantplus/index.ts', 'PennantPlus'],
@@ -252,6 +253,9 @@ it('names the left-out actions themselves (D-032)', function (string $item): voi
     'installed transports',
     // PennantPlus
     'database driver',
+    // Guardian
+    'guardian.atrium.organization_route',
+    'guardian.sso.manage',
     // Polycart
     '@polycartCan',
     'CartLineResource.options',
@@ -268,6 +272,42 @@ it('names the left-out actions themselves (D-032)', function (string $item): voi
     'impex.runs.index',
     'owners.show',
 ]);
+
+/*
+ * The Guardian integration (AC 100): the integration itself, Roster's
+ * removed role and permission screens with their Guardian replacements,
+ * `responseHandler()` and the `uqr` dependency.
+ */
+
+it('has the Guardian integration', function (): void {
+    expect(changelogUpgradeSection())
+        ->toContain('Guardian')
+        ->toContain('`atrium.integrations.guardian`')
+        ->toContain('`guardian.routes.enabled`')
+        ->toContain('`atrium.integrations.guardian.screens`')
+        ->toContain('`/guardian/two-factor/challenge`');
+});
+
+it('maps each removed Roster screen to its Guardian replacement', function (string $removed, string $replacement): void {
+    expect(changelogUpgradeSection())->toMatch('/`'.preg_quote($removed, '/').'`[^\n]*`'.preg_quote($replacement, '/').'`/');
+})->with([
+    ['roster.roles', 'guardian.roles'],
+    ['roster.role', 'guardian.role'],
+    ['roster.permissions', 'guardian.permissions'],
+    ['/roster/roles', '/guardian/roles'],
+    ['/roster/permissions', '/guardian/permissions'],
+]);
+
+it('moves role assignments to the guardian.access tab', function (): void {
+    expect(changelogUpgradeSection())->toContain('`guardian.access`')->toContain('role assignments');
+});
+
+it('has responseHandler() and the uqr dependency', function (): void {
+    expect(changelogUpgradeSection())
+        ->toContain('$atrium.responseHandler(')
+        ->toContain('`uqr`')
+        ->toContain('0.1.3');
+});
 
 it('has the D-020 release step', function (): void {
     expect(changelogUpgradeSection())

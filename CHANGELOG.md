@@ -78,7 +78,7 @@ Every route answers JSON under `atrium.routes.prefix` and `atrium.routes.middlew
 
 ### Suite integrations
 
-Atrium hosts the front ends of Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Each of those packages' v2 ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client, and no Atrium plugin, Blade screens or `atrium.{pkg}.*` routes. Their pages, widgets, settings panels, search sources and navigation are now Atrium's:
+Atrium hosts the front ends of Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Each of those packages' v2 ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client, and no Atrium plugin, Blade screens or `atrium.{pkg}.*` routes. Their pages, widgets, settings panels, search sources and navigation are now Atrium's:
 
 - **PHP declares, the layer renders.** `src/Integrations/{Pkg}/{Pkg}Integration` declares each package's nav items, widgets, settings panel, search sources and screens as static data, and never loads a package class. The Nuxt layer renders them under `/{pkg}/` and calls each package's API through `useAtriumIntegration(key)`, an `openapi-fetch` client typed by the package's schema and signed by the one auth adapter.
 - **Config.** `atrium.integrations` has one entry per package: `atrium.integrations.{pkg}.enabled` (default `true`, boolean-coerced), `atrium.integrations.{pkg}.api_base` (default `null`: the package's own `{pkg}.routes.prefix` while `{pkg}.routes.enabled` is on) and `atrium.integrations.{pkg}.features` (default `[{Pkg}Feature::class]`), plus the cross-package hook settings. An integration registers only when `refactor-circus/{pkg}` is installed, it is enabled and it has an API base; otherwise Atrium logs one warning per process naming the keys to set.
@@ -86,6 +86,29 @@ Atrium hosts the front ends of Cortex, Impex, Keen, PennantPlus, Polycart, Roste
 - **Screens.** Every v1 screen keeps its key (`roster.organization`, `showroom.product`, ...), so host tabs and sections still attach. The new route `atrium.screens.show` (`GET screens/{screen}`, with optional `record` and `tab` query strings) serves a declared screen's `{key, kind, path, subject_type, record, tabs, sections}` from `ScreenExtensions`, loading no record; an unknown, undeclared or inactive screen answers 404.
 - **Shell additions.** The shell gains `integrations` (`{key, label, active, api_base, features}` per registered integration), `search.sources` (the client-side search sources of active integrations), `search.per_source`, and a `live` key on each nav item (`{key, options}` or null, set with `NavItem::live()`) whose badge or children the layer computes from a package API. Atrium computes no badge for an integration's nav item.
 - **Cross-package hooks** keep their v1 defaults: Cortex's redirect domains on `roster.organization` (the `cortex.mcp` tab) and `roster.user` (an `aside` section), Impex's run link on `showroom.transfers` rows, and Keen's history section, activity tab and History nav item. Each registers only while both its integrations are registered.
+
+#### Guardian
+
+Guardian v2 is the suite's security package, with a JSON API and MCP and no UI, and it takes over roles and permissions from Roster. The `guardian` integration hosts its screens in one "Security" nav group:
+
+- **Config.** `atrium.integrations.guardian` has `enabled`, `api_base`, `features` (`[GuardianFeature::class]`), `scope_types` (default `['organization' => null, 'team' => null]`; a `null` value reads `guardian.adopt.scope_types.{key}`, and one that does not resolve is dropped) and `screens` (the hooks below). Guardian ships with `guardian.routes.enabled` off: turn it on behind your auth middleware, or the integration does not register. It registers with or without Roster.
+- **Screens.** `/guardian/security` (the user's two-factor, sessions, devices, API tokens and recent activity), `/guardian/roles`, `/guardian/roles/:role`, `/guardian/permissions`, `/guardian/role-assignments`, `/guardian/users/:user`, `/guardian/security-events` (and one event), `/guardian/lockouts`, `/guardian/ip-rules`, `/guardian/two-factor-policies`, `/guardian/password-policy` and `/guardian/sso-connections/:connection`, plus the shell-less `/guardian/two-factor/challenge` and `/guardian/two-factor/setup`.
+- **Two-factor.** Put Guardian's `guardian.two-factor` and `guardian.session` middleware on Atrium's and the packages' route groups: a 403 with `code` `two_factor_challenge_required` or `two_factor_enrollment_required` sends the user to the challenge or setup page, and the `Guardian-Two-Factor-Deadline` header shows an app-wide notice (expose it through CORS on split hosts). API tokens need `guardian.tokens.driver` (the section shows "not enabled" on 501); passkeys need `web-auth/webauthn-lib`, HTTPS and a matching `guardian.two_factor.passkeys.rp_id`.
+- **Hooks on Roster's screens.** `atrium.integrations.guardian.screens` defaults to `['roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'], 'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities']]`, as Guardian v1's `guardian.atrium.screens` did.
+- **SSO and SCIM.** The `guardian.sso` and `guardian.scim` tabs, the `guardian.sso-identities` section and the `guardian.sso-connection` page port Guardian v1's Atrium UI onto Guardian's API.
+
+Roles and permissions leave Roster. These Roster screens and nav items are removed with no alias or redirect (D-046); a host extension registered on an old key no longer attaches:
+
+| Removed from Roster | Guardian replacement |
+| --- | --- |
+| `roster.roles` (`/roster/roles`, the Roles nav item) | `guardian.roles` (`/guardian/roles`) |
+| `roster.role` (`/roster/roles/:role`) | `guardian.role` (`/guardian/roles/:role`) |
+| `roster.permissions` (`/roster/permissions`, the Permissions nav item) | `guardian.permissions` (`/guardian/permissions`) |
+| The roles card of `roster.user` and the role assignments tab of `roster.organization` | the `guardian.access` tab on both, listing and assigning role assignments in Guardian (and `guardian.role-assignments` for every assignment) |
+
+**Response handlers.** `$atrium.responseHandler(key, (response, request) => void)` registers a handler that every integration client, `useAtriumClient()` and `useAtriumApi()` call with each response, in registration order, before the caller sees it; one that throws is logged and skipped. `$atrium.notify()` and `<AtriumResponseNotice>` show app-wide notices. Guardian's two-factor redirect is the first handler.
+
+**New dependency.** The layer depends on `uqr` (0.1.3, exact) to draw the TOTP QR code in the browser, so the secret never leaves it.
 
 #### Replaced package keys
 
@@ -156,7 +179,12 @@ The packages' Blade pages (`atrium.{pkg}.*` routes under `/atrium/{pkg}/...`) ar
   - A line's options: `CartLineResource.options` is typed as an empty object, so the screen shows only the purchasable, or "Custom".
   - The `row.actions` section slot on each cart and type row: `atrium.screens.show` loads no records.
   - The cart type's PHP class on the types screen: `CartTypeResource` does not carry it.
-- **Cross-package hooks**: nothing. Cortex's `redirect-domains` index, store and destroy, and Keen's `packages.index` and `entries.index` all have v2 routes; the run link makes no request.
+- **Cross-package hooks**: nothing. Cortex's `redirect-domains` index, store and destroy, and Keen's `packages.index` and `entries.index` and Guardian's role assignment, user security, SSO and SCIM routes all have v2 routes; the run link makes no request.
+- **Guardian SSO and SCIM** (v1's Atrium UI: the SSO and SCIM tabs, the SSO identities section and the connection page)
+  - Hiding the SSO and SCIM forms, the connection's settings and delete, and the unlink buttons from a viewer without `guardian.sso.manage` or `guardian.scim.manage`: v1 asked Roster's `Authorizer`, and no v2 route reports these abilities, so the controls show and a 403 shows the no-access notice (D-031).
+  - The connection page's organization name in its header: the v2 connection carries the organization's slug only.
+  - `guardian.atrium.organization_route`, the connection page's back link: the layer links to `/roster/organizations/:organization?tab=guardian.sso` while the Roster integration is active.
+  - The flashed status messages after each action: each form shows its result in place.
 - **Roster users and impersonations**
   - The deleted user's page: v2's `roster.users.show` answers 404 for a deleted user. Restore and purge are offered on the Deleted tab, and on the user page right after a delete.
   - The "I understand" checkbox before delete and purge (v1's `confirm` field): the v2 routes take no confirmation field, so a browser confirmation replaces it.
@@ -216,6 +244,7 @@ The pull request template carries these as release items.
 - `composer test:nuxt` and the `nuxt` CI job: a frozen pnpm install, typecheck, build, Vitest, and a build of a fresh consumer app against a copy of the layer.
 - Contract fixtures in `nuxt/layer/test/fixtures`, compared by the PHP suite on every run and rewritten only with `UPDATE_FIXTURES=1`.
 - The suite integrations (see "Suite integrations" above): the `Integrations` domain (`IntegrationRegistry`, the `InstalledPackages` contract, `IntegrationFeatures`, `ScreenDeclaration`), `src/Integrations/{Pkg}` for the seven packages and `src/Integrations/Hooks`, the `atrium.integrations` config section, the `atrium.screens.show` route, the shell's `integrations`, `search.sources` and `search.per_source`, and `NavItem::live()`. In the layer: `useAtriumIntegration()`, `useIntegrationQuery()`, `$atrium.searchSource()` and `$atrium.live()`, `<AtriumIntegrationUnavailable>`, `<AtriumIntegrationScreen>` and `<AtriumNoAccess>`, the integrations' pages under `/{pkg}/`, a public layout for `/roster/invitations/:token`, and English strings for each integration.
+- The Guardian integration (see "Guardian" above): `src/Integrations/Guardian` (`GuardianIntegration`, `GuardianFeature`, `GuardianScopeTypes`), the `GuardianScreens` hook, `atrium.integrations.guardian`, and in the layer its pages under `/guardian/`, the vendored Guardian client, `$atrium.responseHandler()`, `$atrium.notify()` and `<AtriumResponseNotice>`, and the `uqr` dependency.
 - Atrium's own OpenAPI document, `openapi.json` (OpenAPI 3.1, one operation per `atrium.*` route), written by `composer openapi:export` with Scramble (a dev dependency, configured in the workbench); every resource declares `schema()`. The layer's `nuxt/layer/app/client/schema.d.ts` is generated from it by `pnpm -C nuxt generate:client`, the layer's response types are aliases of it, and `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the auth adapter. `useAtriumApi()` is unchanged.
 
 ### Fixed

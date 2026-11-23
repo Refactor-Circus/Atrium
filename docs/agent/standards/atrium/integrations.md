@@ -1,18 +1,18 @@
 ---
-description: "Atrium's suite integrations (Cortex, Impex, Keen, PennantPlus, Polycart, Roster, Showroom): the framework in Domains/Integrations and per-package definitions in src/Integrations/{Pkg}; PHP declares static data only and never loads package code; Vue in app/integrations/{pkg} and app/pages/{pkg} calls each package API through useAtriumIntegration(); registration by installed + enabled + API base, activation by Pennant flags; cross-package hooks; vendored clients (D-020)."
+description: "Atrium's suite integrations (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom): the framework in Domains/Integrations and per-package definitions in src/Integrations/{Pkg}; PHP declares static data only and never loads package code; Vue in app/integrations/{pkg} and app/pages/{pkg} calls each package API through useAtriumIntegration(); registration by installed + enabled + API base, activation by Pennant flags; cross-package hooks; response handlers and shell-less pages; roles and permissions in Guardian; vendored clients (D-020)."
 tags: [atrium, integrations, suite, nuxt, vue, openapi, pennant, hooks]
 kind: architectural
 ---
 
 # Suite Integrations
 
-Complements [[components]] and [[domains]]: Atrium hosts the front ends of the seven suite packages, which in v2 ship only a JSON API, an MCP server, `openapi.json` and a generated client. Atrium names the packages by the user's decision (shape.md); the departures from [[dependencies]] and [[domain-modules]] are rows in `docs/agent/standards-feedback.md`.
+Complements [[components]] and [[domains]]: Atrium hosts the front ends of the eight suite packages, which in v2 ship only a JSON API, an MCP server, `openapi.json` and a generated client. Atrium names the packages by the user's decision (shape.md); the departures from [[dependencies]] and [[domain-modules]] are rows in `docs/agent/standards-feedback.md`.
 
 ## Layout
 
 - **Framework:** `src/Domains/Integrations/`: the `Contracts\Integration` contract and its `Support\Integration` base, `Contracts\InstalledPackages` (bound to `Services\ComposerInstalledPackages`), `Services\IntegrationRegistry`, `Services\IntegrationFeatures`, `Data\ScreenDeclaration` and `Data\SearchSourceDeclaration`, and the `atrium.screens.show` controller, request and `routes.php`. `IntegrationsServiceProvider` is in `DomainServiceProvider::$providers`.
 - **Per package:** `src/Integrations/{Pkg}/` holds `{Pkg}Integration` and `{Pkg}Feature`, nothing else. The registry finds `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Integration` by convention from the keys of `atrium.integrations`, so adding a package adds a folder and a config key, not a registration.
-- **Hooks:** `src/Integrations/Hooks/` (`CortexRedirectDomains`, `ImpexRunLink`, `KeenHistory`), registered from `IntegrationsServiceProvider` after the integrations.
+- **Hooks:** `src/Integrations/Hooks/` (`CortexRedirectDomains`, `ImpexRunLink`, `KeenHistory`, `GuardianScreens`), registered from `IntegrationsServiceProvider` after the integrations.
 - **Strings:** server-side labels in `lang/en/integrations/{pkg}.php`; layer strings in `nuxt/layer/i18n/locales/integrations/{pkg}.en.json` (Roster and Showroom also one file per screen area, the hooks `hooks.en.json`). Only `en` ships.
 - **Layer:** `nuxt/layer/app/integrations/{pkg}/` holds `index.ts` (its registrations, its `screens` map of screen key to route name, and its `// Not ported (D-032)` comment), `components/` and the vendored `client/`. Pages live in `nuxt/layer/app/pages/{pkg}/`, so every path starts with `/{pkg}/`. Tests live in `nuxt/layer/test/integrations/{pkg}/`; `test/integrations/support.ts` has `mockPackageApi()`.
 - **Fixtures:** each package's PHP integration test writes its declarations to `nuxt/layer/test/fixtures/integrations/{pkg}.json` under the contract-fixture rules (compare by default, rewrite only with `UPDATE_FIXTURES=1`).
@@ -20,7 +20,7 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the s
 ## PHP declares data only
 
 - An integration returns nav items, widget definitions, a settings panel, search source descriptors and screen declarations (key, kind, Nuxt path, subject morph alias, optional static `options`). Every widget, settings panel, tab and section sends static data only: `{}` or its hook configuration, never a resolver that reads package state.
-- Atrium's PHP never loads a package's classes, models or actions: nothing in `src/` names `RefactorCircus\Cortex`, `\Impex`, `\Keen`, `\PennantPlus`, `\Polycart`, `\Roster` or `\Showroom`, not even as a string, and `composer.json` `require` names only PHP, Laravel and `refactor-circus/keystone`.
+- Atrium's PHP never loads a package's classes, models or actions: nothing in `src/` names `RefactorCircus\Cortex`, `\Guardian`, `\Impex`, `\Keen`, `\PennantPlus`, `\Polycart`, `\Roster` or `\Showroom`, not even as a string, and `composer.json` `require` names only PHP, Laravel and `refactor-circus/keystone`.
 - Screen keys start with `{pkg}.` and paths with `/{pkg}/`; the registry throws otherwise. v1 keys are kept, so host extensions still attach.
 - Morph aliases a hook needs (`subject_type`, `owner_type`) are constants in Atrium, checked against the package's documented alias by its integration test.
 
@@ -46,6 +46,19 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the s
 - A hook registers only while both of its integrations are registered, and follows both their flags; it has no flag of its own.
 - Its targets come from `atrium.integrations.{pkg}.*` with the v1 defaults. A target is `*`, `{package}.*` or a screen key, and a slot matches `Screen::NAME_PATTERN`. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped elsewhere.
 - Hook data is the hook's configuration plus the screen's declared `subject_type`; the Vue component adds the record key from `?record=`.
+- A hook's Vue component lives in `app/integrations/hooks/components/` and wraps the owning integration's own components (Guardian's `guardian.access` wraps `GuardianAssignments`), which take their record as a prop rather than reading the route.
+
+## Roles and permissions live in Guardian
+
+- Guardian, not Roster, owns roles, permissions and role assignments. Their screens are `guardian.roles`, `guardian.role`, `guardian.permissions`, `guardian.role-assignments` and `guardian.user`; Roster's `roster.roles`, `roster.role` and `roster.permissions` are gone with no alias (D-046), and Roster's organization and user screens get role assignments from the `guardian.access` hook (`GuardianScreens`).
+- Scoped screens name a scope by the morph type Guardian stores, from `GuardianScopeTypes` (`atrium.integrations.guardian.scope_types`, null values through `guardian.adopt.scope_types.{key}`); a scope that does not resolve is not offered, and its hook tab is skipped with one warning per process (D-048).
+
+## Response handlers and shell-less pages
+
+- `$atrium.responseHandler(key, handler)` registers a handler that sees every response of every integration client, `useAtriumClient()` and `useAtriumApi()`, in registration order, before the caller. Each gets its own copy; one that throws is logged and skipped. Register at plugin time from the integration's `index.ts`, whether or not the integration is active, so handlers run even when the shell request fails. A handler shows an app-wide notice with `$atrium.notify(key, notice)` rather than its own banner (D-065).
+- Guardian's `guardian.two-factor` handler sends a 403 `two_factor_challenge_required` or `two_factor_enrollment_required` to its challenge or setup page, once for concurrent 403s, and never while one of those pages is open.
+- A page that must work without the shell (`/roster/invitations/:token`, `/guardian/two-factor/challenge`, `/guardian/two-factor/setup`) declares `definePageMeta({ atrium: { public: true } })` with the public layout, builds a client of its own (host override, a loaded shell's `api_base`, then the package default), never calls `atrium.screens.show`, and is exempt from the page-has-a-screen check (D-038, D-050).
+- Secrets a page handles (two-factor codes, plain API and SCIM tokens, TOTP secrets) stay in component state: never in the URL, the title, logs or storage.
 
 ## Vendored clients (D-020)
 

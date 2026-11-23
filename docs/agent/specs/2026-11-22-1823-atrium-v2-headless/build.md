@@ -1559,3 +1559,24 @@ Guardian hooks on Roster's screens (AC 97, 98).
 
 - `composer test:unit`: 1438 tests, all passed (`HooksTest` 73). PHPStan 0 errors, Pint passed.
 - `composer test:nuxt`: every step passed; Vitest 142 files, 1359 tests, no type errors, and the consumer build.
+
+## Group 37
+
+Guardian docs, changelog and release checks (AC 100, 101).
+
+### Files
+
+- `README.md`, "Suite integrations": Guardian joins the hosted packages, the API base paragraph (`guardian.routes.enabled`), the hooks block (`atrium.integrations.guardian.screens` with its defaults) and the routes table, and a new "Guardian" part: its API behind auth, `scope_types`, `guardian.two-factor` and `guardian.session` with the challenge and setup pages, `Guardian-Two-Factor-Deadline` through CORS (`exposed_headers`), `guardian.tokens.driver` and the 501 state, passkeys (`web-auth/webauthn-lib`, HTTPS, `guardian.two_factor.passkeys.rp_id`), the hook keys, and `$atrium.responseHandler()` with an example.
+- `CHANGELOG.md` (v2.0.0): a "Guardian" part of "Suite integrations" (config, screens, two-factor, hooks, SSO/SCIM), the removed Roster screens and nav items mapped to their Guardian replacements, `responseHandler()`, the `uqr` dependency, the "Guardian SSO and SCIM" items under "Not ported (D-032)", and an "Added" entry.
+- `AGENTS.md` (the `CLAUDE.md` symlink's target): Guardian in the hosted packages and the package-namespace rule, roles living in Guardian, and a response handlers and shell-less pages convention.
+- `docs/agent/standards/atrium/integrations.md`: Guardian, `GuardianScreens`, hook wrappers, and new sections "Roles and permissions live in Guardian" and "Response handlers and shell-less pages".
+- `resources/boost/skills/atrium-development/SKILL.md`: Guardian's setup and `responseHandler()` in step 5.
+- `.github/pull_request_template.md`: Guardian in the D-020 release item and its paragraph, and the Guardian part in the README manual check.
+- Tests: `DocsTest` (the Guardian README keys, the `/guardian/` routes, the agent docs, the standard, the Boost skill, the PR template item; the hosted-package list now includes Guardian) and `ChangelogUpgradeTest` (the integration, each removed Roster screen with its replacement, `guardian.access`, `responseHandler()`, `uqr`, the Guardian D-032 list from `integrations/guardian/index.ts` and two named items; the package list now includes Guardian).
+
+### Tests
+
+- Before the docs were written, 36 of the new doc tests failed. After: `DocsTest` and `ChangelogUpgradeTest` pass (204 tests).
+- `vendor/bin/ringside check` passed after `ringside sync`.
+- `composer test`: PHPStan 0 errors, Pint passed, type coverage 100%, Pest 1473 tests, all passed.
+- `composer test:nuxt` (pnpm shim, D-041): every step passed; Vitest 142 files, 1359 tests, no type errors, and the consumer build.

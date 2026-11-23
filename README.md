@@ -440,7 +440,7 @@ uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
 
 ## Suite integrations
 
-Atrium hosts the front ends of the Refactor Circus suite: Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and the Nuxt layer renders them and calls each package's own API from the browser, with your one auth adapter.
+Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and the Nuxt layer renders them and calls each package's own API from the browser, with your one auth adapter.
 
 Atrium's PHP never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. Everything below is configured under `atrium.integrations` in `config/atrium.php`.
 
@@ -469,10 +469,10 @@ The layer calls each package where its API is served:
 
 When neither applies, the integration does not register, and Atrium logs one `warning` per process naming `{pkg}.routes.enabled` and `atrium.integrations.{pkg}.api_base`.
 
-Polycart and Roster ship with their API off (`polycart.routes.enabled` and `roster.routes.enabled` are `false`), so their integrations stay away until you turn the API on, behind your authentication middleware:
+Guardian, Polycart and Roster ship with their API off (`guardian.routes.enabled`, `polycart.routes.enabled` and `roster.routes.enabled` are `false`), so their integrations stay away until you turn the API on, behind your authentication middleware:
 
 ```php
-// config/polycart.php (and config/roster.php alike)
+// config/polycart.php (and config/guardian.php and config/roster.php alike)
 'routes' => [
     'enabled' => true,
     'middleware' => ['api', 'auth:sanctum'],
@@ -532,6 +532,14 @@ Some integrations add a tab or section to another's screens. Each hook registers
             ],
         ],
     ],
+    'guardian' => [
+        // atrium.integrations.guardian.screens: Guardian's tabs and sections on Roster's
+        // screens. A plain value is a tab; a `slot => key` entry is a section.
+        'screens' => [
+            'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'],
+            'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities'],
+        ],
+    ],
     'showroom' => [
         // atrium.integrations.showroom.transfers.flow_prefix: the Impex flows
         // Showroom's transfers screen lists, by name prefix.
@@ -549,6 +557,7 @@ Each integration's pages live in the layer under its key, so their paths start w
 | Integration | Pages |
 | --- | --- |
 | Cortex | `/cortex/virtual-agents`, `/cortex/concrete-agents`, `/cortex/tools`, `/cortex/servers`, `/cortex/redirect-domains`, `/cortex/run` and their detail pages |
+| Guardian | `/guardian/security`, `/guardian/roles`, `/guardian/permissions`, `/guardian/role-assignments`, `/guardian/users/:user`, `/guardian/security-events`, `/guardian/lockouts`, `/guardian/ip-rules`, `/guardian/two-factor-policies`, `/guardian/password-policy`, `/guardian/sso-connections/:connection`, and the shell-less `/guardian/two-factor/challenge` and `/guardian/two-factor/setup` |
 | Impex | `/impex/runs`, `/impex/flows`, `/impex/messages`, `/impex/channels`, `/impex/subscriptions` and their detail pages |
 | Keen | `/keen/entries`, `/keen/entries/:entry` and `/keen/history/:package` |
 | PennantPlus | `/pennantplus/features` |
@@ -587,6 +596,50 @@ pnpm -C nuxt generate:client   # regenerate nuxt/layer/app/client/schema.d.ts
 ```
 
 `tests/Feature/OpenApiTest.php` fails when either file is stale, naming both commands. `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the same auth adapter; `useAtriumApi()` keeps working.
+
+### Guardian
+
+[refactor-circus/guardian](https://github.com/Refactor-Circus/Guardian) is the suite's security package, and Atrium hosts its screens: the current user's security settings (`/guardian/security`), roles, permissions and role assignments (which moved from Roster), one user's security (`/guardian/users/:user`), the security log, lockouts, IP rules, two-factor policies, the password policy, SSO connections and SCIM tokens. All of them sit in one "Security" nav group.
+
+**Turn its API on behind your auth.** Guardian ships with `guardian.routes.enabled` off, so the integration stays away (with one warning) until you turn it on in `config/guardian.php`, behind your authentication middleware, as above. Its API base is then `/` plus `guardian.routes.prefix` (`/guardian`). The integration registers whether or not Roster is installed; only its hooks on Roster's screens need Roster.
+
+**Scope types.** Scoped roles, assignments and two-factor policies name a scope by the morph type Guardian stores. `atrium.integrations.guardian.scope_types` maps each scope key to it:
+
+```php
+'guardian' => [
+    'scope_types' => [
+        'organization' => null, // null: read guardian.adopt.scope_types.organization
+        'team' => null,
+    ],
+],
+```
+
+A `null` value resolves to `guardian.adopt.scope_types.{key}`; a value that does not resolve to a non-empty string is dropped, and the layer offers no scope it cannot name. While `organization` does not resolve, the `guardian.access` tab is left off `roster.organization`, and Atrium logs one warning naming `atrium.integrations.guardian.scope_types`.
+
+**Two-factor and sessions.** Guardian's `guardian.two-factor` and `guardian.session` middleware can go on Atrium's route group (`atrium.routes.middleware`, before `Authorize`) and on each package's API group. A user who still owes a second factor then gets Guardian's 403, whose JSON `code` is `two_factor_challenge_required` or `two_factor_enrollment_required`, and the layer sends them to `/guardian/two-factor/challenge` or `/guardian/two-factor/setup` with a guarded `redirect` back. Both pages are shell-less (`definePageMeta({ atrium: { public: true } })` with the public layout): they load no shell and reach Guardian through a client of their own (`runtimeConfig.public.atrium.integrations.guardian.apiBase`, a loaded shell's `api_base`, or `/guardian`). A response carrying `Guardian-Two-Factor-Deadline` shows an app-wide notice with the enrolment deadline. On split hosts, expose that header through CORS so the browser can read it:
+
+```php
+// config/cors.php
+'exposed_headers' => ['Guardian-Two-Factor-Deadline'],
+```
+
+**API tokens.** The security page issues and revokes personal API tokens through Guardian's token driver, `guardian.tokens.driver` (`sanctum`, `passport` or your own `TokenDriver`). With no driver the token routes answer 501, and the page shows "API tokens are not enabled" with no form; `guardian.user` hides its tokens block. A token's plain value shows once and is never stored.
+
+**Passkeys** need `web-auth/webauthn-lib` installed in the host (without it Guardian's passkey routes answer 501 and the layer hides the passkey controls), HTTPS, and a `guardian.two_factor.passkeys.rp_id` that matches the SPA's host: WebAuthn binds a passkey to that relying party, so a SPA on another host cannot register or use one.
+
+**Hooks on Roster's screens.** `atrium.integrations.guardian.screens` places Guardian's tabs and sections, as Guardian v1's `guardian.atrium.screens` did (a plain value is a tab, a `slot => key` entry a section); the defaults are in the hooks block above. `guardian.access` lists and assigns roles in the organization's scope, or the user's own; `guardian.user-security` shows a user's sessions, tokens, events and the two-factor reset; `guardian.sso` and `guardian.scim` manage an organization's SSO connections and SCIM tokens, whose base URL uses `guardian.scim.prefix`; and `guardian.sso-identities` lists a user's linked identities. Each is placed only while Guardian and Roster are both registered and active.
+
+**Response handlers.** Guardian's redirect is one use of `$atrium.responseHandler(key, (response, request) => void)`, which any plugin or integration can register: every integration client, `useAtriumClient()` and `useAtriumApi()` pass each response to every handler, in registration order, before the caller sees it. A handler gets its own copy of the response, and one that throws is logged and skipped.
+
+```ts
+export default defineNuxtPlugin(() => {
+  useAtrium().responseHandler('my-app.maintenance', (response) => {
+    if (response.status === 503) {
+      navigateTo('/maintenance')
+    }
+  })
+})
+```
 
 ### Parity with v1
 

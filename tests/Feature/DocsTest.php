@@ -216,7 +216,7 @@ it('has an upgrade note for the history removal pointing to Keen', function (): 
 
 it('documents detecting and enabling an integration', function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))->not->toBe('')
-        ->toContain('Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
+        ->toContain('Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
         ->toContain('refactor-circus/{pkg}')
         ->toContain('installed')
         ->toContain('`atrium.integrations.{pkg}.enabled`')
@@ -265,7 +265,7 @@ it('documents each hook key with its default', function (string $phrase): void {
 
 it('documents the Nuxt routes of every integration', function (string $pkg): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))->toContain('`/'.$pkg.'/');
-})->with(['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
+})->with(['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
 
 it('documents the screen route, the unavailable page and page overrides', function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))
@@ -301,6 +301,55 @@ it('documents the parity departures', function (): void {
         ->toContain('permission')
         ->toContain('Operator mode')
         ->toContain('CHANGELOG');
+});
+
+/*
+ * The Guardian integration (AC 100): turning on Guardian's API behind auth,
+ * `scope_types`, the two-factor and session middleware with the challenge
+ * and setup pages, the deadline header through CORS, token drivers and the
+ * 501 state, passkeys, the hook keys with their defaults, and
+ * `$atrium.responseHandler()`; the agent docs, the local standard and the
+ * pull request template follow.
+ */
+
+it('documents the Guardian integration', function (string $phrase): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))->toContain($phrase);
+})->with([
+    '`guardian.routes.enabled`',
+    '`atrium.integrations.guardian.scope_types`',
+    'guardian.adopt.scope_types',
+    '`guardian.two-factor`',
+    '`guardian.session`',
+    '/guardian/two-factor/challenge',
+    '/guardian/two-factor/setup',
+    'Guardian-Two-Factor-Deadline',
+    'exposed_headers',
+    '`guardian.tokens.driver`',
+    '501',
+    'web-auth/webauthn-lib',
+    'HTTPS',
+    '`guardian.two_factor.passkeys.rp_id`',
+    '`atrium.integrations.guardian.screens`',
+    "'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim']",
+    "'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities']",
+    '$atrium.responseHandler(',
+    '`guardian.scim.prefix`',
+]);
+
+it('describes Guardian in the agent docs and the integrations standard', function (string $path, array $phrases): void {
+    expect((string) file_get_contents($path))->toContain(...$phrases);
+})->with([
+    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['Guardian', 'RefactorCircus\\{Cortex,Guardian,', 'responseHandler(', 'public: true']],
+    'integrations standard' => [docsPath('docs/agent/standards/atrium/integrations.md'), ['Guardian', 'responseHandler(', 'public: true', 'roles and permissions']],
+    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['guardian.routes.enabled', 'atrium.integrations.guardian.screens', 'responseHandler(']],
+]);
+
+it('has Guardian in the pull request template\'s D-020 release item', function (): void {
+    $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
+
+    preg_match('/^- \[ \] [^\n]*D-020[^\n]*(?:\n(?!- \[ \]|#)[^\n]*)*/m', $template, $item);
+
+    expect($item[0] ?? '')->toContain('Guardian');
 });
 
 it('lists the screen route in the API table', function (): void {
