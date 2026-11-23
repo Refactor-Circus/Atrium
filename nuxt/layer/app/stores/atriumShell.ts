@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import type { AtriumShell, AtriumShellResponse } from '../types/atrium'
+import type { AtriumIntegration, AtriumShell, AtriumShellResponse } from '../types/atrium'
 
 /**
  * The shell (GET /shell): app, user, navigation, themes, settings, search,
- * and the app's locale, which the layer switches to when it has messages for
- * it (its own `en`, or a locale the host added).
+ * the registered suite integrations, and the app's locale, which the layer
+ * switches to when it has messages for it (its own `en`, or a locale the host
+ * added).
  */
 export const useAtriumShellStore = defineStore('atrium-shell', () => {
   const nuxtApp = useNuxtApp()
@@ -42,5 +43,18 @@ export const useAtriumShellStore = defineStore('atrium-shell', () => {
     await i18n.setLocale(locale as typeof i18n.locale.value)
   }
 
-  return { shell, error, loading, load }
+  /** The registered integrations; none until the shell is loaded. */
+  const integrations = computed<AtriumIntegration[]>(() => shell.value?.integrations ?? [])
+
+  /** The integration registered under `key`, or null when the shell does not list it. */
+  function integration(key: string): AtriumIntegration | null {
+    return integrations.value.find(entry => entry.key === key) ?? null
+  }
+
+  /** Whether the integration is registered and active for the user. */
+  function isActive(key: string): boolean {
+    return integration(key)?.active === true
+  }
+
+  return { shell, error, loading, load, integrations, integration, isActive }
 })

@@ -16,12 +16,25 @@ export interface AtriumDataError {
   message: string
 }
 
+/**
+ * A nav item whose badge or children the layer computes from a package API
+ * (`NavItem::live()`): the resolver registered with `$atrium.live(key, …)`
+ * runs with these static `options`.
+ */
+export interface AtriumNavLive {
+  /** `{package}.{name}`, e.g. `impex.active-runs` */
+  key: string
+  options: Record<string, unknown>
+}
+
 export interface AtriumNavItem {
   label: string
   /** An Iconify name (`i-lucide-house`) */
   icon: string | null
   link: AtriumLink | null
   badge: string | number | null
+  /** Sent by the API on every item (null when unset); optional on items a live resolver returns */
+  live?: AtriumNavLive | null
   children: AtriumNavItem[]
 }
 
@@ -51,6 +64,31 @@ export interface AtriumSettingsSummary {
   component: string
 }
 
+/**
+ * A suite integration Atrium registered (the package is installed, enabled
+ * and serves its API). `active` is false when one of its feature flags is
+ * off for the user.
+ */
+export interface AtriumIntegration {
+  /** The package key (`impex`), also the first segment of its pages' paths */
+  key: string
+  label: string
+  active: boolean
+  /** Where its API is: a path on Atrium's host (`/impex/api`) or an absolute URL */
+  api_base: string
+  /** Each feature flag the integration needs, and whether it is on for the user */
+  features: Record<string, boolean>
+}
+
+/** A client-side search source, run with the resolver `$atrium.searchSource(key, …)` registers. */
+export interface AtriumSearchSource {
+  key: string
+  /** The integration whose API it searches */
+  integration: string
+  label: string
+  icon: string | null
+}
+
 export interface AtriumShell {
   app: { name: string }
   user: { name: string | null, email: string | null } | null
@@ -61,7 +99,15 @@ export interface AtriumShell {
   navigation: AtriumNavSection[]
   themes: { default: string | null, switchable: boolean, all: AtriumTheme[] }
   settings: AtriumSettingsSummary[]
-  search: { min_length: number }
+  search: {
+    min_length: number
+    /** The client-side sources of active integrations */
+    sources: AtriumSearchSource[]
+    /** How many results each source may add */
+    per_source: number
+  }
+  /** Every registered integration, by key */
+  integrations: AtriumIntegration[]
 }
 
 export interface AtriumShellResponse {
@@ -167,6 +213,24 @@ export interface AtriumScreen {
   rows: Record<string, Record<string, AtriumExtension[]>>
 }
 
+/**
+ * A screen a suite integration declares (`atrium.screens.show`): its
+ * declaration and the extensions other packages registered for it. The page
+ * loads the record itself, from the package's API.
+ */
+export interface AtriumIntegrationScreen extends AtriumScreen {
+  /** The layer route it lives at (`/impex/runs/:run`) */
+  path: string
+  /** The package's morph alias of the screen's record, on a detail screen */
+  subject_type: string | null
+  /** The record key the screen was asked for (`?record=`), as a string */
+  record: string | null
+}
+
+export interface AtriumIntegrationScreenResponse {
+  data: AtriumIntegrationScreen
+}
+
 /** The layer's public names for a screen payload and the shell. */
 export type ScreenData = AtriumScreen
 export type Shell = AtriumShell
@@ -196,15 +260,36 @@ export interface AtriumSearchResult {
 }
 
 /**
+ * A client-side search source (`$atrium.searchSource(key, resolver)`): it
+ * searches its package's API for `q` and returns at most `limit` results. A
+ * rejection (an HTTP error included) drops the source from that search only.
+ */
+export type AtriumSearchSourceResolver = (q: string, options: { limit: number }) => Promise<AtriumSearchResult[]>
+
+/** What a live resolver sets on its nav item; a key left out keeps the item's own. */
+export interface AtriumLiveResult {
+  /** The badge to show; null (or 0, by the resolver's choice) shows none */
+  badge?: number | null
+  children?: AtriumNavItem[]
+}
+
+/** A live nav resolver (`$atrium.live(key, resolver)`), given the item's static `live.options`. */
+export type AtriumLiveResolver = (options: Record<string, unknown>) => Promise<AtriumLiveResult>
+
+/** Why an integration's page cannot render: missing from the shell, or flagged off. */
+export type AtriumIntegrationUnavailableReason = 'absent' | 'inactive'
+
+/**
  * How the app authenticates against Atrium's API. Atrium has no opinion:
  * the host app's guard (Passport, Sanctum, anything) decides, and this adapter
- * is the client half of it.
+ * is the client half of it. It signs every integration client too
+ * (`useAtriumIntegration()`), so a host configures auth once.
  */
 export interface AtriumAuthAdapter {
   /** Headers for every API request, e.g. `{ Authorization: 'Bearer …' }` */
   headers?: () => Record<string, string> | Promise<Record<string, string>>
   /** `include` for cookie-based auth across origins */
   credentials?: RequestCredentials
-  /** Called on a 401: refresh, or send the user to sign in */
+  /** Called on a 401 (except on a public page): refresh, or send the user to sign in */
   onUnauthorized?: () => void | Promise<void>
 }

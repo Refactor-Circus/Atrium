@@ -546,3 +546,25 @@ I did not run the full suite: the instructions say the gate runs `vendor/bin/pes
 ### Deviations
 
 None beyond the standards-feedback rows recorded in the salvaged section (`architecture/dependencies`, `architecture/domain-modules`, `http/authorization`).
+
+## Group 12 (salvaged)
+
+### What I found
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress. All of the group's work was in the tree, uncommitted: 12 modified files and every new file the group lists. I compared it with tasks 12.1 to 12.7, and it covers each of them:
+
+- Tests (12.1): `integration-client`, `-routing`, `-search`, `-live`, `-absent` and `-i18n` Vitest files, the new shell types in `fixtures.test-d.ts`, and Pest `VendoredClientsTest` (stamps, the sibling comparison or a skip naming `pnpm -C nuxt sync:clients`, and the no-`@refactor-circus/*-client` grep).
+- `nuxt/scripts/sync-clients.mjs` and the `sync:clients` script (12.2). It checks every source first and fails naming the package and path (D-039). I re-ran it with `ATRIUM_SUITE_PATH` set as D-040 says. All seven packages synced and the vendored `client/` folders did not change.
+- `openapi-fetch` pinned at `0.17.0` in the layer, with the lockfile updated (12.3).
+- `useAtriumIntegration()` with the auth middleware, and `useIntegrationQuery()` (12.4).
+- The registry's `searchSource()` and `live()`, the `atrium-integrations` plugin (`import.meta.glob`), the global middleware with the `atrium.public` page meta, the public layout, `<AtriumIntegrationScreen>`, `<AtriumNoAccess>`, `<AtriumIntegrationUnavailable>`, `useAtriumScreen()`, Navigation `live` support, the ⌘K fan-out in `useAtriumSearch()`, and the extended shell types and store (12.5). `Search.vue` needed no change, because the fan-out lives in the composable.
+- The 14 integration locale files, each `{}`, registered in `nuxt.config.ts`, and the new strings in `en.json` (12.6).
+- `test/integrations/support.ts` with `mockPackageApi()` (typed by the vendored `paths`), `mountIntegration()` and the i18n key helpers (12.7).
+
+### What I committed
+
+Only the group's paths. `nuxt/layer/.nuxtrc`, an untracked file written by `@nuxt/test-utils` setup, is not in the group's file list, so I left it alone and did not commit it.
+
+### What is left
+
+- 12.8 is unticked. I did not run `composer test:nuxt` or `vendor/bin/pest`, as the salvage instructions said, and `pnpm` was not on this session's PATH for a typecheck. The gate runs both.

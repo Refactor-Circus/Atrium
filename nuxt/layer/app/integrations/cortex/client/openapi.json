@@ -1,0 +1,2749 @@
+{
+    "openapi": "3.1.2",
+    "info": {
+        "title": "Cortex API",
+        "version": "2.0.0",
+        "description": "The Cortex JSON API: virtual and concrete agents, tools, MCP servers, redirect domains and the agent directory. Paths are relative to the `cortex.routes.prefix` of the host application."
+    },
+    "servers": [
+        {
+            "url": "/cortex"
+        }
+    ],
+    "paths": {
+        "/search": {
+            "get": {
+                "operationId": "cortex.search.index",
+                "tags": [
+                    "AgentSearch"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AgentReferenceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AgentReferenceResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents": {
+            "get": {
+                "operationId": "cortex.concrete-agents.index",
+                "tags": [
+                    "ConcreteAgent"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ConcreteAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ConcreteAgentResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}": {
+            "get": {
+                "operationId": "cortex.concrete-agents.show",
+                "tags": [
+                    "ConcreteAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ConcreteAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConcreteAgentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}/run": {
+            "post": {
+                "operationId": "cortex.concrete-agents.run",
+                "tags": [
+                    "ConcreteAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunConcreteAgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AgentRunResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AgentRunResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}/tools": {
+            "put": {
+                "operationId": "cortex.concrete-agents.tools.update",
+                "tags": [
+                    "ConcreteAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ConcreteAgentOverrideResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConcreteAgentOverrideResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}/override": {
+            "delete": {
+                "operationId": "cortex.concrete-agents.override.destroy",
+                "tags": [
+                    "ConcreteAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}/versions": {
+            "get": {
+                "operationId": "cortex.concrete-agents.versions.index",
+                "tags": [
+                    "ConcreteAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ConcreteAgentOverrideVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ConcreteAgentOverrideVersionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.concrete-agents.versions.store",
+                "tags": [
+                    "ConcreteAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreConcreteAgentVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ConcreteAgentOverrideVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConcreteAgentOverrideVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/concrete-agents/{agent}/versions/{version}/publish": {
+            "post": {
+                "operationId": "cortex.concrete-agents.versions.publish",
+                "tags": [
+                    "ConcreteAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ConcreteAgentOverrideResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConcreteAgentOverrideResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/history": {
+            "get": {
+                "operationId": "cortex.history.index",
+                "tags": [
+                    "History"
+                ],
+                "parameters": [
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 191
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 191
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 191
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Auditing is turned off for this package."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "No audit log is installed. Install refactor-circus/keen to record history."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/servers/{server}/instructions": {
+            "get": {
+                "operationId": "cortex.servers.instructions.show",
+                "tags": [
+                    "McpInstruction"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`McpInstructionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/McpInstructionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "cortex.servers.instructions.destroy",
+                "tags": [
+                    "McpInstruction"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`McpInstructionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/McpInstructionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/servers/{server}/instructions/versions": {
+            "get": {
+                "operationId": "cortex.servers.instructions.versions.index",
+                "tags": [
+                    "McpInstruction"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `McpInstructionVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/McpInstructionVersionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.servers.instructions.versions.store",
+                "tags": [
+                    "McpInstruction"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreMcpInstructionVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`McpInstructionVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/McpInstructionVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/servers/{server}/instructions/versions/{version}/publish": {
+            "post": {
+                "operationId": "cortex.servers.instructions.versions.publish",
+                "tags": [
+                    "McpInstruction"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`McpInstructionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/McpInstructionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/servers": {
+            "get": {
+                "operationId": "cortex.servers.index",
+                "tags": [
+                    "McpServer"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `McpServerResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/McpServerResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/servers/{server}/tools": {
+            "put": {
+                "operationId": "cortex.servers.tools.update",
+                "tags": [
+                    "McpServerTools"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`McpInstructionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/McpInstructionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "cortex.servers.tools.destroy",
+                "tags": [
+                    "McpServerTools"
+                ],
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/providers": {
+            "get": {
+                "operationId": "cortex.providers.index",
+                "tags": [
+                    "Provider"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/redirect-domains": {
+            "get": {
+                "operationId": "cortex.redirect-domains.index",
+                "tags": [
+                    "RedirectDomain"
+                ],
+                "parameters": [
+                    {
+                        "name": "owner_type",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "owner_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 255
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.redirect-domains.store",
+                "tags": [
+                    "RedirectDomain"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreRedirectDomainRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/redirect-domains/{domain}": {
+            "delete": {
+                "operationId": "cortex.redirect-domains.destroy",
+                "tags": [
+                    "RedirectDomain"
+                ],
+                "parameters": [
+                    {
+                        "name": "domain",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/runnable-agents": {
+            "get": {
+                "operationId": "cortex.runnable-agents.index",
+                "tags": [
+                    "RunnableAgent"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AgentReferenceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AgentReferenceResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/settings-summary": {
+            "get": {
+                "operationId": "cortex.settings-summary.show",
+                "tags": [
+                    "SettingsSummary"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SettingsSummaryResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SettingsSummaryResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/tools": {
+            "get": {
+                "operationId": "cortex.tools.index",
+                "tags": [
+                    "Tool"
+                ],
+                "parameters": [
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ToolResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ToolResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/tools/{tool}/description": {
+            "get": {
+                "operationId": "cortex.tools.description.show",
+                "tags": [
+                    "ToolDescription"
+                ],
+                "parameters": [
+                    {
+                        "name": "tool",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ToolDescriptionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ToolDescriptionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "cortex.tools.description.destroy",
+                "tags": [
+                    "ToolDescription"
+                ],
+                "parameters": [
+                    {
+                        "name": "tool",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/tools/{tool}/description/versions": {
+            "get": {
+                "operationId": "cortex.tools.description.versions.index",
+                "tags": [
+                    "ToolDescription"
+                ],
+                "parameters": [
+                    {
+                        "name": "tool",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ToolDescriptionVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ToolDescriptionVersionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.tools.description.versions.store",
+                "tags": [
+                    "ToolDescription"
+                ],
+                "parameters": [
+                    {
+                        "name": "tool",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreToolDescriptionVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ToolDescriptionVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ToolDescriptionVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/tools/{tool}/description/versions/{version}/publish": {
+            "post": {
+                "operationId": "cortex.tools.description.versions.publish",
+                "tags": [
+                    "ToolDescription"
+                ],
+                "parameters": [
+                    {
+                        "name": "tool",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ToolDescriptionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ToolDescriptionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents": {
+            "get": {
+                "operationId": "cortex.virtual-agents.index",
+                "tags": [
+                    "VirtualAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `VirtualAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VirtualAgentResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.virtual-agents.store",
+                "tags": [
+                    "VirtualAgent"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreVirtualAgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`VirtualAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents/{agent}": {
+            "get": {
+                "operationId": "cortex.virtual-agents.show",
+                "tags": [
+                    "VirtualAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VirtualAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "cortex.virtual-agents.update",
+                "tags": [
+                    "VirtualAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateVirtualAgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`VirtualAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "cortex.virtual-agents.destroy",
+                "tags": [
+                    "VirtualAgent"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents/{agent}/run": {
+            "post": {
+                "operationId": "cortex.virtual-agents.run",
+                "tags": [
+                    "VirtualAgentRun"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunVirtualAgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AgentRunResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AgentRunResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents/{agent}/versions": {
+            "get": {
+                "operationId": "cortex.virtual-agents.versions.index",
+                "tags": [
+                    "VirtualAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `VirtualAgentVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VirtualAgentVersionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "cortex.virtual-agents.versions.store",
+                "tags": [
+                    "VirtualAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreVirtualAgentVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`VirtualAgentVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents/{agent}/versions/{version}": {
+            "get": {
+                "operationId": "cortex.virtual-agents.versions.show",
+                "tags": [
+                    "VirtualAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VirtualAgentVersionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentVersionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/virtual-agents/{agent}/versions/{version}/publish": {
+            "post": {
+                "operationId": "cortex.virtual-agents.versions.publish",
+                "tags": [
+                    "VirtualAgentVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "description": "The agent slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VirtualAgentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VirtualAgentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AgentReferenceResource": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type",
+                    "key",
+                    "name"
+                ],
+                "title": "AgentReferenceResource"
+            },
+            "AgentRunResource": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string"
+                    },
+                    "usage": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "text",
+                    "usage"
+                ],
+                "title": "AgentRunResource"
+            },
+            "ConcreteAgentOverrideResource": {
+                "type": "object",
+                "properties": {
+                    "agent": {
+                        "type": "string"
+                    },
+                    "published_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "published_content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tools": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "agent",
+                    "published_version",
+                    "published_content",
+                    "tools",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ConcreteAgentOverrideResource"
+            },
+            "ConcreteAgentOverrideVersionResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "version",
+                    "content",
+                    "created_at"
+                ],
+                "title": "ConcreteAgentOverrideVersionResource"
+            },
+            "ConcreteAgentResource": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "overridable": {
+                        "type": "string"
+                    },
+                    "tools_overridable": {
+                        "type": "string"
+                    },
+                    "instructions": {
+                        "type": "string"
+                    },
+                    "tools": {
+                        "type": "string"
+                    },
+                    "default_instructions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "default_tools": {
+                        "type": "string"
+                    },
+                    "published_version": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tools_overridden": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name",
+                    "overridable",
+                    "tools_overridable",
+                    "instructions",
+                    "tools",
+                    "default_tools",
+                    "published_version",
+                    "tools_overridden"
+                ],
+                "title": "ConcreteAgentResource"
+            },
+            "McpInstructionResource": {
+                "type": "object",
+                "properties": {
+                    "server": {
+                        "type": "string"
+                    },
+                    "published_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "published_content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "server",
+                    "published_version",
+                    "published_content",
+                    "created_at",
+                    "updated_at"
+                ],
+                "additionalProperties": {},
+                "title": "McpInstructionResource"
+            },
+            "McpInstructionVersionResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "version",
+                    "content",
+                    "created_at"
+                ],
+                "title": "McpInstructionVersionResource"
+            },
+            "McpServerResource": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "instructions": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "instructions"
+                ],
+                "additionalProperties": {},
+                "title": "McpServerResource"
+            },
+            "RunConcreteAgentRequest": {
+                "type": "object",
+                "properties": {
+                    "input": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "input"
+                ],
+                "title": "RunConcreteAgentRequest"
+            },
+            "RunVirtualAgentRequest": {
+                "type": "object",
+                "properties": {
+                    "input": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "input"
+                ],
+                "title": "RunVirtualAgentRequest"
+            },
+            "SettingsSummaryResource": {
+                "type": "object",
+                "properties": {
+                    "providers": {
+                        "type": "string"
+                    },
+                    "tool_count": {
+                        "type": "string"
+                    },
+                    "agent_count": {
+                        "type": "string"
+                    },
+                    "server_count": {
+                        "type": "string"
+                    },
+                    "cache_enabled": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "providers",
+                    "tool_count",
+                    "agent_count",
+                    "server_count",
+                    "cache_enabled"
+                ],
+                "title": "SettingsSummaryResource"
+            },
+            "StoreConcreteAgentVersionRequest": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string"
+                    },
+                    "publish": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "content"
+                ],
+                "title": "StoreConcreteAgentVersionRequest"
+            },
+            "StoreMcpInstructionVersionRequest": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string"
+                    },
+                    "publish": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "content"
+                ],
+                "title": "StoreMcpInstructionVersionRequest"
+            },
+            "StoreRedirectDomainRequest": {
+                "type": "object",
+                "properties": {
+                    "owner_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "owner_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "domain": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "domain"
+                ],
+                "title": "StoreRedirectDomainRequest"
+            },
+            "StoreToolDescriptionVersionRequest": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string"
+                    },
+                    "publish": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "content"
+                ],
+                "title": "StoreToolDescriptionVersionRequest"
+            },
+            "StoreVirtualAgentRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instructions": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "model": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "settings": {
+                        "type": "object",
+                        "properties": {
+                            "temperature": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 2
+                            },
+                            "max_steps": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "max_tokens": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "top_p": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            }
+                        }
+                    },
+                    "tools": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "lookup-order",
+                                "refund-order",
+                                "search-knowledge-base",
+                                "create-ticket",
+                                "check-inventory",
+                                "current-time",
+                                "list-audit-entries-tool",
+                                "show-audit-entry-tool",
+                                "record-audit-event-tool"
+                            ]
+                        }
+                    },
+                    "sub_agents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
+                    },
+                    "concrete_sub_agents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "support-triage",
+                                "refund-agent",
+                                "catalog-agent",
+                                "summarizer"
+                            ]
+                        },
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "name",
+                    "slug",
+                    "instructions"
+                ],
+                "title": "StoreVirtualAgentRequest"
+            },
+            "StoreVirtualAgentVersionRequest": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string"
+                    },
+                    "publish": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "content"
+                ],
+                "title": "StoreVirtualAgentVersionRequest"
+            },
+            "ToolDescriptionResource": {
+                "type": "object",
+                "properties": {
+                    "tool": {
+                        "type": "string"
+                    },
+                    "published_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "published_content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "tool",
+                    "published_version",
+                    "published_content",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ToolDescriptionResource"
+            },
+            "ToolDescriptionVersionResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "version",
+                    "content",
+                    "created_at"
+                ],
+                "title": "ToolDescriptionVersionResource"
+            },
+            "ToolResource": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "schema": {
+                        "type": "string"
+                    },
+                    "tags": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "description",
+                    "schema",
+                    "tags"
+                ],
+                "title": "ToolResource"
+            },
+            "UpdateVirtualAgentRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instructions": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "model": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "settings": {
+                        "type": "object",
+                        "properties": {
+                            "temperature": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 2
+                            },
+                            "max_steps": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "max_tokens": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "top_p": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            }
+                        }
+                    },
+                    "tools": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "lookup-order",
+                                "refund-order",
+                                "search-knowledge-base",
+                                "create-ticket",
+                                "check-inventory",
+                                "current-time",
+                                "list-audit-entries-tool",
+                                "show-audit-entry-tool",
+                                "record-audit-event-tool"
+                            ]
+                        }
+                    },
+                    "sub_agents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
+                    },
+                    "concrete_sub_agents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "support-triage",
+                                "refund-agent",
+                                "catalog-agent",
+                                "summarizer"
+                            ]
+                        },
+                        "uniqueItems": true
+                    }
+                },
+                "title": "UpdateVirtualAgentRequest"
+            },
+            "VirtualAgentResource": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instructions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "published_version": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "provider": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "model": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "settings": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "additionalProperties": {}
+                    },
+                    "tools": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "sub_agents": {
+                        "type": "array",
+                        "items": {}
+                    },
+                    "concrete_sub_agents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "slug",
+                    "description",
+                    "provider",
+                    "model",
+                    "settings",
+                    "tools",
+                    "concrete_sub_agents",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "VirtualAgentResource"
+            },
+            "VirtualAgentVersionResource": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "version",
+                    "content",
+                    "created_at"
+                ],
+                "title": "VirtualAgentVersionResource"
+            }
+        },
+        "responses": {
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -3,12 +3,19 @@
  * The Atrium shell: sidebar navigation, ⌘K search, the theme switcher and
  * the signed-in user, all from GET /shell, loaded once on boot. The version
  * banner warns when the API and this layer have drifted apart.
+ *
+ * A `/{pkg}/…` page whose integration is not active (the
+ * `atrium-integration` middleware marks it) is replaced by
+ * <AtriumIntegrationUnavailable>, so the page never calls its package.
  */
 const store = useAtriumShellStore()
 const theme = useAtriumTheme()
+const route = useRoute()
 const { t } = useI18n()
 
 await store.load()
+
+const unavailable = computed(() => route.meta.atriumUnavailable ?? null)
 
 useHead({ titleTemplate: title => (title ? `${title} · ` : '') + (store.shell?.app.name ?? 'Atrium') })
 
@@ -54,6 +61,12 @@ const themeItems = computed(() => [theme.themes.value.map(item => ({
       <div v-if="store.error" class="m-6">
         <UAlert color="error" :title="t('atrium.app.unreachable')" :description="String(store.error)" />
       </div>
+      <AtriumIntegrationUnavailable
+        v-else-if="unavailable"
+        :integration="unavailable.integration"
+        :reason="unavailable.reason"
+        :label="store.integration(unavailable.integration)?.label"
+      />
       <slot v-else />
     </div>
   </UDashboardGroup>

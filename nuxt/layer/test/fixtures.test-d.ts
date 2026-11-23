@@ -1,6 +1,9 @@
 import { describe, expectTypeOf, it } from 'vitest'
 import type {
   AtriumDashboardResponse,
+  AtriumIntegration,
+  AtriumNavLive,
+  AtriumSearchSource,
   AtriumSettingsIndexResponse,
   AtriumSettingsPanelResponse,
   AtriumShellResponse
@@ -10,6 +13,7 @@ import screen from './fixtures/screen.json'
 import screenTab from './fixtures/screen-tab.json'
 import settings from './fixtures/settings.json'
 import shell from './fixtures/shell.json'
+import shellIntegrations from './fixtures/shell-integrations.json'
 
 /*
  * The PHP suite writes these payloads from the API itself
@@ -35,6 +39,18 @@ type Sent<T> = T extends readonly (infer Item)[]
 describe('the API contract fixtures', () => {
   it('shell.json is a shell response', () => {
     expectTypeOf<Sent<typeof shell>>().toExtend<AtriumShellResponse>()
+  })
+
+  it('shell-integrations.json is a shell response with integrations, search sources and live nav keys', () => {
+    expectTypeOf<Sent<typeof shellIntegrations>>().toExtend<AtriumShellResponse>()
+    expectTypeOf<Sent<typeof shellIntegrations.data.integrations[number]>>().toExtend<AtriumIntegration>()
+    expectTypeOf<Sent<typeof shellIntegrations.data.search.sources[number]>>().toExtend<AtriumSearchSource>()
+    expectTypeOf<Sent<NonNullable<typeof shellIntegrations.data.navigation[3]['items'][0]['live']>>>().toExtend<AtriumNavLive>()
+  })
+
+  it('a shell response requires the integration keys', () => {
+    expectTypeOf<{ min_length: number }>().not.toExtend<AtriumShellResponse['data']['search']>()
+    expectTypeOf<AtriumShellResponse['data']>().toHaveProperty('integrations')
   })
 
   it('dashboard.json is a dashboard response', () => {
