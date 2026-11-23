@@ -1557,5 +1557,5 @@ Guardian hooks on Roster's screens (AC 97, 98).
 
 ### Tests
 
-- `composer test:unit`: 1438 tests, all passed (`HooksTest` 72). PHPStan 0 errors, Pint passed.
+- `composer test:unit`: 1438 tests, all passed (`HooksTest` 73). PHPStan 0 errors, Pint passed.
 - `composer test:nuxt`: every step passed; Vitest 142 files, 1359 tests, no type errors, and the consumer build.
