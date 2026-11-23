@@ -997,3 +997,34 @@ This was a retry for 20.3 only. 20.1 and 20.2 were already committed (salvaged).
 ### Deviations
 
 - None. `nuxt/layer/.nuxtrc` is still untracked and not committed. `nuxt prepare` writes it.
+
+## Group 21 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+- Every file was on disk, untracked:
+  - the pages `pages/roster/roles/{index,[role]}.vue`, `pages/roster/permissions/index.vue` and `pages/roster/transfers/{index,[transfer]}.vue`;
+  - `integrations/roster/components/access/` (`access.ts`, `AccessState.vue`, `RolePermissions.vue`);
+  - `integrations/roster/components/transfers/` (`transfers.ts`, `TransferStatusBadge.vue`);
+  - the filled `i18n/locales/integrations/roster-access.en.json`;
+  - the six Vitest files under `test/integrations/roster/access/` (`roles`, `role`, `permissions`, `transfers`, `transfer`, `pages`), plus `support.ts`.
+- The `// Not ported (D-032)` comment was at the top of `pages/roster/roles/index.vue`.
+- One bug: `pages/roster/transfers/[transfer].vue` called `outcomeLabel()` in its template but never defined it, so the page failed to render once a transfer loaded. 9 of the 11 tests in `transfer.test.ts` failed on it.
+
+### What was done
+
+- Defined `outcomeLabel()` in `[transfer].vue`. It returns `roster.transfers.outcomes.{outcome}` when the locale has that key. Otherwise it returns the outcome as Roster sent it, for example an export's `exported` result.
+- Nothing else changed. v1's role, permission and transfer views had no confirmation prompt on delete or cancel, so AC 54's "keep their confirmation" adds none here.
+
+### Results
+
+- **Vitest (the layer's own binary).** All 87 files and 757 tests pass, with no type errors. The group's own suites are 6 files and 64 tests.
+- **`nuxt typecheck`.** Clean on the layer and on the playground.
+- **Playground `nuxt build`.** Passes.
+- **`composer test:unit`.** 1215 tests: 1208 passed and 7 skipped.
+
+### What is left
+
+- 21.3 is not ticked. `pnpm` is not on this session's PATH, so the full `composer test:nuxt` gate was not run. The frozen install, `generate:client --check` and the consumer build (which runs `pnpm install` itself) did not run. The retry can run them with the `pnpm` shim (D-041).
