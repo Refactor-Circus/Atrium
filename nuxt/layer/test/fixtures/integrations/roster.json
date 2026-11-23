@@ -1,0 +1,225 @@
+{
+    "key": "roster",
+    "label": "Roster",
+    "api_base": "/roster/api",
+    "features": [
+        "RefactorCircus\\Atrium\\Integrations\\Roster\\RosterFeature"
+    ],
+    "navigation": [
+        {
+            "label": "Users",
+            "icon": "i-lucide-users",
+            "group": "Roster",
+            "sort": 10,
+            "link": {
+                "path": "/roster/users",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Organizations",
+            "icon": "i-lucide-building-2",
+            "group": "Roster",
+            "sort": 20,
+            "link": {
+                "path": "/roster/organizations",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Roles",
+            "icon": "i-lucide-shield-check",
+            "group": "Roster",
+            "sort": 30,
+            "link": {
+                "path": "/roster/roles",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Permissions",
+            "icon": "i-lucide-key-round",
+            "group": "Roster",
+            "sort": 40,
+            "link": {
+                "path": "/roster/permissions",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Impersonations",
+            "icon": "i-lucide-eye",
+            "group": "Roster",
+            "sort": 45,
+            "link": {
+                "path": "/roster/impersonations",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Imports & exports",
+            "icon": "i-lucide-arrow-up-down",
+            "group": "Roster",
+            "sort": 48,
+            "link": {
+                "path": "/roster/transfers",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        }
+    ],
+    "widgets": [
+        {
+            "key": "roster.user-status",
+            "label": "Users by status",
+            "description": "How many users are active, suspended and deactivated.",
+            "icon": "i-lucide-users",
+            "component": "roster.user-status",
+            "lazy": false,
+            "default_size": {
+                "width": 6,
+                "height": 2
+            },
+            "min_size": {
+                "width": 1,
+                "height": 1
+            },
+            "data": {}
+        },
+        {
+            "key": "roster.organizations",
+            "label": "Organizations",
+            "description": "How many organizations, teams and pending invitations exist.",
+            "icon": "i-lucide-building-2",
+            "component": "roster.organizations",
+            "lazy": false,
+            "default_size": {
+                "width": 6,
+                "height": 1
+            },
+            "min_size": {
+                "width": 1,
+                "height": 1
+            },
+            "data": {}
+        }
+    ],
+    "settings": null,
+    "search_sources": [
+        {
+            "key": "roster-users",
+            "integration": "roster",
+            "label": "Users",
+            "icon": "i-lucide-users"
+        },
+        {
+            "key": "roster-organizations",
+            "integration": "roster",
+            "label": "Organizations",
+            "icon": "i-lucide-building-2"
+        }
+    ],
+    "screens": [
+        {
+            "key": "roster.users",
+            "kind": "list",
+            "path": "/roster/users",
+            "subject_type": null
+        },
+        {
+            "key": "roster.user-create",
+            "kind": "detail",
+            "path": "/roster/users/create",
+            "subject_type": null
+        },
+        {
+            "key": "roster.user",
+            "kind": "detail",
+            "path": "/roster/users/:user",
+            "subject_type": "roster.user"
+        },
+        {
+            "key": "roster.organizations",
+            "kind": "list",
+            "path": "/roster/organizations",
+            "subject_type": null
+        },
+        {
+            "key": "roster.organization-create",
+            "kind": "detail",
+            "path": "/roster/organizations/create",
+            "subject_type": null
+        },
+        {
+            "key": "roster.organization",
+            "kind": "detail",
+            "path": "/roster/organizations/:organization",
+            "subject_type": "roster.organization"
+        },
+        {
+            "key": "roster.team",
+            "kind": "detail",
+            "path": "/roster/organizations/:organization/teams/:team",
+            "subject_type": null
+        },
+        {
+            "key": "roster.roles",
+            "kind": "list",
+            "path": "/roster/roles",
+            "subject_type": null
+        },
+        {
+            "key": "roster.role",
+            "kind": "detail",
+            "path": "/roster/roles/:role",
+            "subject_type": null
+        },
+        {
+            "key": "roster.permissions",
+            "kind": "list",
+            "path": "/roster/permissions",
+            "subject_type": null
+        },
+        {
+            "key": "roster.impersonations",
+            "kind": "list",
+            "path": "/roster/impersonations",
+            "subject_type": null
+        },
+        {
+            "key": "roster.transfers",
+            "kind": "list",
+            "path": "/roster/transfers",
+            "subject_type": null
+        },
+        {
+            "key": "roster.transfer",
+            "kind": "detail",
+            "path": "/roster/transfers/:transfer",
+            "subject_type": null
+        },
+        {
+            "key": "roster.invitation",
+            "kind": "detail",
+            "path": "/roster/invitations/:token",
+            "subject_type": null
+        }
+    ]
+}
