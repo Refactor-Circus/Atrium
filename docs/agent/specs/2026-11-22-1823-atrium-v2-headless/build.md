@@ -1094,3 +1094,28 @@ This was a retry for 22.1 and 22.4. 22.2 and 22.3 were already committed (salvag
   - the fixture helper and the six other integration fixtures;
   - `ScreenRouteTest`, `ContractFixturesTest` and the new `tests/Unit/ScreenDeclarationOptionsTest.php`.
 - Group 25's transfers page should read `options.flow_prefix` from its `atrium.screens.show` response.
+
+## Group 22 (re-verified)
+
+This was a second retry for 22.1 and 22.4. Commit `f649540` already did both (D-042 applied, all four tasks ticked), so this run changed no code and only reran the gates in the job worktree.
+
+### Files
+
+- This section only. No code, test or fixture changed.
+
+### Tests
+
+- **`composer test:unit`**, with `ATRIUM_SUITE_PATH` set (D-040): 1223 tests, all passed.
+- **`composer test:nuxt`**, with the `pnpm` shim (D-041) and `ATRIUM_SUITE_PATH` set. Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check`;
+  - the typechecks;
+  - the build;
+  - Vitest, with 87 files and 758 tests passing and no type errors;
+  - the consumer build.
+
+### Deviations
+
+- None.
+- The worktree has an untracked `nuxt/layer/.nuxtrc`. It is outside this group and wasn't created by this run, so it is not committed.
