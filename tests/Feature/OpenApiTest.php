@@ -278,7 +278,7 @@ it('describes each success response with its resource schema\'s required propert
 it('answers a deleted dashboard with 204 and no body', function (): void {
     $successes = openApiSuccesses(openApiOperations()['atrium.dashboards.destroy'] ?? []);
 
-    expect(array_keys($successes))->toBe(['204'], ATRIUM_OPENAPI_STALE)
+    expect(array_keys($successes))->toBe([204], ATRIUM_OPENAPI_STALE)
         ->and($successes['204'])->not->toHaveKey('content');
 });
 

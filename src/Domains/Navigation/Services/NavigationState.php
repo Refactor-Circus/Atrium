@@ -79,7 +79,15 @@ final class NavigationState
      */
     private function for(Request $request): array
     {
-        /** @var array{active: WeakMap<NavItem, bool>, urls: WeakMap<NavItem, array{0: string|null}>} */
-        return $this->requests[$request] ??= ['active' => new WeakMap, 'urls' => new WeakMap];
+        if (! isset($this->requests[$request])) {
+            /** @var WeakMap<NavItem, bool> $active */
+            $active = new WeakMap;
+            /** @var WeakMap<NavItem, array{0: string|null}> $urls */
+            $urls = new WeakMap;
+
+            $this->requests[$request] = ['active' => $active, 'urls' => $urls];
+        }
+
+        return $this->requests[$request];
     }
 }
