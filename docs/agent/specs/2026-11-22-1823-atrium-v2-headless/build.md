@@ -1350,3 +1350,8 @@ Integration docs, changelog and release checks (AC 76, 77).
 - `CLAUDE.md` is a symlink to `AGENTS.md`, so the `CLAUDE.md` changes are committed in `AGENTS.md`, which is outside the listed files.
 - `docs/agent/standards.index.yml` is git-ignored and generated. `vendor/bin/ringside sync` lists `atrium/integrations` in it locally, but no tracked file changes. For that reason the index test in `DocsTest` skips when the file is missing in a fresh checkout. The standard's front matter, which the index is built from, is asserted unconditionally.
 - `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
+
+### Retry
+
+- Re-checked tasks 28.1 to 28.5 against AC 76 and 77. The README "Suite integrations" section, the CHANGELOG v2.0.0 integrations entries, the Boost skill, `AGENTS.md` (`CLAUDE.md`), the `atrium/integrations` standard and its index entry, the updated `atrium/components` and `atrium/domains`, the PR template release items with owners, `DocsTest` and `ChangelogUpgradeTest` were all already in commit `befdfd6`. No file changes were needed.
+- `composer test:unit`: 1357 tests (1350 passed, 7 skipped). `composer test`: PHPStan 0 errors, Pint passed, type coverage 100%, Pest the same counts. Nothing under `nuxt/` changed since the `composer test:nuxt` run recorded above.
