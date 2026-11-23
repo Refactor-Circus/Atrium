@@ -59,9 +59,9 @@ depends on: 5
 files: resources/**, public/**, bin/build-css.mjs, package.json, package-lock.json, src/Support/Icons.php, src/Support/StyleRegistry.php, src/Testing/AtriumStyles.php, src/Facades/Atrium.php, src/Atrium.php, src/AtriumServiceProvider.php, src/Http/**, src/Domains/*/ *ServiceProvider.php (view loading only), .gitattributes, .github/workflows/browser-tests.yml, tests/Browser/**, tests/BrowserTestCase.php, tests/ArchTest.php, tests/Feature/RemovalTest.php, tests/Feature/FacadeDocblockTest.php, tests/Feature/AtriumStylesTest.php, tests/Feature/ComponentLibraryTest.php, tests/Feature/IconsTest.php, tests/Feature/PaginationComponentTest.php, tests/Feature/SharedComponentsTest.php, tests/Feature/UserMenuTest.php, tests/Feature/HistoryRemovedTest.php, tests/Feature/DomainLayoutTest.php, composer.json
 criteria: 10, 16, 17
 
-- [ ] 6.1 Write tests: the removal test (files, classes, config keys, `package.json` CSS scripts and deps); the facade `@method` reflection test; `.gitattributes` `export-ignore` for `nuxt/`, `workbench/` and the tests; the token guard exists only under `workbench/`; ArchTest: no `view(`, `Illuminate\View` or `Blade::` in `src/`; controllers are single-line `persist()` returns
-- [ ] 6.2 Delete the views, CSS, icons, the public build, `StyleRegistry`, `Icons`, `AtriumStyles`, `css()`/`stylesheet()`, the view and component registration, the browser suite and workflow, and the CSS npm build. Update the facade docblock, the `composer.json` scripts (drop `test:browser` and `build:css`) and `.gitattributes`.
-- [ ] 6.3 Run vendor/bin/pest and composer test; all green
+- [x] 6.1 Write tests: the removal test (files, classes, config keys, `package.json` CSS scripts and deps); the facade `@method` reflection test; `.gitattributes` `export-ignore` for `nuxt/`, `workbench/` and the tests; the token guard exists only under `workbench/`; ArchTest: no `view(`, `Illuminate\View` or `Blade::` in `src/`; controllers are single-line `persist()` returns
+- [x] 6.2 Delete the views, CSS, icons, the public build, `StyleRegistry`, `Icons`, `AtriumStyles`, `css()`/`stylesheet()`, the view and component registration, the browser suite and workflow, and the CSS npm build. Update the facade docblock, the `composer.json` scripts (drop `test:browser` and `build:css`) and `.gitattributes`.
+- [x] 6.3 Run vendor/bin/pest and composer test; all green
 
 ## Group 7: Workbench, contract fixtures and API version
 depends on: 6

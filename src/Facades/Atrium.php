@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static \RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions screens()
  * @method static \RefactorCircus\Atrium\Atrium theme(\RefactorCircus\Atrium\Domains\Themes\Data\Theme $theme)
  * @method static array<string, \RefactorCircus\Atrium\Domains\Themes\Data\Theme> themes()
- * @method static \RefactorCircus\Atrium\Atrium stylesheet(string $href)
- * @method static \RefactorCircus\Atrium\Atrium css(string $css, ?string $key = null)
  * @method static \RefactorCircus\Atrium\Atrium plugin(\RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin|class-string $plugin)
  * @method static array<string, \RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin> plugins()
  * @method static \RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry pluginRegistry()

@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium;
 
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Console\Commands\InstallCommand;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
-use RefactorCircus\Atrium\Support\StyleRegistry;
 use RefactorCircus\Keystone\Packages\Package;
 use RefactorCircus\Keystone\Support\PackageServiceProvider;
 
@@ -43,7 +41,6 @@ class AtriumServiceProvider extends PackageServiceProvider
 
         $this->registerPackage();
 
-        $this->app->singleton(StyleRegistry::class);
         $this->app->singleton(Atrium::class);
 
         $this->app->register(DomainServiceProvider::class);
@@ -59,15 +56,9 @@ class AtriumServiceProvider extends PackageServiceProvider
         $this->registerPolicies();
         $this->registerNotFoundResponses();
 
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'atrium');
-
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'atrium');
-
-        // Exposes the shared library as <x-atrium::card>, usable anywhere in
-        // the host application, inside the dashboard shell or outside it.
-        Blade::anonymousComponentNamespace('atrium::components', 'atrium');
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -78,16 +69,8 @@ class AtriumServiceProvider extends PackageServiceProvider
         ], ['atrium', 'atrium-config']);
 
         $this->publishes([
-            __DIR__.'/../resources/views' => resource_path('views/vendor/atrium'),
-        ], ['atrium', 'atrium-views']);
-
-        $this->publishes([
             __DIR__.'/../lang' => $this->app->langPath('vendor/atrium'),
         ], ['atrium', 'atrium-lang']);
-
-        $this->publishes([
-            __DIR__.'/../public' => public_path('vendor/atrium'),
-        ], ['atrium', 'atrium-assets']);
 
         $this->publishesMigrations([
             __DIR__.'/../database/migrations' => database_path('migrations'),

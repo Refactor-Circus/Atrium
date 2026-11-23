@@ -248,8 +248,8 @@ return [
     |                   feature resolver every feature is on, so the switcher
     |                   always shows. Null always shows it too; a feature name
     |                   of your own gates it.
-    | available:        Your own themes. Each key is a token from
-    |                   resources/css/atrium.css without `--color-`; set the
+    | available:        Your own themes. Each key is a design token of the
+    |                   Nuxt layer's stylesheet without `--color-`; set the
     |                   `-dark` tokens too so dark mode stays readable.
     |                   `layout` is `sidebar` (the default) or `top`.
     |
@@ -283,7 +283,7 @@ return [
     | here becomes "--color-{key}". To offer a whole new look, add a theme
     | under `themes.available` instead.
     |
-    | See resources/css/atrium.css for the full list of available tokens.
+    | The Nuxt layer's stylesheet (nuxt/layer) lists every available token.
     |
     */
 

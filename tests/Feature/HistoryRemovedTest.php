@@ -54,12 +54,3 @@ it('ships neither the history controller nor the audit components', function ():
 it('gives plugins no history nav item', function (): void {
     expect(method_exists(Plugin::class, 'historyNavItem'))->toBeFalse();
 });
-
-it('compiles no audit or history view into the stylesheet', function (): void {
-    $sources = array_filter(
-        file(dirname(__DIR__, 2).'/resources/css/atrium.css', FILE_IGNORE_NEW_LINES) ?: [],
-        fn (string $line): bool => str_starts_with(trim($line), '@source'),
-    );
-
-    expect(array_filter($sources, fn (string $line): bool => str_contains($line, 'audit') || str_contains($line, 'history/')))->toBe([]);
-});

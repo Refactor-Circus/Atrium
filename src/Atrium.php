@@ -23,7 +23,6 @@ use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Support\StyleRegistry;
 
 class Atrium
 {
@@ -40,7 +39,6 @@ class Atrium
         protected SettingsRegistry $settings,
         protected SearchRegistry $search,
         protected Gatekeeper $gatekeeper,
-        protected StyleRegistry $styles,
         protected ThemeRegistry $themes,
         protected ScreenExtensions $screens,
     ) {}
@@ -71,27 +69,6 @@ class Atrium
     public function themes(): array
     {
         return $this->themes->all();
-    }
-
-    /**
-     * Link a stylesheet in the dashboard's <head>, after Atrium's own.
-     */
-    public function stylesheet(string $href): static
-    {
-        $this->styles->stylesheet($href);
-
-        return $this;
-    }
-
-    /**
-     * Add CSS to the dashboard's <head>, after Atrium's own stylesheet - for
-     * utilities a package uses that Atrium's precompiled stylesheet lacks.
-     */
-    public function css(string $css, ?string $key = null): static
-    {
-        $this->styles->css($css, $key);
-
-        return $this;
     }
 
     /**

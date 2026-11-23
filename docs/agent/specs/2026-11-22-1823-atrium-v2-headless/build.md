@@ -162,3 +162,35 @@ The work was complete except for one failing test. All of it was uncommitted:
 ### What is left
 
 Nothing in group 5. `PluginDiscoveryTest` and `src/Domains/Domains/DomainServiceProvider.php` needed no change.
+
+## Group 6
+
+Remove the Blade UI. Criteria 10, 16, 17.
+
+### Files
+
+- Deleted: `resources/views`, `resources/css`, `resources/icons` (heroicons and their licence), `public/` (`atrium.css`, `atrium.js`, `alpine.js`), `bin/build-css.mjs`, `package.json` and `package-lock.json` (every script and dependency was the CSS/Alpine build or Playwright, so nothing was left to keep), `src/Support/Icons.php`, `src/Support/StyleRegistry.php`, `src/Testing/AtriumStyles.php`, `.github/workflows/browser-tests.yml`, `tests/Browser`, `tests/BrowserTestCase.php`, and the Blade-only feature tests `AtriumStylesTest`, `ComponentLibraryTest`, `IconsTest`, `PaginationComponentTest`, `SharedComponentsTest`, `UserMenuTest`. `resources/boost` stays (group 9).
+- `src/Atrium.php`: `css()`, `stylesheet()` and the `StyleRegistry` dependency removed. `src/Facades/Atrium.php`: their `@method` lines removed.
+- `src/AtriumServiceProvider.php`: no `StyleRegistry` singleton, no `loadViewsFrom()`, no `Blade::anonymousComponentNamespace()`, no `atrium-views` or `atrium-assets` publish tags. No domain provider loaded views, so none changed.
+- `composer.json`: `test:browser` dropped, `test:unit` no longer excludes the Browser suite, `pestphp/pest-plugin-browser` dropped from `require-dev` with the `amphp/dns` and `amphp/socket` floors that only pinned its transitive dependencies. There was no `build:css` composer script (it was the npm script, now gone with `package.json`).
+- `.gitattributes`: `/nuxt` and `/.nvmrc` are `export-ignore`; `/tests` and `/workbench` already were. The `package.json` and `package-lock.json` lines went with the files.
+
+### Tests
+
+- `tests/Feature/RemovalTest.php`: each removed path, no `public/atrium.*`, the removed classes and the `AuthorizesScreens` trait, no `Atrium::css()`/`stylesheet()`, no `atrium` view namespace, anonymous component namespace or `atrium-views`/`atrium-assets` publish tag, the five removed config keys absent from the merged and the shipped config, `package.json` (if any) without the CSS/Alpine/Playwright scripts and dependencies, `composer.json` without `test:browser`, `build:css` or the browser plugin, `.gitattributes` export-ignoring `/nuxt`, `/workbench` and `/tests`, and every class declaration matching `*WorkbenchToken*` in the repo (vendor, node_modules and build output pruned) living under `workbench/`. That last check passes vacuously until group 7 adds `AuthenticateWorkbenchToken`.
+- `tests/Feature/FacadeDocblockTest.php`: the facade's `@method static` tags, by name and parameter names, equal Atrium's public instance methods; no `css`/`stylesheet` tag; `@see` points at Atrium.
+- `tests/ArchTest.php`: `RefactorCircus\Atrium` does not use `view`, `Illuminate\View`, the `Blade` or `View` facades (Pest `toUse`); a token scan of every file in `src/` finds no global `view(` call (method declarations and `->view(` are allowed), no `Illuminate\View` name or string, and no `Blade::`; every public method of every `src/Domains/*/Http/Controllers/*` controller is exactly `return $request->persist();`, and the glob is not empty.
+- `tests/Feature/HistoryRemovedTest.php`: dropped the case that read `resources/css/atrium.css`.
+- PHPStan (`composer analyse`, 0 errors) and Pint (`--test` on `src`, `tests`, `config`) pass. The new and changed test files plus `CommandsTest` pass (70 tests). The full suite was not run here, as instructed; the gate runs it.
+
+### Deviations and notes
+
+- Touched outside the group's file list, all consequences of the removal:
+  - `tests/Fixtures/BrowserPlugin.php` and `tests/Fixtures/views/**` (group 5's fixtures): only the deleted browser suite used them.
+  - `tests/Pest.php`: the pest-plugin-browser directory workaround and the `BrowserTestCase` binding removed. `tests/TestCase.php`: the `Fixtures/views` view path removed.
+  - `phpunit.xml.dist`: the `Browser` test suite removed. `.github/workflows/tests.yml`: the Windows step runs plain `vendor/bin/pest`. `.gitignore`: the `tests/Browser` screenshot and trace lines removed. `ring-master.yml`: `browser_test: 'composer test:browser'` removed, since the script no longer exists. `testbench.yaml`: `atrium-assets` no longer republished on build.
+  - `src/Console/Commands/InstallCommand.php`: no longer publishes the removed `atrium-assets` tag; its closing line names the API prefix (`atrium.routes.prefix`) instead of the removed `atrium.path`.
+  - `config/atrium.php` comments and the `Theme` docblock pointed at `resources/css/atrium.css`; they now refer to the Nuxt layer's stylesheet.
+- `Atrium::path()` and `Atrium::url()` stay: AC 16 does not list them, though they read the removed `atrium.path` key and now always answer the v1 default `atrium`. `NavItem::isActive()` reads the same key. Returned as a decision.
+- `/nuxt export-ignore` follows AC 16, but GitHub builds the tarballs giget downloads with `git archive`, which honours `export-ignore`, so D-001's `github:refactor-circus/atrium/nuxt/layer#v2.0.0` would fetch nothing. Returned as a decision.
+- The workbench (`DemoPlugin`, `ScreenHostPlugin`) still calls `Icons::svg()` and `->view()`. Group 7 owns it; no test or PHPStan path loads it.

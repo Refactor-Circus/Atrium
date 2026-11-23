@@ -32,11 +32,8 @@ workbench:
     - create-sqlite-db
     - db-wipe
     - migrate-fresh
-  # Republished on every build, so the served dashboard always uses the
-  # freshly compiled public/atrium.css and atrium.js.
   assets:
     - laravel-assets
-    - atrium-assets
   sync:
     - from: storage
       to: workbench/storage

@@ -8,8 +8,8 @@ use InvalidArgumentException;
 use RefactorCircus\Atrium\Support\Iconify;
 
 /**
- * One look for the dashboard: values for the design tokens in
- * resources/css/atrium.css, applied at runtime without rebuilding any CSS.
+ * One look for the dashboard: values for the design tokens of the Nuxt
+ * layer's stylesheet, sent in the shell and applied at runtime.
  *
  * A theme sets light and dark tokens together (`primary` and `primary-dark`),
  * so the light/dark toggle keeps working inside every theme. Tokens it leaves
