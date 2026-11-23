@@ -21,3 +21,9 @@ runs:
     round: 0
     date: 2026-11-23
     note: "groups 3 and 4 implementers hit max_turns without reporting; partial work committed as WIP on their group branches (6d1e713, a2fca62); relaunched with implementer max_turns 160"
+  - workflow: ring-master-factory
+    run_id: wf_7ef8523b-dc2
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "groups 3 and 4 built and merged without conflict (30f8aae); integrator held because the full suite is red (11 failures in group 5/6 files), which D-014 accepts; continuing from group 5"
