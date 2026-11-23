@@ -1490,3 +1490,23 @@ Roles, permissions, role assignments and the user security screen (AC 89, 90).
 
 - Vitest: the group's suites are 5 files and 53 tests. `composer test:nuxt` passed every step: Vitest 131 files, 1250 tests, no type errors, and the consumer build.
 - `composer test:unit`: 1405 tests, all passed.
+
+## Group 34
+
+Security administration screens (AC 91 to 95).
+
+### Files
+
+- Pages: `pages/guardian/security-events/index.vue` and `[event].vue`, `lockouts/index.vue`, `ip-rules/index.vue`, `password-policy/index.vue` and `two-factor-policies/index.vue`, each framed by `<AtriumIntegrationScreen>` with its own key; the IP rules and policies pages read `mode` and `scope_types` from their screen.
+- `integrations/guardian/components/admin/`: `admin.ts` (types, `SECURITY_EVENT_TYPES` tied to the schema's enum, `ipRuleModeOf()`, `eventPath()`, `startOfDay()`/`endOfDay()`, `contextValue()`) and `GuardianEventList.vue` (cursor-paged events under the parent's filters, shared by the events and lockouts screens).
+- `guardian-admin.en.json` filled.
+- Tests: `test/integrations/guardian/admin/` (`events`, `lockouts`, `ip-rules`, `policies`, `pages` and `support.ts`).
+
+### Decisions
+
+- D-069 (event types from a constant checked against the schema enum), D-070 (the lockout identifier in the body), D-071 (what a policy update changes; `methods: null`; page sizes).
+
+### Tests
+
+- Vitest: the group's suites are 5 files and 48 tests. `composer test:nuxt` passed every step: Vitest 136 files, 1298 tests, no type errors, and the consumer build.
+- `composer test:unit`: 1405 tests, all passed.

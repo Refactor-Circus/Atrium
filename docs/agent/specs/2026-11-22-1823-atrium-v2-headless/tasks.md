@@ -357,9 +357,9 @@ depends on: 30
 files: nuxt/layer/app/pages/guardian/security-events/**, nuxt/layer/app/pages/guardian/lockouts/**, nuxt/layer/app/pages/guardian/ip-rules/**, nuxt/layer/app/pages/guardian/password-policy/**, nuxt/layer/app/pages/guardian/two-factor-policies/**, nuxt/layer/app/integrations/guardian/components/admin/**, nuxt/layer/i18n/locales/integrations/guardian-admin.en.json, nuxt/layer/test/integrations/guardian/admin/**
 criteria: 91, 92, 93, 94, 95
 
-- [ ] 34.1 Write Vitest tests: `guardian.security-events`: the `type` select, `user`, `from` and `to`; cursor paging; `guardian.security-event`: the detail, with its context rows; `guardian.lockouts`: clearing an identifier (`DELETE lockouts`, body `{identifier}`), with a confirmation and a 422; the `login.locked_out` events list; `guardian.ip-rules`: list; create, with a 422 for an invalid CIDR; delete with a confirmation; the `allowlist` warning and the extra confirmation when deleting an allow rule; `guardian.password-policy`: rendered read-only; `guardian.two-factor-policies`: list, create, update and delete, with every field; 403 on every screen; each screen key has its page.
-- [ ] 34.2 Write the pages and the `admin/` components. The event-type list comes from the vendored schema's enum when it has one, and otherwise from a layer constant matching Guardian AC 23.
-- [ ] 34.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 34.1 Write Vitest tests: `guardian.security-events`: the `type` select, `user`, `from` and `to`; cursor paging; `guardian.security-event`: the detail, with its context rows; `guardian.lockouts`: clearing an identifier (`DELETE lockouts`, body `{identifier}`), with a confirmation and a 422; the `login.locked_out` events list; `guardian.ip-rules`: list; create, with a 422 for an invalid CIDR; delete with a confirmation; the `allowlist` warning and the extra confirmation when deleting an allow rule; `guardian.password-policy`: rendered read-only; `guardian.two-factor-policies`: list, create, update and delete, with every field; 403 on every screen; each screen key has its page.
+- [x] 34.2 Write the pages and the `admin/` components. The event-type list comes from the vendored schema's enum when it has one, and otherwise from a layer constant matching Guardian AC 23.
+- [x] 34.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 35: SSO connections and SCIM tokens
 depends on: 30

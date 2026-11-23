@@ -496,3 +496,25 @@
 - Rationale: The conservative reading of AC 89 and 90. Route-held filters, as Roster's group 21 screens had, would clash once these blocks are mounted inside another package's screen.
 - Date: 2026-11-23
 - Raised by: implement (group 33); default chosen because no user was available
+
+## D-069: Where does the security events filter get its event types?
+- Choice: From a layer constant, `SECURITY_EVENT_TYPES` in `guardian/components/admin/admin.ts`, typed against the vendored schema's `SecurityEventType` enum: it must be a subset (`satisfies`), and a compile-time check fails while the enum has a type the list lacks. A Vitest case compares it with the enum in the vendored `openapi.json`, order included.
+- Rationale: AC 91 asks for the schema's enum when it has one; it does. Bundling `openapi.json` (over 300 KB) into the layer to read one enum at run time costs every host, while the typecheck and the test tie the constant to the enum just as firmly, and `sync:clients` surfaces any new type.
+- Date: 2026-11-23
+- Raised by: implement (group 34); default chosen because no user was available
+
+## D-070: How does the lockouts screen send the identifier it clears?
+- Choice: In the JSON body of `DELETE lockouts` (`{identifier}`), never the query string. Guardian's request validates `identifier` from its input, which includes the body; its vendored schema lists it as a query parameter, so the call is untyped there. The confirmation names the identifier; the success notice names it once and the field is cleared.
+- Rationale: The identifier is usually an email address, and query strings end up in access logs and history, as D-064 says for codes. Task 34.1 names the body.
+- Date: 2026-11-23
+- Raised by: implement (group 34); default chosen because no user was available
+
+## D-071: What can a two-factor policy's update change, and how are no methods sent?
+- Choice:
+  - An existing policy updates `required`, `methods` and `grace_days` only, in place on its row, as Guardian's `UpdateTwoFactorPolicyRequest` accepts nothing else; its scope and role are shown read-only. To change them, delete the policy and create another.
+  - With every method unticked the form sends `methods: null` ("any method"), as Guardian's schema requires at least one method in a list; the methods it sends follow Guardian's order (`totp`, `email`, `sms`, `passkey`).
+  - `grace_days` is a whole number, 0 by default; the scope id is sent only with a scope type, and "Everyone" sends both as null.
+  - The IP rules and policies lists page 25 at a time, and the events lists 50 at a time by cursor.
+- Rationale: The conservative reading of AC 95 against the vendored schema: offering fields the update ignores would mislead.
+- Date: 2026-11-23
+- Raised by: implement (group 34); default chosen because no user was available
