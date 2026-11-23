@@ -201,8 +201,8 @@ depends on: 18
 files: nuxt/layer/app/pages/roster/users/**, nuxt/layer/app/pages/roster/impersonations/**, nuxt/layer/app/integrations/roster/components/users/**, nuxt/layer/i18n/locales/integrations/roster-users.en.json, nuxt/layer/test/integrations/roster/users/**
 criteria: 54, 69
 
-- [ ] 19.1 Write Vitest files for `roster.users` (active and deleted tabs, status filter, paging), `roster.user-create` (422), `roster.user` and `roster.impersonations`. On `roster.user`, cover the profile update and each action of AC 69: approve, reject, suspend, deactivate, reactivate, delete, restore, purge, impersonate, switch context, domain join, role assign and revoke. On `roster.impersonations`, cover the list and stop. Assert method, path and body per action, plus 403 and 404, and that each of these screen keys has its page.
-- [ ] 19.2 Write the pages and components, porting from `resources/views/ui/users/**` and `impersonations/**` in Roster's main checkout. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/roster/users/index.vue`.
+- [x] 19.1 Write Vitest files for `roster.users` (active and deleted tabs, status filter, paging), `roster.user-create` (422), `roster.user` and `roster.impersonations`. On `roster.user`, cover the profile update and each action of AC 69: approve, reject, suspend, deactivate, reactivate, delete, restore, purge, impersonate, switch context, domain join, role assign and revoke. On `roster.impersonations`, cover the list and stop. Assert method, path and body per action, plus 403 and 404, and that each of these screen keys has its page.
+- [x] 19.2 Write the pages and components, porting from `resources/views/ui/users/**` and `impersonations/**` in Roster's main checkout. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/roster/users/index.vue`.
 - [ ] 19.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 20: Roster screens: organizations, teams and the public invitation page

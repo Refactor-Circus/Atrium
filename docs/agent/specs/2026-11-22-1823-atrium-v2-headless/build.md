@@ -824,3 +824,37 @@ Commit `dc50217` on `ring-master/2026-11-22-1823-atrium-v2-headless--g27` contai
 ### What is left
 
 - **27.4 is unticked.** Neither `composer test:nuxt` nor `vendor/bin/pest` has been run on this group.
+
+## Group 19 (salvaged)
+
+### What I found
+
+There was no index lock and no merge or rebase in progress. The stopped agent had written everything in the group's paths, but none of it was committed:
+
+- the four pages (`users/index.vue`, `users/create.vue`, `users/[user].vue` and `impersonations/index.vue`), with the `// Not ported (D-032)` comment at the top of `users/index.vue`;
+- seven components and `users.ts` under `integrations/roster/components/users/`;
+- the filled `roster-users.en.json`;
+- five Vitest files plus `support.ts`.
+
+The tests cover what 19.1 asks for: tabs, the status filter and paging; the 422 on create; the profile update and every AC 69 user action by method, path and body; role assign and revoke; listing and stopping impersonations; 403 and 404; and a page for each screen key.
+
+**Every integration suite in the layer fails to load, not only group 19's.** The shared `test/integrations/support.ts` (group 12) has `fileURLToPath(new URL('../../', import.meta.url))` on line 277. In the Nuxt Vitest environment, Vite rewrites `new URL('<literal>', import.meta.url)` into a served asset URL (`http://localhost:3000/test/integrations`), and `fileURLToPath()` throws "The URL must be of scheme file". The committed `roster/widgets.test.ts`, `cortex/integration.test.ts` and `test/integration-i18n.test.ts` fail the same way. That file is outside this group's paths, so I left it alone. The fix is to read the URL through a variable (`const here = import.meta.url`, then `new URL('../../', here)`); `cortex`, `polycart` and `pennantplus` `integration.test.ts` use the same pattern and need the same fix.
+
+### What I did
+
+- **Checked the group's suites.** I put a throwaway Vitest config and a patched copy of the shared support in the group's test folder. A `resolveId` plugin pointed `../../support` at the copy. I deleted both afterwards. The first run gave 49 passed and 6 failed, all from test-harness bugs, which I fixed:
+  - `pages.test.ts` used the same `new URL(…, import.meta.url)` pattern. It now reads through a variable.
+  - Pages from earlier tests stayed mounted. Their route watchers reloaded against the next test's mocks, which inflated the GET counts. A new `resetRosterPages()` in the group's `support.ts` unmounts them, and each suite's `afterEach` calls it.
+  - happy-dom has no `window.confirm`, so `vi.spyOn` threw. `confirmWith()` now stubs it with `vi.stubGlobal`, and `resetRosterPages()` drops the stub.
+  - Two route assertions after a `router.push` were timing-dependent. They now use `vi.waitFor`.
+- **Result.** With the patched support, all 5 files and 55 tests pass, three runs in a row.
+- **Typecheck.** `nuxt typecheck` reports no errors in group 19's files. It reports 8 errors in Cortex and Impex files from other groups (`CortexToolPicker.vue`, `CortexVersions.vue`, `ImpexChannelFields.vue`, `cortex/redirect-domains.vue`, `impex/channels/[name].vue`, `impex/runs/[run].vue`).
+- **Pest.** `composer test:unit` gives 1191 passed, 3 failed and 14 errors, all in `OpenApiTest` and `ContractFixturesTest`: `Dedoc\Scramble\Scramble` is not in this worktree's `vendor/` (group 27 added `dedoc/scramble` to `require-dev`; `composer install` has not been rerun here), plus one `'204'` against `204` OpenAPI mismatch. Group 19 changes no PHP.
+
+### What I committed
+
+Only the group's paths (the 19 files above, with the test fixes), plus this note and the ticks for 19.1 and 19.2. `nuxt/layer/.nuxtrc` is still untracked and not committed.
+
+### What is left
+
+- **19.3 is unticked.** `composer test:nuxt` cannot pass until the shared `test/integrations/support.ts` line 277 is fixed (group 12's file) and the Cortex and Impex type errors are fixed. `vendor/bin/pest` needs `composer install` for `dedoc/scramble` and the OpenAPI 204 fix. None of these are in group 19's paths.
