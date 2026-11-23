@@ -247,9 +247,9 @@ depends on: 22
 files: nuxt/layer/app/pages/showroom/attributes/**, nuxt/layer/app/pages/showroom/attribute-groups/**, nuxt/layer/app/pages/showroom/association-types/**, nuxt/layer/app/pages/showroom/categories/**, nuxt/layer/app/pages/showroom/channels/**, nuxt/layer/app/pages/showroom/flags/**, nuxt/layer/app/integrations/showroom/components/structure/**, nuxt/layer/i18n/locales/integrations/showroom-structure.en.json, nuxt/layer/test/integrations/showroom/structure/**
 criteria: 54, 71
 
-- [ ] 24.1 Write Vitest files for `attributes`, `attribute-create` and `attribute` (with options), `attribute-groups` and `attribute-group`, `association-types`, `categories` (the tree) and `category`, `channels` and `channel` (with locales), and `flags` and `flag`. Cover each mutation's method, path and body, plus 403 and 422, and assert that each of these screen keys has its page.
-- [ ] 24.2 Write the pages and components, porting from the matching `ui/**` folders. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/attributes/index.vue`.
-- [ ] 24.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 24.1 Write Vitest files for `attributes`, `attribute-create` and `attribute` (with options), `attribute-groups` and `attribute-group`, `association-types`, `categories` (the tree) and `category`, `channels` and `channel` (with locales), and `flags` and `flag`. Cover each mutation's method, path and body, plus 403 and 422, and assert that each of these screen keys has its page.
+- [x] 24.2 Write the pages and components, porting from the matching `ui/**` folders. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/attributes/index.vue`.
+- [x] 24.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 25: Showroom screens: assets, owners and transfers
 depends on: 22

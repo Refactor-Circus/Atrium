@@ -1179,3 +1179,47 @@ The build agent ended without a result. There was no index lock and no merge or 
 
 - Nothing in this group.
 - `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
+
+## Group 24 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+- The tests were on disk, uncommitted and complete. `test/integrations/showroom/structure/` held:
+  - `support.ts`, with the payloads;
+  - one Vitest file per screen: `attributes`, `attribute-create`, `attribute`, `attribute-groups`, `attribute-group`, `association-types`, `categories`, `category`, `channels`, `channel`, `flags` and `flag`;
+  - `pages.test.ts`. It checks that each of the 12 screen keys has its page at its declared path, framed with its own key. It also checks the D-032 comment and the `t()` keys.
+- The shared code was on disk: `components/structure/structure.ts`, `AttributeFlags`, `CategoryBranch`, `ChannelFields` and `FlagFields`.
+- Eight pages were on disk: `attributes/{index,create,[attribute]}.vue`, `attribute-groups/{index,[group]}.vue`, `association-types/index.vue` and `categories/{index,[category]}.vue`. The `// Not ported (D-032)` comment was at the top of `attributes/index.vue`.
+- Missing:
+  - the four channels and flags pages;
+  - every string: `i18n/locales/integrations/showroom-structure.en.json` was still the `{}` from group 12.
+- One typecheck error: in `attributes/index.vue`, the type predicate of the query builder did not fit the narrowed key type.
+
+### What was done
+
+- Wrote the four missing pages, porting v1's `channels/{index,show}` and `flags/{index,show}`:
+  - `channels/index.vue`. The locales card lists, adds and deletes locales, and has its own load state, so a 403 on `locales.index` affects only that card. It also has the new-channel form (`ChannelFields`, with the trees from `categories.index?roots=1`) and the cursor-paged table.
+  - `channels/[channel].vue`: the label, locales, currencies and tree. It saves through `channels.update` and deletes once confirmed.
+  - `flags/index.vue`. The new-flag form ticks both subjects by default and leaves a blank sort order to Showroom. It also has the cursor-paged table with a badge per subject.
+  - `flags/[flag].vue`: the code shown but not editable, the label, subjects and sort order. It saves through `flags.update`, and a delete is confirmed, with Showroom's 409 message shown when it refuses.
+- Filled `showroom-structure.en.json` with every key the group's pages and components use. The wording comes from Showroom's `lang/en/showroom.php`.
+- Fixed the typecheck error in `attributes/index.vue` by widening the key type before the predicate.
+
+### Results
+
+- **`composer test:nuxt`.** It ran with the pinned Node 26.13.1 and the pnpm from Herd's Node 22.22.2 on PATH. Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check`;
+  - the typechecks;
+  - the build;
+  - Vitest, with 109 files and 1005 tests passing and no type errors. The structure suite alone has 13 files and 138 tests.
+  - the consumer build.
+- **`composer test:unit`.** 1223 tests: 1216 passed and 7 skipped.
+
+### What is left
+
+- Nothing in this group.
+- `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
