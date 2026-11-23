@@ -1292,3 +1292,31 @@ The build agent ended without a result. There was no index lock and no merge or 
 - `<AtriumScreen>` renders every slot it does not place, `row.actions` included, after the page content with a null record. So a `row.actions` section also shows once below the transfers page, outside any row. Fixing that is in `components/Atrium/Screen.vue`, which is outside this group.
 - The Polycart flake above belongs to group 17's test file.
 - `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
+
+## Group 26 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+Every file of the group was on disk, uncommitted, and complete:
+
+- PHP: `src/Integrations/Hooks/` holds the abstract `Hook` (target and slot validation, which throws in `local`/`testing` and reports and skips elsewhere; screen matching against the screens registered integrations declare; a per-request gate that requires both integrations to be active), the `Hooks` registrar (runs each hook and adds each extension once per screen, so registering again is safe), `CortexRedirectDomains`, `ImpexRunLink` and `KeenHistory`. `IntegrationsServiceProvider` binds `Hooks` as a singleton and runs it in the `booted` callback, after `IntegrationRegistry::register()`. The labels are in `lang/en/integrations/hooks.php`.
+- `tests/Feature/Integrations/HooksTest.php` (40 tests): the defaults, a changed config, invalid targets and slots in `testing`, `local` and `production`, each hook absent while its other integration is not registered, Keen history on every screen except Keen's own, the `atrium.screens.show` payloads of `roster.organization`, `roster.user` and `showroom.transfers`, Pennant flags hiding the hooks, boot order, and label keys.
+- Layer: `app/integrations/hooks/index.ts` registers `cortex.mcp` and `cortex.redirect-domains` (`CortexRedirectDomains.vue`), `impex.run-link` (`ImpexRunLink.vue`), `keen.history` (`KeenHistorySection.vue`) and `keen.activity` (`KeenActivityTab.vue`). Both Keen components use `KeenHookEntries.vue`, which checks `keen.packages.index`, renders Keen's `KeenEntriesTable` from group 15, and renders nothing on a 403. The query builders are in `components/hooks.ts`. The strings are in `hooks.en.json`.
+- Vitest: `test/integrations/hooks/` has `redirect-domains`, `run-link`, `keen` and `registration` (26 tests).
+
+### What was done
+
+Nothing needed changing. I ran the gates and committed the group's paths.
+
+### Results
+
+- **`composer test:unit`.** 1263 tests: 1256 passed and 7 skipped. `HooksTest.php` alone: 40 of 40 passed.
+- **`composer test:nuxt`.** It ran with the pnpm shim (D-041) on PATH. Every step passed: the fixtures check, the frozen install, `generate:client --check`, the typechecks, the build, Vitest (121 files, 1129 tests) and the consumer build.
+- **`composer analyse`** and **Pint** on the group's PHP files passed.
+
+### What is left
+
+- Nothing in this group's tasks.
+- `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.

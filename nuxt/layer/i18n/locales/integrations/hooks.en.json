@@ -1,1 +1,20 @@
-{}
+{
+  "hooks": {
+    "redirect_domains": {
+      "description": "The OAuth redirect domains this record's MCP clients may use.",
+      "empty": "No redirect domains yet.",
+      "domain": "Domain",
+      "add": "Add domain",
+      "remove": "Remove",
+      "load_failed": "The redirect domains could not be loaded."
+    },
+    "run_link": {
+      "label": "Run"
+    },
+    "keen": {
+      "history": "History",
+      "view_all": "View all",
+      "load_failed": "The history could not be loaded."
+    }
+  }
+}
