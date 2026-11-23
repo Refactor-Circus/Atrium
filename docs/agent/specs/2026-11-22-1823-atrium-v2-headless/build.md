@@ -194,3 +194,28 @@ Remove the Blade UI. Criteria 10, 16, 17.
 - `Atrium::path()` and `Atrium::url()` stay: AC 16 does not list them, though they read the removed `atrium.path` key and now always answer the v1 default `atrium`. `NavItem::isActive()` reads the same key. Returned as a decision.
 - `/nuxt export-ignore` follows AC 16, but GitHub builds the tarballs giget downloads with `git archive`, which honours `export-ignore`, so D-001's `github:refactor-circus/atrium/nuxt/layer#v2.0.0` would fetch nothing. Returned as a decision.
 - The workbench (`DemoPlugin`, `ScreenHostPlugin`) still calls `Icons::svg()` and `->view()`. Group 7 owns it; no test or PHPStan path loads it.
+
+## Group 7
+
+Workbench, contract fixtures and API version. Criteria 21, 28, 31. Tasks 7.1-7.3 were done in the salvaged commit `0550037`. The retry checked that work against the tasks and criteria, changed no code, and ticked 7.1-7.4. 7.4 (the full suite) is left to the gate, as instructed.
+
+### Files
+
+- `workbench/app/Atrium/DemoPlugin.php`: `routes()` serves the demo pages as JSON (`orders`, `users`, `reports/{report}`, `billing`) inside the API group, so they are named `atrium.plugins.demo.*`. Widgets (`demo.revenue`, `demo.orders`, `demo.conversion`, `demo.users`, `demo.recent-orders`, `demo.services`, `demo.goals`, `demo.welcome`) and the `demo` settings panel are registered by key with Iconify icons. There are no `->view()` or `Icons::svg()` calls left.
+- `workbench/app/Atrium/DemoScreens.php` (new): a registered tab `demo.storefront`, a `header.actions` section and an `aside` section on `atrium.settings-panel`, limited to the `demo` panel.
+- `workbench/app/Atrium/DemoData.php`: the storefront data the tab resolves.
+- `workbench/app/Http/Middleware/AuthenticateWorkbenchToken.php` (new, `final`, its docblock opens with "WORKBENCH ONLY"): in `local` only, `Authorization: Bearer workbench` signs the request in as testbench.yaml's `workbench.user`. It implements `AuthenticatesRequests`, so the middleware priority runs it ahead of `Authorize`.
+- `workbench/app/Providers/WorkbenchServiceProvider.php`: `atrium.routes.middleware` is `['api', AuthenticateWorkbenchToken, Authorize]`. CORS covers `atrium/api/*` for the playground origins (`localhost:3000`, `127.0.0.1:3000`), with `supports_credentials` off because token auth sends no cookies. It registers the demo plugin, the screen extensions and the workbench gates.
+- `workbench/routes/web.php`: `/` redirects to `/atrium`, which returns JSON pointing at the playground, the API prefix and the workbench token.
+- Deleted: `workbench/app/Http/Middleware/SignInWorkbenchUser.php`, `workbench/app/Atrium/ScreenHost/*` and every Blade view under `workbench/resources/views` (the demo pages, the widgets and `screen-host`).
+- `nuxt/layer/test/fixtures/{shell,dashboard,screen,screen-tab,settings}.json`: generated with `UPDATE_FIXTURES=1`.
+
+### Tests
+
+- `tests/Feature/Api/ContractFixturesTest.php` (AC 31, AC 21): runs the workbench app with its provider and `DatabaseSeeder`, sequential seeded uuids (`019ab000-0000-7000-8000-…`) and time frozen at `2026-11-23 10:00:00`. It compares the shell, the default dashboard, the settings screen on its built-in tab and on the registered `demo.storefront` tab, and the settings list with their fixtures, pretty-printed with `{}` and `[]` kept apart. It also checks: payloads are deterministic; a plain run fails on a difference or a missing fixture (the message names `UPDATE_FIXTURES=1`) and writes nothing; `UPDATE_FIXTURES=1` writes the file. Finally, it covers AC 21: the demo plugin's API routes and names, 401 for a guest, and the token guard (signs in the `workbench.user` in `local`, rejects a wrong token, does nothing outside `local`).
+- `tests/Feature/ApiVersionTest.php` (AC 28): `Atrium::API_VERSION` is major.minor and equals the major.minor of `nuxt/layer/package.json`. The test is skipped, with a message naming group 8, until that file exists.
+- The suite was not run in this retry, as instructed; the gate runs `vendor/bin/pest` (7.4).
+
+### Deviations
+
+- None. Every changed file is in the group's list. `RemovalTest`'s check that the `*WorkbenchToken*` class lives only under `workbench/` (group 6) now runs against a real class.
