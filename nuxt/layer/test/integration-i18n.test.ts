@@ -5,6 +5,10 @@ import { useNuxtApp } from '#imports'
 import { withSetup } from './support'
 import { hasI18nKey, i18nKeysIn, integrationLocaleFiles, missingI18nKeys } from './integrations/support'
 
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `fileURLToPath()` refuses.
+const here = import.meta.url
+
 /*
  * Integration strings (AC 53): each integration's layer strings live in
  * `i18n/locales/integrations/{pkg}.en.json` (Roster and Showroom also have one
@@ -22,7 +26,7 @@ const LOCALE_FILES = [
 
 const INTEGRATIONS = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom', 'hooks']
 
-const locales = fileURLToPath(new URL('../i18n/locales/', import.meta.url))
+const locales = fileURLToPath(new URL('../i18n/locales/', here))
 
 describe('i18nKeysIn()', () => {
   it('finds the literal keys of t() and $t() calls', () => {

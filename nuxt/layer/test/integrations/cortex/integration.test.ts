@@ -6,6 +6,10 @@ import { screens } from '../../../app/integrations/cortex/index'
 import fixture from '../../fixtures/integrations/cortex.json'
 import { missingI18nKeys } from '../support'
 
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `fileURLToPath()` refuses.
+const here = import.meta.url
+
 /*
  * The Cortex integration as a whole (AC 49, 53, 55): every screen the PHP
  * integration declares (`fixtures/integrations/cortex.json`, written by
@@ -65,7 +69,7 @@ describe('the cortex integration', () => {
   })
 
   it.each(Object.entries(PAGES))('frames the %s page with its own screen key, so it calls atrium.screens.show with it', (key, file) => {
-    const source = readFileSync(fileURLToPath(new URL(`../../../app/pages/cortex/${file}`, import.meta.url)), 'utf8')
+    const source = readFileSync(fileURLToPath(new URL(`../../../app/pages/cortex/${file}`, here)), 'utf8')
 
     expect(source).toContain(`screen-key="${key}"`)
   })
@@ -77,7 +81,7 @@ describe('the cortex integration', () => {
   })
 
   it('lists the old actions with no v2 route in a Not ported (D-032) comment', () => {
-    const index = readFileSync(fileURLToPath(new URL('../../../app/integrations/cortex/index.ts', import.meta.url)), 'utf8')
+    const index = readFileSync(fileURLToPath(new URL('../../../app/integrations/cortex/index.ts', here)), 'utf8')
 
     expect(index.startsWith('// Not ported (D-032)')).toBe(true)
   })

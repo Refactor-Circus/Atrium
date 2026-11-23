@@ -9,6 +9,10 @@ import { AtriumRegistry } from '../../../app/plugins/atrium'
 import { withSetup } from '../../support'
 import { hasI18nKey, missingI18nKeys } from '../support'
 
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `fileURLToPath()` refuses.
+const here = import.meta.url
+
 /*
  * The Polycart integration's layer side (AC 49, 53, 59, 60, 62): every
  * screen and nav path PHP declares (`test/fixtures/integrations/polycart.json`,
@@ -27,11 +31,11 @@ interface Declarations {
   screens: { key: string, kind: string, path: string, subject_type: string | null }[]
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/polycart.json', import.meta.url), 'utf8')) as Declarations
+const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/polycart.json', here), 'utf8')) as Declarations
 
-const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/polycart.en.json', import.meta.url), 'utf8')) as unknown
+const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/polycart.en.json', here), 'utf8')) as unknown
 
-const indexSource = readFileSync(new URL('../../../app/integrations/polycart/index.ts', import.meta.url), 'utf8')
+const indexSource = readFileSync(new URL('../../../app/integrations/polycart/index.ts', here), 'utf8')
 
 /** A Nuxt route path as PHP declares it: `:param()` read as `:param`. */
 function declaredPath(path: string): string {

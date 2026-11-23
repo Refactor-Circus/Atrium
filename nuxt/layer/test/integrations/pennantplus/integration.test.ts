@@ -21,9 +21,13 @@ interface Declarations {
   screens: { key: string, kind: string, path: string, subject_type: string | null }[]
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/pennantplus.json', import.meta.url), 'utf8')) as Declarations
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `readFileSync()` refuses.
+const here = import.meta.url
 
-const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/pennantplus.en.json', import.meta.url), 'utf8')) as unknown
+const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/pennantplus.json', here), 'utf8')) as Declarations
+
+const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/pennantplus.en.json', here), 'utf8')) as unknown
 
 /** A Nuxt route path as PHP declares it: `:param()` read as `:param`. */
 function declaredPath(path: string): string {

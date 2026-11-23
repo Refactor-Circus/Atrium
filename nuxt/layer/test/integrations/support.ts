@@ -274,7 +274,10 @@ export async function mountIntegration<T>(
   return mountSuspended(component, mountOptions as Parameters<typeof mountSuspended<T>>[1])
 }
 
-const layerRoot = fileURLToPath(new URL('../../', import.meta.url))
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `fileURLToPath()` refuses.
+const here = import.meta.url
+const layerRoot = fileURLToPath(new URL('../../', here))
 const localesRoot = join(layerRoot, 'i18n', 'locales')
 
 /**

@@ -8,6 +8,10 @@ import type { AtriumRegistry } from '../app/plugins/atrium'
 import { settle, shell, withSetup } from './support'
 import { resetPackageApis, useShell, watchPackageApis } from './integrations/support'
 
+// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
+// into a served asset URL, which `fileURLToPath()` refuses.
+const here = import.meta.url
+
 /*
  * Build without packages (AC 51): a host whose shell lists no integration
  * gets no integration UI and no package request, even with every
@@ -86,7 +90,7 @@ describe('a shell with integrations: []', () => {
   })
 
   it('carries every integration\'s vendored client, so it builds with no sibling checkout', () => {
-    const integrations = fileURLToPath(new URL('../app/integrations/', import.meta.url))
+    const integrations = fileURLToPath(new URL('../app/integrations/', here))
 
     for (const pkg of PACKAGES) {
       expect(readdirSync(`${integrations}${pkg}/client`).sort(), pkg).toEqual(['openapi.json', 'openapi.sha256', 'schema.d.ts'])

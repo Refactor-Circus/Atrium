@@ -9,6 +9,7 @@ export default defineVitestConfig({
   test: {
     environment: 'nuxt',
     include: ['test/**/*.test.ts'],
+    setupFiles: ['./test/setup.ts'],
     typecheck: {
       enabled: true,
       include: ['test/**/*.test-d.ts'],
