@@ -153,10 +153,7 @@ describe('the page', () => {
   it('asks atrium.screens.show for polycart.cart with the cart as its record and the open tab', async () => {
     polycart()
     await useShell(integrationShell([integrationEntry('polycart')]))
-    await useRouter().push({ path: `/polycart/carts/${CART_ID}`, query: { tab: 'keen.activity' } })
-    await settle()
-
-    const wrapper = await mountIntegration(CartPage, 'polycart')
+    const wrapper = await mountIntegration(CartPage, 'polycart', { route: { path: `/polycart/carts/${CART_ID}`, query: { tab: 'keen.activity' } } })
     await settle()
 
     expect(api).toHaveBeenCalledWith('/screens/polycart.cart', { query: { record: CART_ID, tab: 'keen.activity' } })

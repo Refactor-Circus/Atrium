@@ -103,10 +103,14 @@ async function loadOptions(): Promise<void> {
   concreteAgents.value = concreteList.status === 'fulfilled' ? concreteList.value : []
 }
 
-/** The form as Cortex validates it: blank settings left out, numbers as numbers. */
+/**
+ * The form as Cortex validates it: blank settings left out, numbers as numbers.
+ * A number input's v-model hands back a number once edited, so each setting
+ * is read as a string first.
+ */
 function payload() {
   const settings = Object.fromEntries(SETTINGS
-    .filter(key => form.settings[key].trim() !== '')
+    .filter(key => String(form.settings[key] ?? '').trim() !== '')
     .map(key => [key, Number(form.settings[key])]))
 
   return {

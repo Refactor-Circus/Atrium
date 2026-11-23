@@ -29,8 +29,9 @@ function polycart(routes: PackageRoutes<'polycart'> = {}): PackageCall[] {
   })
 }
 
-async function mountPage(): Promise<VueWrapper> {
-  const wrapper = await mountIntegration(CartsPage, 'polycart')
+/** Mounts the page at `/polycart/carts`, with `query` (mountSuspended() navigates there itself). */
+async function mountPage(query: Record<string, string> = {}): Promise<VueWrapper> {
+  const wrapper = await mountIntegration(CartsPage, 'polycart', { route: { path: '/polycart/carts', query } })
   await settle()
 
   return wrapper as unknown as VueWrapper
@@ -70,8 +71,7 @@ describe('loading', () => {
 
   it('asks atrium.screens.show for its extensions, with the open tab', async () => {
     polycart()
-    await useRouter().replace({ query: { tab: 'keen.activity' } })
-    await mountPage()
+    await mountPage({ tab: 'keen.activity' })
 
     expect(api).toHaveBeenCalledWith('/screens/polycart.carts', { query: { record: undefined, tab: 'keen.activity' } })
   })
@@ -123,8 +123,7 @@ describe('filters', () => {
 
   it('reads its filters from the page query, as the widgets and the types screen link to it', async () => {
     const calls = polycart()
-    await useRouter().replace({ query: { type: 'quote', unexpired: '1' } })
-    const wrapper = await mountPage()
+    const wrapper = await mountPage({ type: 'quote', unexpired: '1' })
 
     expect(requests(calls, 'GET', '/carts')[0]!.query).toEqual({ type: 'quote', unexpired: '1' })
     expect((control(wrapper, 'polycart-filter-type').element as unknown as HTMLSelectElement).value).toBe('quote')
@@ -132,8 +131,7 @@ describe('filters', () => {
 
   it('resets every filter', async () => {
     const calls = polycart()
-    await useRouter().replace({ query: { type: 'quote', status: 'open' } })
-    const wrapper = await mountPage()
+    const wrapper = await mountPage({ type: 'quote', status: 'open' })
 
     await wrapper.find('[data-testid="polycart-reset"]').trigger('click')
     await settle()
@@ -164,8 +162,7 @@ describe('paging', () => {
 
   it('keeps the filters while paging', async () => {
     const calls = polycart()
-    await useRouter().replace({ query: { type: 'order' } })
-    const wrapper = await mountPage()
+    const wrapper = await mountPage({ type: 'order' })
 
     await wrapper.find('[data-testid="polycart-next"]').trigger('click')
     await settle()

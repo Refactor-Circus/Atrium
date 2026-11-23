@@ -1,4 +1,5 @@
-import { vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
+import { enableAutoUnmount } from '@vue/test-utils'
 import type { components } from '../../../app/integrations/cortex/client/schema'
 import type {
   CortexConcreteAgent,
@@ -134,6 +135,11 @@ export function screensApi(path: string, options?: { query?: Record<string, unkn
     ? Promise.resolve(screenOf(decodeURIComponent(match[1]!), typeof record === 'string' ? record : null))
     : Promise.reject(new Error(`Unexpected Atrium API call: ${path}`))
 }
+
+// A page left mounted keeps watching the route and reloads when the next
+// test navigates, so every suite that mounts Cortex pages unmounts them after
+// each test.
+enableAutoUnmount(afterEach)
 
 /** Mounts a Cortex page at `route`, with Cortex active in the shell, and lets it load. */
 export async function mountCortexPage<T>(page: T, route: string) {

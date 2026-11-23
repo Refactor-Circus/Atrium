@@ -76,7 +76,8 @@ describe('polycart.carts-by-type', () => {
     const wrapper = await mountDashboard()
 
     const types = wrapper.findAll('[data-testid="polycart-carts-by-type"] [data-testid="polycart-type-count"]')
-    expect(types.map(type => type.text().replace(/\s+/g, ' ').trim())).toEqual(['order 4', 'quote 0'])
+    // The badge and the count are separate elements, with no text between them.
+    expect(types.map(type => type.text())).toEqual(['order4', 'quote0'])
     expect(types[0]!.attributes('href')).toBe('/polycart/carts?type=order&unexpired=1')
   })
 })
