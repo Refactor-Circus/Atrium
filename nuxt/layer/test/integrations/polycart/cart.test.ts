@@ -206,7 +206,8 @@ describe('cart actions', () => {
 
     expect(confirm).toHaveBeenCalledOnce()
     expect(requests(calls, 'DELETE', '/carts/{cart}').map(call => [call.path, call.body])).toEqual([[`/carts/${CART_ID}`, undefined]])
-    expect(useRouter().currentRoute.value.path).toBe('/polycart/carts')
+    // The list page loads lazily on its first visit; wait for the navigation.
+    await vi.waitFor(() => expect(useRouter().currentRoute.value.path).toBe('/polycart/carts'))
   })
 
   it('does not delete when the confirmation is declined', async () => {

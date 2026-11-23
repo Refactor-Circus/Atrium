@@ -117,7 +117,8 @@ describe('impex.channel', () => {
 
     expect(deleted).toHaveLength(1)
     expect(deleted[0]!.path).toBe('/channels/erp')
-    expect(useRouter().currentRoute.value.path).toBe('/impex/channels')
+    // The list page loads lazily on its first visit; wait for the navigation.
+    await vi.waitFor(() => expect(useRouter().currentRoute.value.path).toBe('/impex/channels'))
   })
 
   it('keeps a channel whose deletion is cancelled', async () => {

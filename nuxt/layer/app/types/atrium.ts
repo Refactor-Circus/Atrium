@@ -189,6 +189,33 @@ export type AtriumIntegrationUnavailableReason = 'absent' | 'inactive'
  * is the client half of it. It signs every integration client too
  * (`useAtriumIntegration()`), so a host configures auth once.
  */
+/**
+ * Sees every response of every Atrium client (the integration clients,
+ * `useAtriumClient()` and `useAtriumApi()`) before the caller does, with the
+ * request that got it (D-049). It gets its own copy of the response, so it
+ * may read the body. One that throws is logged and skipped.
+ */
+export type AtriumResponseHandler = (response: Response, request: Request) => void | Promise<void>
+
+/**
+ * An app-wide notice above every shell page, raised with `atrium.notify()`
+ * (by a response handler, say) and dismissed by the user.
+ */
+export interface AtriumNotice {
+  /** An i18n key, or the text itself when no message has that key */
+  message: string
+  /** The message's parameters */
+  params?: Record<string, string | number>
+  /** Where the notice links, inside the SPA */
+  link?: { to: string, label: string }
+  color?: 'info' | 'warning' | 'error'
+  /**
+   * What the notice is about: once dismissed, the same key and `id` is not
+   * shown again in this app's life (a new deadline is)
+   */
+  id?: string
+}
+
 export interface AtriumAuthAdapter {
   /** Headers for every API request, e.g. `{ Authorization: 'Bearer …' }` */
   headers?: () => Record<string, string> | Promise<Record<string, string>>

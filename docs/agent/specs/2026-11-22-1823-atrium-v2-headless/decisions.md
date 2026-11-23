@@ -454,3 +454,26 @@
 - Rationale: AC 82 gives only the defaults. Passing Guardian's own "no limit" through keeps the form from refusing what Guardian allows, and Guardian validates both values anyway (D-054).
 - Date: 2026-11-23
 - Raised by: implement (group 30); default chosen because no user was available
+
+## D-064: How does the layer send the proof for removing a two-factor method or passkey?
+- Choice: In the JSON body of the `DELETE` (`{code}`), never the query string. Guardian's request validates `code` from the request input, which includes the JSON body; its vendored schema documents `code` as a query parameter, so the layer sends an untyped body.
+- Rationale: AC 85 and 87 keep codes out of URLs, which end up in logs and history. Guardian reads both, so nothing changes on its side.
+- Date: 2026-11-23
+- Raised by: implement (group 31); default chosen because no user was available
+
+## D-065: What do response handlers receive, and how does a handler show a notice?
+- Choice:
+  - Each handler gets its own copy of the response (`response.clone()`), in registration order, inside the Nuxt app's context until its first `await`. For `useAtriumApi()`, whose body `$fetch` has already parsed, the copy is rebuilt from the parsed data with the same status and headers.
+  - The registry gains `notify(key, notice)` and `dismiss(key)`, and `<AtriumResponseNotice>` (in the default layout) renders the notices. A dismissed notice stays hidden until a notice under the same key arrives with a different `id`, so a new two-factor deadline shows again.
+- Rationale: A handler that reads the body must not consume the caller's. A generic notice keeps Guardian's banner out of the layout (D-049) and lets other packages raise their own.
+- Date: 2026-11-23
+- Raised by: implement (group 31); default chosen because no user was available
+
+## D-066: Which methods does the challenge page offer, and where may `redirect` lead?
+- Choice:
+  - TOTP, email and SMS when the user has that method confirmed; a passkey when the user has one, Guardian reports passkeys available, and the browser has `PublicKeyCredential`; a recovery code while `recovery_codes_remaining` is above 0.
+  - `redirect` is followed only when it is a path inside the SPA (`isInternalPath()`, now exported from `atriumLink.ts`) and is not the challenge or setup page itself; anything else goes to `/`.
+  - `uqr` (0.1.3, exact) is a runtime `dependency` of the layer, since consumers render the QR code.
+- Rationale: Offering a method the user cannot use only produces a 422. Refusing the two-factor pages as targets avoids a redirect loop.
+- Date: 2026-11-23
+- Raised by: implement (group 31); default chosen because no user was available

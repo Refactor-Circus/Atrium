@@ -1,7 +1,7 @@
 import createClient, { type Client, type Middleware } from 'openapi-fetch'
 import type { Router } from 'vue-router'
 import type { paths } from '../client/schema'
-import type { AtriumRegistry } from '../plugins/atrium'
+import { runResponseHandlers, type AtriumRegistry } from '../plugins/atrium'
 
 /** Atrium's own API, typed by the client generated from openapi.json (AC 74). */
 export type AtriumClient = Client<paths>
@@ -37,14 +37,20 @@ export function useAtriumClient(): AtriumClient {
     fetch: (input: Request) => globalThis.fetch(input)
   })
 
-  client.use(signedBy(nuxtApp.$atrium as AtriumRegistry, nuxtApp.$router as Router))
+  client.use(signedBy(nuxtApp))
   clients.set(nuxtApp, { base, client })
 
   return client
 }
 
-/** Signs each request with the auth adapter, read at request time. */
-function signedBy(atrium: AtriumRegistry, router: Router): Middleware {
+/**
+ * Signs each request with the auth adapter, read at request time, and hands
+ * each response to the app's response handlers (D-049) before the caller.
+ */
+function signedBy(nuxtApp: ReturnType<typeof useNuxtApp>): Middleware {
+  const atrium = nuxtApp.$atrium as AtriumRegistry
+  const router = nuxtApp.$router as Router
+
   return {
     async onRequest({ request }) {
       const auth = atrium.auth()
@@ -58,7 +64,9 @@ function signedBy(atrium: AtriumRegistry, router: Router): Middleware {
 
       return new Request(request, { headers, ...(auth.credentials ? { credentials: auth.credentials } : {}) })
     },
-    async onResponse({ response }) {
+    async onResponse({ request, response }) {
+      await runResponseHandlers(nuxtApp, response, request)
+
       if (response.status === 401 && router.currentRoute.value.meta.atrium?.public !== true) {
         await atrium.auth().onUnauthorized?.()
       }

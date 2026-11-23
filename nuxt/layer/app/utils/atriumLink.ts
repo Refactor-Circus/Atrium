@@ -36,10 +36,14 @@ export function isExternalUrl(url: string): boolean {
   return /^https?:\/\/[^/\\\s]/i.test(url)
 }
 
-function isFollowable(path: string): boolean {
-  if (isExternalUrl(path)) {
-    return true
-  }
-
+/**
+ * Whether `path` is a path inside the SPA: it starts with one `/`, never
+ * `//host` or `/\host`, which a browser would read as another host.
+ */
+export function isInternalPath(path: string): boolean {
   return path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\')
+}
+
+function isFollowable(path: string): boolean {
+  return isExternalUrl(path) || isInternalPath(path)
 }

@@ -8,7 +8,7 @@ import type { paths as PennantPlusPaths } from '../integrations/pennantplus/clie
 import type { paths as PolycartPaths } from '../integrations/polycart/client/schema'
 import type { paths as RosterPaths } from '../integrations/roster/client/schema'
 import type { paths as ShowroomPaths } from '../integrations/showroom/client/schema'
-import type { AtriumRegistry } from '../plugins/atrium'
+import { runResponseHandlers, type AtriumRegistry } from '../plugins/atrium'
 
 /**
  * Each suite integration's API, typed by the `paths` of its vendored
@@ -144,14 +144,20 @@ function cachedClient<K extends AtriumIntegrationKey>(nuxtApp: ReturnType<typeof
     fetch: (input: Request) => globalThis.fetch(input)
   })
 
-  client.use(authMiddleware(nuxtApp.$atrium as AtriumRegistry, nuxtApp.$router as Router))
+  client.use(authMiddleware(nuxtApp))
   perApp.set(key, { base, client })
 
   return client
 }
 
-/** Signs each request with the auth adapter, read at request time. */
-function authMiddleware(atrium: AtriumRegistry, router: Router): Middleware {
+/**
+ * Signs each request with the auth adapter, read at request time, and hands
+ * each response to the app's response handlers (D-049) before the caller.
+ */
+function authMiddleware(nuxtApp: ReturnType<typeof useNuxtApp>): Middleware {
+  const atrium = nuxtApp.$atrium as AtriumRegistry
+  const router = nuxtApp.$router as Router
+
   return {
     async onRequest({ request }) {
       const auth = atrium.auth()
@@ -165,7 +171,9 @@ function authMiddleware(atrium: AtriumRegistry, router: Router): Middleware {
 
       return new Request(request, { headers, ...(auth.credentials ? { credentials: auth.credentials } : {}) })
     },
-    async onResponse({ response }) {
+    async onResponse({ request, response }) {
+      await runResponseHandlers(nuxtApp, response, request)
+
       if (response.status === 401 && router.currentRoute.value.meta.atrium?.public !== true) {
         await atrium.auth().onUnauthorized?.()
       }

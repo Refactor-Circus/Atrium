@@ -87,6 +87,9 @@
         "inactive_title": "{name} is turned off for you",
         "inactive_description": "{name} is installed, but a feature flag turns it off for your account."
       }
+    },
+    "notice": {
+      "dismiss": "Dismiss"
     }
   }
 }

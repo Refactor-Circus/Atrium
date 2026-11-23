@@ -1415,3 +1415,30 @@ Guardian integration: PHP declarations, gating and layer registration (AC 79 to 
 
 - `composer test:unit`: 1405 tests, all passed. PHPStan 0 errors, Pint passed.
 - `composer test:nuxt`: every step passed; Vitest 120 files, 1106 tests, no type errors. A first run had two timing failures in `polycart/cart.test.ts` and `impex/channel.test.ts` (navigation after delete), both unrelated and green alone and on the rerun.
+
+## Group 31
+
+Two-factor responses, challenge and setup pages (AC 83 to 87).
+
+### Files
+
+- Response handlers: `plugins/atrium.ts` (`responseHandler()`, `handleResponse()`, `notify()`, `dismiss()`, `runResponseHandlers()`), run in the integration-client middleware (`useAtriumIntegration.ts`), `useAtriumClient.ts` and `useAtriumApi.ts` (`onResponse`, with the parsed body replayed). `types/atrium.ts` (`AtriumResponseHandler`, `AtriumNotice`). `components/Atrium/ResponseNotice.vue`, rendered by `layouts/default.vue`; `atrium.notice.dismiss` in `en.json`.
+- `utils/atriumLink.ts` exports `isInternalPath()` (the AC 14 guard) for the redirect.
+- Guardian (`integrations/guardian/components/two-factor/`): `guardian.ts` (types, `guardianData`, `useGuardianAction` with `code`, `retryAfter` and field errors, `guardedRedirect`, `offeredMethods`), `client.ts` (the shell-less client, D-050), `handler.ts` (AC 84), `webauthn.ts` (D-052), and the components `GuardianQrCode`, `GuardianTotpEnrol`, `GuardianRecoveryCodes`, `GuardianOneTimeCodes`, `GuardianPasskeys`, `GuardianFactorRemoval`, `GuardianTwoFactorMethods` and `GuardianActionError`. `guardian/index.ts` registers the handler.
+- Pages: `pages/guardian/two-factor/challenge.vue` and `setup.vue` (public meta, public layout, no `<AtriumIntegrationScreen>`).
+- `uqr` 0.1.3 (exact) in `nuxt/layer/package.json` and `nuxt/pnpm-lock.yaml`. `guardian-two-factor.en.json` filled.
+- Tests: `test/response-handlers.test.ts`, `test/integrations/guardian/two-factor/{handler,challenge,setup,components}.test.ts` and `support.ts`.
+
+### Decisions
+
+- D-064 (removal proof in the body), D-065 (handler copies and notices), D-066 (challenge methods, redirect guard, `uqr` as a runtime dependency).
+
+### Deviations
+
+- `test/integrations/impex/channel.test.ts` and `test/integrations/polycart/cart.test.ts` (outside the group) now wait for the navigation after a delete. Both failed intermittently under the full run (the list page loads lazily on its first visit) and passed alone; the extra Vitest files made it happen on most runs.
+- The AC 49 page check is per area in this layer, so the exemption of the two public pages is asserted in `challenge.test.ts` and `setup.test.ts` (public meta, public layout, no `screen-key`, no shell call).
+
+### Tests
+
+- Vitest: the group's suites are 5 files and 69 tests. `composer test:nuxt` passed every step: Vitest 125 files, 1175 tests, no type errors, and the consumer build.
+- `composer test:unit`: 1405 tests, all passed.

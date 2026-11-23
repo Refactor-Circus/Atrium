@@ -1,4 +1,5 @@
 import { defineAtriumIntegration } from '../../composables/useAtriumIntegration'
+import { GUARDIAN_HANDLER_KEY, guardianTwoFactorHandler } from './components/two-factor/handler'
 
 /*
  * Guardian in the layer (AC 82 to 98): the security package's screens. The
@@ -8,6 +9,11 @@ import { defineAtriumIntegration } from '../../composables/useAtriumIntegration'
  * AC 99), one user's security, the security administration screens and SSO
  * connections. Guardian declares no widgets, settings panel or search
  * sources (D-057).
+ *
+ * It registers one response handler, `guardian.two-factor` (AC 84, D-049),
+ * whether or not the shell lists Guardian as active: it sends a user who
+ * owes a second factor to the challenge or setup page, and shows Guardian's
+ * enrolment deadline as an app-wide notice.
  */
 
 /**
@@ -33,4 +39,6 @@ export const screens: Record<string, string> = {
   'guardian.sso-connection': 'guardian-sso-connections-connection'
 }
 
-export default defineAtriumIntegration(() => {})
+export default defineAtriumIntegration((atrium) => {
+  atrium.responseHandler(GUARDIAN_HANDLER_KEY, guardianTwoFactorHandler(atrium))
+})
