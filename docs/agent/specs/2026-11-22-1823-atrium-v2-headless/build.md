@@ -889,3 +889,38 @@ This was a retry for 19.3 only. 19.1 and 19.2 were already committed (salvaged).
   - the 8 Cortex and Impex type errors;
   - the 48 Vitest failures in other groups' suites;
   - the `OpenApiTest` 204 mismatch (group 27).
+
+## Stabilization (after wave 3 merge)
+
+Groups 11-18, 27 and part of 22 were built in parallel worktrees and merged by hand. This pass made both gates green without deleting or skipping a test.
+
+### PHP gate (`composer test`)
+
+- `tests/Feature/OpenApiTest.php`: the 204 test expected the key `'204'`. PHP casts a numeric-string array key to an int, so `array_keys()` can only return `204`. The test was wrong, so it now expects `[204]`.
+- `src/Domains/Navigation/Services/NavigationState.php`: PHPStan rejected the `??=` assignment of two untyped `new WeakMap`s into the typed per-request map. `for()` now builds both maps with their generic types before storing them. The behaviour is unchanged.
+
+### Nuxt gate (`composer test:nuxt`), Vitest
+
+- `new URL('…', import.meta.url)` in `test/integrations/support.ts`, `integration-absent`, `integration-i18n`, `cortex/integration`, `pennantplus/integration` and `polycart/integration`: Vite rewrites that literal into a served asset URL, which `fileURLToPath()` and `readFileSync()` refuse. These files now read `import.meta.url` through a variable, as the Roster page tests already did.
+- `test/setup.ts` (new, set as `setupFiles`): happy-dom has no `window.confirm`, so `vi.spyOn(window, 'confirm')` failed in the Cortex, Polycart and Pennantplus suites. Every test file now starts with a `confirm` that declines, which the tests can spy on.
+- `hasI18nKey()` in `test/integrations/support.ts`: in the Nuxt environment, imported locale files and loaded locale messages hold precompiled message ASTs (`{type: 0, body}`), not strings. The helper now counts either as a message.
+- `integration-client`: a `useIntegrationQuery` widget left mounted keeps its shared request alive (D-029), so one test's request answered the next test. These tests now unmount their widgets with `enableAutoUnmount(afterEach)`.
+- `cortex/support.ts`: Cortex pages left mounted kept watching the route, and reloaded when the next test navigated (an extra `virtual-agents.index`). The Cortex suites now auto-unmount their pages too.
+- `mountSuspended()` navigates to its own `route`, `/` by default, which dropped the route a test had pushed first:
+  - `integration-routing` and the Polycart `cart` and `carts` tests now pass the route to the mount.
+  - The public-page 401 test now takes its client before it navigates, because `withSetup()` mounts at `/` and so left the public page.
+- `integration-search`: the link-guard test returned three results from one source while the shell capped each source at `per_source: 2`. It now spreads them over two sources.
+- `polycart/widgets`: the badge and the count are separate elements with no text between them, so the test now expects `order4`/`quote0`.
+- `CortexAgentForm.vue` (implementation bug): a number input's `v-model` hands back a number once it is edited, so `form.settings[key].trim()` threw on submit. Each setting is now read as a string first. This fixed the create, 422 and 403 tests.
+
+### Nuxt gate, typecheck
+
+- `CortexToolPicker.vue`, `CortexVersions.vue` and `pages/impex/channels/[name].vue`: Nuxt UI types `onClick` as returning void. Inline handlers that assign are now written as arrow functions.
+- `pages/cortex/redirect-domains.vue`: vue-tsc rejected `action.busy.value` on the add button, though the same expression type-checks on other pages. The page now binds a top-level `busy` ref instead.
+- `impex/components/shared.ts`: `CHANNEL_TRANSPORTS` is now `readonly string[]`, since a channel's transport is a string in the API and in the form.
+- `pages/impex/runs/[run].vue`: by its schema, `runs.signals.store` answers a finished run with `{message}` only. The page now tells a sent signal from an ignored one by whether the answer has `data`.
+
+### Result
+
+- `composer test`: phpstan, pint and type coverage pass. Pest ran 1215 tests: 1208 passed and 7 skipped.
+- `composer test:nuxt`, run with `ATRIUM_SUITE_PATH` set to the scratch suite (D-040): the frozen install, client check, typecheck, build, Vitest and consumer build all pass. Vitest ran 75 files and 628 tests, all passing, with no type errors.
