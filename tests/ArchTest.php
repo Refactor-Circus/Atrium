@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardController;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
 use RefactorCircus\Atrium\Domains\Screens\Data\ResolvedScreen;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
@@ -196,6 +197,37 @@ arch('every controller method is a single return $request->persist()')
 
             return $violations;
         }, glob(ATRIUM_DOMAINS.'/*/Http/Controllers/*.php') ?: [])),
+    )))
+    ->toBeEmpty();
+
+arch('the shell reaches other domains through their data and services, never their Http classes')
+    ->expect('RefactorCircus\Atrium\Domains\Navigation')
+    ->not->toUse(array_map(
+        fn (string $domain): string => 'RefactorCircus\\Atrium\\Domains\\'.$domain.'\\Http',
+        ['Access', 'Dashboard', 'Plugins', 'Screens', 'Search', 'Settings', 'Themes', 'Widgets'],
+    ));
+
+arch('no domain uses another domain\'s requests')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(function (string $path): ?string {
+            $domain = explode('/', substr($path, strlen(ATRIUM_DOMAINS) + 1))[0];
+            preg_match_all('/RefactorCircus\\\\Atrium\\\\Domains\\\\(\w+)\\\\Http\\\\Requests\\\\/', (string) file_get_contents($path), $matches);
+            $foreign = array_values(array_diff(array_unique($matches[1]), [$domain]));
+
+            return $foreign === [] ? null : $path.' uses '.implode(', ', $foreign);
+        }, array_values(array_filter(
+            array_map(fn (SplFileInfo $file): string => $file->getPathname(), iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(ATRIUM_DOMAINS, FilesystemIterator::SKIP_DOTS)))),
+            fn (string $path): bool => str_ends_with($path, '.php'),
+        ))),
+    )))
+    ->toBeEmpty();
+
+arch('the dashboard controller names each method for its request\'s verb')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(
+            fn (ReflectionMethod $method): ?string => in_array($method->getName(), ['index', 'show', 'showDefault', 'store', 'update', 'destroy'], true) ? null : $method->getName(),
+            new ReflectionClass(DashboardController::class)->getMethods(ReflectionMethod::IS_PUBLIC),
+        ),
     )))
     ->toBeEmpty();
 

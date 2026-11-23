@@ -26,7 +26,7 @@ final class IndexSearchResultRequest extends Request
     public function rules(): array
     {
         return [
-            'q' => ['required', 'string', 'min:'.self::minLength()],
+            'q' => ['required', 'string', 'min:'.app(SearchRegistry::class)->minLength()],
         ];
     }
 
@@ -35,16 +35,5 @@ final class IndexSearchResultRequest extends Request
         $query = $this->string('q')->trim()->toString();
 
         return SearchResultResource::collection(app(SearchRegistry::class)->search($this, $query))->response();
-    }
-
-    /**
-     * The fewest characters a query needs, from `atrium.search.min_length`:
-     * at least 1, which null or any other value means.
-     */
-    public static function minLength(): int
-    {
-        $length = config('atrium.search.min_length');
-
-        return is_int($length) ? max(1, $length) : 1;
     }
 }

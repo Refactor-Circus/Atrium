@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Atrium;
 use RefactorCircus\Atrium\Domains\Navigation\Http\Resources\ShellResource;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
-use RefactorCircus\Atrium\Domains\Search\Http\Requests\IndexSearchResultRequest;
+use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
 use RefactorCircus\Atrium\Http\Requests\Request;
@@ -37,7 +37,7 @@ final class ShowShellRequest extends Request
             'default_theme' => $themes->default(),
             'switchable' => $themes->switchable($this),
             'panels' => array_values(app(SettingsRegistry::class)->panels($this)),
-            'min_length' => IndexSearchResultRequest::minLength(),
+            'min_length' => app(SearchRegistry::class)->minLength(),
         ])->response();
     }
 }

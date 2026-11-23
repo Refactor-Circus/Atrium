@@ -15,7 +15,7 @@ use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\UpdateDashboardRequest
 
 final class DashboardController
 {
-    public function default(ShowDefaultDashboardRequest $request): JsonResponse
+    public function showDefault(ShowDefaultDashboardRequest $request): JsonResponse
     {
         return $request->persist();
     }

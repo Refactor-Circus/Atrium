@@ -131,6 +131,18 @@ it('searches once the query is long enough', function (): void {
     expect($calls)->toBe(2);
 });
 
+it('reads the minimum query length from the search registry, at least 1', function (mixed $configured, int $expected): void {
+    config()->set('atrium.search.min_length', $configured);
+
+    expect(app(SearchRegistry::class)->minLength())->toBe($expected);
+})->with([
+    'configured' => [3, 3],
+    'zero' => [0, 1],
+    'negative' => [-2, 1],
+    'null' => [null, 1],
+    'not an integer' => ['4', 1],
+]);
+
 it('counts characters, not bytes, toward the minimum', function (): void {
     searchApiSource([SearchResult::make('Hit', '/hit')]);
 

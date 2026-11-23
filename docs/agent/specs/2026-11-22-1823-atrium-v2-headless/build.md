@@ -441,3 +441,29 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
 ### Observations for review
 
 - `nuxt/layer/.nuxtrc` (`setups.@nuxt/test-utils="4.4.0"`) is written by `@nuxt/test-utils` when Vitest runs. It was already untracked before this round, and I did not commit it. It probably belongs in `nuxt/.gitignore`.
+
+## Review fixes, round 1
+
+### Fixes
+
+- Major (`architecture/dependencies`): Navigation no longer reaches into other domains' Http classes.
+  - The minimum query length moved from `IndexSearchResultRequest::minLength()` (static, on a request) to `SearchRegistry::minLength()`. The search request's `q` rule and `ShowShellRequest` both read it there, and the floor of 1 is unchanged.
+  - `ShellResource` builds each settings panel summary (`key`, `label`, `icon`, `component`) in a private `panel()`, the same way it builds sections and themes, so it no longer imports Settings' `SettingsPanelResource`. The shell payload is unchanged: the `shell.json` contract fixture still matches.
+  - New arch tests: Navigation uses no other domain's `Http` namespace, and no domain uses another domain's `Http\Requests`.
+- Minor (`http/request-persist`): `DashboardController::default()` is now `showDefault()`, matching `ShowDefaultDashboardRequest`. The route keeps its name, `atrium.dashboards.default`. An arch test lists the controller's allowed method names.
+- Minor (compat, CHANGELOG v2.0.0):
+  - Removed: `SearchController::minLength()`, replaced by `config('atrium.search.min_length')`, which `IndexSearchResultRequest` enforces (or by `SearchRegistry::minLength()`).
+  - Removed: `SearchController::__invoke()`. The controller is now `final` with `index()`.
+  - Removed: `DashboardController`'s constructor, `index(Request)`, `show(Request, string)` and `render()`. The controller is now `final`, with the new methods listed.
+  - Changed behavior: `DashboardManager`'s new constructor dependencies (`PlacementResolver`, `PackageRegistry`).
+  - Added: `SearchRegistry::minLength()`.
+
+### Tests
+
+- `composer test:unit`: 901 passed, 3183 assertions.
+- `composer analyse` and `composer lint:check`: passed.
+
+### Observations for review
+
+- The open question about registry-only requests inheriting `authorize() => true` is unchanged, as instructed.
+- Navigation still reads Settings', Themes' and Search's registries from `Services/`. The dependencies standard lists `Contracts/`, `Data/` and models as the seams. The finding proposed `SearchRegistry` as the seam, and the shell already used the other registries, so I followed that.

@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
-use RefactorCircus\Atrium\Domains\Settings\Http\Resources\SettingsPanelResource;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
@@ -61,10 +60,7 @@ final class ShellResource extends JsonResource
                 'switchable' => $shell['switchable'],
                 'all' => array_map($this->theme(...), $shell['themes']),
             ],
-            'settings' => array_map(
-                fn (SettingsPanel $panel): array => new SettingsPanelResource($panel)->resolve($request),
-                $shell['panels'],
-            ),
+            'settings' => array_map($this->panel(...), $shell['panels']),
             'search' => [
                 'min_length' => $shell['min_length'],
             ],
@@ -115,6 +111,22 @@ final class ShellResource extends JsonResource
             'link' => ClientPath::for($item->resolveUrl()),
             'badge' => $item->resolveBadge(),
             'children' => array_map($this->item(...), array_values($item->children)),
+        ];
+    }
+
+    /**
+     * A settings panel's summary, as the settings list sends it: what the
+     * layer needs to link to the panel, without resolving its data.
+     *
+     * @return array{key: string, label: string, icon: string|null, component: string}
+     */
+    private function panel(SettingsPanel $panel): array
+    {
+        return [
+            'key' => $panel->key,
+            'label' => $panel->label,
+            'icon' => $panel->icon,
+            'component' => $panel->component,
         ];
     }
 

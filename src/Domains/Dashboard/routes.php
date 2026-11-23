@@ -9,7 +9,7 @@ use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardWidgetCont
 
 // Loaded inside Atrium's API group: `atrium.routes.prefix`, `atrium.routes.middleware`
 // and the `atrium.` name prefix. Dashboards are named by slug, placements by uuid.
-Route::get('dashboard', [DashboardController::class, 'default'])->name('dashboards.default');
+Route::get('dashboard', [DashboardController::class, 'showDefault'])->name('dashboards.default');
 Route::get('dashboards', [DashboardController::class, 'index'])->name('dashboards.index');
 Route::post('dashboards', [DashboardController::class, 'store'])->name('dashboards.store');
 Route::get('dashboards/{dashboard:slug}', [DashboardController::class, 'show'])->name('dashboards.show');
