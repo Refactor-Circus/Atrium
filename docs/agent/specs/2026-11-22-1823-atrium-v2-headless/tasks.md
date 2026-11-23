@@ -134,7 +134,7 @@ criteria: 47, 48, 49, 50, 51, 52, 53
 - [x] 12.5 Add the registry's `searchSource()` and `live()`, the integrations plugin (it loads `app/integrations/*/index.ts` through `import.meta.glob`), the global middleware, the public layout and the `public` page meta, `<AtriumIntegrationScreen>`, `<AtriumNoAccess>`, `<AtriumIntegrationUnavailable>`, and Navigation and Search support. Extend the shell types.
 - [x] 12.6 Create and register in `nuxt.config.ts` the locale files: `cortex`, `impex`, `keen`, `pennantplus`, `polycart`, `roster`, `roster-users`, `roster-organizations`, `roster-access`, `showroom`, `showroom-catalog`, `showroom-structure`, `showroom-assets` and `hooks`, each as `{}`. Add the layer's own strings for the new components to `en.json`.
 - [x] 12.7 Write `test/integrations/support.ts` with `mockPackageApi(pkg, routes)`, typed by the vendored `paths`, and a mounting helper with a shell carrying one active integration.
-- [ ] 12.8 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 12.8 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 13: Cortex integration
 depends on: 12

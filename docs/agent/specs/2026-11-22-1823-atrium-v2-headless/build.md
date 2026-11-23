@@ -568,3 +568,20 @@ Only the group's paths. `nuxt/layer/.nuxtrc`, an untracked file written by `@nux
 ### What is left
 
 - 12.8 is unticked. I did not run `composer test:nuxt` or `vendor/bin/pest`, as the salvage instructions said, and `pnpm` was not on this session's PATH for a typecheck. The gate runs both.
+
+## Group 12
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 12.8 ticked.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: this section.
+
+This retry had only 12.8 left. Tasks 12.1 to 12.7 were already committed in the salvaged section above, and I kept that work as it was. No source, test, fixture or vendored client files changed. `nuxt/layer/.nuxtrc` is still untracked and not in the group's file list, so it stays out of the commit.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 12.8 is ticked on that basis.
+
+### Deviations
+
+None.
