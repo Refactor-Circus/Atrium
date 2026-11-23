@@ -585,3 +585,47 @@ I did not run either suite. The instructions say the gate runs `composer test:nu
 ### Deviations
 
 None.
+
+## Group 15 (salvaged)
+
+### What I found
+
+There was no index lock and no merge or rebase in progress in the `--g15` worktree. The previous agent left this work uncommitted:
+
+- The PHP side was complete: `KeenIntegration` (the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, left out when `history.nav.enabled` is false; the 3 screen declarations), `lang/en/integrations/keen.php`, `KeenIntegrationTest` (gating, the API base from `keen.routes.prefix` and the `api_base` override, both nav items, a malformed config, the shell payload, the screens, the label keys and the fixture) and the generated `fixtures/integrations/keen.json`.
+- The layer side was complete except for its tests: `index.ts` (with its `// Not ported (D-032)` note, which says nothing was left out), the 3 pages, `KeenEntriesBrowser`, `KeenEntriesTable`, `KeenChanges`, `KeenRecordForm`, `entries.ts`, the `keen.history` live resolver in `history.ts`, and `keen.en.json`.
+- There was nothing under `nuxt/layer/test/integrations/keen/`.
+
+### What I committed
+
+Everything above, plus the missing Vitest suites in `nuxt/layer/test/integrations/keen/`:
+
+- `keen.ts`: payload helpers, typed with `satisfies` against the vendored Keen schema, and the `atrium.screens.show` answers.
+- `entries.test.ts`: `keen.entries` loads, the filters come from the route query and from the form, Clear works, cursor paging goes older, newer and back to newest, a 422 shows field errors, a 403 shows no access, and other failures show an error. The record form posts to `keen.entries.store` (method, path and body) and reloads, a 422 shows field errors, and a 403 shows no access.
+- `entry.test.ts`: `formatChange()`, `changeRows()` and `<KeenChanges>` (rendered as v1's `audit.changes`), and the `keen.entry` page: its load request, details, the IP address and user agent only when Keen sends them, and the 404, 403 and failure states.
+- `history.test.ts`: `keen.history` lists `keen.entries.index` with `source` fixed to the package, keeps it when other filters change, ignores `?source=`, shows not-found for an unlisted package, and shows no access on a 403.
+- `live.test.ts`: the `keen.history` resolver is registered, and it handles exclusion, grouping under the nav group's label, sorting by label, link encoding, malformed options, and rejection on 500 and 403.
+- `pages.test.ts`: every fixture screen has a route at its declared path, each page calls `atrium.screens.show` with its key, record and tab, and every `t()` key exists.
+
+Commit `b52c048` on `ring-master/2026-11-22-1823-atrium-v2-headless--g15`, touching only the group's paths.
+
+### What is left
+
+- 15.4 is unticked. As instructed, I did not run `composer test:nuxt` or `vendor/bin/pest`. The new Vitest suites have never been run, so the gate is their first run. The likeliest weak spots are the page-level interactions in happy-dom: driving the Nuxt UI inputs and buttons through `data-testid`, and route-query reactivity after `router.replace`.
+
+## Group 15
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 15.4 ticked. 15.1 to 15.3 are ticked on the group branch too, because the salvage marked them done only in the job worktree.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: the salvaged section above and this one.
+
+This retry had only 15.4 left. Tasks 15.1 to 15.3 were already committed in `b52c048` (see "Group 15 (salvaged)" above), and I kept that work as it was. No source, test, fixture or locale files changed. `nuxt/layer/.nuxtrc` is untracked and not in the group's file list, so it stays out of the commit.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 15.4 is ticked on that basis. The Keen Vitest suites have never been run, so the gate is their first run. The weak spots noted in the salvaged section still apply.
+
+### Deviations
+
+None.

@@ -161,10 +161,10 @@ depends on: 12
 files: src/Integrations/Keen/KeenIntegration.php, lang/en/integrations/keen.php, tests/Feature/Integrations/KeenIntegrationTest.php, nuxt/layer/test/fixtures/integrations/keen.json, nuxt/layer/app/integrations/keen/index.ts, nuxt/layer/app/integrations/keen/components/**, nuxt/layer/app/pages/keen/**, nuxt/layer/i18n/locales/integrations/keen.en.json, nuxt/layer/test/integrations/keen/**
 criteria: 39, 40, 45, 53, 54, 57, 64
 
-- [ ] 15.1 Write tests: Pest: gating; the API base from `keen.routes.prefix`; the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, absent when `history.nav.enabled` is false; the 3 screen declarations; writing `fixtures/integrations/keen.json`; Vitest: `keen.entries` (filters, cursor paging, the record form posting to `keen.entries.store` with 422), `keen.entry` (changes rendering), `keen.history` (`source` filter); the History `live` resolver (exclusion, grouping, sorting, failure); fixture pages; the i18n keys
-- [ ] 15.2 Write `KeenIntegration` and its lang file, porting from `KeenPlugin`.
-- [ ] 15.3 Write the pages, an entries table and a changes component (shared with group 26's section and tab), the `live` resolver and `index.ts`.
-- [ ] 15.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 15.1 Write tests: Pest: gating; the API base from `keen.routes.prefix`; the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, absent when `history.nav.enabled` is false; the 3 screen declarations; writing `fixtures/integrations/keen.json`; Vitest: `keen.entries` (filters, cursor paging, the record form posting to `keen.entries.store` with 422), `keen.entry` (changes rendering), `keen.history` (`source` filter); the History `live` resolver (exclusion, grouping, sorting, failure); fixture pages; the i18n keys
+- [x] 15.2 Write `KeenIntegration` and its lang file, porting from `KeenPlugin`.
+- [x] 15.3 Write the pages, an entries table and a changes component (shared with group 26's section and tab), the `live` resolver and `index.ts`.
+- [x] 15.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 16: PennantPlus integration
 depends on: 12
