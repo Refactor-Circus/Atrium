@@ -69,5 +69,9 @@ runs:
     round: 2
     date: 2026-11-23
     note: "groups 20-28 built serially; gate green, no nits; composer test (pest 1357) and composer test:nuxt (vitest 1135, consumer build) re-run by hand, both green"
+  - workflow: direct
+    result: approved
+    date: 2026-11-23
+    note: "Guardian addendum: groups 29-37 built directly (34-37 in this run, D-069 to D-074); composer test (pest 1473, phpstan 0, pint, type coverage 100%) and composer test:nuxt (vitest 142 files / 1359 tests, typecheck clean, consumer build) green"
 reopened: 2026-11-23
 waits_for: [Cortex, Impex, Keen, PennantPlus, Polycart, Roster, Showroom v2 specs 2026-11-23-0943-*, Roster/2026-11-23-0943-roster-v2-api-and-mcp-only addendum (criteria 28-46), Guardian/2026-11-23-1718-guardian-v2-security-platform]
