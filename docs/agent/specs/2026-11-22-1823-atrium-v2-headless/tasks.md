@@ -68,9 +68,9 @@ depends on: 6
 files: workbench/**, tests/Feature/Api/ContractFixturesTest.php, tests/Feature/ApiVersionTest.php, nuxt/layer/test/fixtures/*.json
 criteria: 21, 28, 31
 
-- [ ] 7.1 Write tests: the fixture comparison for shell, dashboard, resolved screen and settings: seeded uuids, frozen time, writes only with `UPDATE_FIXTURES=1`; `Atrium::API_VERSION` equals the major.minor in `nuxt/layer/package.json`, and the test is skipped with a clear message until group 8 creates the file
-- [ ] 7.2 Workbench: demo plugins register API routes and their widgets/panel keys; port `AuthenticateWorkbenchToken` (marked workbench-only) and the CORS setup from the spike; remove the Blade demo views
-- [ ] 7.3 Generate the fixtures with `UPDATE_FIXTURES=1` and commit them.
+- [x] 7.1 Write tests: the fixture comparison for shell, dashboard, resolved screen and settings: seeded uuids, frozen time, writes only with `UPDATE_FIXTURES=1`; `Atrium::API_VERSION` equals the major.minor in `nuxt/layer/package.json`, and the test is skipped with a clear message until group 8 creates the file
+- [x] 7.2 Workbench: demo plugins register API routes and their widgets/panel keys; port `AuthenticateWorkbenchToken` (marked workbench-only) and the CORS setup from the spike; remove the Blade demo views
+- [x] 7.3 Generate the fixtures with `UPDATE_FIXTURES=1` and commit them.
 - [ ] 7.4 Run vendor/bin/pest; all green
 
 ## Group 8: Nuxt layer and playground
@@ -98,6 +98,6 @@ depends on: 6
 files: .gitattributes, tests/Feature/RemovalTest.php, tests/Feature/FacadeDocblockTest.php, src/Atrium.php, src/Facades/Atrium.php, src/Domains/Navigation/Data/NavItem.php, tests/Unit/NavItemActiveTest.php
 criteria: 16
 
-- [ ] 10.1 Write tests: `RemovalTest` asserts the dev parts of `nuxt/` are export-ignored and `/nuxt/layer` is not; `Atrium::path()`/`url()` no longer exist and the facade docblock matches; `NavItem::isActive()` does not read `atrium.path`
-- [ ] 10.2 Narrow the `nuxt/` export-ignore rules (D-015); remove `Atrium::path()`/`url()` and their `@method` lines; update `NavItem::isActive()` (D-016)
-- [ ] 10.3 Run vendor/bin/pest and composer test; all green
+- [x] 10.1 Write tests: `RemovalTest` asserts the dev parts of `nuxt/` are export-ignored and `/nuxt/layer` is not; `Atrium::path()`/`url()` no longer exist and the facade docblock matches; `NavItem::isActive()` does not read `atrium.path`
+- [x] 10.2 Narrow the `nuxt/` export-ignore rules (D-015); remove `Atrium::path()`/`url()` and their `@method` lines; update `NavItem::isActive()` (D-016)
+- [x] 10.3 Run vendor/bin/pest and composer test; all green

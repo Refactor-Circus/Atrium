@@ -194,3 +194,60 @@ Remove the Blade UI. Criteria 10, 16, 17.
 - `Atrium::path()` and `Atrium::url()` stay: AC 16 does not list them, though they read the removed `atrium.path` key and now always answer the v1 default `atrium`. `NavItem::isActive()` reads the same key. Returned as a decision.
 - `/nuxt export-ignore` follows AC 16, but GitHub builds the tarballs giget downloads with `git archive`, which honours `export-ignore`, so D-001's `github:refactor-circus/atrium/nuxt/layer#v2.0.0` would fetch nothing. Returned as a decision.
 - The workbench (`DemoPlugin`, `ScreenHostPlugin`) still calls `Icons::svg()` and `->view()`. Group 7 owns it; no test or PHPStan path loads it.
+
+## Group 10
+
+Archive rules and path helpers (D-015, D-016). Criterion 16. Built on branch `ring-master/2026-11-22-1823-atrium-v2-headless--g10`.
+
+### Files
+
+- `.gitattributes`: `/nuxt export-ignore` replaced by `/nuxt/playground`, `/nuxt/package.json`, `/nuxt/pnpm-workspace.yaml`, `/nuxt/pnpm-lock.yaml` and `/nuxt/layer/test`, so `/nuxt/layer` stays in the archive that giget and Composer dists download (D-015).
+- `src/Atrium.php`: `path()` and `url()` removed. `src/Facades/Atrium.php`: their `@method` lines removed (D-016).
+- `src/Domains/Navigation/Data/NavItem.php`: `isActive()` no longer reads `atrium.path`. A URL item still stays active on the paths beneath it, and only the site root (`/`) is never treated as the parent of every page. The docblock says "site root" instead of "dashboard root".
+
+### Tests
+
+- `tests/Feature/RemovalTest.php`: the `.gitattributes` patterns are read once by `exportIgnoredPatterns()`. Each nuxt dev part, `/workbench` and `/tests` is export-ignored. No export-ignored pattern matches `/nuxt`, `/nuxt/layer` or `/nuxt/layer/nuxt.config.ts` (checked with `fnmatch`, so a glob like `/nuxt/*` is caught too). `Atrium::path()` and `url()` are added to the removed public-API dataset.
+- `tests/Feature/FacadeDocblockTest.php`: `path` and `url` are added to the "documents no removed method" dataset. The reflection test already compares the tags with the public methods.
+- `tests/Unit/NavItemActiveTest.php` (new): with a container whose config still sets `atrium.path => 'atrium'`, an item at `/atrium` is active on `/atrium` and `/atrium/settings` and not on `/atriumx`. A root item (`/`, `http://localhost/`) is active on `/` but not on `/settings`. The `NavItem` source does not contain `atrium.path`.
+- Pint `--test` passes on the changed files. The suite was not run here, as instructed; the gate runs it.
+
+### Deviations and notes
+
+- Touched outside the group's file list: `tests/Feature/NavigationTest.php`. I removed the case "never treats the dashboard root as the parent of every page", which asserted that `/atrium` is not active on `/atrium/settings`. That was the `atrium.path` behavior D-016 removes. `NavItemActiveTest` now covers the replacement behavior.
+- The v2.0.0 CHANGELOG entry for `Atrium::path()`/`url()` belongs to group 9 (task 9.1 already lists it).
+
+## Group 7 (salvaged)
+
+Workbench, contract fixtures and API version. Criteria 21, 28 and 31. The build agent ended without returning a result. Salvaged on branch `ring-master/2026-11-22-1823-atrium-v2-headless--g7` as commit `0550037`.
+
+### What I found
+
+There was no index lock and no merge or rebase in progress. The worktree held the whole group as uncommitted work, all inside the group's paths:
+
+- The Blade demo views, `ScreenHost` and `SignInWorkbenchUser` were already deleted and staged.
+- `DemoPlugin`, `DemoData`, `WorkbenchServiceProvider` and `routes/web.php` were modified.
+- `DemoScreens`, `AuthenticateWorkbenchToken`, both test files and the five fixtures were untracked.
+
+Everything looked finished. Pint `--test` passed on `workbench/` and both test files, and PHPStan passed with 0 errors.
+
+### What I committed
+
+- **Workbench (AC 21):**
+  - `DemoPlugin` uses Iconify icons and SPA paths for nav and search. Its routes return JSON and load in Atrium's API group as `atrium.plugins.demo.*` (`orders`, `users`, `reports.show`, `billing`).
+  - The settings panel and every widget have component keys. `demo.services` is lazy.
+  - `DemoScreens` adds a `demo.storefront` tab, a `header.actions` section and an `aside` section to `atrium.settings-panel`.
+  - `AuthenticateWorkbenchToken` is marked WORKBENCH ONLY and is ported from the spike. It accepts `Bearer workbench` in `local` only and signs in testbench.yaml's `workbench.user`.
+  - The CORS setup is ported from the spike: playground origins, `atrium/api/*`, and `supports_credentials` off. It sits in `WorkbenchServiceProvider::register()`, with `atrium.routes.middleware` set to `['api', AuthenticateWorkbenchToken::class, Authorize::class]`.
+  - `/atrium` returns a JSON pointer to the playground. The Blade demo views are removed.
+- **`tests/Feature/Api/ContractFixturesTest.php` (AC 31):**
+  - Fixture comparisons for the shell, the default dashboard, the settings screen (built-in tab and registered tab) and the settings list. They use the workbench app and seeder, uuids from a sequence (`Str::createUuidsUsing`), and time frozen at 2026-11-23 10:00 UTC.
+  - Fixtures are written only with `UPDATE_FIXTURES=1`. Meta-tests check that a plain run fails on a diff or a missing fixture and writes nothing, and that the update writes pretty-printed JSON.
+  - The file also tests the demo plugin's API routes and the token guard, in `local` and outside it.
+- **`tests/Feature/ApiVersionTest.php` (AC 28):** checks that `Atrium::API_VERSION` is major.minor and equals the major.minor of `nuxt/layer/package.json`. Until group 8 adds that file, the test is skipped with a message naming group 8.
+- **`nuxt/layer/test/fixtures/`:** `shell.json`, `dashboard.json`, `screen.json`, `screen-tab.json` and `settings.json`.
+
+### What is left
+
+- 7.4 is not ticked: I did not run the suite, as instructed, so the gate has to confirm it is green. If the committed fixtures differ from the current payloads, regenerate them with `UPDATE_FIXTURES=1 vendor/bin/pest tests/Feature/Api/ContractFixturesTest.php`.
+- `testbench.yaml` is outside this group's paths and still has stale comments: `/_workbench` sign-in, and `views`/`components` discovery. Group 9 or a follow-up should tidy them.
