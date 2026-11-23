@@ -1,18 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Workbench\App\Atrium\ScreenHost\ScreenHostController;
+use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
+use Workbench\App\Providers\WorkbenchServiceProvider;
 
-// `composer serve` signs in the seeded admin through /_workbench and starts
-// at the dashboard (see testbench.yaml), so the root only points there.
+// Atrium renders no HTML: `composer serve` serves its JSON API, and the Nuxt
+// playground renders it. testbench.yaml starts at /atrium, which says where
+// each lives.
 Route::redirect('/', '/atrium');
 
-// The screen-extensions test host: a detail and a list screen, each under
-// its own key or the one given.
-Route::get('test/host/{screen?}', [ScreenHostController::class, 'detail'])
-    ->where('screen', '[a-z0-9.-]+')
-    ->name('test.host');
-
-Route::get('test/list/{screen?}', [ScreenHostController::class, 'list'])
-    ->where('screen', '[a-z0-9.-]+')
-    ->name('test.list');
+Route::get('atrium', fn (): array => [
+    'message' => 'Atrium is headless: run the Nuxt playground (pnpm -C nuxt dev) and open it.',
+    'playground' => WorkbenchServiceProvider::PLAYGROUND_ORIGINS[0],
+    'api' => url((string) config('atrium.routes.prefix')),
+    'token' => 'Authorization: Bearer '.AuthenticateWorkbenchToken::TOKEN.' (workbench only)',
+]);

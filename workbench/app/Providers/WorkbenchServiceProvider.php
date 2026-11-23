@@ -2,25 +2,49 @@
 
 namespace Workbench\App\Providers;
 
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
-use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use RefactorCircus\Atrium\Domains\Access\Http\Middleware\Authorize;
 use RefactorCircus\Atrium\Facades\Atrium;
 use Workbench\App\Atrium\DemoData;
 use Workbench\App\Atrium\DemoPlugin;
-use Workbench\App\Atrium\ScreenHost\ScreenHostPlugin;
-use Workbench\App\Http\Middleware\SignInWorkbenchUser;
+use Workbench\App\Atrium\DemoScreens;
+use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
 use Workbench\App\Models\User;
 
+/**
+ * The workbench app is a host application of Atrium's JSON API: `composer
+ * serve` serves it on :8000, and the Nuxt playground (`nuxt/playground`, on
+ * :3000) renders it.
+ */
 class WorkbenchServiceProvider extends ServiceProvider
 {
+    /**
+     * The origins the Nuxt playground's dev server runs on.
+     *
+     * @var list<string>
+     */
+    public const array PLAYGROUND_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
     /**
      * Register services.
      */
     public function register(): void
     {
-        //
+        // The host chooses its auth: here, the workbench-only bearer token
+        // guard, before Authorize as every host guard must be. The playground
+        // reads the API across origins, so CORS allows its dev server and the
+        // `Authorization` header; with token auth no cookies cross, so
+        // credentials stay off. A host using cookie (Sanctum SPA) auth sets
+        // `supports_credentials` and the CSRF flow instead.
+        config([
+            'atrium.routes.middleware' => ['api', AuthenticateWorkbenchToken::class, Authorize::class],
+            'cors.paths' => ['atrium/api/*'],
+            'cors.allowed_origins' => self::PLAYGROUND_ORIGINS,
+            'cors.allowed_methods' => ['*'],
+            'cors.allowed_headers' => ['*'],
+            'cors.supports_credentials' => false,
+        ]);
     }
 
     /**
@@ -28,23 +52,14 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Keep the workbench user signed in whatever URL is opened first.
-        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel): void {
-            if ($kernel instanceof Kernel) {
-                $kernel->appendMiddlewareToGroup('web', SignInWorkbenchUser::class);
-            }
-        });
-
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'workbench');
-
         // Installed packages are discovered from their composer.json; the
-        // workbench app is the host, so it registers its plugins explicitly.
-        // The screen host's pages are the screen-extensions test screens.
+        // workbench app is the host, so it registers its plugin explicitly.
         Atrium::plugin(DemoPlugin::class);
-        Atrium::plugin(ScreenHostPlugin::class);
 
-        // The workbench dashboard is open so `composer serve` is usable
-        // without logging in. A real application defines a real gate.
+        DemoScreens::register(Atrium::screens());
+
+        // The workbench dashboard is open to anyone the token guard signs in.
+        // A real application defines a real gate.
         Gate::define('viewAtrium', fn ($user = null): bool => true);
 
         // The permissions the demo's navigation is gated by. The seeded admin

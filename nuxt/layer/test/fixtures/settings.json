@@ -1,0 +1,34 @@
+{
+    "data": [
+        {
+            "key": "demo",
+            "label": "Shop settings",
+            "icon": "i-lucide-store",
+            "component": "demo"
+        }
+    ],
+    "screen": {
+        "key": "atrium.settings",
+        "kind": "list",
+        "open_tab": "overview",
+        "tabs": [
+            {
+                "key": "overview",
+                "label": "Overview",
+                "icon": "i-lucide-layout-grid",
+                "built_in": true,
+                "component": null
+            }
+        ],
+        "sections": {
+            "header.actions": [],
+            "before": [],
+            "after": []
+        },
+        "rows": {
+            "demo": {
+                "row.actions": []
+            }
+        }
+    }
+}

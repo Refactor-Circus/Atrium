@@ -1,0 +1,306 @@
+{
+    "data": {
+        "app": {
+            "name": "Acme Shop"
+        },
+        "user": {
+            "name": "Admin",
+            "email": "admin@example.com"
+        },
+        "locale": "en",
+        "api_version": "2.0",
+        "navigation": [
+            {
+                "key": "group-workspace",
+                "label": "Workspace",
+                "icon": "i-lucide-briefcase",
+                "grouped": true,
+                "link": {
+                    "path": "/",
+                    "external": false
+                },
+                "items": [
+                    {
+                        "label": "Overview",
+                        "icon": "i-lucide-house",
+                        "link": {
+                            "path": "/",
+                            "external": false
+                        },
+                        "badge": null,
+                        "children": []
+                    },
+                    {
+                        "label": "Orders",
+                        "icon": "i-lucide-shopping-cart",
+                        "link": {
+                            "path": "/demo/orders",
+                            "external": false
+                        },
+                        "badge": 1,
+                        "children": []
+                    },
+                    {
+                        "label": "Team",
+                        "icon": "i-lucide-users",
+                        "link": {
+                            "path": "/demo/users",
+                            "external": false
+                        },
+                        "badge": 6,
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "key": "group-insights",
+                "label": "Insights",
+                "icon": "i-lucide-chart-pie",
+                "grouped": true,
+                "link": null,
+                "items": [
+                    {
+                        "label": "Reports",
+                        "icon": "i-lucide-chart-column",
+                        "link": null,
+                        "badge": null,
+                        "children": [
+                            {
+                                "label": "Sales",
+                                "icon": null,
+                                "link": {
+                                    "path": "/demo/reports/sales",
+                                    "external": false
+                                },
+                                "badge": null,
+                                "children": []
+                            },
+                            {
+                                "label": "Signups",
+                                "icon": null,
+                                "link": {
+                                    "path": "/demo/reports/signups",
+                                    "external": false
+                                },
+                                "badge": null,
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "key": "group-administration",
+                "label": "Administration",
+                "icon": "i-lucide-settings",
+                "grouped": true,
+                "link": {
+                    "path": "/demo/billing",
+                    "external": false
+                },
+                "items": [
+                    {
+                        "label": "Billing",
+                        "icon": "i-lucide-credit-card",
+                        "link": {
+                            "path": "/demo/billing",
+                            "external": false
+                        },
+                        "badge": null,
+                        "children": []
+                    }
+                ]
+            }
+        ],
+        "themes": {
+            "default": "atrium",
+            "switchable": true,
+            "all": [
+                {
+                    "key": "atrium",
+                    "label": "Atrium",
+                    "layout": "sidebar",
+                    "swatch": "#4f46e5",
+                    "icon": null,
+                    "properties": {}
+                },
+                {
+                    "key": "harbor",
+                    "label": "Harbor",
+                    "layout": "sidebar",
+                    "swatch": "#0d9488",
+                    "icon": null,
+                    "properties": {
+                        "--color-canvas": "#f1f5f9",
+                        "--color-surface": "#ffffff",
+                        "--color-surface-alt": "#f8fafc",
+                        "--color-on-surface": "#475569",
+                        "--color-on-surface-strong": "#0f172a",
+                        "--color-primary": "#0d9488",
+                        "--color-on-primary": "#ffffff",
+                        "--color-secondary": "#0f172a",
+                        "--color-on-secondary": "#ffffff",
+                        "--color-outline": "#e2e8f0",
+                        "--color-outline-strong": "#1e293b",
+                        "--color-canvas-dark": "#020617",
+                        "--color-surface-dark": "#0f172a",
+                        "--color-surface-dark-alt": "#1e293b",
+                        "--color-on-surface-dark": "#94a3b8",
+                        "--color-on-surface-dark-strong": "#f8fafc",
+                        "--color-primary-dark": "#2dd4bf",
+                        "--color-on-primary-dark": "#042f2e",
+                        "--color-secondary-dark": "#f1f5f9",
+                        "--color-on-secondary-dark": "#020617",
+                        "--color-outline-dark": "#1e293b",
+                        "--color-outline-dark-strong": "#cbd5e1",
+                        "--color-info": "#0284c7",
+                        "--color-success": "#059669",
+                        "--color-warning": "#d97706",
+                        "--color-danger": "#e11d48",
+                        "--radius-radius": "0.75rem"
+                    }
+                },
+                {
+                    "key": "sunset",
+                    "label": "Sunset",
+                    "layout": "sidebar",
+                    "swatch": "#ea580c",
+                    "icon": null,
+                    "properties": {
+                        "--color-canvas": "#f5f5f4",
+                        "--color-surface": "#ffffff",
+                        "--color-surface-alt": "#fafaf9",
+                        "--color-on-surface": "#57534e",
+                        "--color-on-surface-strong": "#1c1917",
+                        "--color-primary": "#ea580c",
+                        "--color-on-primary": "#ffffff",
+                        "--color-secondary": "#1c1917",
+                        "--color-on-secondary": "#ffffff",
+                        "--color-outline": "#e7e5e4",
+                        "--color-outline-strong": "#292524",
+                        "--color-canvas-dark": "#0c0a09",
+                        "--color-surface-dark": "#1c1917",
+                        "--color-surface-dark-alt": "#292524",
+                        "--color-on-surface-dark": "#a8a29e",
+                        "--color-on-surface-dark-strong": "#fafaf9",
+                        "--color-primary-dark": "#fb923c",
+                        "--color-on-primary-dark": "#1c1917",
+                        "--color-secondary-dark": "#f5f5f4",
+                        "--color-on-secondary-dark": "#0c0a09",
+                        "--color-outline-dark": "#292524",
+                        "--color-outline-dark-strong": "#d6d3d1",
+                        "--radius-radius": "0.625rem"
+                    }
+                },
+                {
+                    "key": "forest",
+                    "label": "Forest",
+                    "layout": "sidebar",
+                    "swatch": "#15803d",
+                    "icon": null,
+                    "properties": {
+                        "--color-canvas": "#f1f4f1",
+                        "--color-surface": "#ffffff",
+                        "--color-surface-alt": "#f8faf8",
+                        "--color-on-surface": "#4d5b52",
+                        "--color-on-surface-strong": "#14231a",
+                        "--color-primary": "#15803d",
+                        "--color-on-primary": "#ffffff",
+                        "--color-secondary": "#14231a",
+                        "--color-on-secondary": "#ffffff",
+                        "--color-outline": "#dfe5df",
+                        "--color-outline-strong": "#22332a",
+                        "--color-canvas-dark": "#0a110d",
+                        "--color-surface-dark": "#111b15",
+                        "--color-surface-dark-alt": "#1a2820",
+                        "--color-on-surface-dark": "#9fb3a6",
+                        "--color-on-surface-dark-strong": "#eef5f0",
+                        "--color-primary-dark": "#4ade80",
+                        "--color-on-primary-dark": "#052e16",
+                        "--color-secondary-dark": "#eef5f0",
+                        "--color-on-secondary-dark": "#0a110d",
+                        "--color-outline-dark": "#1f3127",
+                        "--color-outline-dark-strong": "#c5d4ca",
+                        "--color-success": "#15803d",
+                        "--radius-radius": "0.5rem"
+                    }
+                },
+                {
+                    "key": "midnight",
+                    "label": "Midnight",
+                    "layout": "sidebar",
+                    "swatch": "#7c3aed",
+                    "icon": null,
+                    "properties": {
+                        "--color-canvas": "#eef0f8",
+                        "--color-surface": "#ffffff",
+                        "--color-surface-alt": "#f7f8fc",
+                        "--color-on-surface": "#4b5070",
+                        "--color-on-surface-strong": "#151833",
+                        "--color-primary": "#7c3aed",
+                        "--color-on-primary": "#ffffff",
+                        "--color-secondary": "#151833",
+                        "--color-on-secondary": "#ffffff",
+                        "--color-outline": "#dfe2f0",
+                        "--color-outline-strong": "#23284a",
+                        "--color-canvas-dark": "#070815",
+                        "--color-surface-dark": "#0f1124",
+                        "--color-surface-dark-alt": "#1a1d38",
+                        "--color-on-surface-dark": "#9ca0c4",
+                        "--color-on-surface-dark-strong": "#f1f2fb",
+                        "--color-primary-dark": "#a78bfa",
+                        "--color-on-primary-dark": "#1e0b4b",
+                        "--color-secondary-dark": "#f1f2fb",
+                        "--color-on-secondary-dark": "#070815",
+                        "--color-outline-dark": "#22264a",
+                        "--color-outline-dark-strong": "#c8cbe6",
+                        "--radius-radius": "0.875rem"
+                    }
+                },
+                {
+                    "key": "ledger",
+                    "label": "Ledger",
+                    "layout": "top",
+                    "swatch": "#404040",
+                    "icon": null,
+                    "properties": {
+                        "--color-canvas": "#fafafa",
+                        "--color-surface": "#ffffff",
+                        "--color-surface-alt": "#f5f5f5",
+                        "--color-on-surface": "#525252",
+                        "--color-on-surface-strong": "#0a0a0a",
+                        "--color-primary": "#171717",
+                        "--color-on-primary": "#ffffff",
+                        "--color-secondary": "#0a0a0a",
+                        "--color-on-secondary": "#ffffff",
+                        "--color-outline": "#e5e5e5",
+                        "--color-outline-strong": "#262626",
+                        "--color-canvas-dark": "#0a0a0a",
+                        "--color-surface-dark": "#141414",
+                        "--color-surface-dark-alt": "#1f1f1f",
+                        "--color-on-surface-dark": "#a3a3a3",
+                        "--color-on-surface-dark-strong": "#fafafa",
+                        "--color-primary-dark": "#fafafa",
+                        "--color-on-primary-dark": "#0a0a0a",
+                        "--color-secondary-dark": "#fafafa",
+                        "--color-on-secondary-dark": "#0a0a0a",
+                        "--color-outline-dark": "#262626",
+                        "--color-outline-dark-strong": "#d4d4d4",
+                        "--radius-radius": "0.25rem"
+                    }
+                }
+            ]
+        },
+        "settings": [
+            {
+                "key": "demo",
+                "label": "Shop settings",
+                "icon": "i-lucide-store",
+                "component": "demo"
+            }
+        ],
+        "search": {
+            "min_length": 2
+        }
+    }
+}

@@ -1,0 +1,228 @@
+{
+    "data": {
+        "slug": "overview",
+        "name": "Overview",
+        "is_default": true,
+        "version": 3,
+        "widgets": [
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000001",
+                "key": "demo.revenue",
+                "component": "demo.revenue",
+                "title": "Revenue",
+                "icon": "i-lucide-banknote",
+                "lazy": false,
+                "grid": {
+                    "row": 0,
+                    "column": 0,
+                    "width": 3,
+                    "height": 1
+                },
+                "settings": {},
+                "data": {
+                    "label": "Revenue this month",
+                    "icon": "i-lucide-banknote",
+                    "value": "$48,250",
+                    "change": "+12.4% vs last month",
+                    "trend": "up"
+                }
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000002",
+                "key": "demo.orders",
+                "component": "demo.orders",
+                "title": "Orders",
+                "icon": "i-lucide-shopping-cart",
+                "lazy": false,
+                "grid": {
+                    "row": 0,
+                    "column": 3,
+                    "width": 3,
+                    "height": 1
+                },
+                "settings": {},
+                "data": {
+                    "label": "Orders this month",
+                    "icon": "i-lucide-shopping-cart",
+                    "value": "1,284",
+                    "change": "+8.1% vs last month",
+                    "trend": "up"
+                }
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000003",
+                "key": "demo.conversion",
+                "component": "demo.conversion",
+                "title": "Conversion rate",
+                "icon": "i-lucide-trending-up",
+                "lazy": false,
+                "grid": {
+                    "row": 0,
+                    "column": 6,
+                    "width": 3,
+                    "height": 1
+                },
+                "settings": {},
+                "data": {
+                    "label": "Conversion rate",
+                    "icon": "i-lucide-trending-up",
+                    "value": "3.2%",
+                    "change": "-0.4 pts vs last month",
+                    "trend": "down"
+                }
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000004",
+                "key": "demo.users",
+                "component": "demo.users",
+                "title": "Team members",
+                "icon": "i-lucide-users",
+                "lazy": false,
+                "grid": {
+                    "row": 0,
+                    "column": 9,
+                    "width": 3,
+                    "height": 1
+                },
+                "settings": {},
+                "data": {
+                    "label": "Team members",
+                    "icon": "i-lucide-users",
+                    "value": 6,
+                    "change": "1 awaiting invitation",
+                    "trend": null
+                }
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000005",
+                "key": "demo.recent-orders",
+                "component": "demo.recent-orders",
+                "title": "Recent orders",
+                "icon": "i-lucide-receipt",
+                "lazy": false,
+                "grid": {
+                    "row": 1,
+                    "column": 0,
+                    "width": 8,
+                    "height": 2
+                },
+                "settings": {},
+                "data": {
+                    "orders": [
+                        {
+                            "number": "ORD-1048",
+                            "customer": "Northwind Traders",
+                            "email": "buying@northwind.test",
+                            "total": 1840,
+                            "status": "paid",
+                            "placed": "12 minutes ago"
+                        },
+                        {
+                            "number": "ORD-1047",
+                            "customer": "Initech",
+                            "email": "peter@initech.test",
+                            "total": 329.5,
+                            "status": "pending",
+                            "placed": "48 minutes ago"
+                        },
+                        {
+                            "number": "ORD-1046",
+                            "customer": "Umbrella Health",
+                            "email": "ops@umbrella.test",
+                            "total": 5120,
+                            "status": "paid",
+                            "placed": "2 hours ago"
+                        },
+                        {
+                            "number": "ORD-1045",
+                            "customer": "Stark Industries",
+                            "email": "procurement@stark.test",
+                            "total": 12400,
+                            "status": "shipped",
+                            "placed": "5 hours ago"
+                        },
+                        {
+                            "number": "ORD-1044",
+                            "customer": "Wayne Enterprises",
+                            "email": "lucius@wayne.test",
+                            "total": 760.25,
+                            "status": "refunded",
+                            "placed": "Yesterday"
+                        }
+                    ]
+                }
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000006",
+                "key": "demo.services",
+                "component": "demo.services",
+                "title": "Service status",
+                "icon": "i-lucide-activity",
+                "lazy": true,
+                "grid": {
+                    "row": 1,
+                    "column": 8,
+                    "width": 4,
+                    "height": 2
+                },
+                "settings": {}
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000007",
+                "key": "demo.welcome",
+                "component": "demo.welcome",
+                "title": "Welcome note",
+                "icon": "i-lucide-sparkles",
+                "lazy": false,
+                "grid": {
+                    "row": 2,
+                    "column": 0,
+                    "width": 6,
+                    "height": 2
+                },
+                "settings": {},
+                "data": {}
+            },
+            {
+                "uuid": "019ab000-0000-7000-8000-000000000008",
+                "key": "demo.goals",
+                "component": "demo.goals",
+                "title": "Quarterly goals",
+                "icon": "i-lucide-target",
+                "lazy": false,
+                "grid": {
+                    "row": 2,
+                    "column": 6,
+                    "width": 6,
+                    "height": 2
+                },
+                "settings": {},
+                "data": {
+                    "goals": [
+                        {
+                            "label": "Q4 revenue: $150k",
+                            "value": 112,
+                            "max": 150
+                        },
+                        {
+                            "label": "New customers: 400",
+                            "value": 286,
+                            "max": 400
+                        },
+                        {
+                            "label": "Support tickets resolved within a day",
+                            "value": 91,
+                            "max": 100
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "meta": {
+        "abilities": {
+            "update": true,
+            "delete": true
+        }
+    }
+}
