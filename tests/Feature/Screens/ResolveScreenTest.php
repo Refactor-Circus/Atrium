@@ -20,12 +20,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 function resolveTab(string $key, string $label = ''): TabDefinition
 {
-    return TabDefinition::make($key)->view('acme::'.$key)->label($label === '' ? $key : $label)->public();
+    return TabDefinition::make($key)->label($label === '' ? $key : $label)->public();
 }
 
 function resolveSection(string $key, string $label = ''): SectionDefinition
 {
-    return SectionDefinition::make($key)->view('acme::'.$key)->label($label === '' ? $key : $label)->public();
+    return SectionDefinition::make($key)->label($label === '' ? $key : $label)->public();
 }
 
 /**
@@ -206,7 +206,7 @@ describe('tabs', function (): void {
     });
 
     it('answers 403 for a registered tab the viewer cannot see', function (): void {
-        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.hidden')->view('acme::hidden'));
+        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.hidden'));
         resolveRoute(fn (): Screen => Screen::make('test.screen'));
 
         $this->get('/screen-test?tab=acme.hidden')->assertForbidden();
@@ -405,7 +405,7 @@ describe('wildcards', function (): void {
     it('adds a * section to every screen declaring the slot, with that screen', function (): void {
         $screens = [];
 
-        Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.everywhere')->view('acme::x')
+        Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.everywhere')
             ->authorize(function (Request $request, ?Model $record, Screen $screen) use (&$screens): bool {
                 $screens[] = $screen->key;
 
@@ -427,7 +427,7 @@ describe('wildcards', function (): void {
     it('never runs the closures of a wildcard section on a slot the screen lacks', function (): void {
         $calls = 0;
 
-        Atrium::screens()->section('*', 'sidebar', SectionDefinition::make('acme.x')->view('acme::x')
+        Atrium::screens()->section('*', 'sidebar', SectionDefinition::make('acme.x')
             ->authorize(function () use (&$calls): bool {
                 $calls++;
 
@@ -442,8 +442,8 @@ describe('wildcards', function (): void {
 
     it('keeps wildcard extensions hidden unless they say who may see them', function (): void {
         Atrium::screens()
-            ->tab('*', TabDefinition::make('acme.tab')->view('acme::x'))
-            ->section('*', 'before', SectionDefinition::make('acme.section')->view('acme::x'));
+            ->tab('*', TabDefinition::make('acme.tab'))
+            ->section('*', 'before', SectionDefinition::make('acme.section'));
 
         $resolved = resolveScreen(Screen::standard('test.a', 'detail'));
 

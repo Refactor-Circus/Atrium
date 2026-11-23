@@ -17,7 +17,7 @@ class SearchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadDashboardRoutesFrom(__DIR__.'/routes.php');
+        $this->loadApiRoutesFrom(__DIR__.'/routes.php');
 
         if ($this->app->runningInConsole()) {
             // The child process the process search driver runs each source in.

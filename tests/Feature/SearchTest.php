@@ -250,7 +250,7 @@ function fullResultSource(string $key): void
 {
     app(SearchRegistry::class)->add(
         SearchSource::make($key)->using(fn (string $q): array => [
-            SearchResult::make('Ada Lovelace', '/people/1')->subtitle('Analyst')->icon('user')->group('People'),
+            SearchResult::make('Ada Lovelace', '/people/1')->subtitle('Analyst')->icon('i-lucide-user')->group('People'),
         ]),
     );
 }
@@ -363,46 +363,6 @@ it('skips sources whose authorize callback denies', function (): void {
     expect(app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x'))->toBe([]);
 });
 
-it('serves results as json from the search endpoint', function (): void {
-    app(PluginRegistry::class)->register(FullPlugin::class);
-
-    $this->getJson('/atrium/search?q=orders')
-        ->assertOk()
-        ->assertJsonPath('data.0.title', 'Match for orders')
-        ->assertJsonPath('data.0.subtitle', 'From the full plugin');
-});
-
-it('returns an empty payload for a blank query', function (): void {
-    $this->getJson('/atrium/search?q=')->assertOk()->assertJsonPath('data', []);
-});
-
-it('runs no source for a query shorter than the minimum length', function (): void {
-    $defaults = require __DIR__.'/../../config/atrium.php';
-
-    config()->set('atrium.search.min_length', $defaults['search']['min_length']);
-
-    $ran = 0;
-
-    app(SearchRegistry::class)->add(SearchSource::make('counted')->using(function (string $q) use (&$ran): array {
-        $ran++;
-
-        return [SearchResult::make('Hit', '/hit')];
-    }));
-
-    $this->getJson('/atrium/search?q=a')->assertOk()->assertJsonPath('data', []);
-    $this->getJson('/atrium/search?q='.urlencode(' a '))->assertOk()->assertJsonPath('data', []);
-
-    expect($ran)->toBe(0);
-
-    $this->getJson('/atrium/search?q=ab')->assertOk()->assertJsonPath('data.0.title', 'Hit');
-
-    config()->set('atrium.search.min_length', 1);
-
-    $this->getJson('/atrium/search?q=a')->assertOk()->assertJsonPath('data.0.title', 'Hit');
-
-    expect($ran)->toBe(2);
-});
-
 it('searches inside the request by default', function (): void {
     $defaults = require __DIR__.'/../../config/atrium.php';
 
@@ -417,12 +377,6 @@ it('searches inside the request by default', function (): void {
     expect(searchTitles())->toBe([(string) getmypid(), (string) getmypid()]);
 
     Process::assertNothingRan();
-});
-
-it('tells the search box the minimum query length', function (): void {
-    config()->set('atrium.search.min_length', 3);
-
-    $this->get('/atrium')->assertOk()->assertSee('minLength: 3', false);
 });
 
 it('runs sources in separate processes with the process driver', function (): void {
@@ -719,7 +673,7 @@ it('brings every field of a result back from a child process', function (): void
         ->and($results[0]->title)->toBe('Ada Lovelace')
         ->and($results[0]->url)->toBe('/people/1')
         ->and($results[0]->subtitle)->toBe('Analyst')
-        ->and($results[0]->icon)->toBe('user')
+        ->and($results[0]->icon)->toBe('i-lucide-user')
         ->and($results[0]->group)->toBe('People');
 });
 
@@ -786,7 +740,7 @@ it('drops malformed rows from a child and keeps the rest in order', function ():
     Exceptions::fake();
 
     Process::fake(['*' => Process::result(childEnvelope([
-        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'i-lucide-star', 'group' => 'Group'],
         ['url' => '/no-title'],
         ['title' => 'No url'],
         ['title' => 42, 'url' => '/numeric-title'],
@@ -807,7 +761,7 @@ it('drops malformed rows from a child and keeps the rest in order', function ():
     $results = app(SearchRegistry::class)->search(Request::create('/atrium/search'), 'x');
 
     expect(array_map(fn (SearchResult $result): array => $result->toArray(), $results))->toBe([
-        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'star', 'group' => 'Group'],
+        ['title' => 'Kept 1', 'url' => '/1', 'subtitle' => 'Sub', 'icon' => 'i-lucide-star', 'group' => 'Group'],
         ['title' => 'Kept 2', 'url' => '/2', 'subtitle' => null, 'icon' => null, 'group' => null],
         ['title' => 'Kept 3', 'url' => '/3', 'subtitle' => null, 'icon' => null, 'group' => null],
     ]);

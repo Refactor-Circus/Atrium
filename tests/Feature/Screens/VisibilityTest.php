@@ -22,14 +22,14 @@ use RefactorCircus\Atrium\Facades\Atrium;
 function visibilityRegister(string $kind, Closure $configure): void
 {
     if ($kind === 'tab') {
-        $tab = TabDefinition::make('acme.x')->view('acme::x');
+        $tab = TabDefinition::make('acme.x');
         $configure($tab);
         Atrium::screens()->tab('test.screen', $tab);
 
         return;
     }
 
-    $section = SectionDefinition::make('acme.x')->view('acme::x');
+    $section = SectionDefinition::make('acme.x');
     $configure($section);
     Atrium::screens()->section('test.screen', 'before', $section);
 }
@@ -121,7 +121,7 @@ it('asks the host about a row section\'s permission with the row as the record',
     $row = new User;
     $row->id = 5;
 
-    $screen = visibilityRowScreen(SectionDefinition::make('acme.x')->view('acme::x')->permission('granted'))
+    $screen = visibilityRowScreen(SectionDefinition::make('acme.x')->permission('granted'))
         ->access(function (string $permission, Request $request, ?Model $record) use (&$seen): bool {
             $seen[] = [$permission, $record];
 
@@ -143,7 +143,7 @@ it('asks and resolves again for rows with the same id in two model classes', fun
     $asked = 0;
     $resolved = 0;
 
-    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')->view('acme::x')
+    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')
         ->authorize(function (Request $request, ?Model $record) use (&$asked, $first): bool {
             $asked++;
 
@@ -180,7 +180,7 @@ it('keeps separate data for rows with the same id in two model classes', functio
     $second->id = 1;
     $resolved = 0;
 
-    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')->view('acme::x')->public()
+    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')->public()
         ->resolve(function (?Model $record) use (&$resolved): array {
             $resolved++;
 
@@ -200,7 +200,7 @@ it('asks and resolves again for a new unsaved row after the last one is freed', 
     $resolved = 0;
     $make = fn (): Model => new class extends Model {};
 
-    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')->view('acme::x')
+    $resolvedScreen = visibilityResolve(visibilityRowScreen(SectionDefinition::make('acme.x')
         ->authorize(function () use (&$asked): bool {
             $asked++;
 

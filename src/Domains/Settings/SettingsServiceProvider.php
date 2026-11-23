@@ -16,6 +16,6 @@ class SettingsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadDashboardRoutesFrom(__DIR__.'/routes.php');
+        $this->loadApiRoutesFrom(__DIR__.'/routes.php');
     }
 }
