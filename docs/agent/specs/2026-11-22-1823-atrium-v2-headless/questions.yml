@@ -1,1 +1,9 @@
-[]
+- id: Q-008
+  question: Group 2 removes view() and validates icons, so the full suite fails until the Blade UI is removed in group 6. How should the factory gate groups 2 to 5?
+  options:
+    - "Accept a red full suite until group 6: gate groups 2-5 on their own tests plus PHPStan and Pint; full gate from group 6"
+    - "Expand group 2 to move every caller now (fixtures, ~25 Blade-era tests, workbench, Blade views)"
+    - "Split group 2: add component now, keep view() and SVG icons; move removal and Iconify checks to group 6"
+  recommendation: "Accept a red full suite until group 6: gate groups 2-5 on their own tests plus PHPStan and Pint; full gate from group 6"
+  evidence: "Group 2 commit ff02aec; tests/Unit 260/260 green; ~25 Feature tests and tests/Fixtures plugins still call ->view(), owned by groups 3-6"
+  source: build
