@@ -1,3 +1,19 @@
+// Not ported (D-032)
+// Guardian v1's Atrium UI (`src/Atrium`, `resources/views/atrium`: the SSO and
+// SCIM tabs, the SSO identities section and the SSO connection page) leaves out
+// these features, which have no v2 API route (D-073):
+// - Hiding the SSO and SCIM forms, the connection's settings and delete, and the
+//   unlink buttons from a viewer without `guardian.sso.manage` or
+//   `guardian.scim.manage`. v1 asked Roster's `Authorizer`; no v2 route reports
+//   these abilities, so the controls show and a 403 shows the no-access notice
+//   (D-031).
+// - The SSO connection page's organization name in its header. The v2
+//   connection carries the organization's slug only, so the slug is shown.
+// - `guardian.atrium.organization_route`, the connection page's back link. The
+//   layer links to `/roster/organizations/:organization?tab=guardian.sso` while
+//   the Roster integration is active instead.
+// - The flashed status messages after creating, saving, deleting, issuing,
+//   revoking and unlinking. Each form shows its own result in place.
 import { defineAtriumIntegration } from '../../composables/useAtriumIntegration'
 import { GUARDIAN_HANDLER_KEY, guardianTwoFactorHandler } from './components/two-factor/handler'
 

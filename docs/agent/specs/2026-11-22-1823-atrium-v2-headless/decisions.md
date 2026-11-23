@@ -518,3 +518,19 @@
 - Rationale: The conservative reading of AC 95 against the vendored schema: offering fields the update ignores would mislead.
 - Date: 2026-11-23
 - Raised by: implement (group 34); default chosen because no user was available
+
+## D-072: What do the SSO forms send, and where does the connection page go after a delete?
+- Choice:
+  - A new connection sends `name`, `protocol` and the settings of that protocol (`issuer`, `client_id` and `client_secret` for OIDC; `tenant`, `client_id` and `client_secret` for Entra ID; `metadata_url`, `entity_id`, `sso_url` and `certificate` for SAML), as v1's form did, because Guardian refuses a connection without its required settings. Blank settings are left out. Its flags keep Guardian's defaults; the connection page, which the form opens next, edits them.
+  - An update sends `name`, `enabled`, `enforced`, `jit` and the protocol's settings. Guardian never sends the client secret or certificate back, so their inputs start blank and a blank one is left out, keeping the stored value; any other blanked setting is sent as `null`. The vendored schema documents no update body, so the body is untyped; it holds only fields Guardian's `UpdateSsoConnectionData` accepts.
+  - After a delete the page opens the organization's SSO tab while Roster is active, else `/`. The "test sign-in" link shows only for an http(s) URL.
+  - The connections and SCIM token lists page 25 at a time (v1's size); the token form's connection choice loads up to 100; identities load 50. The plain SCIM token lives in component state, never in storage or the URL, and is dropped on unmount. The identities section renders nothing while it loads or when empty, and the no-access state on a 403.
+- Rationale: The conservative reading of AC 96 against Guardian's request rules, keeping v1's behaviour where the API allows it.
+- Date: 2026-11-23
+- Raised by: implement (group 35); default chosen because no user was available
+
+## D-073: Where does Guardian's `// Not ported (D-032)` list live?
+- Choice: At the top of `app/integrations/guardian/index.ts`, as every other integration's list does (and as `CLAUDE.md` describes), rather than at the top of `pages/guardian/sso-connections/[connection].vue` as task 35.2 says. The page's doc comment points to it. It lists v1's Atrium UI features only (the SSO and SCIM tabs, the identities section and the connection page), since Guardian's other screens are new in v2.
+- Rationale: One list per integration keeps group 37's CHANGELOG collection and `ChangelogUpgradeTest` uniform, and the job's instructions named `index.ts`.
+- Date: 2026-11-23
+- Raised by: implement (group 35); default chosen because no user was available

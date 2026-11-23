@@ -1510,3 +1510,29 @@ Security administration screens (AC 91 to 95).
 
 - Vitest: the group's suites are 5 files and 48 tests. `composer test:nuxt` passed every step: Vitest 136 files, 1298 tests, no type errors, and the consumer build.
 - `composer test:unit`: 1405 tests, all passed.
+
+## Group 35
+
+SSO connections and SCIM tokens (AC 96).
+
+### Files
+
+- `integrations/guardian/components/sso/`: `sso.ts` (types, with `settings` as the object Guardian sends; the protocols and their settings; `settingsBody()`, `connectionPath()`, `organizationSsoPath()`, `scimBaseUrl()`), `SsoConnectionFields.vue` (one protocol's settings, v1's `partials/sso-fields`), `GuardianSsoConnections.vue` (the `guardian.sso` tab body), `GuardianScimTokens.vue` (the `guardian.scim` tab body) and `GuardianSsoIdentities.vue` (the `guardian.sso-identities` section body). Each takes its record as a prop (`organization` or `user`) for group 36's wrappers.
+- `pages/guardian/sso-connections/[connection].vue`: `guardian.sso-connection`, framed by `<AtriumIntegrationScreen>` with the slug as its record.
+- Ported from Guardian v1's `Screens.php`, `SsoUiController`, `ScimUiController` and `resources/views/atrium/**` (read from Guardian's main checkout).
+- `integrations/guardian/index.ts`: the `// Not ported (D-032)` list at the top (D-073).
+- `guardian-sso.en.json` filled.
+- Tests: `test/integrations/guardian/sso/` (`connections`, `connection`, `scim`, `identities`, `pages` and `support.ts`).
+
+### Decisions
+
+- D-072 (what the SSO forms send, blank secrets, the delete's destination, page sizes, the plain SCIM token's lifetime), D-073 (the Not ported list in `index.ts`).
+
+### Deviations
+
+- The `// Not ported (D-032)` list is in `integrations/guardian/index.ts` (outside the group's files), not at the top of the connection page (D-073); the page's doc comment points to it.
+
+### Tests
+
+- Vitest: the group's suites are 5 files and 34 tests. `composer test:nuxt` passed every step: Vitest 141 files, 1332 tests, no type errors, and the consumer build.
+- `composer test:unit`: 1405 tests, all passed.
