@@ -71,7 +71,7 @@ criteria: 21, 28, 31
 - [x] 7.1 Write tests: the fixture comparison for shell, dashboard, resolved screen and settings: seeded uuids, frozen time, writes only with `UPDATE_FIXTURES=1`; `Atrium::API_VERSION` equals the major.minor in `nuxt/layer/package.json`, and the test is skipped with a clear message until group 8 creates the file
 - [x] 7.2 Workbench: demo plugins register API routes and their widgets/panel keys; port `AuthenticateWorkbenchToken` (marked workbench-only) and the CORS setup from the spike; remove the Blade demo views
 - [x] 7.3 Generate the fixtures with `UPDATE_FIXTURES=1` and commit them.
-- [ ] 7.4 Run vendor/bin/pest; all green
+- [x] 7.4 Run vendor/bin/pest; all green
 
 ## Group 8: Nuxt layer and playground
 depends on: 7
