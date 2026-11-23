@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardController;
-use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardCrudController;
 use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardLayoutController;
 use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardWidgetController;
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-Route::post('dashboards', [DashboardCrudController::class, 'store'])->name('dashboards.store');
-Route::put('dashboards/{dashboard}', [DashboardCrudController::class, 'update'])->name('dashboards.update');
-Route::delete('dashboards/{dashboard}', [DashboardCrudController::class, 'destroy'])->name('dashboards.destroy');
-Route::put('dashboards/{dashboard}/layout', [DashboardLayoutController::class, 'update'])->name('dashboards.layout');
-Route::get('dashboards/{dashboard}/widgets/{widget}', [DashboardWidgetController::class, 'show'])->name('dashboards.widgets.show')->scopeBindings();
-
-Route::get('d/{slug}', [DashboardController::class, 'show'])->name('dashboard.show');
+// Loaded inside Atrium's API group: `atrium.routes.prefix`, `atrium.routes.middleware`
+// and the `atrium.` name prefix. Dashboards are named by slug, placements by uuid.
+Route::get('dashboard', [DashboardController::class, 'default'])->name('dashboards.default');
+Route::get('dashboards', [DashboardController::class, 'index'])->name('dashboards.index');
+Route::post('dashboards', [DashboardController::class, 'store'])->name('dashboards.store');
+Route::get('dashboards/{dashboard:slug}', [DashboardController::class, 'show'])->name('dashboards.show');
+Route::put('dashboards/{dashboard:slug}', [DashboardController::class, 'update'])->name('dashboards.update');
+Route::delete('dashboards/{dashboard:slug}', [DashboardController::class, 'destroy'])->name('dashboards.destroy');
+Route::put('dashboards/{dashboard:slug}/layout', [DashboardLayoutController::class, 'update'])->name('dashboards.layout');
+Route::get('dashboards/{dashboard:slug}/widgets/{widget:uuid}', [DashboardWidgetController::class, 'show'])->name('dashboards.widgets.show')->scopeBindings();

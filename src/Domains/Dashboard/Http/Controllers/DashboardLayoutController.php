@@ -7,7 +7,7 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\SaveDashboardLayoutRequest;
 
-class DashboardLayoutController
+final class DashboardLayoutController
 {
     public function update(SaveDashboardLayoutRequest $request): JsonResponse
     {

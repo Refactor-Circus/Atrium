@@ -13,4 +13,9 @@ class WidgetsServiceProvider extends ServiceProvider
     {
         $this->app->singleton(WidgetRegistry::class);
     }
+
+    public function boot(): void
+    {
+        $this->loadApiRoutesFrom(__DIR__.'/routes.php');
+    }
 }

@@ -4,83 +4,44 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers;
 
-use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
-use RefactorCircus\Atrium\Domains\Dashboard\Actions\CreateDashboardAction;
-use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
-use RefactorCircus\Atrium\Domains\Dashboard\Services\DashboardManager;
-use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
-use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
-use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\DeleteDashboardRequest;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\IndexDashboardRequest;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\ShowDashboardRequest;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\ShowDefaultDashboardRequest;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\StoreDashboardRequest;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\UpdateDashboardRequest;
 
-class DashboardController
+final class DashboardController
 {
-    public function __construct(
-        protected DashboardManager $dashboards,
-        protected WidgetRegistry $widgets,
-        protected ScreenExtensions $screens,
-    ) {}
-
-    public function index(Request $request): View
+    public function default(ShowDefaultDashboardRequest $request): JsonResponse
     {
-        return $this->render($request, null);
+        return $request->persist();
     }
 
-    /**
-     * The parameter is a slug rather than `{dashboard}`, which is bound to the
-     * model by id for the routes that change a dashboard.
-     */
-    public function show(Request $request, string $slug): View
+    public function index(IndexDashboardRequest $request): JsonResponse
     {
-        return $this->render($request, $slug);
+        return $request->persist();
     }
 
-    protected function render(Request $request, ?string $slug): View
+    public function show(ShowDashboardRequest $request): JsonResponse
     {
-        // Fetched once: the switcher lists them and the current one is among them.
-        $dashboards = $this->dashboards->visible($request);
-        $current = $this->dashboards->pick($dashboards, $slug);
+        return $request->persist();
+    }
 
-        abort_if($slug !== null && $current === null, 404);
+    public function store(StoreDashboardRequest $request): JsonResponse
+    {
+        return $request->persist();
+    }
 
-        // A signed-in user with no dashboard yet gets one, so the widget
-        // picker is reachable on a first visit rather than dead-ending on an
-        // empty state. The dashboard is created empty; no widget is placed.
-        if ($current === null && $request->user() !== null) {
-            $current = app(CreateDashboardAction::class)->execute(
-                new CreateDashboardData(__('atrium::atrium.dashboard')),
-                $this->dashboards->owner($request),
-            );
+    public function update(UpdateDashboardRequest $request): JsonResponse
+    {
+        return $request->persist();
+    }
 
-            // There were none to see, so the new one is the only one - when
-            // it has an owner to be visible to.
-            if ($this->dashboards->owner($request) !== null) {
-                $dashboards = new Collection([$current]);
-            }
-        }
-
-        // `/` and `d/{slug}` are separate screens, so a package can extend
-        // one without the other.
-        // Extensions' `permission()`s are Gate abilities, asked about the
-        // dashboard.
-        $screen = Screen::standard($slug === null ? 'atrium.dashboard' : 'atrium.named-dashboard', Screen::DETAIL)
-            ->record($current)
-            ->access(fn (string $permission, Request $request, ?Model $record): bool => Gate::forUser($request->user())
-                ->allows($permission, $record ? [$record] : []));
-
-        /** @var view-string $view */
-        $view = 'atrium::dashboard.index';
-
-        return view($view, [
-            'resolved' => $this->screens->resolve($screen, $request),
-            'dashboards' => $dashboards,
-            'dashboard' => $current,
-            'placements' => $current === null ? collect() : $current->widgets,
-            'available' => $this->widgets->available($request),
-            'editable' => $current !== null && $this->dashboards->canModify($request, $current),
-        ]);
+    public function destroy(DeleteDashboardRequest $request): Response
+    {
+        return $request->persist();
     }
 }
