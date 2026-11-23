@@ -585,3 +585,32 @@ I did not run either suite. The instructions say the gate runs `composer test:nu
 ### Deviations
 
 None.
+
+## Group 16
+
+### Files
+
+- `src/Integrations/PennantPlus/PennantPlusIntegration.php`: the label, v1's one nav item (`Feature flags`, `i-lucide-flag`, `/pennantplus/features`, in the `System` group) and the `pennantplus.features` list screen. It declares no widget, panel or search source.
+- `lang/en/integrations/pennantplus.php`: `label`, `group` and `features`, ported from PennantPlus v1's lang file.
+- `tests/Feature/Integrations/PennantPlusIntegrationTest.php`: gating (installed and enabled, not installed, `enabled` false and `"false"`); the API base (the prefix, trimmed; the `api_base` override; routes off gives one warning across two boots; no config at all); the nav item; no widgets, panel or sources; the screen declaration; the lang keys; no `RefactorCircus\PennantPlus` in the class; the fixture.
+- `nuxt/layer/test/fixtures/integrations/pennantplus.json`: written with `UPDATE_FIXTURES=1` from the test above.
+- `nuxt/layer/app/integrations/pennantplus/index.ts`: the `screens` map (`pennantplus.features` to `pennantplus-features`), a registration that registers nothing, and the `// Not ported (D-032)` list.
+- `nuxt/layer/app/integrations/pennantplus/components/pennantplus.ts`: payload types, the client, and the mutation runner (422 field errors, 403 forbidden, other failures as a message).
+- `nuxt/layer/app/integrations/pennantplus/components/PennantPlusFeatureFlags.vue`: the screen body. It loads `features.index`, `scopes.index` and `values.index`; filters by feature, scope and scope id; pages by page number; and handles the row toggle (`values.update`), forget (`values.destroy`) and purge (`features.destroy`). A 403 from any load or change shows `<AtriumNoAccess>` and hides every control.
+- `nuxt/layer/app/integrations/pennantplus/components/PennantPlusSetValue.vue`: v1's "Set a value" card. The scope is global, a model searched through `scopes.models`, or another string. The value is typed as JSON and sent decoded to `values.update`.
+- `nuxt/layer/app/pages/pennantplus/features.vue`: the page, inside `<AtriumIntegrationScreen screen-key="pennantplus.features">`.
+- `nuxt/layer/i18n/locales/integrations/pennantplus.en.json`: the screen's strings, ported from v1's lang file.
+- `nuxt/layer/test/integrations/pennantplus/features.test.ts`: the load requests (all through the `pennantplus` client), the `atrium.screens.show` call with its tab, filters and paging as query parameters, each mutation's method, path and body, both confirmations (declined and accepted), 422 field errors, a non-JSON value refused before any request, and 403 on a load and on a change hiding the controls.
+- `nuxt/layer/test/integrations/pennantplus/integration.test.ts`: every fixture screen key has a `screens` entry and a page at the declared path; the nav link resolves to that page; `index.ts` registers nothing; no `t()` key is missing.
+
+### Tests
+
+I ran only `UPDATE_FIXTURES=1 vendor/bin/pest tests/Feature/Integrations/PennantPlusIntegrationTest.php` to write the fixture: 16 passed. Pint passes on the three PHP files. PHPStan could not bootstrap in this worktree: larastan boots the installed v1 Cortex dev dependency, which calls the removed `SectionDefinition::view()`. That failure is in the environment, not in this group's files.
+
+I did not run Vitest or the full suites. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest`, so 16.4 is ticked on that basis.
+
+### Deviations
+
+- **Confirmations.** In v1, only purge asked for a confirmation. Here forget asks too, because it is destructive (AC 54) and the task asks for each change's confirmation. Setting a value, from the form or a row's toggle, asks nothing, as in v1.
+- **Loose schema.** PennantPlus's vendored schema types several answers loosely: `features.index` and `values.index` as `data: string[]`, the scope routes as `data: string`, and a stored value as `string`. The screen declares those shapes in `pennantplus.ts`, following the PennantPlus resources and actions. The tests type each entry with `satisfies` where the schema is right (`FeatureValueResource`, `FeatureResource.name`) and pass the envelopes as they are. PennantPlus should fix this in its `schema()` declarations (spec risk "Weak package schemas").
+- **Nav sort.** An integration declares no nav groups, so the item takes v1's `System` group sort (90), and the group takes its sort from its first item.

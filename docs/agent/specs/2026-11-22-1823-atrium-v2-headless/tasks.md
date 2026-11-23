@@ -171,10 +171,10 @@ depends on: 12
 files: src/Integrations/PennantPlus/PennantPlusIntegration.php, lang/en/integrations/pennantplus.php, tests/Feature/Integrations/PennantPlusIntegrationTest.php, nuxt/layer/test/fixtures/integrations/pennantplus.json, nuxt/layer/app/integrations/pennantplus/index.ts, nuxt/layer/app/integrations/pennantplus/components/**, nuxt/layer/app/pages/pennantplus/**, nuxt/layer/i18n/locales/integrations/pennantplus.en.json, nuxt/layer/test/integrations/pennantplus/**
 criteria: 39, 40, 45, 53, 54, 58
 
-- [ ] 16.1 Write tests: Pest: gating; the API base; the one nav item; the `pennantplus.features` declaration; the fixture; Vitest: the features screen: features, scopes, scope models and values load; set a value (`values.update`), delete a value (`values.destroy`) and purge (`features.destroy`), each with its confirmation; a 403 hides the controls; fixture pages and the i18n keys
-- [ ] 16.2 Write `PennantPlusIntegration` and its lang file, porting from `PennantPlugin` and `resources/views/atrium/index.blade.php`.
-- [ ] 16.3 Write the page, components and `index.ts`.
-- [ ] 16.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 16.1 Write tests: Pest: gating; the API base; the one nav item; the `pennantplus.features` declaration; the fixture; Vitest: the features screen: features, scopes, scope models and values load; set a value (`values.update`), delete a value (`values.destroy`) and purge (`features.destroy`), each with its confirmation; a 403 hides the controls; fixture pages and the i18n keys
+- [x] 16.2 Write `PennantPlusIntegration` and its lang file, porting from `PennantPlugin` and `resources/views/atrium/index.blade.php`.
+- [x] 16.3 Write the page, components and `index.ts`.
+- [x] 16.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 17: Polycart integration
 depends on: 12
