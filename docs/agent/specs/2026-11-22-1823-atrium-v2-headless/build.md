@@ -1253,3 +1253,42 @@ This was a retry. The salvaged commit (`562d755`) already held all of group 24, 
 ### Deviations
 
 - None.
+
+## Group 25 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+- The tests were on disk, uncommitted and complete. `test/integrations/showroom/assets/` held:
+  - `support.ts`, with the payloads, the transfers screen answer (with `options.flow_prefix` and an optional `row.actions` section) and an area mounter that puts Showroom and Impex in the shell;
+  - one Vitest file per screen: `assets`, `asset`, `owners`, `owner`, `owner-types`, `owner-type` and `transfers`;
+  - `pages.test.ts`. It checks that each of the 7 screen keys has its page at its declared path, framed with its own key. It also checks the D-032 comment, `useAtriumIntegration('impex')` on the transfers screen (D-035) and the `t()` keys.
+- On disk: both asset pages (`assets/{index,[asset]}.vue`, with the `// Not ported (D-032)` comment at the top of `index.vue`), `components/assets/{assets.ts,AssetThumbnail.vue}` and `components/owners/owners.ts`.
+- Missing:
+  - the four owners and owner-types pages, the transfers page and `components/transfers/`;
+  - the owner asset card and the chain rules fields;
+  - every string: `showroom-assets.en.json` was still the `{}` from group 12.
+
+### What was done
+
+- `components/transfers/transfers.ts`: the flow and run types from Impex's vendored schema, the prefix read from the screen's options (with `showroom:` as the fallback), the flow filter, the merge into the 20 newest by `created_at`, and the export body. `TransferRunsTable.vue` renders the runs and the screen's `row.actions` sections, with the run id as their record.
+- `pages/showroom/transfers/index.vue`: it reads the prefix from `atrium.screens.show` (the same request `<AtriumIntegrationScreen>` makes, which shares its key), and then calls `impex.flows.index` and one `impex.runs.index?flow=&per_page=20` per matching flow. It renders the "requires Impex" notice when Impex is inactive or absent, and no-access in the runs card on a 403. Import sends the file and mode as multipart (`showroom.imports.store`). Export sends the format, the family, category tree and channel, and the published switch (`showroom.exports.store`). Both reload the runs.
+- `owners/{index,[owner]}.vue`:
+  - The list has the search and type filters (`?type=` from the owner type page), a cursor pager, and a create form that appears once an owner type exists.
+  - The detail page shows the chain (each ancestor links to the list searched for it), the children and the counts. It has the save form (labels, parent, enabled, external ids through `ExternalIds`, and the flags that apply to owners), an add-child form, and the asset card. Delete is confirmed, and a 409 shows Showroom's message.
+- `owner-types/{index,[ownerType].vue}`: the list with its parents column (Any for `null`), and create and save with the chain rules (`OwnerTypeRules.vue`: any parent sends `parent_types: null`, otherwise the ticked codes in Showroom's order). Delete is confirmed.
+- `OwnerAssets.vue` uploads a file and links it with `type: owner`. `CatalogAssets` takes only product link types and belongs to group 23. `AssetThumbnail` now takes only the file fields it reads, so the owner card can reuse it.
+- Filled `showroom-assets.en.json` with every key the group's pages and components use.
+
+### Results
+
+- **`composer test:nuxt`.** It ran with Herd's Node 26.13.1 and the pnpm shim (D-041) on PATH. These steps passed: the fixtures check, the frozen install, `generate:client --check`, the typechecks and the build. In the Vitest step, 116 of 117 files passed. The one failure was `test/integrations/polycart/cart.test.ts` › "deletes the cart after a confirmation, then returns to the list" (`expected '/' to be '/polycart/carts'`). It is a timing flake in group 17's test, which reads the route right after the click and does not use `vi.waitFor`. It passed when rerun alone (27/27) and in a full Vitest run just before (117 files, 1103 tests). The consumer build was then run alone and passed. The group's own suite has 8 files and 98 tests, all passing.
+- **`composer test:unit`.** 1223 tests: 1216 passed and 7 skipped.
+
+### What is left
+
+- Nothing in this group's tasks.
+- `<AtriumScreen>` renders every slot it does not place, `row.actions` included, after the page content with a null record. So a `row.actions` section also shows once below the transfers page, outside any row. Fixing that is in `components/Atrium/Screen.vue`, which is outside this group.
+- The Polycart flake above belongs to group 17's test file.
+- `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.

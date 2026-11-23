@@ -256,9 +256,9 @@ depends on: 22
 files: nuxt/layer/app/pages/showroom/assets/**, nuxt/layer/app/pages/showroom/owners/**, nuxt/layer/app/pages/showroom/owner-types/**, nuxt/layer/app/pages/showroom/transfers/**, nuxt/layer/app/integrations/showroom/components/assets/**, nuxt/layer/app/integrations/showroom/components/owners/**, nuxt/layer/app/integrations/showroom/components/transfers/**, nuxt/layer/i18n/locales/integrations/showroom-assets.en.json, nuxt/layer/test/integrations/showroom/assets/**
 criteria: 54, 71
 
-- [ ] 25.1 Write Vitest files: `assets` (grid and list, upload) and `asset` (links); `owners`, `owner`, `owner-types` and `owner-type` (with rules); `transfers`: `impex.flows.index` filtered by `flow_prefix`; one `impex.runs.index?flow=` per flow, merged into the 20 newest; import and export through `showroom.imports.store` and `showroom.exports.store`; the "requires Impex" notice when Impex is inactive, with import and export still offered. Cover 403 and 422, and assert that each of these screen keys has its page.
-- [ ] 25.2 Write the pages and components, porting from `ui/assets/**`, `owners/**`, `owner-types/**` and `transfers/**`. The transfers screen uses `useAtriumIntegration('impex')` (D-035). List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/assets/index.vue`.
-- [ ] 25.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 25.1 Write Vitest files: `assets` (grid and list, upload) and `asset` (links); `owners`, `owner`, `owner-types` and `owner-type` (with rules); `transfers`: `impex.flows.index` filtered by `flow_prefix`; one `impex.runs.index?flow=` per flow, merged into the 20 newest; import and export through `showroom.imports.store` and `showroom.exports.store`; the "requires Impex" notice when Impex is inactive, with import and export still offered. Cover 403 and 422, and assert that each of these screen keys has its page.
+- [x] 25.2 Write the pages and components, porting from `ui/assets/**`, `owners/**`, `owner-types/**` and `transfers/**`. The transfers screen uses `useAtriumIntegration('impex')` (D-035). List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/assets/index.vue`.
+- [x] 25.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 26: Cross-package hooks
 depends on: 13, 14, 15, 18, 22
