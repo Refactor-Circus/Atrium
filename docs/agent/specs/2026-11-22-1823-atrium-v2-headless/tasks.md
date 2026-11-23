@@ -212,7 +212,7 @@ criteria: 54, 69, 70
 
 - [x] 20.1 Write Vitest files: `roster.organizations` (active and deleted tabs); `roster.organization-create`; `roster.organization`: members, teams, invitations, links and role assignments (`roster.organizations.role-assignments.index`); update, delete, restore, purge, transfer, link and unlink, add and remove members, invite and revoke; `roster.team`: update, delete, add and remove members; the public page: no shell call, and the lookup 401 does not call `onUnauthorized()`; details rendered; one generic state for 404, and a 429 state; accept and decline, with `onUnauthorized()` first when signed out; the token is absent from `document.title` and from storage. Also assert that each of these screen keys has its page.
 - [x] 20.2 Write the pages and components, porting from `ui/organizations/**`, `teams/**` and `invitations/show`. The public page uses the public layout and page meta (D-038). List missing routes in a `// Not ported (D-032)` comment at the top of `pages/roster/organizations/index.vue`.
-- [ ] 20.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 20.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 21: Roster screens: roles, permissions and transfers
 depends on: 18

@@ -973,3 +973,27 @@ The build agent ended without a result. There was no index lock and no merge or 
 
 - 20.3 is not ticked. `pnpm` is not on this session's PATH, so the full `composer test:nuxt` gate was not run: the frozen install, `generate:client --check`, the playground typecheck, the build and the consumer build. The layer's Vitest and typecheck were run directly instead.
 - "`onUnauthorized()` first" (AC 70, D-038) is read as follows. The page cannot tell whether the visitor is signed in without loading the shell, which D-038 rules out. So it sends accept or decline, and on a 401 calls `onUnauthorized()` before anything is answered. It does not retry the call afterwards.
+
+## Group 20
+
+This was a retry for 20.3 only. 20.1 and 20.2 were already committed (salvaged). This run changed no code.
+
+### Files
+
+- None in the group's paths. Only `tasks.md` (20.3 ticked) and this note changed.
+
+### Tests
+
+- **`composer test:unit`.** 1215 tests: 1208 passed and 7 skipped.
+- **`composer test:nuxt`.** Run with the `pnpm` shim on PATH (D-041) and `ATRIUM_SUITE_PATH` set to the scratch suite (D-040). Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check` (the schema is current);
+  - the layer and playground typechecks;
+  - the playground build;
+  - Vitest, with 81 files and 693 tests passing and no type errors;
+  - the consumer build ("a fresh app extending nuxt/layer builds").
+
+### Deviations
+
+- None. `nuxt/layer/.nuxtrc` is still untracked and not committed. `nuxt prepare` writes it.
