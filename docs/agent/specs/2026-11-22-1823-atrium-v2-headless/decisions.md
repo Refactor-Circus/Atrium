@@ -534,3 +534,12 @@
 - Rationale: One list per integration keeps group 37's CHANGELOG collection and `ChangelogUpgradeTest` uniform, and the job's instructions named `index.ts`.
 - Date: 2026-11-23
 - Raised by: implement (group 35); default chosen because no user was available
+
+## D-074: How does the `guardian.access` hook tell a scope screen from a user screen?
+- Choice:
+  - By the last segment of the screen's declared subject type. `user` (as in `roster.user`) sends `{scope_type: null}`, and the layer lists by user. Any other segment is read as a `scope_types` key (`organization` in `roster.organization`); its resolved type is sent as `{scope_type}`, and while it does not resolve the tab is skipped there, with one warning per process and scope key naming `atrium.integrations.guardian.scope_types`.
+  - Guardian's extensions never go on Guardian's own screens, and, like every hook, only on detail screens that declare a subject type.
+  - On a user, the tab reads the scope types it offers from the `guardian.role-assignments` screen's options (one `atrium.screens.show` call, without the page's `?tab=`); when that fails it offers global assignments only.
+- Rationale: AC 97 names the two default screens; keying off the subject type keeps the hook generic for a host that places the tab elsewhere, and refusing an unresolved scope is the conservative path D-048 sets.
+- Date: 2026-11-23
+- Raised by: implement (group 36); default chosen because no user was available

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 use Laravel\Pennant\Feature;
 use Laravel\Pennant\PennantServiceProvider;
 use RefactorCircus\Atrium\Domains\Integrations\IntegrationsServiceProvider;
@@ -14,6 +15,9 @@ use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
 use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
+use RefactorCircus\Atrium\Integrations\Guardian\GuardianScopeTypes;
+use RefactorCircus\Atrium\Integrations\Hooks\GuardianScreens;
 use RefactorCircus\Atrium\Integrations\Hooks\Hooks;
 use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
@@ -22,13 +26,17 @@ use Workbench\App\Models\User;
 /*
  * The cross-package hooks (AC 65 to 68): Cortex's redirect domains on Roster's
  * screens, Impex's run link on Showroom's transfers, and Keen's history
- * section and activity tab on the other integrations' screens. Each registers
+ * section and activity tab on the other integrations' screens, and Guardian's
+ * access, security, SSO and SCIM tabs and SSO identities section on Roster's
+ * (AC 97). Each registers
  * only while both its integrations are registered, sends only static data
  * (its hook configuration), and shows per request only while both are active.
  */
 
 beforeEach(function (): void {
     IntegrationFixture::forgetWarnings();
+    GuardianScreens::forgetWarnings();
+    GuardianScopeTypes::forget();
     Gate::define('viewAtrium', fn ($user = null): bool => true);
 
     $this->user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
@@ -36,6 +44,8 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     IntegrationFixture::forgetWarnings();
+    GuardianScreens::forgetWarnings();
+    GuardianScopeTypes::forget();
 });
 
 /**
@@ -437,6 +447,268 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
         expect($screen['sections']['aside'])->toBe([])
             ->and($screen['sections']['after'])->toBe([])
             ->and(array_column(hooksScreen($this, 'roster.organization')['tabs'], 'key'))->toBe(['overview']);
+    });
+});
+
+/**
+ * Guardian's scope types as a host that adopted Roster's scopes sets them.
+ */
+function hooksGuardianScopes(): void
+{
+    config()->set('guardian.adopt.scope_types.organization', 'roster.organization');
+    config()->set('guardian.adopt.scope_types.team', 'roster.team');
+}
+
+describe('Guardian on Roster\'s screens (AC 97)', function (): void {
+    it('registers the access, SSO and SCIM tabs on roster.organization and the user tabs and identities section on roster.user by default', function (): void {
+        hooksGuardianScopes();
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.organization'))->toBe([
+            'guardian.access' => ['scope_type' => 'roster.organization'],
+            'guardian.sso' => ['scim_path' => '/scim/v2'],
+            'guardian.scim' => ['scim_path' => '/scim/v2'],
+        ])
+            ->and(hooksTabs('roster.user'))->toBe([
+                'guardian.access' => ['scope_type' => null],
+                'guardian.user-security' => [],
+            ])
+            ->and(hooksSections('roster.user', 'aside'))->toBe(['guardian.sso-identities' => []])
+            ->and(hooksTabs('roster.team'))->toBe([])
+            ->and(hooksTabs('roster.users'))->toBe([]);
+    });
+
+    it('labels each tab and section, with an icon on each tab', function (): void {
+        hooksGuardianScopes();
+        hooksRegistered('guardian', 'roster');
+
+        $tabs = [];
+
+        foreach (app(ScreenExtensions::class)->tabs('roster.organization') as $tab) {
+            $tabs[$tab->key] = [$tab->label, $tab->icon];
+        }
+
+        expect($tabs)->toBe([
+            'guardian.access' => ['Access', 'i-lucide-key-round'],
+            'guardian.sso' => ['SSO', 'i-lucide-log-in'],
+            'guardian.scim' => ['SCIM', 'i-lucide-server'],
+        ])
+            ->and(array_map(fn (SectionDefinition $section): string => $section->label, app(ScreenExtensions::class)->sections('roster.user', 'aside')))->toBe(['SSO identities']);
+    });
+
+    it('follows a changed config', function (): void {
+        hooksGuardianScopes();
+        config()->set('atrium.integrations.guardian.screens', [
+            'roster.organization' => ['guardian.scim', 'before' => 'guardian.sso-identities'],
+            'roster.*' => ['guardian.user-security'],
+        ]);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.organization'))->toBe(['guardian.scim' => ['scim_path' => '/scim/v2'], 'guardian.user-security' => []])
+            ->and(hooksSections('roster.organization', 'before'))->toBe(['guardian.sso-identities' => []])
+            ->and(hooksTabs('roster.user'))->toBe(['guardian.user-security' => []])
+            ->and(hooksSections('roster.user', 'aside'))->toBe([]);
+    });
+
+    it('sends Guardian\'s SCIM prefix as a path', function (mixed $prefix, string $path): void {
+        hooksGuardianScopes();
+        config()->set('guardian.scim.prefix', $prefix);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.organization')['guardian.scim'])->toBe(['scim_path' => $path]);
+    })->with([
+        'the default' => [null, '/scim/v2'],
+        'slashes trimmed' => ['/directory/scim/', '/directory/scim'],
+        'a bare prefix' => ['scim', '/scim'],
+    ]);
+
+    it('registers nothing for an empty map', function (): void {
+        config()->set('atrium.integrations.guardian.screens', []);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.organization'))->toBe([])
+            ->and(hooksTabs('roster.user'))->toBe([]);
+    });
+
+    it('registers nothing while Guardian or Roster is not registered', function (array $packages): void {
+        hooksGuardianScopes();
+        hooksRegistered(...$packages);
+
+        foreach (['roster.organization', 'roster.user'] as $screen) {
+            expect(array_filter(array_keys(hooksTabs($screen)), fn (string $key): bool => str_starts_with($key, 'guardian.')))->toBe([]);
+        }
+
+        expect(hooksSections('roster.user', 'aside'))->not->toHaveKey('guardian.sso-identities');
+    })->with([
+        'without Roster' => [['guardian']],
+        'without Guardian' => [['roster', 'cortex', 'keen']],
+    ]);
+
+    it('stays away while Guardian is installed but its API is off', function (): void {
+        IntegrationFixture::installed('guardian', 'roster');
+        IntegrationFixture::serveApi('roster');
+        IntegrationFixture::register();
+        app(Hooks::class)->register();
+
+        expect(hooksTabs('roster.organization'))->toBe([]);
+    });
+
+    it('places nothing on Guardian\'s own screens', function (): void {
+        config()->set('atrium.integrations.guardian.screens', ['guardian.*' => ['guardian.user-security'], '*' => ['aside' => 'guardian.sso-identities']]);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('guardian.user'))->toBe([])
+            ->and(hooksSections('guardian.sso-connection', 'aside'))->toBe([])
+            ->and(hooksSections('roster.user', 'aside'))->toBe(['guardian.sso-identities' => []]);
+    });
+
+    it('skips the organization access tab, warning once per process, while the organization scope type does not resolve', function (): void {
+        Log::spy();
+
+        hooksRegistered('guardian', 'roster');
+        app(Hooks::class)->register();
+
+        expect(hooksTabs('roster.organization'))->toBe(['guardian.sso' => ['scim_path' => '/scim/v2'], 'guardian.scim' => ['scim_path' => '/scim/v2']])
+            ->and(hooksTabs('roster.user'))->toHaveKey('guardian.access');
+
+        // A new registry run in the same process does not warn again.
+        app()->forgetInstance(ScreenExtensions::class);
+        app()->forgetInstance(Hooks::class);
+        app(Hooks::class)->register();
+
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message): bool => str_contains($message, 'atrium.integrations.guardian.scope_types')
+            && str_contains($message, '[organization]')
+            && str_contains($message, 'guardian.access'))->once();
+    });
+
+    it('sends the configured scope type when one is set in Atrium', function (): void {
+        config()->set('atrium.integrations.guardian.scope_types', ['organization' => 'org']);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.organization')['guardian.access'])->toBe(['scope_type' => 'org']);
+    });
+
+    it('throws on an invalid entry in testing and local', function (mixed $screens, string $environment): void {
+        $this->withEnvironment($environment);
+        config()->set('atrium.integrations.guardian.screens', $screens);
+
+        expect(fn () => hooksRegistered('guardian', 'roster'))->toThrow(InvalidArgumentException::class);
+    })->with([
+        'an invalid target' => [['Roster User' => ['guardian.access']]],
+        'an invalid slot' => [['roster.user' => ['not a slot!' => 'guardian.sso-identities']]],
+        'an unknown tab' => [['roster.user' => ['guardian.roles']]],
+        'an unknown section' => [['roster.user' => ['aside' => 'guardian.access']]],
+        'an entry that is no list' => [['roster.user' => 'guardian.access']],
+        'a map that is no map' => ['roster.user'],
+    ])->with(['testing', 'local']);
+
+    it('reports and skips an invalid entry elsewhere, keeping the valid ones', function (): void {
+        $this->withEnvironment('production');
+        Exceptions::fake();
+        hooksGuardianScopes();
+        config()->set('atrium.integrations.guardian.screens', [
+            'Roster User' => ['guardian.access'],
+            'roster.user' => ['guardian.roles', 'guardian.user-security', 'not a slot!' => 'guardian.sso-identities', 'aside' => 'guardian.access'],
+            'roster.organization' => 'guardian.sso',
+        ]);
+
+        hooksRegistered('guardian', 'roster');
+
+        expect(hooksTabs('roster.user'))->toBe(['guardian.user-security' => []])
+            ->and(hooksSections('roster.user', 'aside'))->toBe([])
+            ->and(hooksTabs('roster.organization'))->toBe([]);
+
+        Exceptions::assertReportedCount(5);
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), '[Roster User]'));
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), '[guardian.roles]'));
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), '[not a slot!]'));
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), 'unknown Guardian section [guardian.access]'));
+        Exceptions::assertReported(fn (InvalidArgumentException $exception): bool => str_contains($exception->getMessage(), '[roster.organization] at [guardian.sso]'));
+    });
+
+    it('hides Guardian\'s extensions while Guardian is flagged off for the user', function (): void {
+        app()->register(PennantServiceProvider::class);
+        config()->set('pennant.default', 'array');
+        hooksGuardianScopes();
+        hooksRegistered('guardian', 'roster');
+        Feature::for($this->user)->deactivate(GuardianFeature::class);
+
+        $screen = hooksScreen($this, 'roster.user', ['record' => '7']);
+
+        expect(array_column($screen['tabs'], 'key'))->toBe(['overview'])
+            ->and($screen['sections']['aside'])->toBe([]);
+    });
+});
+
+describe('atrium.screens.show with Cortex, Keen and Guardian on (AC 97)', function (): void {
+    beforeEach(function (): void {
+        hooksGuardianScopes();
+        hooksRegistered('cortex', 'guardian', 'impex', 'keen', 'roster', 'showroom');
+    });
+
+    it('sends roster.organization with every tab', function (): void {
+        $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme']);
+
+        expect($screen['tabs'])->toBe([
+            ['key' => 'overview', 'label' => 'Overview', 'icon' => 'i-lucide-layout-grid', 'built_in' => true, 'component' => null],
+            ['key' => 'cortex.mcp', 'label' => 'MCP', 'icon' => 'i-lucide-globe', 'built_in' => false, 'component' => 'cortex.mcp'],
+            ['key' => 'keen.activity', 'label' => 'Activity', 'icon' => 'i-lucide-clipboard-list', 'built_in' => false, 'component' => 'keen.activity'],
+            ['key' => 'guardian.access', 'label' => 'Access', 'icon' => 'i-lucide-key-round', 'built_in' => false, 'component' => 'guardian.access'],
+            ['key' => 'guardian.sso', 'label' => 'SSO', 'icon' => 'i-lucide-log-in', 'built_in' => false, 'component' => 'guardian.sso'],
+            ['key' => 'guardian.scim', 'label' => 'SCIM', 'icon' => 'i-lucide-server', 'built_in' => false, 'component' => 'guardian.scim'],
+        ])
+            ->and($screen['sections'])->toBe([
+                'header.actions' => [],
+                'before' => [],
+                'after' => [
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.organization']],
+                ],
+                'aside' => [],
+            ]);
+    });
+
+    it('sends each Guardian tab\'s data when it is open', function (string $tab, array $data): void {
+        $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme', 'tab' => $tab]);
+        $open = array_values(array_filter($screen['tabs'], fn (array $entry): bool => $entry['key'] === $tab))[0];
+
+        expect($screen['open_tab'])->toBe($tab)
+            ->and($open['data'])->toBe($data);
+    })->with([
+        'access' => ['guardian.access', ['scope_type' => 'roster.organization']],
+        'sso' => ['guardian.sso', ['scim_path' => '/scim/v2']],
+        'scim' => ['guardian.scim', ['scim_path' => '/scim/v2']],
+    ]);
+
+    it('sends roster.user with the user tabs, the identities section beside Cortex\'s, and Keen\'s history', function (): void {
+        $screen = hooksScreen($this, 'roster.user', ['record' => '7']);
+
+        expect($screen['tabs'])->toBe([
+            ['key' => 'overview', 'label' => 'Overview', 'icon' => 'i-lucide-layout-grid', 'built_in' => true, 'component' => null],
+            ['key' => 'guardian.access', 'label' => 'Access', 'icon' => 'i-lucide-key-round', 'built_in' => false, 'component' => 'guardian.access'],
+            ['key' => 'guardian.user-security', 'label' => 'Security', 'icon' => 'i-lucide-shield', 'built_in' => false, 'component' => 'guardian.user-security'],
+        ])
+            ->and($screen['sections'])->toBe([
+                'header.actions' => [],
+                'before' => [],
+                'after' => [
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.user']],
+                ],
+                'aside' => [
+                    ['key' => 'cortex.redirect-domains', 'label' => 'Redirect domains', 'component' => 'cortex.redirect-domains', 'data' => ['owner_type' => 'roster.user']],
+                    ['key' => 'guardian.sso-identities', 'label' => 'SSO identities', 'component' => 'guardian.sso-identities', 'data' => []],
+                ],
+            ]);
+    });
+
+    it('sends the user access tab\'s data when it is open', function (): void {
+        $screen = hooksScreen($this, 'roster.user', ['record' => '7', 'tab' => 'guardian.access']);
+
+        expect($screen['tabs'][1]['data'])->toBe(['scope_type' => null]);
     });
 });
 

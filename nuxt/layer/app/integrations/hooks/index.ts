@@ -1,14 +1,21 @@
 // Not ported (D-032): nothing. The hooks call routes every package's v2 API
-// has: Cortex's `redirect-domains` index, store and destroy, and Keen's
-// `packages.index` and `entries.index`. The run link makes no request.
+// has: Cortex's `redirect-domains` index, store and destroy, Keen's
+// `packages.index` and `entries.index`, and Guardian's role assignment,
+// user security, SSO and SCIM routes (whose v1 gaps Guardian's own list in
+// `integrations/guardian/index.ts` names). The run link makes no request.
 import { defineAtriumIntegration } from '../../composables/useAtriumIntegration'
 import CortexRedirectDomains from './components/CortexRedirectDomains.vue'
+import GuardianAccessTab from './components/GuardianAccessTab.vue'
+import GuardianScimTab from './components/GuardianScimTab.vue'
+import GuardianSsoIdentitiesSection from './components/GuardianSsoIdentitiesSection.vue'
+import GuardianSsoTab from './components/GuardianSsoTab.vue'
+import GuardianUserSecurityTab from './components/GuardianUserSecurityTab.vue'
 import ImpexRunLink from './components/ImpexRunLink.vue'
 import KeenActivityTab from './components/KeenActivityTab.vue'
 import KeenHistorySection from './components/KeenHistorySection.vue'
 
 /**
- * The cross-package hooks (AC 65 to 67): one integration's tab or section on
+ * The cross-package hooks (AC 65 to 67, 97, 98): one integration's tab or section on
  * another's screens, registered by the extension keys Atrium's
  * `src/Integrations/Hooks` sends. Atrium sends each only while both its
  * integrations are registered and active, so the components assume their
@@ -23,4 +30,9 @@ export default defineAtriumIntegration((atrium) => {
     .extension('impex.run-link', ImpexRunLink)
     .extension('keen.history', KeenHistorySection)
     .extension('keen.activity', KeenActivityTab)
+    .extension('guardian.access', GuardianAccessTab)
+    .extension('guardian.user-security', GuardianUserSecurityTab)
+    .extension('guardian.sso', GuardianSsoTab)
+    .extension('guardian.scim', GuardianScimTab)
+    .extension('guardian.sso-identities', GuardianSsoIdentitiesSection)
 })

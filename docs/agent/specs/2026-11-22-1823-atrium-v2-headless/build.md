@@ -1536,3 +1536,26 @@ SSO connections and SCIM tokens (AC 96).
 
 - Vitest: the group's suites are 5 files and 34 tests. `composer test:nuxt` passed every step: Vitest 141 files, 1332 tests, no type errors, and the consumer build.
 - `composer test:unit`: 1405 tests, all passed.
+
+## Group 36
+
+Guardian hooks on Roster's screens (AC 97, 98).
+
+### Files
+
+- `src/Integrations/Hooks/GuardianScreens.php` (new), added to `Hooks::HOOKS`: places `atrium.integrations.guardian.screens` (a plain value is a tab, `slot => key` a section) on detail screens with a subject type, validates targets, slots and keys as AC 68 does, and sends `{scope_type}` / `{scope_type: null}` for `guardian.access`, `{}` for `guardian.user-security` and `guardian.sso-identities`, and `{scim_path}` for `guardian.sso` and `guardian.scim`. It reads `GuardianScopeTypes` and `guardian.scim.prefix`; an unresolved organization scope skips the access tab with one warning per process. The labels are in `lang/en/integrations/hooks.php`.
+- Layer: `app/integrations/hooks/components/` `GuardianAccessTab` (group 33's `GuardianAssignments`, by scope or by user), `GuardianUserSecurityTab` (group 33's `UserSecurity`), `GuardianSsoTab`, `GuardianScimTab` and `GuardianSsoIdentitiesSection` (group 35's components); `guardianAccessOf()` in `hooks.ts`; registered in `hooks/index.ts`, whose D-032 note now names Guardian's routes.
+- Tests: `HooksTest` (a Guardian describe: defaults, labels and icons, a changed config, the SCIM path, an empty map, absence without Roster or Guardian or with Guardian's API off, Guardian's own screens, the unresolved scope and its single warning, a configured scope type, invalid entries in testing, local and production, the Pennant flag; and the `atrium.screens.show` payloads of `roster.organization` and `roster.user` with Cortex, Keen and Guardian on). Vitest `hooks/guardian.test.ts` (27 tests) and `hooks/registration.test.ts`.
+
+### Decisions
+
+- D-074 (access mode from the subject type; never on Guardian's own screens; scope types on a user from `guardian.role-assignments`).
+
+### Deviations
+
+- `hooks.en.json` is unchanged: the wrappers render the Guardian components, whose strings are in the Guardian locale files, and add no string of their own.
+
+### Tests
+
+- `composer test:unit`: 1438 tests, all passed (`HooksTest` 72). PHPStan 0 errors, Pint passed.
+- `composer test:nuxt`: every step passed; Vitest 142 files, 1359 tests, no type errors, and the consumer build.

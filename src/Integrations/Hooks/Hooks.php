@@ -12,7 +12,7 @@ use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
 /**
  * Registers the cross-package hooks (AC 65 to 68) on Atrium's screen
  * registry, once the integrations have registered: Cortex's redirect domains,
- * Impex's run link and Keen's history.
+ * Impex's run link, Keen's history and Guardian's tabs and sections.
  *
  * Registration may run again (a later integration registered); each
  * extension is added once per screen, so a second run adds only the hooks of
@@ -27,6 +27,7 @@ final class Hooks
         CortexRedirectDomains::class,
         ImpexRunLink::class,
         KeenHistory::class,
+        GuardianScreens::class,
     ];
 
     /**

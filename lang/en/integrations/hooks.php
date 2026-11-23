@@ -15,5 +15,10 @@ return [
     'run' => 'Run',
     'history' => 'History',
     'activity' => 'Activity',
+    'guardian_access' => 'Access',
+    'guardian_user_security' => 'Security',
+    'guardian_sso' => 'SSO',
+    'guardian_scim' => 'SCIM',
+    'guardian_sso_identities' => 'SSO identities',
 
 ];

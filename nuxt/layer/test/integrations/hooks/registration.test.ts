@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { useAtrium } from '#imports'
 import CortexRedirectDomains from '../../../app/integrations/hooks/components/CortexRedirectDomains.vue'
+import GuardianAccessTab from '../../../app/integrations/hooks/components/GuardianAccessTab.vue'
+import GuardianScimTab from '../../../app/integrations/hooks/components/GuardianScimTab.vue'
+import GuardianSsoIdentitiesSection from '../../../app/integrations/hooks/components/GuardianSsoIdentitiesSection.vue'
+import GuardianSsoTab from '../../../app/integrations/hooks/components/GuardianSsoTab.vue'
+import GuardianUserSecurityTab from '../../../app/integrations/hooks/components/GuardianUserSecurityTab.vue'
 import ImpexRunLink from '../../../app/integrations/hooks/components/ImpexRunLink.vue'
 import KeenActivityTab from '../../../app/integrations/hooks/components/KeenActivityTab.vue'
 import KeenHistorySection from '../../../app/integrations/hooks/components/KeenHistorySection.vue'
@@ -10,7 +15,7 @@ import { withSetup } from '../../support'
 import { missingI18nKeys } from '../support'
 
 /*
- * The hooks' layer registrations (AC 65 to 67, 53): each extension key
+ * The hooks' layer registrations (AC 65 to 67, 97, 98, 53): each extension key
  * Atrium's `src/Integrations/Hooks` sends has its component, and every
  * string the hooks use is in `hooks.en.json`.
  */
@@ -24,6 +29,11 @@ describe('the hook registrations', () => {
     expect(atrium.extensions.get('impex.run-link')).toBe(ImpexRunLink)
     expect(atrium.extensions.get('keen.history')).toBe(KeenHistorySection)
     expect(atrium.extensions.get('keen.activity')).toBe(KeenActivityTab)
+    expect(atrium.extensions.get('guardian.access')).toBe(GuardianAccessTab)
+    expect(atrium.extensions.get('guardian.user-security')).toBe(GuardianUserSecurityTab)
+    expect(atrium.extensions.get('guardian.sso')).toBe(GuardianSsoTab)
+    expect(atrium.extensions.get('guardian.scim')).toBe(GuardianScimTab)
+    expect(atrium.extensions.get('guardian.sso-identities')).toBe(GuardianSsoIdentitiesSection)
   })
 
   it('declares no screens of its own', () => {

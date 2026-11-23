@@ -80,3 +80,20 @@ export function activityQuery(data: Record<string, unknown>, record: unknown): K
     ? { source, subject_type: type, subject_id: id }
     : { source, scope_type: type, scope_id: id }
 }
+
+/**
+ * What the `guardian.access` hook lists (AC 98): in the scope the record is,
+ * when Atrium sends that scope's `scope_type`; else the record's own
+ * assignments, as a user. Null without a record.
+ */
+export function guardianAccessOf(data: Record<string, unknown>, record: unknown): { scopeType: string, scopeId: string } | { user: string } | null {
+  const key = recordKey(record)
+
+  if (key === null) {
+    return null
+  }
+
+  const scopeType = text(data.scope_type)
+
+  return scopeType === null ? { user: key } : { scopeType, scopeId: key }
+}
