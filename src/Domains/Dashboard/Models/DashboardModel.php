@@ -21,6 +21,7 @@ use RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents;
  * @property bool $is_default
  * @property bool $is_shared
  * @property int $sort
+ * @property int $version moved on by every layout or meta update, so a client saving from a stale copy is refused
  */
 class DashboardModel extends Model
 {
@@ -28,10 +29,23 @@ class DashboardModel extends Model
 
     protected $guarded = [];
 
+    /**
+     * The column defaults, so a dashboard just created reads as it is stored.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_default' => false,
+        'is_shared' => false,
+        'sort' => 0,
+        'version' => 1,
+    ];
+
     protected $casts = [
         'is_default' => 'boolean',
         'is_shared' => 'boolean',
         'sort' => 'integer',
+        'version' => 'integer',
     ];
 
     public function getTable(): string

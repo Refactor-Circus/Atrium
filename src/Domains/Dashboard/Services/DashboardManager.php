@@ -7,11 +7,18 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
+use RefactorCircus\Atrium\Domains\Dashboard\Resources\DashboardResource;
+use RefactorCircus\Keystone\Auth\Authorizer;
+use RefactorCircus\Keystone\Packages\PackageRegistry;
 
 class DashboardManager
 {
+    public function __construct(
+        protected PlacementResolver $placements,
+        protected PackageRegistry $packages,
+    ) {}
+
     /**
      * Dashboards the request's user may view: their own, plus shared ones.
      *
@@ -27,47 +34,59 @@ class DashboardManager
     }
 
     /**
-     * Whether the request may see the given dashboard: it is the user's own
-     * or a shared one, as visible() lists them.
+     * The dashboard with the given slug among those the request's user may
+     * view. Slugs are not unique across owners, so the slug is looked up
+     * there rather than across every dashboard; the user's own comes before a
+     * shared one.
      */
-    public function isVisible(Request $request, DashboardModel $dashboard): bool
+    public function findVisible(Request $request, string $slug): ?DashboardModel
     {
         return DashboardModel::query()
             ->visibleTo($this->owner($request))
-            ->whereKey($dashboard->getKey())
-            ->exists();
+            ->where('slug', $slug)
+            ->orderBy('is_shared')
+            ->orderBy('id')
+            ->first();
     }
 
     /**
-     * The dashboard to show when none is specified.
+     * The dashboard to show when none is specified: the default, else the
+     * first. Null when the user has none; reading never creates one.
      */
-    public function current(Request $request, ?string $slug = null): ?DashboardModel
+    public function current(Request $request): ?DashboardModel
     {
-        return $this->pick($this->visible($request), $slug);
-    }
-
-    /**
-     * The dashboard to show from those already fetched: the one with the
-     * given slug, else the default, else the first.
-     *
-     * @param  Collection<int, DashboardModel>  $dashboards
-     */
-    public function pick(Collection $dashboards, ?string $slug = null): ?DashboardModel
-    {
-        if ($slug !== null) {
-            return $dashboards->firstWhere('slug', $slug);
-        }
+        $dashboards = $this->visible($request);
 
         return $dashboards->firstWhere('is_default', true) ?? $dashboards->first();
     }
 
     /**
-     * Whether the request's user may modify the given dashboard, as the
-     * dashboard policy from `atrium.policies` decides.
+     * The dashboard as the API sends it: with its placements and their data,
+     * and what the request's user may do to it in `meta.abilities`.
      */
-    public function canModify(Request $request, DashboardModel $dashboard): bool
+    public function resource(DashboardModel $dashboard, Request $request): DashboardResource
     {
-        return Gate::forUser($request->user())->allows('update', $dashboard);
+        $dashboard->load('widgets');
+
+        return DashboardResource::make($dashboard)
+            ->placementData($this->placements->eager($dashboard, $request))
+            ->additional(['meta' => ['abilities' => $this->abilities($dashboard, $request)]]);
+    }
+
+    /**
+     * What the request's user may do to the dashboard, as the requests that
+     * change it decide: through the dashboard policy from `atrium.policies`.
+     *
+     * @return array{update: bool, delete: bool}
+     */
+    public function abilities(DashboardModel $dashboard, Request $request): array
+    {
+        $authorizer = Authorizer::for($this->packages->forOrFail(self::class));
+
+        return [
+            'update' => $authorizer->can($request->user(), 'update', $dashboard),
+            'delete' => $authorizer->can($request->user(), 'delete', $dashboard),
+        ];
     }
 
     /**

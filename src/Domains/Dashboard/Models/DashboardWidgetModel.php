@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
@@ -12,7 +13,14 @@ use RefactorCircus\Atrium\Support\Tables;
 use RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents;
 
 /**
+ * One widget placed on a dashboard.
+ *
+ * Its public identity is `uuid`, generated on create: lazy widget URLs and
+ * layout payloads name a placement by it. The integer `id` stays the primary
+ * key and never leaves the package.
+ *
  * @property int $id
+ * @property string $uuid
  * @property int $dashboard_id
  * @property string $widget_key
  * @property int $grid_row
@@ -25,6 +33,7 @@ use RefactorCircus\Keystone\Models\Concerns\DispatchesModelEvents;
 class DashboardWidgetModel extends Model
 {
     use DispatchesModelEvents;
+    use HasUuids;
 
     protected $guarded = [];
 
@@ -40,6 +49,16 @@ class DashboardWidgetModel extends Model
     public function getTable(): string
     {
         return Tables::name('dashboard_widgets');
+    }
+
+    /**
+     * Only `uuid` is generated: the primary key stays the integer `id`.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
     }
 
     /**
