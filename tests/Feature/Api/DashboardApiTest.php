@@ -139,11 +139,11 @@ it('never writes on a read', function (): void {
     $slow = $dashboard->widgets()->create(['widget_key' => 'app.slow']);
     $dashboard->widgets()->create(['widget_key' => 'app.orders']);
 
-    $writes = 0;
+    $writes = [];
 
     DB::listen(function (QueryExecuted $query) use (&$writes): void {
         if (preg_match('/^\s*(insert|update|delete|replace)\b/i', $query->sql) === 1) {
-            $writes++;
+            $writes[] = $query->sql;
         }
     });
 
@@ -159,15 +159,18 @@ it('never writes on a read', function (): void {
         $this->actingAs($this->ann)->getJson($url)->assertOk();
     }
 
+    expect($writes)->toBe([]);
+
     // A user with nothing to see gets nothing made for them either.
     $bob = User::forceCreate(['name' => 'Bob', 'email' => 'bob@example.com', 'password' => bcrypt('x')]);
+    $writes = [];
 
     $this->actingAs($bob)->getJson(route('atrium.dashboards.default'))->assertExactJson(['data' => null]);
     $this->actingAs($bob)->getJson(route('atrium.dashboards.index'))->assertExactJson(['data' => []]);
 
     expect(DashboardModel::query()->count())->toBe(1)
         ->and(DashboardWidgetModel::query()->count())->toBe(2)
-        ->and($writes)->toBe(0);
+        ->and($writes)->toBe([]);
 });
 
 it('lists the visible dashboards without their widgets', function (): void {
@@ -406,8 +409,8 @@ it('isolates a failing eager widget outside local and testing, and reports it', 
     Exceptions::assertReported(UnserializableDataException::class);
 });
 
-it('lets a failing eager widget fail the request in testing', function (): void {
-    $this->withEnvironment('testing');
+it('lets a failing eager widget fail the request in local and testing', function (string $environment): void {
+    $this->withEnvironment($environment);
     Gate::define('viewAtrium', fn (): bool => true);
 
     app(WidgetRegistry::class)->add(WidgetDefinition::make('app.broken')->resolve(fn (): array => throw new RuntimeException('the API is down')));
@@ -418,4 +421,4 @@ it('lets a failing eager widget fail the request in testing', function (): void 
     $this->actingAs($this->ann)
         ->getJson(route('atrium.dashboards.show', $dashboard))
         ->assertInternalServerError();
-});
+})->with(['local', 'testing']);

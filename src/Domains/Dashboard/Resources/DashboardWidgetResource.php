@@ -25,12 +25,29 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
 final class DashboardWidgetResource extends JsonResource
 {
     /**
-     * @param  DashboardWidgetModel  $resource
-     * @param  array{data: array<array-key, mixed>|null, error?: array{message: string}}|null  $resolved  the placement's data, or null when it is not sent
+     * A placement has its own `data` key, so Laravel would otherwise take it
+     * for the response wrapper and leave the placement unwrapped.
      */
-    public function __construct($resource, private readonly ?array $resolved = null)
+    public static bool $forceWrapping = true;
+
+    /**
+     * The placement's data, or null when it is not sent.
+     *
+     * @var array{data: array<array-key, mixed>|null, error?: array{message: string}}|null
+     */
+    private ?array $resolved = null;
+
+    /**
+     * Send the placement with its resolved data (and its isolated `error`,
+     * if any). Null sends no `data` key.
+     *
+     * @param  array{data: array<array-key, mixed>|null, error?: array{message: string}}|null  $resolved
+     */
+    public function data(?array $resolved): static
     {
-        parent::__construct($resource);
+        $this->resolved = $resolved;
+
+        return $this;
     }
 
     /**

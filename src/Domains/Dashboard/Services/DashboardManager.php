@@ -68,7 +68,8 @@ class DashboardManager
     {
         $dashboard->load('widgets');
 
-        return DashboardResource::make($dashboard, $this->placements->eager($dashboard, $request))
+        return DashboardResource::make($dashboard)
+            ->placementData($this->placements->eager($dashboard, $request))
             ->additional(['meta' => ['abilities' => $this->abilities($dashboard, $request)]]);
     }
 

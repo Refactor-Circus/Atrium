@@ -35,7 +35,7 @@ final class ShowDashboardWidgetRequest extends Request
 
         abort_if($definition === null || ! $definition->isAuthorized($this), 404);
 
-        return new DashboardWidgetResource($widget, app(PlacementResolver::class)->one($widget))->response($this);
+        return new DashboardWidgetResource($widget)->data(app(PlacementResolver::class)->one($widget))->response($this);
     }
 
     protected function widget(): DashboardWidgetModel
