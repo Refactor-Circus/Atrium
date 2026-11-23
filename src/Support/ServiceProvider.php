@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Support;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Route;
+use RefactorCircus\Atrium\Domains\Access\Http\Middleware\Authorize;
 use RefactorCircus\Keystone\Support\ServiceProvider as BaseServiceProvider;
 
 /**
@@ -43,7 +44,9 @@ abstract class ServiceProvider extends BaseServiceProvider
         return array_filter([
             'domain' => $config->get('atrium.domain'),
             'prefix' => $config->get('atrium.path', 'atrium'),
-            'middleware' => $config->get('atrium.middleware', ['web']),
+            // The `middleware` key left the config in v2; until these routes
+            // move to `atrium.routes`, keep them behind Authorize without it.
+            'middleware' => $config->get('atrium.middleware', ['web', Authorize::class]),
             'as' => 'atrium.',
         ]);
     }

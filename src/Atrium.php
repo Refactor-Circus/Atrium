@@ -27,6 +27,12 @@ use RefactorCircus\Atrium\Support\StyleRegistry;
 
 class Atrium
 {
+    /**
+     * The JSON API's version, the release's major.minor. The shell sends it,
+     * and the Nuxt layer warns when its own version differs.
+     */
+    public const string API_VERSION = '2.0';
+
     public function __construct(
         protected PluginRegistry $plugins,
         protected NavigationRegistry $navigation,

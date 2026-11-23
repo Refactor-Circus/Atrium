@@ -7,11 +7,11 @@ depends on: none
 files: src/Support/JsonData.php, src/Support/ClientPath.php, src/Support/Iconify.php, src/Exceptions/UnserializableDataException.php, src/Atrium.php, src/AtriumServiceProvider.php, config/atrium.php, tests/Unit/Support/JsonDataTest.php, tests/Unit/Support/ClientPathTest.php, tests/Unit/Support/IconifyTest.php, tests/Feature/ConfigTest.php, tests/Feature/RemovedConfigKeysTest.php
 criteria: 13, 14, 18, 29, 33, 37
 
-- [ ] 1.1 Write tests for: `JsonData::check()`: every accepted and rejected type, Carbon, Enum, model `toArray()` with `$hidden`, Collection, the depth limit, the cycle guard, and the exact message format; a `JsonData::resolve(owner, callable)` guard: it isolates failures to `data: null` + `error` outside `local`/`testing` and reports them, and it rethrows in `local`/`testing` (AC 33); the `ClientPath` table (AC 14 bypass forms, the `app.url` host, `client_path` root and non-root, null on rejection); `Iconify::assert()` (the pattern; `lucide:home`, SVG and `i-home` fail); the config banner grep; the removed-key warning: once per process, `Log::spy()`
-- [ ] 1.2 Port `JsonData` and `ClientPath` from the spike and harden them as in the spec. Add `Iconify`. Make `UnserializableDataException` `final`, extending `AtriumException`, with `::forValue()` and status 500.
-- [ ] 1.3 Config: add the `routes` section with the full banner (AC 18) and `client_path`; remove `path`, `domain`, `middleware`, `alpine` and `logout_route`; keep `theme`
-- [ ] 1.4 Add `Atrium::API_VERSION = '2.0'`. Add the boot-time removed-key warning in `AtriumServiceProvider`.
-- [ ] 1.5 Run vendor/bin/pest; all green
+- [x] 1.1 Write tests for: `JsonData::check()`: every accepted and rejected type, Carbon, Enum, model `toArray()` with `$hidden`, Collection, the depth limit, the cycle guard, and the exact message format; a `JsonData::resolve(owner, callable)` guard: it isolates failures to `data: null` + `error` outside `local`/`testing` and reports them, and it rethrows in `local`/`testing` (AC 33); the `ClientPath` table (AC 14 bypass forms, the `app.url` host, `client_path` root and non-root, null on rejection); `Iconify::assert()` (the pattern; `lucide:home`, SVG and `i-home` fail); the config banner grep; the removed-key warning: once per process, `Log::spy()`
+- [x] 1.2 Port `JsonData` and `ClientPath` from the spike and harden them as in the spec. Add `Iconify`. Make `UnserializableDataException` `final`, extending `AtriumException`, with `::forValue()` and status 500.
+- [x] 1.3 Config: add the `routes` section with the full banner (AC 18) and `client_path`; remove `path`, `domain`, `middleware`, `alpine` and `logout_route`; keep `theme`
+- [x] 1.4 Add `Atrium::API_VERSION = '2.0'`. Add the boot-time removed-key warning in `AtriumServiceProvider`.
+- [x] 1.5 Run vendor/bin/pest; all green
 
 ## Group 2: Extension contract and icons on definitions
 depends on: 1

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Console\Commands\InstallCommand;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
 use RefactorCircus\Atrium\Support\StyleRegistry;
@@ -13,6 +14,17 @@ use RefactorCircus\Keystone\Support\PackageServiceProvider;
 
 class AtriumServiceProvider extends PackageServiceProvider
 {
+    /**
+     * The v1 config keys v2 no longer reads.
+     */
+    private const array REMOVED_CONFIG_KEYS = ['path', 'domain', 'middleware', 'alpine', 'logout_route'];
+
+    /**
+     * Whether this process has warned about removed config keys yet: once
+     * per process, not on every boot.
+     */
+    private static bool $warnedAboutRemovedConfigKeys = false;
+
     /**
      * The dashboard always authorizes through the Gate: every screen acts
      * as the signed-in user, unless `atrium.authorization` turns it off.
@@ -42,6 +54,8 @@ class AtriumServiceProvider extends PackageServiceProvider
      */
     public function boot(): void
     {
+        $this->warnAboutRemovedConfigKeys();
+
         $this->registerPolicies();
         $this->registerNotFoundResponses();
 
@@ -86,5 +100,34 @@ class AtriumServiceProvider extends PackageServiceProvider
         $this->commands([
             InstallCommand::class,
         ]);
+    }
+
+    /**
+     * A v1 config left in place must not be dropped silently: a guard in the
+     * old `middleware` key no longer protects anything, and `routes.middleware`
+     * does not inherit it.
+     */
+    private function warnAboutRemovedConfigKeys(): void
+    {
+        if (self::$warnedAboutRemovedConfigKeys) {
+            return;
+        }
+
+        $config = $this->config()->get('atrium', []);
+
+        $present = is_array($config)
+            ? array_values(array_filter(self::REMOVED_CONFIG_KEYS, fn (string $key): bool => array_key_exists($key, $config)))
+            : [];
+
+        if ($present === []) {
+            return;
+        }
+
+        self::$warnedAboutRemovedConfigKeys = true;
+
+        Log::warning(sprintf(
+            'Atrium 2 no longer reads the config keys [%s]; remove them from config/atrium.php. Its routes take their middleware from atrium.routes.middleware, which does not inherit the old middleware key: add your authentication guard there, before Authorize.',
+            implode(', ', $present),
+        ));
     }
 }

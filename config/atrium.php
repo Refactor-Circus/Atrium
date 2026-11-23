@@ -12,68 +12,75 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard Path
+    | API Routes
     |--------------------------------------------------------------------------
     |
-    | The URI path the Atrium dashboard is served from. Plugin routes are
-    | registered beneath this prefix so every dashboard URL is consistent.
+    | Atrium serves its dashboard as a JSON API, which the Nuxt layer in
+    | nuxt/layer renders. Every route, plugin routes included, is registered
+    | under this prefix and middleware and named `atrium.*`.
+    |
+    | enabled:     Set to false to register no Atrium route at all.
+    | prefix:      The URI prefix of every route. Default: `atrium/api`.
+    | middleware:  The middleware of every route. Default:
+    |              ['api', Authorize::class].
+    |
+    | Atrium ships no authentication. Before exposing these routes, add your
+    | application's guard to the middleware, before Authorize: `auth:sanctum`
+    | for Sanctum, `auth:api` for Passport, or a guard of your own. With no
+    | guard there is no signed-in user, and every route answers 401. Keep
+    | Authorize::class last: it checks the `viewAtrium` gate below against
+    | the user the guard signed in, so it must run after the guard.
+    |
+    | client_path: The base path the host serves the SPA from. Default: `/`.
+    |              It must match that base URL, or navigation and search
+    |              links break: a link on this app's host (`app.url`) under
+    |              `client_path` is sent relative to the SPA, any other link
+    |              as external.
+    |
+    | A SPA on another origin than this API needs the host's own setup:
+    |
+    | - Cookie auth (the Sanctum SPA flow): add the prefix to CORS `paths`
+    |   (config/cors.php, e.g. 'atrium/api/*'), set `supports_credentials` to
+    |   true, list the SPA's domain in Sanctum's stateful domains, and have
+    |   the SPA fetch /sanctum/csrf-cookie first, so CSRF protection passes.
+    | - Token auth: the SPA sends the token in the `Authorization` header
+    |   (`Authorization: Bearer ...`) through the layer's auth adapter. CORS
+    |   `paths` must still include the prefix; how the token is stored is up
+    |   to the host.
+    |
+    | Security: the `viewAtrium` gate lets any authenticated user through
+    | while it is undefined and the app runs in the `local` environment.
+    | Never run a shared dev or staging server with APP_ENV=local unless every
+    | user who can sign in may see the dashboard; define the gate instead.
     |
     */
 
-    'path' => 'atrium',
+    'routes' => [
+        'enabled' => true,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Dashboard Domain
-    |--------------------------------------------------------------------------
-    |
-    | Optionally serve the dashboard from a dedicated subdomain. Leave null
-    | to serve it from the application's default domain.
-    |
-    */
+        'prefix' => 'atrium/api',
 
-    'domain' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Middleware
-    |--------------------------------------------------------------------------
-    |
-    | Middleware applied to every Atrium route, including plugin routes. The
-    | authorization middleware checks the gate defined below.
-    |
-    */
-
-    'middleware' => [
-        'web',
-        Authorize::class,
+        'middleware' => [
+            'api',
+            Authorize::class,
+        ],
     ],
+
+    'client_path' => '/',
 
     /*
     |--------------------------------------------------------------------------
     | Authorization Gate
     |--------------------------------------------------------------------------
     |
-    | The gate ability checked before the dashboard is shown. Define it in a
+    | The gate ability Authorize checks on every API route. Define it in a
     | service provider with Gate::define(). When the gate is not defined,
-    | access is granted in the local environment and denied everywhere else.
+    | access is granted to any authenticated user in the `local` environment
+    | and denied everywhere else. See the security note above.
     |
     */
 
     'gate' => 'viewAtrium',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sign Out
-    |--------------------------------------------------------------------------
-    |
-    | The name of the app's logout route (a POST route, as Laravel's starter
-    | kits define it). The top bar's account menu signs out through it. Null,
-    | or a route the app does not define, hides the menu.
-    |
-    */
-
-    'logout_route' => 'logout',
 
     /*
     |--------------------------------------------------------------------------
@@ -152,19 +159,6 @@ return [
     'disabled' => [
         //
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Alpine.js
-    |--------------------------------------------------------------------------
-    |
-    | Atrium's interactive components are built on Alpine. Leave this true to
-    | let Atrium serve the copy it ships with. Set it to false when the host
-    | application already bundles Alpine, so the page does not load it twice.
-    |
-    */
-
-    'alpine' => true,
 
     /*
     |--------------------------------------------------------------------------
