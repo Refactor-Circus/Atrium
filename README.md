@@ -428,6 +428,8 @@ if (class_exists(Atrium::class)) {
 
 A default takes effect only when its target screen exists: a registration for a screen nobody declares is never sent.
 
+The suite's own packages follow the same rule from the other side: in v2 they ship no Atrium code at all, and Atrium's [Suite integrations](#suite-integrations) carry their cross-package defaults in `atrium.integrations`.
+
 ### Testing
 
 Registrations made in a test would otherwise outlive it. Use `RefactorCircus\Atrium\Testing\ResetsScreenExtensions` on your test case: it snapshots the registry once the application has booted, keeping every provider's `boot()` registrations, and restores the snapshot after each test.
@@ -436,9 +438,165 @@ Registrations made in a test would otherwise outlive it. Use `RefactorCircus\Atr
 uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
 ```
 
-## Managing Pennant feature flags
+## Suite integrations
 
-The Feature flags page moved to [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus), which registers it as an Atrium plugin when both are installed.
+Atrium hosts the front ends of the Refactor Circus suite: Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and the Nuxt layer renders them and calls each package's own API from the browser, with your one auth adapter.
+
+Atrium's PHP never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. Everything below is configured under `atrium.integrations` in `config/atrium.php`.
+
+### Detection and `enabled`
+
+An integration registers at boot when both hold:
+
+- `refactor-circus/{pkg}` is installed (asked through Composer's `InstalledVersions`, behind the `InstalledPackages` contract), and
+- `atrium.integrations.{pkg}.enabled` is true (the default). It is read as a boolean, so `"false"` from an env file turns it off.
+
+```php
+// config/atrium.php
+'integrations' => [
+    'polycart' => ['enabled' => env('ATRIUM_POLYCART', true)],
+],
+```
+
+Set `enabled` to `false` to keep a package installed (its API and MCP server still answer) while hiding it from Atrium.
+
+### The API base
+
+The layer calls each package where its API is served:
+
+- a non-empty `atrium.integrations.{pkg}.api_base` wins: a path such as `/cortex/api`, or an absolute URL for a package served from another host;
+- otherwise `/` plus the package's own `{pkg}.routes.prefix`, while `{pkg}.routes.enabled` is true.
+
+When neither applies, the integration does not register, and Atrium logs one `warning` per process naming `{pkg}.routes.enabled` and `atrium.integrations.{pkg}.api_base`.
+
+Polycart and Roster ship with their API off (`polycart.routes.enabled` and `roster.routes.enabled` are `false`), so their integrations stay away until you turn the API on, behind your authentication middleware:
+
+```php
+// config/polycart.php (and config/roster.php alike)
+'routes' => [
+    'enabled' => true,
+    'middleware' => ['api', 'auth:sanctum'],
+],
+```
+
+The package APIs answer with their own authorization, so a user Atrium lets in still sees only what each package's policies allow. Cookie auth across origins needs the package prefixes in your CORS `paths` as well.
+
+On the Nuxt side, the shell sends each integration's `api_base`. A path is resolved against the origin of `runtimeConfig.public.atrium.apiBase` when that is absolute, and against the page's origin otherwise. A host serving a package elsewhere overrides it per key with `runtimeConfig.public.atrium.integrations.{key}.apiBase`.
+
+### Feature flags (Pennant)
+
+An integration is active for a request only when every name in `atrium.integrations.{pkg}.features` is active. The default is one class per package, `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Feature`, which resolves to `true`.
+
+- With [Laravel Pennant](https://laravel.com/docs/pennant) installed, each name resolves through `Feature::for($user)->active($name)`, so you can turn an integration off for everyone or per user:
+
+  ```php
+  use Laravel\Pennant\Feature;
+  use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
+
+  Feature::for($user)->deactivate(PolycartFeature::class);   // one user
+  Feature::deactivateForEveryone(PolycartFeature::class);   // everyone
+  ```
+
+- Without Pennant every flag is on. An empty `features` list always shows the integration; list your own feature names to gate it on them.
+
+An inactive integration is listed in the shell with `active: false`, and none of its navigation, widgets, settings panel or search sources is sent; `atrium.widgets.index` leaves its widgets out, and `atrium.screens.show` answers 404 for its screens. These flags are separate from plugin features, which go through `Atrium::resolveFeaturesUsing()`.
+
+### Cross-package hooks
+
+Some integrations add a tab or section to another's screens. Each hook registers only while both of its integrations are registered, and follows both their flags. The defaults keep v1's:
+
+```php
+'integrations' => [
+    'cortex' => [
+        // atrium.integrations.cortex.redirect_domains.screens: Cortex's redirect domains
+        // on Roster screens, as the `cortex.mcp` tab or a `cortex.redirect-domains` section.
+        'redirect_domains' => ['screens' => ['roster.organization' => 'tab', 'roster.user' => 'aside']],
+    ],
+    'impex' => [
+        // atrium.integrations.impex.run_link.screens: the `impex.run-link` row section.
+        'run_link' => ['screens' => ['showroom.transfers' => 'row.actions']],
+    ],
+    'keen' => [
+        // atrium.integrations.keen.history: the `keen.history` section, the
+        // `keen.activity` tab and the History nav item.
+        'history' => [
+            'screens' => ['*'],
+            'slot' => 'after',
+            'exclude' => ['keen.*', 'atrium.*'],
+            'tabs' => ['roster.organization' => ['scope' => true]],
+            'nav' => [
+                'enabled' => true,
+                'sort' => 90,
+                'exclude' => [],
+                'groups' => ['showroom' => 'showroom', 'pennantplus' => 'pennantplus'],
+            ],
+        ],
+    ],
+    'showroom' => [
+        // atrium.integrations.showroom.transfers.flow_prefix: the Impex flows
+        // Showroom's transfers screen lists, by name prefix.
+        'transfers' => ['flow_prefix' => 'showroom:'],
+    ],
+],
+```
+
+A target is a screen key (`roster.user`), `{package}.*` or `*`, and a slot must be a valid slot name. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped anywhere else. `keen.history.nav.groups` values name Atrium nav groups.
+
+### The Nuxt routes
+
+Each integration's pages live in the layer under its key, so their paths start with `/{pkg}/` and mirror the v1 URLs without the `atrium` prefix:
+
+| Integration | Pages |
+| --- | --- |
+| Cortex | `/cortex/virtual-agents`, `/cortex/concrete-agents`, `/cortex/tools`, `/cortex/servers`, `/cortex/redirect-domains`, `/cortex/run` and their detail pages |
+| Impex | `/impex/runs`, `/impex/flows`, `/impex/messages`, `/impex/channels`, `/impex/subscriptions` and their detail pages |
+| Keen | `/keen/entries`, `/keen/entries/:entry` and `/keen/history/:package` |
+| PennantPlus | `/pennantplus/features` |
+| Polycart | `/polycart/carts`, `/polycart/carts/:cart` and `/polycart/types` |
+| Roster | `/roster/users`, `/roster/organizations`, `/roster/roles`, `/roster/permissions`, `/roster/impersonations`, `/roster/transfers`, their detail pages, and the public `/roster/invitations/:token` |
+| Showroom | `/showroom/products`, `/showroom/product-models`, `/showroom/families`, `/showroom/attributes`, `/showroom/categories`, `/showroom/channels`, `/showroom/owners`, `/showroom/flags`, `/showroom/assets`, `/showroom/transfers` and the rest of its 27 screens |
+
+- Every screen keeps its v1 key, so host extensions registered on `roster.organization` or `showroom.product` still attach. A page fetches its tabs and sections from `atrium.screens.show` (`GET screens/{screen}?record=&tab=`), which serves the screen's extensions without Atrium loading the record.
+- On a `/{pkg}/` path whose integration is not active in the shell, the layer renders `<AtriumIntegrationUnavailable>` (not installed, disabled or flagged off) and calls nothing.
+- `/roster/invitations/:token` is a public page: it loads no shell, and a 401 there never calls `onUnauthorized()` until the visitor accepts or declines.
+- Override any page by defining the same path in your own app.
+
+### Vendored clients and `sync:clients`
+
+Until the packages' v2 tags exist, the layer vendors each package's generated types (D-020). `nuxt/layer/app/integrations/{pkg}/client/` holds:
+
+- `openapi.json`, copied from the package;
+- `schema.d.ts`, the package's generated `client/src/schema.d.ts`, verbatim;
+- `openapi.sha256`, the SHA-256 of `openapi.json`.
+
+`useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` client typed by that `schema.d.ts` and signed by your auth adapter. Refresh the copies after a package's API changes with:
+
+```bash
+ATRIUM_SUITE_PATH=/path/to/checkouts pnpm -C nuxt sync:clients
+```
+
+`ATRIUM_SUITE_PATH` defaults to the repository's parent directory, holding one checkout per package (`Cortex`, `Impex`, ...). `tests/Feature/Integrations/VendoredClientsTest.php` (no Node) checks each stamp, and compares the copies with a sibling checkout when there is one. At release the vendored folders become pnpm git dependencies; the CHANGELOG records the step.
+
+### Atrium's own OpenAPI document and client
+
+Atrium's API has its own `openapi.json` at the repository root (OpenAPI 3.1, one operation per `atrium.*` route, `operationId` the route name), and the layer's `nuxt/layer/app/client/schema.d.ts` is generated from it:
+
+```bash
+composer openapi:export        # rewrite openapi.json from the routes and resources
+pnpm -C nuxt generate:client   # regenerate nuxt/layer/app/client/schema.d.ts
+```
+
+`tests/Feature/OpenApiTest.php` fails when either file is stale, naming both commands. `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the same auth adapter; `useAtriumApi()` keeps working.
+
+### Parity with v1
+
+The integrations port v1's screens, with three departures, each listed in the CHANGELOG:
+
+- **No permission-filtered navigation (D-031).** Integration nav items show to everyone the `viewAtrium` gate admits while the integration is active. A screen shows a no-access state on the package's 403, a widget a no-access card, and a search source is dropped. Use the feature flags above to hide a whole integration from someone.
+- **Operator mode is gone (D-032).** `impex.atrium.show_all` and `polycart.atrium.show_all` have no v2 API, so every list shows what the package API returns for the signed-in user.
+- **Actions without a v2 route are left out (D-032).** Each is named in a `// Not ported (D-032)` comment in the layer and in the CHANGELOG.
+
+The Feature flags screen of [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus) is the PennantPlus integration's `/pennantplus/features` page.
 
 ## Widgets are offered, never placed
 
@@ -498,7 +656,7 @@ Atrium::theme(Theme::make('grove')->label('Grove')->swatch('#15803d')->icon('i-l
 
 Set the `-dark` tokens as well as the light ones, so dark mode stays readable in your theme. Tokens a theme leaves out keep the layer's defaults (in `nuxt/layer/app/assets/css/atrium.css`).
 
-The switcher shows only when there is more than one theme and the feature named by `switcher_feature` is on, asked through Atrium's feature resolver. By default that is Atrium's `ThemeSwitcherFeature`, a Pennant feature that is on globally until you set its global value, and that every user follows until they are given their own. With [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus) installed you turn it off, globally or for particular users, from its feature flags screen. Atrium does not require Pennant: with no feature resolver registered every feature is on, so the switcher always shows. Set `switcher_feature` to `null` for the same, or to a feature name of your own. While the switcher is hidden, everyone sees the default theme.
+The switcher shows only when there is more than one theme and the feature named by `switcher_feature` is on, asked through Atrium's feature resolver. By default that is Atrium's `ThemeSwitcherFeature`, a Pennant feature that is on globally until you set its global value, and that every user follows until they are given their own. Once your feature resolver asks Pennant (`Atrium::resolveFeaturesUsing()`, see [Who sees what](#who-sees-what)), you turn it off globally or for particular users with Pennant, or from the PennantPlus integration's feature flags screen (`/pennantplus/features`). Atrium does not require Pennant: with no feature resolver registered every feature is on, so the switcher always shows. Set `switcher_feature` to `null` for the same, or to a feature name of your own. While the switcher is hidden, everyone sees the default theme.
 
 ### Retuning the built-in theme
 
@@ -585,7 +743,7 @@ Atrium::resolveFeaturesUsing(fn (string $feature, Request $request): bool =>
     Feature::for($request->user())->active($feature));
 ```
 
-[refactor-circus/pennantplus](https://github.com/Refactor-Circus/pennantplus) registers a feature resolver backed by Pennant when both packages are installed. Hiding a link does not protect the data behind it: plugin routes follow the plugin's `features()`, `atrium.feature:billing,billing-v2` guards any other route the same way, and permissions still belong in your routes, requests, or policies.
+Register the resolver yourself (refactor-circus/pennantplus v2 no longer registers one; its `pennantplus.atrium.resolve_features` key is gone). Suite integrations have their own flags, which ask Pennant directly (see [Suite integrations](#suite-integrations)). Hiding a link does not protect the data behind it: plugin routes follow the plugin's `features()`, `atrium.feature:billing,billing-v2` guards any other route the same way, and permissions still belong in your routes, requests, or policies.
 
 ## Search
 
@@ -629,7 +787,7 @@ Every route sits under `atrium.routes.prefix` and `atrium.routes.middleware`, is
 
 | Name | Method and path | Answers |
 | --- | --- | --- |
-| `atrium.shell` | `GET shell` | The app and user, navigation, themes, settings panel summaries, `search.min_length`, `locale` and `api_version` |
+| `atrium.shell` | `GET shell` | The app and user, navigation (each item with its `live` key or null), themes, settings panel summaries, `search` (`min_length`, `per_source` and the client-side `sources`), `integrations`, `locale` and `api_version` |
 | `atrium.dashboards.default` | `GET dashboard` | The user's default dashboard, or `{"data": null}` |
 | `atrium.dashboards.index` | `GET dashboards` | The dashboards the user may see |
 | `atrium.dashboards.show` | `GET dashboards/{dashboard:slug}` | A dashboard with its placements, and `meta.abilities` |
@@ -642,6 +800,7 @@ Every route sits under `atrium.routes.prefix` and `atrium.routes.middleware`, is
 | `atrium.search` | `GET search?q=` | Search results |
 | `atrium.settings.index` | `GET settings` | Settings panel summaries and the `atrium.settings` screen |
 | `atrium.settings.show` | `GET settings/{panel}` | One panel with its data and the `atrium.settings-panel` screen |
+| `atrium.screens.show` | `GET screens/{screen}` | A suite integration's screen (`?record=`, `?tab=`): its key, kind, path, subject type, record, tabs and sections; 404 for an unknown, undeclared or inactive screen (see [Suite integrations](#suite-integrations)) |
 
 Plugin routes follow, under `plugins/{key}` and named `atrium.plugins.{key}.*`.
 
@@ -764,6 +923,7 @@ The code is organised into domain modules under `src/Domains/{Domain}`, namespac
 | --- | --- |
 | `Access` | `Services\Gatekeeper`, the `Concerns\Gated` trait, and the `Authorize`, `ForceJsonResponse` and `EnsureFeaturesAreEnabled` middleware (`Http\Middleware`) |
 | `Dashboard` | `Models\DashboardModel` and `Models\DashboardWidgetModel`, their resources (`Resources\DashboardResource`, `Resources\DashboardWidgetResource`), policies, actions, events, requests and controllers, and `Services\DashboardManager` |
+| `Integrations` | The suite integration framework: the `Contracts\Integration` contract and its `Support\Integration` base, `Services\IntegrationRegistry`, the `Contracts\InstalledPackages` seam, `Services\IntegrationFeatures` (Pennant or all-on), `Data\ScreenDeclaration` and the `atrium.screens.show` endpoint. Each package's definitions (`{Pkg}Integration`, `{Pkg}Feature`) sit in the top-level `src/Integrations/{Pkg}/`, and the cross-package hooks in `src/Integrations/Hooks/` |
 | `Navigation` | `Data\NavItem`, `Data\NavGroup`, `Services\NavigationRegistry` and the shell endpoint (`Http\Resources\ShellResource`) |
 | `Plugins` | The `Contracts\Plugin` contract, the `Support\Plugin` base class, `Services\PluginRegistry`, Composer discovery, plugin routes and the plugin commands |
 | `Screens` | `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, `Services\ScreenExtensions` (the registry behind `Atrium::screens()`), `Services\ScreenVisibility` and `Http\Resources\ResolvedScreenResource` |
@@ -799,6 +959,7 @@ The models keep the class names they had before the domain move (`RefactorCircus
 | `search.min_length` | The fewest characters a query needs (2); a shorter one gets 422. |
 | `search.results` | `per_source` and `total` result caps. Null for no limit. |
 | `search.classification` | `enabled`, `sources` (how many of the most likely sources run, default 3), `provider`, and `model` for classifying search queries with laravel/ai. |
+| `integrations` | One entry per suite package (`cortex`, `impex`, `keen`, `pennantplus`, `polycart`, `roster`, `showroom`): `enabled`, `api_base`, `features`, and the cross-package hook settings. See [Suite integrations](#suite-integrations). |
 
 At boot, Atrium logs one warning per process if the v1 keys `path`, `domain`, `middleware`, `alpine` or `logout_route` are still in `config/atrium.php`.
 

@@ -7,7 +7,8 @@ declare(strict_types=1);
  * installing, host-chosen auth and using the Nuxt layer; the README and the
  * Boost skill explain screen extensions as JSON plus client components; the
  * agent docs describe the API + layer model; none of them still teaches the
- * removed Blade UI or the history screen that moved to Keen.
+ * removed Blade UI or the history screen that moved to Keen. The suite
+ * integrations (AC 76) follow further down.
  */
 
 /**
@@ -204,6 +205,184 @@ it('has an upgrade note for the history removal pointing to Keen', function (): 
         ->toContain('x-atrium::audit.entries')
         ->toContain('refactor-circus/keen')
         ->toContain('ScreenExtensions');
+});
+
+/*
+ * The suite integrations (AC 76): the README's "Suite integrations" section
+ * covers detection, the API base, Pennant flags, the hook keys, the Nuxt
+ * routes, the vendored clients, Atrium's own OpenAPI and client, and the
+ * parity departures; the agent docs and the local standard describe them.
+ */
+
+it('documents detecting and enabling an integration', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))->not->toBe('')
+        ->toContain('Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
+        ->toContain('refactor-circus/{pkg}')
+        ->toContain('installed')
+        ->toContain('`atrium.integrations.{pkg}.enabled`')
+        ->toContain('"false"')
+        // Atrium's PHP never loads a package's classes.
+        ->toContain('never loads');
+});
+
+it('documents the API base and turning on the Polycart and Roster APIs behind auth', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('`atrium.integrations.{pkg}.api_base`')
+        ->toContain('`{pkg}.routes.prefix`')
+        ->toContain('`{pkg}.routes.enabled`')
+        ->toContain('`polycart.routes.enabled`')
+        ->toContain('`roster.routes.enabled`')
+        ->toContain('auth:sanctum')
+        ->toContain('warning')
+        ->toContain('runtimeConfig.public.atrium.integrations');
+});
+
+it('documents the Pennant flags and turning an integration off per user', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('Pennant')
+        ->toContain('`atrium.integrations.{pkg}.features`')
+        ->toContain('{Pkg}Feature')
+        ->toContain('Feature::for($user)->deactivate(')
+        ->toContain('active: false')
+        ->toContain('Without Pennant');
+});
+
+it('documents each hook key with its default', function (string $phrase): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))->toContain($phrase);
+})->with([
+    'atrium.integrations.cortex.redirect_domains.screens',
+    "'roster.organization' => 'tab'",
+    "'roster.user' => 'aside'",
+    'atrium.integrations.impex.run_link.screens',
+    "'showroom.transfers' => 'row.actions'",
+    'atrium.integrations.keen.history',
+    "'exclude' => ['keen.*', 'atrium.*']",
+    "'tabs' => ['roster.organization' => ['scope' => true]]",
+    "'sort' => 90",
+    'atrium.integrations.showroom.transfers.flow_prefix',
+    "'showroom:'",
+]);
+
+it('documents the Nuxt routes of every integration', function (string $pkg): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))->toContain('`/'.$pkg.'/');
+})->with(['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
+
+it('documents the screen route, the unavailable page and page overrides', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('`atrium.screens.show`')
+        ->toContain('AtriumIntegrationUnavailable')
+        ->toContain('/roster/invitations/:token')
+        ->toContain('same path');
+});
+
+it('documents the vendored clients and sync:clients', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('pnpm -C nuxt sync:clients')
+        ->toContain('ATRIUM_SUITE_PATH')
+        ->toContain('openapi.sha256')
+        ->toContain('schema.d.ts')
+        ->toContain('useAtriumIntegration(')
+        ->toContain('VendoredClientsTest');
+});
+
+it("documents Atrium's own OpenAPI document and client", function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('openapi.json')
+        ->toContain('composer openapi:export')
+        ->toContain('pnpm -C nuxt generate:client')
+        ->toContain('useAtriumClient()')
+        ->toContain('OpenApiTest');
+});
+
+it('documents the parity departures', function (): void {
+    expect(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('D-031')
+        ->toContain('D-032')
+        ->toContain('permission')
+        ->toContain('Operator mode')
+        ->toContain('CHANGELOG');
+});
+
+it('lists the screen route in the API table', function (): void {
+    expect(docsSection(docsPath('README.md'), 'The API'))
+        ->toContain('`atrium.screens.show`')
+        ->toContain('`GET screens/{screen}`');
+});
+
+it('describes the integrations in the agent docs', function (string $path, array $phrases): void {
+    expect((string) file_get_contents($path))->toContain(...$phrases);
+})->with([
+    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'src/Integrations/{Pkg}', 'atrium/integrations', 'useAtriumIntegration(', 'sync:clients']],
+    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['app/integrations/{pkg}', 'useAtriumIntegration(', '[[integrations]]']],
+    'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['`Integrations`', 'src/Integrations/{Pkg}', 'atrium.screens.show']],
+    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.integrations.{pkg}.enabled', 'polycart.routes.enabled', 'roster.routes.enabled', 'Pennant', 'useAtriumIntegration(']],
+]);
+
+it('has the local integrations standard', function (): void {
+    $standard = (string) file_get_contents(docsPath('docs/agent/standards/atrium/integrations.md'));
+
+    expect($standard)
+        ->toStartWith("---\n")
+        ->toContain('description:')
+        ->toContain('kind: architectural')
+        // Layout.
+        ->toContain('src/Domains/Integrations')
+        ->toContain('src/Integrations/{Pkg}')
+        ->toContain('app/integrations/{pkg}')
+        ->toContain('app/pages/{pkg}')
+        // Data-only PHP, Vue through clients.
+        ->toContain('static')
+        ->toContain('RefactorCircus\\Cortex')
+        ->toContain('useAtriumIntegration(')
+        // Gating and hooks.
+        ->toContain('InstalledPackages')
+        ->toContain('Pennant')
+        ->toContain('src/Integrations/Hooks')
+        // Vendored clients.
+        ->toContain('sync:clients')
+        ->toContain('D-020')
+        ->toContain('D-032');
+});
+
+it('lists the integrations standard in the standards index', function (): void {
+    // The index is generated by ringside and git-ignored; a fresh checkout
+    // has none until `vendor/bin/ringside sync` (or `composer install`) runs.
+    if (! is_file(docsPath('docs/agent/standards.index.yml'))) {
+        $this->markTestSkipped('No standards index: run vendor/bin/ringside sync.');
+    }
+
+    expect((string) file_get_contents(docsPath('docs/agent/standards.index.yml')))
+        ->toContain('atrium/integrations:')
+        ->toContain('path: docs/agent/standards/atrium/integrations.md');
+});
+
+it('has the integration release items in the pull request template', function (): void {
+    $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
+
+    expect($template)
+        // D-020: the vendored clients become pnpm git dependencies.
+        ->toContain('@refactor-circus/{pkg}-client')
+        ->toContain('github:refactor-circus/{pkg}#v2.0.0&path:/client')
+        ->toContain('sync:clients')
+        ->toContain('create{Pkg}Client')
+        // Polycart's `/client` export-ignore.
+        ->toContain('Polycart')
+        ->toContain('/client')
+        ->toContain('export-ignore')
+        // D-037: the Keystone constraint.
+        ->toContain('refactor-circus/keystone')
+        ->toContain('D-037');
+
+    // Every release item names its owner.
+    $releaseChecks = (string) strstr($template, '## Release checks');
+
+    preg_match_all('/^- \[ \] .*$(?:\n(?!- \[ \]|#).*)*/m', $releaseChecks, $items);
+
+    expect($items[0])->not->toBeEmpty();
+
+    foreach ($items[0] as $item) {
+        expect($item)->toContain('Owner:');
+    }
 });
 
 it('has the release checks in the pull request template', function (): void {

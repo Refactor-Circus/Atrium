@@ -1320,3 +1320,33 @@ Nothing needed changing. I ran the gates and committed the group's paths.
 
 - Nothing in this group's tasks.
 - `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
+
+## Group 28
+
+Integration docs, changelog and release checks (AC 76, 77).
+
+### Files
+
+- `README.md`: a new "Suite integrations" section in place of the stale "Managing Pennant feature flags" one. It covers detection and `enabled`, the API base (with `polycart.routes.enabled` and `roster.routes.enabled` behind auth), the Pennant flags (with per-user `deactivate()`), the hook keys and their defaults, the `/{pkg}/` Nuxt routes, the vendored clients and `sync:clients`, Atrium's `openapi.json` and client, and the parity departures (D-031, D-032). Also `atrium.screens.show` in the API table, the shell additions, `integrations` in the config table, the `Integrations` domain in the layout table, and the PennantPlus resolver lines (PennantPlus v2 no longer registers `Atrium::resolveFeaturesUsing()`).
+- `CHANGELOG.md` (v2.0.0): upgrade step 8; a "Suite integrations" section with the replaced package keys (every `{pkg}.ui.*` and `{pkg}.atrium.*` key and `pennantplus.atrium.resolve_features`, each mapped to its replacement), the five `{Pkg}SupportFeature` classes and their `{Pkg}Feature` replacements, the parity changes, every `// Not ported (D-032)` item from the seven `index.ts` files and the six Roster and Showroom area index pages, and the D-020 release step. Plus two "Added" entries: the integrations, and the OpenAPI document and client.
+- `.github/pull_request_template.md`: the D-020 and D-037 release items (Polycart's `/client` export-ignore, the pnpm git dependencies, the Keystone constraint), each with an owner, plus manual checks for the new README and CHANGELOG sections and the new standard.
+- `docs/agent/standards/atrium/integrations.md` (new). `docs/agent/standards/atrium/components.md` and `domains.md` updated.
+- `resources/boost/skills/atrium-development/SKILL.md`: a new step, "5. Suite integrations" (the later steps are renumbered), and the PennantPlus resolver line.
+- `AGENTS.md`, the target of the `CLAUDE.md` symlink: the `Integrations` domain, the integrations conventions, the layer's integration folders, and two quick commands.
+- `tests/Feature/DocsTest.php`, `tests/Feature/ChangelogUpgradeTest.php`.
+- `docs/agent/specs/.../tasks.md`: tasks 28.1 to 28.5 ticked.
+
+### Tests
+
+- New `DocsTest` cases check the README "Suite integrations" section (detection, API base, Pennant, every hook key with its default, each `/{pkg}/` route, the screen route and the unavailable page, `sync:clients`, the OpenAPI commands, the parity departures), the API table, the agent docs and the new standard. They also check the index entry, which is skipped when the index is absent, and that every PR-template release item names an owner.
+- New `ChangelogUpgradeTest` cases check the integrations, `atrium.screens.show`, the shell additions, all 17 replaced package keys with their replacements, the 5 support features, and the parity changes. They also check a "Not ported (D-032)" heading per source file, whose comment the test reads from the layer, and 16 named left-out items. The D-020 release step and the OpenAPI entries are checked too.
+- Before the docs were written, 93 of these tests failed. After: `DocsTest` and `ChangelogUpgradeTest` pass (169 tests).
+- `composer test` passed: PHPStan, Pint, type coverage at 100%, and Pest with 1357 tests (1350 passed, 7 skipped). A serial `vendor/bin/pest` gave the same counts.
+- `composer test:nuxt` passed with the pnpm shim (D-041): the fixtures check, the frozen install, `generate:client --check`, the typechecks, the build, Vitest (121 files, 1129 tests) and the consumer build.
+- `vendor/bin/ringside check` passed after `ringside sync`.
+
+### Deviations
+
+- `CLAUDE.md` is a symlink to `AGENTS.md`, so the `CLAUDE.md` changes are committed in `AGENTS.md`, which is outside the listed files.
+- `docs/agent/standards.index.yml` is git-ignored and generated. `vendor/bin/ringside sync` lists `atrium/integrations` in it locally, but no tracked file changes. For that reason the index test in `DocsTest` skips when the file is missing in a fresh checkout. The standard's front matter, which the index is built from, is asserted unconditionally.
+- `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.

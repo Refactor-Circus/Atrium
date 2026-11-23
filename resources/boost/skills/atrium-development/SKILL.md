@@ -4,8 +4,8 @@ description: >
   Configure and apply the headless Atrium dashboard package in Laravel
   applications: its JSON API and host-chosen auth, the Nuxt layer and its
   component registry, the authorization gate, dashboard policies, events,
-  plugins, widgets, dashboards and screen extensions (tabs and sections added
-  to any declared screen).
+  plugins, widgets, dashboards, screen extensions (tabs and sections added
+  to any declared screen) and the suite integrations.
 license: MIT
 metadata:
   author: Jay Fletcher
@@ -101,15 +101,26 @@ A plugin is how anything appears in the dashboard. Generate one with `php artisa
 
 Every resolver must return JSON-serializable data (scalars, arrays, `JsonSerializable`, `Arrayable`, backed enums, dates); a closure, an `Htmlable` or another object throws `UnserializableDataException`. Prefer JSON resources. Outside `local` and `testing` a failing resolver is isolated (`data: null` plus `error`) and reported.
 
-Atrium has no permission or feature-flag system of its own. `can()` asks Laravel's Gate unless the application calls `Atrium::resolvePermissionsUsing()`, and `feature()` is always on until something calls `Atrium::resolveFeaturesUsing()` (refactor-circus/pennantplus does, with Pennant). Guard other routes with the `atrium.feature:{features}` middleware.
+Atrium has no permission or feature-flag system of its own. `can()` asks Laravel's Gate unless the application calls `Atrium::resolvePermissionsUsing()`, and `feature()` is always on until the application calls `Atrium::resolveFeaturesUsing()` (for example with Pennant; refactor-circus/pennantplus v2 no longer registers a resolver). Guard other routes with the `atrium.feature:{features}` middleware.
 
 Register it one of two ways. Packages declare the class in their `composer.json` under `extra.atrium.plugins` and Atrium discovers it (cached in `bootstrap/cache/atrium-plugins.php` by `atrium:discover`, which `package:discover` and `optimize` run; `optimize:clear` removes it). Applications call `Atrium::plugin(BillingPlugin::class)` in a service provider's `boot()` method.
 
-### 5. Themes
+### 5. Suite integrations
+
+Atrium hosts the front ends of the suite packages Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom: in v2 they ship only a JSON API and MCP server, and their pages (under `/{pkg}/` in the layer), widgets, settings panels, search sources and nav come from Atrium. Do not look for an Atrium plugin in those packages.
+
+- An integration registers when `refactor-circus/{pkg}` is installed and `atrium.integrations.{pkg}.enabled` is true (boolean-coerced). Set it to `false` to hide an installed package.
+- It needs an API base: `atrium.integrations.{pkg}.api_base`, or else the package's own `{pkg}.routes.prefix` while `{pkg}.routes.enabled` is on. Polycart and Roster ship with their API off: set `polycart.routes.enabled` / `roster.routes.enabled` to `true` and put the app's guard (`auth:sanctum`, ...) in that package's `routes.middleware`, or the integration does not register (Atrium logs a warning naming both keys).
+- It is active per user while every name in `atrium.integrations.{pkg}.features` is active: with Laravel Pennant installed through `Feature::for($user)->active()`, so `Feature::for($user)->deactivate(PolycartFeature::class)` hides Polycart from one user; without Pennant every flag is on.
+- Cross-package hooks are configured under `atrium.integrations.cortex.redirect_domains.screens`, `atrium.integrations.impex.run_link.screens`, `atrium.integrations.keen.history` and `atrium.integrations.showroom.transfers.flow_prefix`; each registers only while both its integrations are registered.
+- In the layer, integration components call their package's API through `useAtriumIntegration(pkg).client`, an `openapi-fetch` client signed by the app's auth adapter; a host serving a package elsewhere sets `runtimeConfig.public.atrium.integrations.{pkg}.apiBase`. Override any integration page by defining the same path in the app.
+- Integration nav items are not hidden by package permissions; the package's 403 shows a no-access state. Operator modes (`show_all`) are gone, and v1 actions without a v2 route are listed in the CHANGELOG.
+
+### 6. Themes
 
 The shell sends every theme with its design tokens, and the layer applies the chosen one on `:root`: the built-in `atrium`, `harbor`, `sunset`, `forest`, `midnight` and `ledger`, any under `config('atrium.themes.available')` (token => value, light and `-dark` together), and any a package registers with `Atrium::theme(Theme::make('key')->label(...)->icon('i-lucide-...')->colors([...]))`. `atrium.themes.default` picks the default; the switcher shows while the `atrium.themes.switcher_feature` feature is on (Atrium's `ThemeSwitcherFeature`; always with no feature resolver or when null). `config('atrium.theme')` retunes the built-in `atrium` theme. No Tailwind build is required in the Laravel app.
 
-### 6. Customize who may change dashboards
+### 7. Customize who may change dashboards
 
 The gate decides who reaches Atrium at all. Each dashboard request is then checked against the policy in `config('atrium.policies')`: `create` on `DashboardModel::class` to store, `update`/`delete` on the dashboard to rename or remove it, and for a layout save `update` on the dashboard, `delete` on each placement it removes, and `create` on `DashboardWidgetModel::class` (both in `RefactorCircus\Atrium\Domains\Dashboard\Models`). Responses carry `meta.abilities` (`update`, `delete`) so the layer hides what would fail. By default the owner may do anything, everyone may view a shared dashboard, and `DashboardWidgetPolicy` defers to the dashboard. To change the rules, extend `RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardPolicy` and point `atrium.policies` at it:
 
@@ -120,7 +131,7 @@ The gate decides who reaches Atrium at all. Each dashboard request is then check
 ],
 ```
 
-### 7. React to dashboard changes
+### 8. React to dashboard changes
 
 - Model events: `RefactorCircus\Atrium\Domains\Dashboard\Events\{Entity}{Hook}Event` (e.g. `DashboardCreatedEvent`, `DashboardWidgetDeletedEvent`), synchronous, with `$event->dashboard` / `$event->widget`, `model()` and `hook()`.
 - Actions take Data objects, never arrays: `app(CreateDashboardAction::class)->execute(new CreateDashboardData('Operations'), $user)`; also `UpdateDashboardData` (partial, fields left out stay) and `SaveDashboardLayoutData` (`new SaveDashboardLayoutData([new WidgetPlacementData('billing.revenue', gridWidth: 6)])`), in `RefactorCircus\Atrium\Domains\Dashboard\Data`. A layout is the full layout: placements are matched by `uuid`, one without a uuid is new, and one left out is deleted (orphans are kept). `version` guards against stale saves (409); code that vouches for the state may leave it out. Use `XData::from($input)` to validate untrusted input.
@@ -237,7 +248,7 @@ In tests, use `RefactorCircus\Atrium\Testing\ResetsScreenExtensions` on the test
 
 Read before executing:
 
-- `config/atrium.php` for `routes` (`enabled`, `prefix`, `middleware`), `client_path`, `gate`, `policies`, `tables` (table names, set before migrating), `audit`, `discover`, `plugins`, `disabled`, `search`, `themes` and `theme`
+- `config/atrium.php` for `routes` (`enabled`, `prefix`, `middleware`), `client_path`, `gate`, `policies`, `tables` (table names, set before migrating), `audit`, `discover`, `plugins`, `disabled`, `search`, `themes`, `theme` and `integrations`
 - the package README for the API, the auth setups and the Nuxt layer
 - the package CHANGELOG's v2.0.0 upgrade guide when moving an app or package off v1
 

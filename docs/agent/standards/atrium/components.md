@@ -20,19 +20,22 @@ Atrium's PHP side serves data; the Nuxt layer in `nuxt/layer` (`@refactor-circus
 ## The layer
 
 - A Nuxt 4 layer, `ssr: false`, on Nuxt UI 4, Pinia, VueUse and `@nuxtjs/i18n`. Distributed by git `extends` from the release tag (D-001), never from a registry, so `nuxt/layer/package.json` has no `workspace:` dependency and the layer imports nothing outside `nuxt/layer`.
-- Its public surface: the `$atrium` registry plugin (`auth()`, `widget()`, `extension()`, `settingsPanel()`), the `useAtrium*` composables, the `Atrium*` components and the `ScreenData` / `Shell` types. Anything else is internal.
+- Its public surface: the `$atrium` registry plugin (`auth()`, `widget()`, `extension()`, `settingsPanel()`, `searchSource()`, `live()`), the `useAtrium*` composables (including `useAtriumIntegration()` and `useAtriumClient()`), the `Atrium*` components and the `ScreenData` / `Shell` types. Anything else is internal.
+- The layer's response types in `app/types/atrium.ts` are aliases of `components['schemas']` in `app/client/schema.d.ts`, generated from Atrium's `openapi.json` (`pnpm -C nuxt generate:client`), with the public names kept.
 - Its own strings come from locale files (`i18n/locales`, `en` shipped); server-side labels stay translated by Laravel.
 - Icons come from collections bundled locally (`icon.serverBundle`, `lucide` by default); the remote Iconify API stays off unless a host opts in.
 - Styling uses Nuxt UI components and the design tokens in `nuxt/layer/app/assets/css/atrium.css`. Themes (`Domains\Themes`) are sent in the shell as token values and applied on `:root`; never hard-code a colour a theme should own.
 
 ## Suite packages
 
-- A suite package's Atrium UI is PHP definitions and JSON plugin routes, plus Vue components registered under its keys. It ships no stylesheet and no design tokens of its own: its components are built from Nuxt UI and the layer's `Atrium*` components and tokens.
+- The seven suite packages (Cortex, Impex, Keen, PennantPlus, Polycart, Roster, Showroom) ship no UI in v2. Their Vue code lives in this layer, in `app/integrations/{pkg}/` and `app/pages/{pkg}/`, and calls each package's API through `useAtriumIntegration(pkg).client`; see [[integrations]].
+- A third-party package's Atrium UI is PHP definitions and JSON plugin routes, plus Vue components registered under its keys. It ships no stylesheet and no design tokens of its own: its components are built from Nuxt UI and the layer's `Atrium*` components and tokens.
+- Integration components follow the same rule: Nuxt UI and the `Atrium*` components (`AtriumNoAccess`, `AtriumIntegrationScreen`, `AtriumErrorCard`, ...), never a package-specific stylesheet.
 - When a package needs a generic piece of UI, add an `Atrium*` component to the layer rather than styling it in the package.
-- Atrium knows no suite package by name: no layer code, fixture or test refers to another package's keys.
+- Outside `app/integrations/{pkg}/`, `app/pages/{pkg}/`, their locale files, tests and fixtures, no layer code refers to a suite package's keys.
 
 ## Enforcement
 
 - `tests/ArchTest.php` fails if `src/` calls `view(`, references `Illuminate\View` or uses `Blade::`.
 - PHP feature tests compare the API's payloads with the contract fixtures in `nuxt/layer/test/fixtures` (rewritten only with `UPDATE_FIXTURES=1`), and Vitest type-checks each fixture against the layer's types.
-- `composer test:nuxt` runs the frozen install, typecheck, build, Vitest and a consumer build against a copy of the layer. Run it after any change under `nuxt/`.
+- `composer test:nuxt` runs the frozen install, the `generate:client` staleness check, typecheck, build, Vitest and a consumer build against a copy of the layer. Run it after any change under `nuxt/`.

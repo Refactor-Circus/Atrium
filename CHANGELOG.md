@@ -27,6 +27,7 @@ Work through these in order.
 5. **Choose your auth.** Atrium ships no authentication. Cookie auth (Sanctum's SPA flow) needs the host's CORS (`paths`, `supports_credentials`) and CSRF setup; token auth sends the `Authorization` header from the layer's auth adapter, and the host owns where the token is stored. See the README's "Authentication".
 6. **Install the front end.** Extend the layer from a Nuxt 4 app with `extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0']` (pin a commit SHA in production), set `runtimeConfig.public.atrium.apiBase` to the API, and register a Vue component for every widget, screen extension and settings panel key with `$atrium.widget(...)`, `$atrium.extension(...)` and `$atrium.settingsPanel(...)`. See the README's "The Nuxt layer".
 7. **Update your plugins and packages** as listed below: icons become Iconify names, `view()` becomes a client component key, and plugin routes return JSON.
+8. **Move the suite packages to v2 together.** Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom v2 ship only their JSON API and MCP server; their Atrium UI now lives in Atrium's own integrations (see "Suite integrations" below). Upgrade them with Atrium, move their old Atrium keys to `atrium.integrations` as the table below lists, then delete the `ui` and `atrium` sections from each published package config. Turn on the Polycart and Roster APIs (`polycart.routes.enabled`, `roster.routes.enabled`, both off by default) behind your auth middleware, or their integrations do not register.
 
 #### Routes
 
@@ -75,7 +76,138 @@ Every route answers JSON under `atrium.routes.prefix` and `atrium.routes.middlew
 - **Resolver output must be JSON-serializable.** Every widget, tab, section and settings panel resolver's output passes through `Support\JsonData::check()`. A closure, an `Htmlable` or another non-serializable object, a cycle or too deep a structure throws `RefactorCircus\Atrium\Exceptions\UnserializableDataException` (status 500). Outside `local` and `testing`, a failing eager resolver no longer fails the response: that placement, tab, section or panel is sent with `data: null` and an `error`, and the exception is reported.
 - **Links are `{path, external}`.** Navigation items and search results are sent with `link`, computed by `Support\ClientPath` against `atrium.client_path` and the host of `app.url`; a `javascript:`, `data:`, `//host` or other unsafe URL is sent as `link: null`.
 
-### Added
+### Suite integrations
+
+Atrium hosts the front ends of Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Each of those packages' v2 ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client, and no Atrium plugin, Blade screens or `atrium.{pkg}.*` routes. Their pages, widgets, settings panels, search sources and navigation are now Atrium's:
+
+- **PHP declares, the layer renders.** `src/Integrations/{Pkg}/{Pkg}Integration` declares each package's nav items, widgets, settings panel, search sources and screens as static data, and never loads a package class. The Nuxt layer renders them under `/{pkg}/` and calls each package's API through `useAtriumIntegration(key)`, an `openapi-fetch` client typed by the package's schema and signed by the one auth adapter.
+- **Config.** `atrium.integrations` has one entry per package: `atrium.integrations.{pkg}.enabled` (default `true`, boolean-coerced), `atrium.integrations.{pkg}.api_base` (default `null`: the package's own `{pkg}.routes.prefix` while `{pkg}.routes.enabled` is on) and `atrium.integrations.{pkg}.features` (default `[{Pkg}Feature::class]`), plus the cross-package hook settings. An integration registers only when `refactor-circus/{pkg}` is installed, it is enabled and it has an API base; otherwise Atrium logs one warning per process naming the keys to set.
+- **Feature flags.** An integration is active for a user only while all its `features` are; with Laravel Pennant installed each resolves through `Feature::for($user)->active()`, and without Pennant every flag is on. The plugin feature gate (`Gatekeeper`, `Atrium::resolveFeaturesUsing()`) is unchanged.
+- **Screens.** Every v1 screen keeps its key (`roster.organization`, `showroom.product`, ...), so host tabs and sections still attach. The new route `atrium.screens.show` (`GET screens/{screen}`, with optional `record` and `tab` query strings) serves a declared screen's `{key, kind, path, subject_type, record, tabs, sections}` from `ScreenExtensions`, loading no record; an unknown, undeclared or inactive screen answers 404.
+- **Shell additions.** The shell gains `integrations` (`{key, label, active, api_base, features}` per registered integration), `search.sources` (the client-side search sources of active integrations), `search.per_source`, and a `live` key on each nav item (`{key, options}` or null, set with `NavItem::live()`) whose badge or children the layer computes from a package API. Atrium computes no badge for an integration's nav item.
+- **Cross-package hooks** keep their v1 defaults: Cortex's redirect domains on `roster.organization` (the `cortex.mcp` tab) and `roster.user` (an `aside` section), Impex's run link on `showroom.transfers` rows, and Keen's history section, activity tab and History nav item. Each registers only while both its integrations are registered.
+
+#### Replaced package keys
+
+Delete these from the published package configs; nothing reads them in v2. Move any value you changed to its replacement.
+
+| v1 package key | v2 replacement |
+| --- | --- |
+| `cortex.ui.enabled` | `atrium.integrations.cortex.enabled` |
+| `impex.ui.enabled` | `atrium.integrations.impex.enabled` |
+| `keen.ui.enabled` | `atrium.integrations.keen.enabled` |
+| `polycart.ui.enabled` | `atrium.integrations.polycart.enabled` |
+| `showroom.ui.enabled` | `atrium.integrations.showroom.enabled` |
+| `cortex.atrium.features` | `atrium.integrations.cortex.features` |
+| `impex.atrium.features` | `atrium.integrations.impex.features` |
+| `polycart.atrium.features` | `atrium.integrations.polycart.features` |
+| `roster.atrium.features` | `atrium.integrations.roster.features` |
+| `showroom.atrium.features` | `atrium.integrations.showroom.features` |
+| `cortex.atrium.redirect_domains.screens` | `atrium.integrations.cortex.redirect_domains.screens` (same default) |
+| `impex.atrium.run_link.screens` | `atrium.integrations.impex.run_link.screens` (same default) |
+| `keen.atrium.history` (`screens`, `slot`, `exclude`, `tabs`, `nav`) | `atrium.integrations.keen.history` (same defaults; `nav.groups` values now name Atrium nav groups, `showroom` and `pennantplus`, not translation keys) |
+| `impex.atrium.show_all` | None: operator mode has no v2 API (D-032). |
+| `polycart.atrium.show_all` | None: operator mode has no v2 API (D-032). |
+| `showroom.atrium.widget_cache_seconds` | `showroom.stats.cache_seconds`, in Showroom, which caches `GET /showroom/stats`. |
+| `pennantplus.atrium.resolve_features` | None in PennantPlus, which no longer registers Atrium's feature resolver: register one yourself with `Atrium::resolveFeaturesUsing()` for plugin features. Integrations use their own flags. |
+
+Each package's Pennant support feature is replaced by Atrium's integration feature, a class whose `resolve()` returns `true` until you deactivate it. Stored Pennant values under the old names are no longer read and can be purged (`php artisan pennant:purge`):
+
+| v1 feature | v2 replacement |
+| --- | --- |
+| `CortexSupportFeature` | `RefactorCircus\Atrium\Integrations\Cortex\CortexFeature` |
+| `ImpexSupportFeature` | `RefactorCircus\Atrium\Integrations\Impex\ImpexFeature` |
+| `PolycartSupportFeature` | `RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature` |
+| `RosterSupportFeature` | `RefactorCircus\Atrium\Integrations\Roster\RosterFeature` |
+| `ShowroomSupportFeature` | `RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature` |
+
+Keen and PennantPlus had none; they get `RefactorCircus\Atrium\Integrations\Keen\KeenFeature` and `RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusFeature`.
+
+The packages' Blade pages (`atrium.{pkg}.*` routes under `/atrium/{pkg}/...`) are replaced by the layer's pages at `/{pkg}/...`, the same paths without the `atrium` prefix; update bookmarks and links.
+
+#### Parity changes (D-031, D-032)
+
+- **Navigation is no longer filtered by permission (D-031).** Integration nav items show to everyone the `viewAtrium` gate admits while the integration is active; v1 asked each package's policies in PHP, which Atrium no longer calls. A screen shows a no-access state on the package's 403, a widget a no-access card, and a search source that answers 403 is dropped from ⌘K. Controls are no longer hidden by ability either (v1's `@rosterCan`, `@showroomCan`, `@polycartCan`): they show, and the package's 403 refuses. Hide a whole integration from someone with its feature flag.
+- **Operator mode is not ported (D-032).** `impex.atrium.show_all` and `polycart.atrium.show_all` have no v2 API, so lists, widgets and search show what the package API returns for the signed-in user.
+- **Actions without a v2 API route are left out (D-032),** as listed below. Each is also named in a `// Not ported (D-032)` comment at the top of the integration's `index.ts`, or of the area's index page for Roster and Showroom.
+- **Screen extensions on rows.** `atrium.screens.show` loads no records, so the `row.actions` slot of a list screen gets no per-row sections from other packages; the tabs and the `header.actions`, `before`, `aside` and `after` sections still render.
+
+#### Not ported (D-032)
+
+- **Cortex**
+  - Redirect domains: the source filter (`?source=global|owned`); `redirect-domains.index` takes only `owner_type`/`owner_id`.
+  - Redirect domains: the read-only list of domains configured in `cortex.redirect_domains` (config); the API lists stored domains only.
+  - Redirect domains: paging of the stored domains; `redirect-domains.index` answers every stored domain at once.
+  - Redirect domains: the "redirect domains are turned off" warning; no route reports whether they are enabled.
+- **Impex**
+  - Operator mode (`impex.atrium.show_all`): every list shows what the API returns for the signed-in user.
+  - The channel form's list of installed transports: the v2 API lists none, so the form offers http, mail and file.
+  - Hiding nav items, widgets and the search source by permission (D-031): a screen shows its no-access state on Impex's 403 instead.
+- **Keen**: nothing. Browsing and filtering the log, one entry, recording an event and each package's history all have v2 routes.
+- **PennantPlus**
+  - The "needs a Pennant store that uses the database driver" notice: no v2 route reports whether the store can list stored values, so on another driver `values.index` answers an empty list.
+  - The `row.actions` section slot on each stored value: `atrium.screens.show` loads no records.
+- **Polycart**
+  - Operator mode (`polycart.atrium.show_all`): Polycart's API lists only the carts the user can access, and has no operator route.
+  - Hiding each control the user may not use (v1's `@polycartCan` checks): no v2 route reports a cart's abilities, so every control shows and Polycart's 403 answers with the no-access notice (D-031).
+  - The share form's pickers (the configured owner and scope aliases, `polycart.owners` and `polycart.scopes`, and the cart type's roles): no v2 route lists either, so both are text fields, and the form shows for every scoped cart; Polycart's 422 refuses what v1 never offered.
+  - Offering only the moves and conversions the policy allows: the screen offers what the type allows, and Polycart's 403 refuses the rest.
+  - The cart's full scope path (every ancestor scope): the cart resource carries only its own scope.
+  - A line's options: `CartLineResource.options` is typed as an empty object, so the screen shows only the purchasable, or "Custom".
+  - The `row.actions` section slot on each cart and type row: `atrium.screens.show` loads no records.
+  - The cart type's PHP class on the types screen: `CartTypeResource` does not carry it.
+- **Cross-package hooks**: nothing. Cortex's `redirect-domains` index, store and destroy, and Keen's `packages.index` and `entries.index` all have v2 routes; the run link makes no request.
+- **Roster users and impersonations**
+  - The deleted user's page: v2's `roster.users.show` answers 404 for a deleted user. Restore and purge are offered on the Deleted tab, and on the user page right after a delete.
+  - The "I understand" checkbox before delete and purge (v1's `confirm` field): the v2 routes take no confirmation field, so a browser confirmation replaces it.
+  - Roster's impersonation banner (`roster::impersonation-banner`) on each screen: it is Roster's own view, with no API route.
+  - Hiding each card and button by the viewer's permissions (v1's `@rosterCan`): a 403 shows the no-access notice instead (D-031).
+  - v1's single status route (`users.status`) maps to `roster.users.suspend`, `roster.users.deactivate` and `roster.users.reactivate`, and is ported as that mapping.
+- **Roster organizations, teams and invitations**
+  - The deleted organization's page: v2's `roster.organizations.show` answers 404 for one. Restore and purge are offered on the Deleted tab, and on the organization page right after a delete.
+  - The "I understand" checkbox before delete and purge: a browser confirmation replaces it.
+  - An immediate purge: v2's `roster.organizations.purge` queues it (202), so the page says so and the organization leaves the Deleted tab once the queue runs.
+  - Roster's impersonation banner (`roster::impersonation-banner`) on each screen.
+  - Hiding each card and button by the viewer's permissions (v1's `@rosterCan`) (D-031).
+  - Screen extensions on the public invitation page: it loads neither the shell nor `atrium.screens.show`, which need a signed-in user (D-038).
+  - The session-based accept and decline forms of the invitation page (`roster.invitations.page.accept` / `.decline`): they map to the API's `roster.invitations.accept` / `.decline`, which need a signed-in user.
+- **Roster roles, permissions and transfers**
+  - Roster's impersonation banner (`roster::impersonation-banner`) on each screen.
+  - Hiding each form and button by the viewer's permissions (v1's `@rosterCan` and `ScreenAccess::allows()`): the new-role and new-permission forms, the role page's read-only view, and the permission edit controls (D-031).
+  - Offering only the import and export types the viewer may start, and the transfer page's "may confirm" check: every type is offered and a 403 shows the no-access notice.
+  - The "transfers need Impex" notice (v1's `Transfers::available()`): starting a transfer without Impex shows Roster's error message.
+  - The transfers page's organization name in its header: the v2 list carries the organization's slug only.
+- **Showroom widgets and search**
+  - Hiding the nav items, widgets and the search source by policy (D-031): the widgets show their no-access card on Showroom's 403, and the search source is dropped from ⌘K.
+  - The recent-changes widget's author names: Showroom's v2 stats name an author by type and id only, so the widget shows the id.
+- **Showroom products, product models and families**
+  - Hiding buttons, cards and the read-only form by the viewer's abilities (v1's `@showroomCan` and `ScreenAccess::allows()`) (D-031).
+  - Showing the own-flags field only to those who may assign flags (`FlagScreen::mayAssign()`): the field always shows, and Showroom answers 403 when an unassignable flag changes.
+  - Publishing from draft or in review when `showroom.workflow.require_approval` is off: no route reports the setting, so the page offers the transitions approval allows; Showroom still decides.
+  - Version authors' names: `products.versions.index` names an author by type and id only.
+  - Uploading and linking an asset in one transaction (v1's `assets.upload`): ported as `assets.store` then `assets.links.store`, so a refused link leaves the uploaded asset unlinked.
+  - v1's `associations.add` and `associations.remove` routes: ported as an update of the record (`products.update`, `product-models.update`) that replaces the type's own targets.
+  - Links from associations and a model's variant products straight to a product's page: they name products by identifier, so they link to the product list searched for it.
+  - The flash messages after each action: the page reloads instead.
+- **Showroom attributes, categories, channels and flags**
+  - Hiding the create, save and delete controls, and the read-only attribute form, by the viewer's abilities (D-031).
+  - Hiding the channels screen's locales card from those who may not list locales: the card shows its own no-access state when `locales.index` answers 403.
+  - The flash messages after each action: the page reloads instead.
+- **Showroom assets, owners and transfers**
+  - Hiding each form and button by policy (`@showroomCan`) (D-031).
+  - The transfers list's result column (an export's file asset and record count, an import's counts): `impex.runs.index` sends no step results. A failed run still shows its error message.
+  - The owner type beside each code of an owner's chain and children: `owners.show` names them by code only.
+
+#### Release step (D-020)
+
+The package v2 tags were not cut during this build, so the layer vendors each package's generated types in `nuxt/layer/app/integrations/{pkg}/client/` (`openapi.json`, `schema.d.ts` and `openapi.sha256`), refreshed with `pnpm -C nuxt sync:clients` from the sibling checkouts (`ATRIUM_SUITE_PATH`) and checked by `VendoredClientsTest`. Once every package's v2 tag exists:
+
+1. Remove `/client export-ignore` from Polycart's `.gitattributes` (and confirm no other package export-ignores `/client`), and cut the tag after that change: a git install reads the tag's archive, which would otherwise lack the client.
+2. Add each client to `nuxt/layer/package.json` as a pnpm git dependency, `"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"`, and update `nuxt/pnpm-lock.yaml`.
+3. Switch the layer's imports to the clients' `create{Pkg}Client`, then delete the vendored `client/` folders, `nuxt/scripts/sync-clients.mjs`, the `sync:clients` script and `VendoredClientsTest`.
+4. Widen the `refactor-circus/keystone` constraint to the Keystone release that drops its built-in `atrium` surface prefix (D-037).
+
+The pull request template carries these as release items.
 
 - The JSON API: `ShellResource`, `DashboardResource` and `DashboardWidgetResource` (beside the models, in `Domains\Dashboard\Resources`), `WidgetDefinitionResource`, `ResolvedScreenResource`, `SettingsPanelResource` and `SearchResultResource`, all on Keystone's `JsonResource`.
 - `nuxt/layer` (`@refactor-circus/atrium-nuxt` 2.0.0): the shell, navigation, ⌘K search, theme switching, the dashboard grid editor and switcher, settings pages and screens, the `$atrium` registry (`auth()`, `widget()`, `extension()`, `settingsPanel()`), an unregistered-component fallback, an error card for failed placements, locale files (`en`) with `@nuxtjs/i18n`, locally bundled `lucide` icons, and a version-mismatch banner. `nuxt/playground` runs it against the workbench.
@@ -84,6 +216,8 @@ Every route answers JSON under `atrium.routes.prefix` and `atrium.routes.middlew
 - `SearchRegistry::minLength()`: `atrium.search.min_length`, at least 1.
 - `composer test:nuxt` and the `nuxt` CI job: a frozen pnpm install, typecheck, build, Vitest, and a build of a fresh consumer app against a copy of the layer.
 - Contract fixtures in `nuxt/layer/test/fixtures`, compared by the PHP suite on every run and rewritten only with `UPDATE_FIXTURES=1`.
+- The suite integrations (see "Suite integrations" above): the `Integrations` domain (`IntegrationRegistry`, the `InstalledPackages` contract, `IntegrationFeatures`, `ScreenDeclaration`), `src/Integrations/{Pkg}` for the seven packages and `src/Integrations/Hooks`, the `atrium.integrations` config section, the `atrium.screens.show` route, the shell's `integrations`, `search.sources` and `search.per_source`, and `NavItem::live()`. In the layer: `useAtriumIntegration()`, `useIntegrationQuery()`, `$atrium.searchSource()` and `$atrium.live()`, `<AtriumIntegrationUnavailable>`, `<AtriumIntegrationScreen>` and `<AtriumNoAccess>`, the integrations' pages under `/{pkg}/`, a public layout for `/roster/invitations/:token`, and English strings for each integration.
+- Atrium's own OpenAPI document, `openapi.json` (OpenAPI 3.1, one operation per `atrium.*` route), written by `composer openapi:export` with Scramble (a dev dependency, configured in the workbench); every resource declares `schema()`. The layer's `nuxt/layer/app/client/schema.d.ts` is generated from it by `pnpm -C nuxt generate:client`, the layer's response types are aliases of it, and `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the auth adapter. `useAtriumApi()` is unchanged.
 
 ### Fixed
 

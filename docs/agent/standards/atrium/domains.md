@@ -1,23 +1,25 @@
 ---
-description: "Atrium's domains (Access, Dashboard, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code, domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
+description: "Atrium's domains (Access, Dashboard, Integrations, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code and per-package src/Integrations/{Pkg}, domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
 tags: [atrium, domains, service-providers, routes, resources, api, morph-aliases]
 kind: convention
 ---
 
 # Atrium Domains
 
-Complements [[domain-modules]], [[routes]] and [[resources]]: Atrium's code sits in nine fixed domains whose providers load their routes into the one JSON API group.
+Complements [[domain-modules]], [[routes]] and [[resources]]: Atrium's code sits in ten fixed domains whose providers load their routes into the one JSON API group.
 
 ## Domains
 
-- `Access`, `Dashboard`, `Navigation`, `Plugins`, `Screens`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
+- `Access`, `Dashboard`, `Integrations`, `Navigation`, `Plugins`, `Screens`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
 - A new domain is added to this list and its provider to `Domains\DomainServiceProvider::$providers`.
-- `Navigation` serves the shell (`atrium.shell`, `Http\Resources\ShellResource`): app, user, navigation, themes, settings summaries, `search.min_length`, `locale` and `api_version`.
+- `Navigation` serves the shell (`atrium.shell`, `Http\Resources\ShellResource`): app, user, navigation (with each item's `live` key), themes, settings summaries, `search` (`min_length`, `per_source`, `sources`), `integrations`, `locale` and `api_version`.
+- `Integrations` is the suite integration framework: the `Integration` contract and base, `IntegrationRegistry`, the `InstalledPackages` seam, `IntegrationFeatures`, `ScreenDeclaration`, and the `atrium.screens.show` endpoint (`GET screens/{screen}`) with its own `routes.php`. It is the only domain that knows the seven suite package keys; see [[integrations]].
 - `Screens` holds the screen extensions registry: `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, the `Services\ScreenExtensions` singleton (`Atrium::screens()`), the `scoped()` `Services\ScreenVisibility` and `Http\Resources\ResolvedScreenResource`. It registers no routes; screens are sent by the endpoints that declare them (Settings declares `atrium.settings` and `atrium.settings-panel`).
 - Atrium has no History domain and no audit concept: the history screen, its components and its nav item belong to refactor-circus/keen.
 
 ## Top level
 
+- `src/Integrations/{Pkg}/` (`{Pkg}Integration`, `{Pkg}Feature`) and `src/Integrations/Hooks/` sit at the top level, outside the domains, because the registry finds them by convention from the `atrium.integrations` keys and each package's definitions stay in one folder (a recorded departure from [[domain-modules]]). They hold declarations only and import nothing from a suite package.
 - Package-wide code: `Atrium` (with `API_VERSION`), `AtriumServiceProvider`, `Facades\Atrium`, `Http\Requests\Request`, `Console\Commands\InstallCommand` (`atrium:install`), `Exceptions\AtriumException` (the abstract base of every Atrium exception, on Keystone's `PackageException`), `Exceptions\UnserializableDataException`, and `Support\` (`ClientPath`, `Iconify`, `JsonData`, `Tables`, `ScreenAccess`, `ServiceProvider`). `JsonData` and `UnserializableDataException` are top level because Widgets, Screens and Settings all use them.
 - A domain's own exceptions sit in its `Exceptions/` (`Search\Exceptions\SearchSourceFailedException`), and its own console commands in its `Console/` (`Search\Console\InvokeSearchSourceCommand`, the hidden `atrium:search-source`), registered by its provider.
 - Value objects in a domain's `Data/` include `NavItem`, `WidgetDefinition`, `SettingsPanel`, `SearchResult` and `Theme`. Their `icon()` setters take Iconify names only, and their `component` defaults to their key.
