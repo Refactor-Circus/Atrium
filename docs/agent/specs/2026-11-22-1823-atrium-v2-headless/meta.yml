@@ -1,6 +1,6 @@
 id: 2026-11-22-1823-atrium-v2-headless
 title: 'Atrium v2 headless'
-status: needs-decision
+status: written
 created: '2026-11-22 18:23'
 release: v2.0.0
 spike: { branch: spike/v2-headless, commit: 2607d9a, worktree: ../Atrium--v2-headless }

@@ -205,3 +205,35 @@ Pinned versions are copied from the spike into the repo (lockfile and `packageMa
 - **`atrium.client_path`** is a new key. It must match the base URL the host serves the SPA from, or nav and search links break. Default `/`.
 - **CI:** adding Node to the package CI raises run time, so a separate job is likely.
 - **Big-bang release:** suite packages on `^1` keep working until they move. Nothing on `^2` renders without its Nuxt layer.
+
+## Addendum 2026-11-22: spec review decisions
+
+See `decisions.md`, D-001 to D-007. Where these conflict with the acceptance criteria above, they win.
+
+25. **Distribution (D-001):** host apps use `extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0']`.
+    - The README documents this, including `GIGET_AUTH` for private repos.
+    - The playground extends the local `../layer` path.
+    - Nothing is published to a registry.
+26. **Node gate (D-002):** `composer test:nuxt` runs `pnpm -C nuxt install --frozen-lockfile`, typecheck, build and Vitest.
+    - CI runs it as its own job.
+    - `composer test` stays PHP-only.
+    - Both must pass for the spec to be done.
+27. **Layer i18n (D-003):** the layer's own strings come from locale files, with English as the default. This is in scope.
+    - The layer uses `@nuxtjs/i18n`.
+    - Hosts can add or override locales.
+    - The shell sends `locale` from `app()->getLocale()`, and the layer switches to it.
+    - Server-side labels (nav, widgets, panels, tabs) stay translated by Laravel.
+    - Vitest proves a string renders in a second test locale.
+28. **Version skew (D-004):** the shell includes `api_version`, a constant on `Atrium` that matches the release major.minor.
+    - The layer compares it with its own package version and shows a non-blocking warning (console plus a dismissible banner) on a major or minor mismatch.
+    - Vitest covers the warning.
+29. **Removed config keys (D-005):** at boot, Atrium logs one warning per request lifecycle when any of `path`, `domain`, `middleware`, `alpine` or `logout_route` is present in `config('atrium')`.
+    - The warning names the keys and points to `atrium.routes.middleware`.
+    - A test asserts the log entry.
+30. **Layout save (D-006):** `PUT dashboards/{dashboard:slug}/layout` treats the payload as the full layout.
+    - Placements whose `uuid` is absent from the payload are deleted.
+    - Orphaned placements (no registered definition) are never deleted by a layout save, even when omitted.
+    - Tests cover omit-deletes, orphan-kept and new-without-uuid.
+31. **Contract fixtures (D-007):** PHP feature tests write the JSON payloads of `shell`, a dashboard, a resolved screen and settings to `nuxt/layer/test/fixtures/*.json`.
+    - A Pest test fails when a committed fixture is stale.
+    - Vitest type-checks each fixture against the layer's TS types (`satisfies`) and renders the components from them.
