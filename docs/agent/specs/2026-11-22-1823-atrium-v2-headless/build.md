@@ -1119,3 +1119,63 @@ This was a second retry for 22.1 and 22.4. Commit `f649540` already did both (D-
 
 - None.
 - The worktree has an untracked `nuxt/layer/.nuxtrc`. It is outside this group and wasn't created by this run, so it is not committed.
+
+## Group 23 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+- The code was on disk, uncommitted:
+  - the eight pages: `pages/showroom/products/{index,create,[product]}.vue`, `pages/showroom/product-models/{index,[productModel]}.vue`, `pages/showroom/families/{index,[family]}.vue` and `pages/showroom/family-variants/[familyVariant].vue`;
+  - `integrations/showroom/components/catalog/`: `catalog.ts` (payload types, loader, action runner, paths) and `values.ts` (the value form, the editing slot and the attribute catalog), plus `ValueEditor`, `InheritedValues`, `AxesFields`, `SlotPicker`, `ProductWorkflow`, `CatalogAssets`, `CatalogAssociations`, `ExternalIds`, `CatalogPager`, `CatalogState` and `CatalogActionError`;
+  - the filled `i18n/locales/integrations/showroom-catalog.en.json`.
+- The `// Not ported (D-032)` comment was at the top of `pages/showroom/products/index.vue`.
+- There were no tests: `test/integrations/showroom/catalog/` did not exist.
+- One typecheck error: `pages/showroom/families/index.vue` sent `families.store` a `labels` map. The vendored schema types it as an array.
+
+### What was done
+
+- `families/index.vue` sends its body through `untyped()`, as the family page already did. Nothing else in the code changed.
+- Wrote the tests under `test/integrations/showroom/catalog/`: `support.ts` and nine Vitest files, 109 tests in all.
+  - `support.ts` holds the payloads, the lookups, the `atrium.screens.show` stand-in, the page mounter, the call filter and the confirmation stub. Scramble types Showroom's resources loosely, so the payloads use `satisfies` against the shapes the pages read (`catalog.ts`). They are answered through `reply(200, …)`, as roster's transfers suite does.
+  - `products.test.ts`: the load, the status and search filters, the URL filters and page, paging, clear, empty and 403.
+  - `product-create.test.ts`: the families, the create body with and without a family, the redirect, 422 and 403.
+  - `product.test.ts`:
+    - load, 403 and 404;
+    - values: the full update body, edited values, family, owner and enabled, the slot from the URL, switching the slot, an added attribute, 422 under its field, and 403;
+    - categories, flags (own and effective), and external ids (emptied as null, a new source, 422 under its source);
+    - workflow: the open transitions, the body with and without a comment, unpublish only when published, a 409 message and 403;
+    - versions: revert once confirmed, revert declined, and 403;
+    - assets: the links, upload then link with the role, and 422;
+    - associations: remove, add plain, add quantified, and 422;
+    - delete: confirmed, declined, and 403;
+    - a variant product: its model and family variant load, it shows what it inherits, and a save sends only what it owns.
+  - `product-models.test.ts`: the load, the filters, cursor paging, create, 422 and 403.
+  - `product-model.test.ts`:
+    - load, then save (owner, categories and values) and its 422;
+    - a new variant product, a new sub-model, and a 422 under the axis;
+    - asset link, association add;
+    - delete confirmed and declined;
+    - an action's 403, the load's 403, and 404.
+  - `families.test.ts`: the load, search and cursor paging, create with and without a label, 422 and 403.
+  - `family.test.ts`: the load, the full-membership save, add and remove, 422, a variant created with an empty second level left out, its 422, delete confirmed and declined, an action's 403, the load's 403, and 404.
+  - `family-variant.test.ts`: the levels and models load, delete back to the family, delete declined, a 409 message, an action's 403, the load's 403, and 404.
+  - `pages.test.ts`: each of the eight screen keys has its page at its declared path and is named in the screens map; each page is framed with its own key; the D-032 comment is at the top; and every `t()` key of these pages and the catalog components exists. The i18n check covers only this group's files, so the other Showroom groups' work in progress cannot break it.
+
+### Results
+
+- **`composer test:nuxt`.** It ran with the pinned Node 26.13.1 and the pnpm from Herd's Node 22.22.2 on PATH. Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check`;
+  - the typechecks;
+  - the build;
+  - Vitest, with 96 files and 867 tests passing and no type errors;
+  - the consumer build.
+- **`composer test:unit`.** 1223 tests: 1216 passed and 7 skipped. `ATRIUM_SUITE_PATH` was not set, so the sibling-client checks skip.
+
+### What is left
+
+- Nothing in this group.
+- `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.

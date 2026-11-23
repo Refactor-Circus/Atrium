@@ -238,9 +238,9 @@ depends on: 22
 files: nuxt/layer/app/pages/showroom/products/**, nuxt/layer/app/pages/showroom/product-models/**, nuxt/layer/app/pages/showroom/families/**, nuxt/layer/app/pages/showroom/family-variants/**, nuxt/layer/app/integrations/showroom/components/catalog/**, nuxt/layer/i18n/locales/integrations/showroom-catalog.en.json, nuxt/layer/test/integrations/showroom/catalog/**
 criteria: 54, 71
 
-- [ ] 23.1 Write Vitest files for `products` (status filter, paging), `product-create`, `product`, `product-models`, `product-model`, `families`, `family` and `family-variant`. On `product`, cover values, assets, categories, associations, flags, external ids, workflow transitions, versions and revert, each mutation's method, path and body, plus 403 and 422. Assert that each of these screen keys has its page.
-- [ ] 23.2 Write the pages and shared catalog components (value editor, inherited values, axes, slot picker), porting from `ui/products/**`, `product-models/**`, `families/**`, `family-variants/**` and `ui/partials/**` in Showroom's main checkout. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/products/index.vue`.
-- [ ] 23.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 23.1 Write Vitest files for `products` (status filter, paging), `product-create`, `product`, `product-models`, `product-model`, `families`, `family` and `family-variant`. On `product`, cover values, assets, categories, associations, flags, external ids, workflow transitions, versions and revert, each mutation's method, path and body, plus 403 and 422. Assert that each of these screen keys has its page.
+- [x] 23.2 Write the pages and shared catalog components (value editor, inherited values, axes, slot picker), porting from `ui/products/**`, `product-models/**`, `families/**`, `family-variants/**` and `ui/partials/**` in Showroom's main checkout. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/showroom/products/index.vue`.
+- [x] 23.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 24: Showroom screens: attributes, categories, channels and flags
 depends on: 22
