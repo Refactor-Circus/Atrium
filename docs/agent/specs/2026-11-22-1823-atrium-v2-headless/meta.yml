@@ -1,6 +1,6 @@
 id: 2026-11-22-1823-atrium-v2-headless
 title: 'Atrium v2 headless'
-status: building
+status: approved
 created: '2026-11-22 18:23'
 release: v2.0.0
 spike: { branch: spike/v2-headless, commit: 2607d9a, worktree: ../Atrium--v2-headless }
@@ -57,5 +57,11 @@ runs:
     round: 0
     date: 2026-11-23
     note: "groups 11-18, 27 built; wave 3 group branches merged by hand (spec docs kept ours, ticks reconciled); group 22 partial, resumed with D-042"
+  - workflow: ring-master-factory
+    run_id: wf_9e04e1d8-3c7
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "group 19 built; merged suites red; stabilization pass d36d28e..a2fc35c made composer test and test:nuxt green"
 reopened: 2026-11-23
 waits_for: [Cortex, Impex, Keen, PennantPlus, Polycart, Roster, Showroom v2 specs 2026-11-23-0943-*]
