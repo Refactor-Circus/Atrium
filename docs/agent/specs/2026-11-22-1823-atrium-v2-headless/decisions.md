@@ -289,3 +289,9 @@
 - Rationale: the shim passed `composer test:nuxt` earlier in this job.
 - Date: 2026-11-23
 - Raised by: orchestrator
+
+## D-042: How does `atrium.integrations.showroom.transfers.flow_prefix` (D-035) reach the layer's `/showroom/transfers` screen?
+- Choice: Add an optional static `options` array to `ScreenDeclaration`, sent in the `atrium.screens.show` payload and in the integration fixture. `ShowroomIntegration` declares `showroom.transfers` with `['flow_prefix' => config('atrium.integrations.showroom.transfers.flow_prefix')]`, and the transfers page reads it from the screen response it already fetches. This touches group 11's `ScreenDeclaration`, `ResolvedScreenResource`, the layer's `ScreenData` type and the shell/screen fixtures. Group 22 may change those files.
+- Rationale: Recommended option. It keeps AC 38 and D-035, does not misuse `live` (AC 43), and does not widen the shell contract.
+- Date: 2026-11-23
+- Raised by: factory build (group 22); default chosen because the user asked to proceed without stopping

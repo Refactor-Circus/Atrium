@@ -144,17 +144,17 @@ criteria: 39, 40, 45, 53, 54, 55, 61, 62
 - [x] 13.1 Write tests: Pest: gating for Cortex: installed and enabled, not installed, disabled; the API base from `cortex.routes.prefix`; the six nav items (labels, Iconify icons, paths); the `cortex` panel and search source with static data; the 11 screen declarations (keys, kinds, paths, subject aliases); writing `fixtures/integrations/cortex.json`; Vitest: one file per screen of AC 55 (load, each mutation's method, path and body, 403, 422 where there is a form), the settings panel against `cortex.settings-summary.show`, the search source and its links, every fixture screen having a page, and the i18n keys
 - [x] 13.2 Write `CortexIntegration` and `lang/en/integrations/cortex.php`, porting the labels and icons from the old `CortexPlugin`.
 - [x] 13.3 Write the Vue pages and components for the 11 screens, the panel, the search source and `index.ts` (registrations and `screens` map). Check every old action against the vendored `openapi.json`, and list the missing ones in `// Not ported (D-032)`.
-- [ ] 13.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 13.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 14: Impex integration
 depends on: 12
 files: src/Integrations/Impex/ImpexIntegration.php, lang/en/integrations/impex.php, tests/Feature/Integrations/ImpexIntegrationTest.php, nuxt/layer/test/fixtures/integrations/impex.json, nuxt/layer/app/integrations/impex/index.ts, nuxt/layer/app/integrations/impex/components/**, nuxt/layer/app/pages/impex/**, nuxt/layer/i18n/locales/integrations/impex.en.json, nuxt/layer/test/integrations/impex/**
 criteria: 39, 40, 45, 53, 54, 56, 60, 61, 62, 63
 
-- [ ] 14.1 Write tests: Pest: gating; the API base; the five nav items, with `runs` carrying `live('impex.active-runs')`; the three widgets with `data: {}`; the `impex` panel and search source; the 10 screen declarations; writing `fixtures/integrations/impex.json`; Vitest: one file per screen of AC 56; the three widgets sharing one `impex.stats.show` request; `message-volume` hidden when `messages` is null; widget 403; the panel against `impex.settings-summary.show`; the search source; the active-runs badge (count, 0 and failure); fixture pages; the i18n keys
-- [ ] 14.2 Write `ImpexIntegration` and its lang file, porting from the old `ImpexPlugin`.
-- [ ] 14.3 Write the Vue pages, widgets, panel, search source, `live` resolver and `index.ts`, with `// Not ported (D-032)` (it names operator mode).
-- [ ] 14.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 14.1 Write tests: Pest: gating; the API base; the five nav items, with `runs` carrying `live('impex.active-runs')`; the three widgets with `data: {}`; the `impex` panel and search source; the 10 screen declarations; writing `fixtures/integrations/impex.json`; Vitest: one file per screen of AC 56; the three widgets sharing one `impex.stats.show` request; `message-volume` hidden when `messages` is null; widget 403; the panel against `impex.settings-summary.show`; the search source; the active-runs badge (count, 0 and failure); fixture pages; the i18n keys
+- [x] 14.2 Write `ImpexIntegration` and its lang file, porting from the old `ImpexPlugin`.
+- [x] 14.3 Write the Vue pages, widgets, panel, search source, `live` resolver and `index.ts`, with `// Not ported (D-032)` (it names operator mode).
+- [x] 14.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 15: Keen integration
 depends on: 12
@@ -278,7 +278,7 @@ criteria: 72, 73, 74, 75
 - [x] 27.1 Write tests: Pest `OpenApiTest` (no Node): a fresh `scramble:export` equals `openapi.json` as decoded JSON; the operations equal the `atrium.*` routes minus `atrium.plugins.*`, with `operationId` = the route name, and `info` as in AC 72; each 2xx schema has the resource's `schema()` required properties; the `schema.d.ts` header hash matches, and the failure messages name both commands; ArchTest: nothing in `src/` uses `Dedoc\`; Vitest: `useAtriumClient()` carries the auth adapter, and the fixtures `satisfies` the generated aliases
 - [x] 27.2 Add `dedoc/scramble` to `require-dev`, the workbench Scramble config, the workbench resource-schema extension and `composer openapi:export`. Give each Atrium resource a `schema()`. If no Scramble release supports Laravel 13 / PHP 8.5, stop and return a decision.
 - [x] 27.3 Add pinned `openapi-typescript` and `generate:client` (`nuxt/scripts/generate-client.mjs`, which writes the sha header), and generate `nuxt/layer/app/client/schema.d.ts`. Make `composer test:nuxt` fail when regeneration changes the file. Point `types/atrium.ts` at the generated `components['schemas']`, keeping its public names. Add `useAtriumClient()`.
-- [ ] 27.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 27.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 28: Integration docs, changelog and release checks
 depends on: 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27
