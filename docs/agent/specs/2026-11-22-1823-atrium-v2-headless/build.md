@@ -402,3 +402,21 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
   - The README's layer examples match the layer code: `runtimeConfig.public.atrium.apiBase`, the chainable `$atrium` registry and the `icon.serverBundle`/`fallbackToApi` options.
   - The PR template has the MySQL/Postgres, sibling `^1` grep, protected `v*` tag and manual doc items, each with its owner.
 - Pint `--test` passes on `DocsTest.php` and `ChangelogUpgradeTest.php`. PHPStan does not analyse `tests/`. The suite was not run, as instructed: the gate runs `composer test` and `composer test:nuxt` for 9.4.
+
+## Rework round 1
+
+### Fixes
+
+- Blocker (gate): `composer exec ringside check` reported stale generated files. I ran `composer exec ringside sync` in the worktree (3 files written), and `ringside check` now passes.
+  - The only tracked file it changed is `AGENTS.md` (the target of `CLAUDE.md`). Group 9 had edited the managed block between the `ring-master:start`/`ring-master:end` markers by hand, adding "and `composer test:nuxt` too when anything under `nuxt/` or the API's payloads changed" to the done-line. Sync restores that block to the generated text.
+  - So the rule is not lost, I moved it outside the managed block, onto the "Nuxt layer gate" line in Quick Commands. `DocsTest` still finds `composer test:nuxt` in `CLAUDE.md`.
+  - The other generated files (`docs/agent/standards.index.yml`, `docs/agent/standards.summary.md`, `.agents/`) are gitignored or excluded, so nothing more is committed for them.
+
+### Tests
+
+- `composer test:unit`: 893 passed, 3160 assertions.
+- `composer exec ringside check`: passed.
+
+### Observations for review
+
+- My first `ringside sync`/`check` ran in the main `Atrium` checkout by mistake, because the shell's `cd` did not persist. It only rewrote gitignored generated files there: no tracked file changed and nothing was committed in that checkout.
