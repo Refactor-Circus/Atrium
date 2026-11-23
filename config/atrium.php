@@ -8,6 +8,7 @@ use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardPolicy;
 use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardWidgetPolicy;
 use RefactorCircus\Atrium\Domains\Themes\Features\ThemeSwitcherFeature;
 use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
 use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
 use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
 use RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusFeature;
@@ -305,7 +306,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Atrium hosts the front ends of the Refactor Circus suite packages:
-    | Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Their
+    | Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and
+    | Showroom. Their
     | pages, widgets, settings panels and search live in the Nuxt layer, which
     | calls each package's own JSON API; Atrium's PHP sends their declarations
     | only and never loads a package's classes.
@@ -322,12 +324,24 @@ return [
     | When neither applies the integration does not register, and Atrium logs
     | a warning once per process naming both keys.
     |
-    | Security: the package APIs answer with their own auth. Polycart and
-    | Roster ship with their API off (polycart.routes.enabled and
-    | roster.routes.enabled are false), so their integrations stay away until
-    | you turn the API on, behind your application's
-    | authentication middleware (e.g. auth:sanctum) in that package's
-    | `routes.middleware`.
+    | Security: the package APIs answer with their own auth. Guardian, Polycart
+    | and Roster ship with their API off (guardian.routes.enabled,
+    | polycart.routes.enabled and roster.routes.enabled are false), so their
+    | integrations stay away until you turn the API on, behind your
+    | application's authentication middleware (e.g. auth:sanctum) in that
+    | package's `routes.middleware`.
+    |
+    | Guardian: its `guardian.two-factor` and `guardian.session` middleware can
+    | go on Atrium's route group (`atrium.middleware`) and on the packages' API
+    | groups. A user who still owes a second factor then gets Guardian's 403,
+    | and the layer sends them to its two-factor challenge page
+    | (/guardian/two-factor/challenge) or setup page (/guardian/two-factor/setup).
+    | guardian.scope_types: the morph type Guardian stores for each scope
+    |              (`organization`, `team`). A null value resolves to
+    |              guardian.adopt.scope_types.{key}; a value that does not
+    |              resolve to a non-empty string is dropped, and the
+    |              organization access tab is skipped while `organization`
+    |              does not resolve.
     |
     | features: feature flags that must all be on for the integration to show
     | to a user: its navigation, widgets, settings panel, search sources and
@@ -352,6 +366,8 @@ return [
     |              Atrium nav groups `nav.groups` names.
     | showroom.transfers.flow_prefix: the Impex flows Showroom's transfers
     |              screen lists, by name prefix.
+    | guardian.screens: Guardian's tabs and sections on Roster's screens. A
+    |              plain value is a tab; a `slot => key` entry is a section.
     |
     | A target is a screen key (`roster.user`), `{package}.*` or `*`. An
     | invalid one throws in local and testing, and is reported and skipped
@@ -366,6 +382,20 @@ return [
             'features' => [CortexFeature::class],
             'redirect_domains' => [
                 'screens' => ['roster.organization' => 'tab', 'roster.user' => 'aside'],
+            ],
+        ],
+
+        'guardian' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [GuardianFeature::class],
+            'scope_types' => [
+                'organization' => null,
+                'team' => null,
+            ],
+            'screens' => [
+                'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'],
+                'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities'],
             ],
         ],
 

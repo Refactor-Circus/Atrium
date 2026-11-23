@@ -1389,3 +1389,29 @@ Client sync and Roster role removal (AC 78, 99).
 
 - `composer test:unit` (with `ATRIUM_SUITE_PATH`): 1362 tests, all passed.
 - `composer test:nuxt` (pnpm shim, D-041): every step passed; Vitest 119 files, 1099 tests, no type errors.
+
+## Group 30
+
+Guardian integration: PHP declarations, gating and layer registration (AC 79 to 82).
+
+### Files
+
+- `src/Integrations/Guardian/`: `GuardianFeature`, `GuardianScopeTypes` (resolves `atrium.integrations.guardian.scope_types` once per process, null values through `guardian.adopt.scope_types.{key}`; `forget()` for tests) and `GuardianIntegration` (nine nav items in the "Security" group, sorted 60 to 68; no widgets, panel or search sources; 15 screens with their static options). `lang/en/integrations/guardian.php`.
+- `config/atrium.php`: the `guardian` section (`enabled`, `api_base`, `features`, `scope_types`, `screens` with AC 97's default) and the banner points of AC 79.
+- `docs/agent/standards-feedback.md`: Guardian joins the `architecture/dependencies` row.
+- Layer: `app/integrations/guardian/index.ts` (the `screens` map, no registrations yet), the six Guardian locale files as `{}`, registered in `nuxt.config.ts` with `guardian` in the runtime `integrations` list. `useAtriumIntegration.ts` gains `guardian` in `AtriumIntegrationPaths` and `ATRIUM_INTEGRATION_KEYS`.
+- Tests: `GuardianIntegrationTest` (new: gating, API base, Pennant, declarations, options, scope types, labels, fixture), `IntegrationConfigTest` (eight keys, banner), `RegistrationTest`, `NoPackageCodeTest`, `ArchTest`; `fixtures/integrations/guardian.json`; Vitest `guardian/integration.test.ts` (new), and `guardian` in `integration-routing`, `integration-absent` and `integration-i18n`.
+
+### Decisions
+
+- D-062 (the `scope_types` option is a list of `{key, type}`) and D-063 (a null token lifetime passes through as no limit).
+
+### Deviations
+
+- `ApiBaseTest.php` needed no change: `GuardianIntegrationTest` covers Guardian's base. `useAtriumIntegration.ts` and the three cross-package Vitest files are outside the group's list; they list every integration.
+- The testbench skeleton held a published `vendor/orchestra/testbench-core/laravel/config/atrium.php` (written by `CommandsTest`'s `atrium:install`), which shadowed the package config, so the new `guardian` key was missing in tests. Deleting it fixed this; the next Pest run publishes a fresh copy. Delete it again whenever `config/atrium.php` changes.
+
+### Tests
+
+- `composer test:unit`: 1405 tests, all passed. PHPStan 0 errors, Pint passed.
+- `composer test:nuxt`: every step passed; Vitest 120 files, 1106 tests, no type errors. A first run had two timing failures in `polycart/cart.test.ts` and `impex/channel.test.ts` (navigation after delete), both unrelated and green alone and on the rerun.

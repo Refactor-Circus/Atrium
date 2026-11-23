@@ -4,12 +4,13 @@ import { fileURLToPath } from 'node:url'
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
 
 // The suite integrations the layer ships (app/integrations/{key}).
-const integrations = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']
+const integrations = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']
 
 // Each integration's layer strings, merged into `en` (AC 53): one file per
-// integration, one per Roster and Showroom screen area, and the hooks'.
+// integration, one per Guardian, Roster and Showroom screen area, and the hooks'.
 const integrationLocales = [
   'cortex', 'impex', 'keen', 'pennantplus', 'polycart',
+  'guardian', 'guardian-two-factor', 'guardian-security', 'guardian-access', 'guardian-admin', 'guardian-sso',
   'roster', 'roster-users', 'roster-organizations', 'roster-access',
   'showroom', 'showroom-catalog', 'showroom-structure', 'showroom-assets',
   'hooks'

@@ -1,0 +1,257 @@
+{
+    "key": "guardian",
+    "label": "Guardian",
+    "api_base": "/guardian",
+    "features": [
+        "RefactorCircus\\Atrium\\Integrations\\Guardian\\GuardianFeature"
+    ],
+    "navigation": [
+        {
+            "label": "My security",
+            "icon": "i-lucide-shield-user",
+            "group": "Security",
+            "sort": 60,
+            "link": {
+                "path": "/guardian/security",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Roles",
+            "icon": "i-lucide-shield-check",
+            "group": "Security",
+            "sort": 61,
+            "link": {
+                "path": "/guardian/roles",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Permissions",
+            "icon": "i-lucide-key-round",
+            "group": "Security",
+            "sort": 62,
+            "link": {
+                "path": "/guardian/permissions",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Role assignments",
+            "icon": "i-lucide-user-check",
+            "group": "Security",
+            "sort": 63,
+            "link": {
+                "path": "/guardian/role-assignments",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Security events",
+            "icon": "i-lucide-scroll-text",
+            "group": "Security",
+            "sort": 64,
+            "link": {
+                "path": "/guardian/security-events",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Lockouts",
+            "icon": "i-lucide-lock",
+            "group": "Security",
+            "sort": 65,
+            "link": {
+                "path": "/guardian/lockouts",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "IP rules",
+            "icon": "i-lucide-network",
+            "group": "Security",
+            "sort": 66,
+            "link": {
+                "path": "/guardian/ip-rules",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Two-factor policies",
+            "icon": "i-lucide-smartphone",
+            "group": "Security",
+            "sort": 67,
+            "link": {
+                "path": "/guardian/two-factor-policies",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "Password policy",
+            "icon": "i-lucide-rectangle-ellipsis",
+            "group": "Security",
+            "sort": 68,
+            "link": {
+                "path": "/guardian/password-policy",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        }
+    ],
+    "widgets": [],
+    "settings": null,
+    "search_sources": [],
+    "screens": [
+        {
+            "key": "guardian.security",
+            "kind": "detail",
+            "path": "/guardian/security",
+            "subject_type": null,
+            "options": {
+                "token_abilities": [
+                    "*"
+                ],
+                "token_max_lifetime_days": 365
+            }
+        },
+        {
+            "key": "guardian.two-factor-challenge",
+            "kind": "detail",
+            "path": "/guardian/two-factor/challenge",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.two-factor-setup",
+            "kind": "detail",
+            "path": "/guardian/two-factor/setup",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.roles",
+            "kind": "list",
+            "path": "/guardian/roles",
+            "subject_type": null,
+            "options": {
+                "scope_types": []
+            }
+        },
+        {
+            "key": "guardian.role",
+            "kind": "detail",
+            "path": "/guardian/roles/:role",
+            "subject_type": null,
+            "options": {
+                "scope_types": []
+            }
+        },
+        {
+            "key": "guardian.permissions",
+            "kind": "list",
+            "path": "/guardian/permissions",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.role-assignments",
+            "kind": "list",
+            "path": "/guardian/role-assignments",
+            "subject_type": null,
+            "options": {
+                "scope_types": []
+            }
+        },
+        {
+            "key": "guardian.user",
+            "kind": "detail",
+            "path": "/guardian/users/:user",
+            "subject_type": null,
+            "options": {
+                "scope_types": [],
+                "token_abilities": [
+                    "*"
+                ]
+            }
+        },
+        {
+            "key": "guardian.security-events",
+            "kind": "list",
+            "path": "/guardian/security-events",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.security-event",
+            "kind": "detail",
+            "path": "/guardian/security-events/:event",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.lockouts",
+            "kind": "list",
+            "path": "/guardian/lockouts",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.ip-rules",
+            "kind": "list",
+            "path": "/guardian/ip-rules",
+            "subject_type": null,
+            "options": {
+                "mode": "denylist"
+            }
+        },
+        {
+            "key": "guardian.two-factor-policies",
+            "kind": "list",
+            "path": "/guardian/two-factor-policies",
+            "subject_type": null,
+            "options": {
+                "scope_types": []
+            }
+        },
+        {
+            "key": "guardian.password-policy",
+            "kind": "detail",
+            "path": "/guardian/password-policy",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "guardian.sso-connection",
+            "kind": "detail",
+            "path": "/guardian/sso-connections/:connection",
+            "subject_type": null,
+            "options": {}
+        }
+    ]
+}

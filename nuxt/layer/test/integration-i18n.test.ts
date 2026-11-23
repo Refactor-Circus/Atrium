@@ -19,12 +19,13 @@ const here = import.meta.url
 
 const LOCALE_FILES = [
   'cortex', 'impex', 'keen', 'pennantplus', 'polycart',
+  'guardian', 'guardian-two-factor', 'guardian-security', 'guardian-access', 'guardian-admin', 'guardian-sso',
   'roster', 'roster-users', 'roster-organizations', 'roster-access',
   'showroom', 'showroom-catalog', 'showroom-structure', 'showroom-assets',
   'hooks'
 ]
 
-const INTEGRATIONS = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom', 'hooks']
+const INTEGRATIONS = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom', 'hooks']
 
 const locales = fileURLToPath(new URL('../i18n/locales/', here))
 
@@ -83,6 +84,15 @@ describe('the integration locale files', () => {
 
     expect(names('roster').sort()).toEqual(['en.json', 'integrations/roster-access.en.json', 'integrations/roster-organizations.en.json', 'integrations/roster-users.en.json', 'integrations/roster.en.json'])
     expect(names('keen')).toEqual(['en.json', 'integrations/keen.en.json'])
+    expect(names('guardian').sort()).toEqual([
+      'en.json',
+      'integrations/guardian-access.en.json',
+      'integrations/guardian-admin.en.json',
+      'integrations/guardian-security.en.json',
+      'integrations/guardian-sso.en.json',
+      'integrations/guardian-two-factor.en.json',
+      'integrations/guardian.en.json'
+    ])
   })
 
   it('are merged into the en locale', async () => {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
 use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
 use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
 use RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusFeature;
@@ -11,7 +12,7 @@ use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
 use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
 
 /*
- * The `integrations` config section (AC 38): exactly the seven packages,
+ * The `integrations` config section (AC 38, 79): exactly the eight packages,
  * their defaults, the cross-package hooks' v1 defaults, and a banner that
  * documents detection, the API base, Pennant flags and the APIs that ship off.
  */
@@ -30,7 +31,7 @@ function integrationConfigBanner(): string
     return substr($source, (int) $start, (int) $end - (int) $start);
 }
 
-it('has exactly the seven package keys, with their defaults and the hooks\' v1 defaults', function (): void {
+it('has exactly the eight package keys, with their defaults and the hooks\' v1 defaults', function (): void {
     $defaults = (require __DIR__.'/../../../config/atrium.php')['integrations'];
 
     expect($defaults)->toBe([
@@ -40,6 +41,19 @@ it('has exactly the seven package keys, with their defaults and the hooks\' v1 d
             'features' => [CortexFeature::class],
             'redirect_domains' => [
                 'screens' => ['roster.organization' => 'tab', 'roster.user' => 'aside'],
+            ],
+        ],
+        'guardian' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [GuardianFeature::class],
+            'scope_types' => [
+                'organization' => null,
+                'team' => null,
+            ],
+            'screens' => [
+                'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'],
+                'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities'],
             ],
         ],
         'impex' => [
@@ -95,7 +109,7 @@ it('has exactly the seven package keys, with their defaults and the hooks\' v1 d
 
 it('merges the section into the running config', function (): void {
     expect(array_keys(config('atrium.integrations')))
-        ->toBe(['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
+        ->toBe(['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
 });
 
 it('documents the detection rule in the banner', function (): void {
@@ -122,11 +136,29 @@ it('documents the Pennant flags in the banner', function (): void {
         ->toContain('every flag is on');
 });
 
-it('warns in the banner that Polycart and Roster ship with their API off', function (): void {
+it('warns in the banner that Guardian, Polycart and Roster ship with their API off', function (): void {
     expect(integrationConfigBanner())
+        ->toContain('guardian.routes.enabled')
         ->toContain('polycart.routes.enabled')
         ->toContain('roster.routes.enabled')
         ->toContain('authentication middleware');
+});
+
+it('documents Guardian\'s middleware and its challenge and setup pages in the banner (AC 79)', function (): void {
+    expect(integrationConfigBanner())
+        ->toContain('guardian.two-factor')
+        ->toContain('guardian.session')
+        ->toContain("Atrium's route group")
+        ->toContain("packages' API")
+        ->toContain('/guardian/two-factor/challenge')
+        ->toContain('/guardian/two-factor/setup');
+});
+
+it('documents how guardian.scope_types resolves in the banner (AC 79, D-048)', function (): void {
+    expect(integrationConfigBanner())
+        ->toContain('guardian.scope_types')
+        ->toContain('guardian.adopt.scope_types.{key}')
+        ->toContain('dropped');
 });
 
 it('gives every package a feature class that resolves on and imports nothing from Pennant', function (string $class): void {
@@ -135,6 +167,7 @@ it('gives every package a feature class that resolves on and imports nothing fro
         ->and((string) file_get_contents((string) new ReflectionClass($class)->getFileName()))->not->toContain('Laravel\\Pennant');
 })->with([
     CortexFeature::class,
+    GuardianFeature::class,
     ImpexFeature::class,
     KeenFeature::class,
     PennantPlusFeature::class,

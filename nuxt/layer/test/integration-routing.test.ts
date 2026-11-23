@@ -25,7 +25,7 @@ const { api } = vi.hoisted(() => ({
 
 mockNuxtImport('useAtriumApi', () => () => api)
 
-const PACKAGES = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
+const PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
 
 /** A page that calls its package's API as soon as it is set up, as a real one would. */
 const CortexPage = defineComponent({

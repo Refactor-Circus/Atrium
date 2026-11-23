@@ -31,7 +31,7 @@ use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
  * stands in for it under the conventional class name.
  */
 
-dataset('suite packages', ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
+dataset('suite packages', ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
 
 /**
  * What every registry an integration adds to holds, by name.

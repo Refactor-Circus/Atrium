@@ -10,9 +10,9 @@ declare(strict_types=1);
  */
 
 /**
- * The seven suite packages Atrium integrates, by namespace segment.
+ * The eight suite packages Atrium integrates, by namespace segment.
  */
-const NO_PACKAGE_CODE_NAMESPACES = ['Cortex', 'Impex', 'Keen', 'PennantPlus', 'Polycart', 'Roster', 'Showroom'];
+const NO_PACKAGE_CODE_NAMESPACES = ['Cortex', 'Guardian', 'Impex', 'Keen', 'PennantPlus', 'Polycart', 'Roster', 'Showroom'];
 
 /**
  * Every PHP file under `src/`.
@@ -59,6 +59,7 @@ it('would catch a package namespace written as a string', function (string $sour
     'a single-quoted string' => ["'RefactorCircus\\Impex\\Impex'"],
     'a double-quoted string' => ['"RefactorCircus\\\\Keen\\\\Keen"'],
     'PennantPlus' => ['RefactorCircus\\PennantPlus\\PennantPlus'],
+    'Guardian' => ['use RefactorCircus\\Guardian\\Domains\\Roles\\Models\\RoleModel;'],
 ]);
 
 it('lets Atrium\'s own integration namespaces through', function (): void {

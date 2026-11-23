@@ -128,6 +128,7 @@ arch('atrium uses no suite package\'s code, only its API (AC 45)')
     ->expect('RefactorCircus\Atrium')
     ->not->toUse([
         'RefactorCircus\Cortex',
+        'RefactorCircus\Guardian',
         'RefactorCircus\Impex',
         'RefactorCircus\Keen',
         'RefactorCircus\PennantPlus',

@@ -1,6 +1,7 @@
 import createClient, { type Client, type Middleware } from 'openapi-fetch'
 import type { Router } from 'vue-router'
 import type { paths as CortexPaths } from '../integrations/cortex/client/schema'
+import type { paths as GuardianPaths } from '../integrations/guardian/client/schema'
 import type { paths as ImpexPaths } from '../integrations/impex/client/schema'
 import type { paths as KeenPaths } from '../integrations/keen/client/schema'
 import type { paths as PennantPlusPaths } from '../integrations/pennantplus/client/schema'
@@ -15,6 +16,7 @@ import type { AtriumRegistry } from '../plugins/atrium'
  */
 export interface AtriumIntegrationPaths {
   cortex: CortexPaths
+  guardian: GuardianPaths
   impex: ImpexPaths
   keen: KeenPaths
   pennantplus: PennantPlusPaths
@@ -26,7 +28,7 @@ export interface AtriumIntegrationPaths {
 export type AtriumIntegrationKey = keyof AtriumIntegrationPaths
 
 /** The integrations the layer ships, whose pages live under `/{key}/`. */
-export const ATRIUM_INTEGRATION_KEYS: readonly AtriumIntegrationKey[] = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']
+export const ATRIUM_INTEGRATION_KEYS: readonly AtriumIntegrationKey[] = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']
 
 /** Whether `key` is one of the integrations the layer ships. */
 export function isAtriumIntegrationKey(key: string): key is AtriumIntegrationKey {

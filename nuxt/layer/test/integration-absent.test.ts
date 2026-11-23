@@ -24,7 +24,7 @@ const { api } = vi.hoisted(() => ({
 
 mockNuxtImport('useAtriumApi', () => () => api)
 
-const PACKAGES = ['cortex', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
+const PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
 
 describe('a shell with integrations: []', () => {
   let atrium: AtriumRegistry
@@ -54,7 +54,7 @@ describe('a shell with integrations: []', () => {
     resetPackageApis()
   })
 
-  it('knows the seven integrations the layer ships', () => {
+  it('knows the eight integrations the layer ships', () => {
     expect([...ATRIUM_INTEGRATION_KEYS]).toEqual([...PACKAGES])
   })
 

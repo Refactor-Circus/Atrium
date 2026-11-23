@@ -442,3 +442,15 @@
 - Rationale: The file lists stay disjoint, as D-024 requires, and each group fits one session.
 - Date: 2026-11-23
 - Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-062: What shape does the `scope_types` screen option take?
+- Choice: A list of `{key, type}` objects in config order, for example `[{"key": "organization", "type": "App\\Models\\Organization"}]`, built by `GuardianScopeTypes::options()`. Scope keys that do not resolve are left out, so an empty result is `[]`.
+- Rationale: AC 82 says "the resolved list". A list keeps the same JSON type when it is empty (a PHP map would encode as `[]` when empty and `{}` otherwise), and it gives the layer both the label key and the value Guardian stores.
+- Date: 2026-11-23
+- Raised by: implement (group 30); default chosen because no user was available
+
+## D-063: What does `token_max_lifetime_days` carry when Guardian sets no limit?
+- Choice: `null`. Guardian's config documents `null` as "no limit", so the option passes it through and the layer then caps nothing. A value that is not a positive integer falls back to Guardian's default, 365. `token_abilities` keeps only non-empty strings and falls back to `['*']`. `mode` is `allowlist` only when Guardian says so exactly, otherwise `denylist`.
+- Rationale: AC 82 gives only the defaults. Passing Guardian's own "no limit" through keeps the form from refusing what Guardian allows, and Guardian validates both values anyway (D-054).
+- Date: 2026-11-23
+- Raised by: implement (group 30); default chosen because no user was available
