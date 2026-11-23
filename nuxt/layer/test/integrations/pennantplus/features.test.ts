@@ -285,7 +285,7 @@ describe('setting a value (values.update)', () => {
     const wrapper = await mountPage()
 
     await control(wrapper, 'pennantplus-feature').setValue('new-dashboard')
-    await control(wrapper, 'pennantplus-value').setValue('false')
+    await control(wrapper, 'pennantplus-value-input').setValue('false')
     await wrapper.find('[data-testid="pennantplus-set-value"]').trigger('submit')
     await settle()
 
@@ -313,7 +313,7 @@ describe('setting a value (values.update)', () => {
     await wrapper.find('[data-testid="pennantplus-scope-result"]').trigger('click')
     expect(wrapper.find('[data-testid="pennantplus-scope-picked"]').text()).toContain('Ada Lovelace (#7)')
 
-    await control(wrapper, 'pennantplus-value').setValue('{"variant":"b"}')
+    await control(wrapper, 'pennantplus-value-input').setValue('{"variant":"b"}')
     await wrapper.find('[data-testid="pennantplus-set-value"]').trigger('submit')
     await settle()
 
@@ -343,7 +343,7 @@ describe('setting a value (values.update)', () => {
     const wrapper = await mountPage()
 
     await control(wrapper, 'pennantplus-feature').setValue('new-dashboard')
-    await control(wrapper, 'pennantplus-value').setValue('yes please')
+    await control(wrapper, 'pennantplus-value-input').setValue('yes please')
     await wrapper.find('[data-testid="pennantplus-set-value"]').trigger('submit')
     await settle()
 

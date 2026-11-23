@@ -202,7 +202,7 @@ async function submit(): Promise<void> {
         :error="jsonError ?? action.error('value')"
         required
       >
-        <UInput v-model="value" class="w-full font-mono" data-testid="pennantplus-value" />
+        <UInput v-model="value" class="w-full font-mono" data-testid="pennantplus-value-input" />
       </UFormField>
 
       <div class="flex items-end sm:pt-6">

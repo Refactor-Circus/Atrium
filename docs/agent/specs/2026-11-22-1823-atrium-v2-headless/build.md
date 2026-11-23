@@ -614,3 +614,9 @@ I did not run Vitest or the full suites. The instructions say the gate runs `com
 - **Confirmations.** In v1, only purge asked for a confirmation. Here forget asks too, because it is destructive (AC 54) and the task asks for each change's confirmation. Setting a value, from the form or a row's toggle, asks nothing, as in v1.
 - **Loose schema.** PennantPlus's vendored schema types several answers loosely: `features.index` and `values.index` as `data: string[]`, the scope routes as `data: string`, and a stored value as `string`. The screen declares those shapes in `pennantplus.ts`, following the PennantPlus resources and actions. The tests type each entry with `satisfies` where the schema is right (`FeatureValueResource`, `FeatureResource.name`) and pass the envelopes as they are. PennantPlus should fix this in its `schema()` declarations (spec risk "Weak package schemas").
 - **Nav sort.** An integration declares no nav groups, so the item takes v1's `System` group sort (90), and the group takes its sort from its first item.
+
+### Retry
+
+I reviewed the committed work against AC 39, 40, 45, 53, 54 and 58, the group 12 framework (`useAtriumIntegration`, `AtriumIntegrationScreen`, `test/integrations/support.ts`) and the vendored PennantPlus schema. I found and fixed one bug. The "Set a value" input and every stored-value row both used `data-testid="pennantplus-value"`. Because the form comes before the table, `findAll` would have found three elements where the test expects two rows, and the non-boolean value test would have read the input instead of the row. The input is now `pennantplus-value-input` (`PennantPlusSetValue.vue`), and the three tests that fill it use the new id (`features.test.ts`).
+
+`vendor/bin/pest tests/Feature/Integrations/PennantPlusIntegrationTest.php`: 16 passed. Vitest did not run, because this worktree has no `nuxt/node_modules`; the gate's frozen install runs it.
