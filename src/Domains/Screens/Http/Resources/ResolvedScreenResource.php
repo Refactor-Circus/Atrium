@@ -46,6 +46,25 @@ final class ResolvedScreenResource extends JsonResource
     private array $rows = [];
 
     /**
+     * A declared screen's layer path, subject and requested record key.
+     *
+     * @var array{path: string, subject_type: string|null, record: string|null}|null
+     */
+    private ?array $declaration = null;
+
+    /**
+     * Send the screen as declared by a suite integration: the layer path it
+     * renders at, the morph alias of its record and the record key it was
+     * asked for, echoed without loading a model.
+     */
+    public function declaredAt(string $path, ?string $subjectType, ?string $record): self
+    {
+        $this->declaration = ['path' => $path, 'subject_type' => $subjectType, 'record' => $record];
+
+        return $this;
+    }
+
+    /**
      * The rows a list screen shows, whose row-slot sections are sent per row.
      *
      * @param  list<Model>  $rows
@@ -76,6 +95,7 @@ final class ResolvedScreenResource extends JsonResource
         return [
             'key' => $resolved->screen->key,
             'kind' => $resolved->screen->kind,
+            ...$this->declaration ?? [],
             'open_tab' => $resolved->openTab,
             'tabs' => array_map($this->tab(...), $resolved->tabs),
             'sections' => (object) $sections,

@@ -46,6 +46,8 @@ final class RoutesApiTest extends TestCase
         'atrium.search' => ['GET', 'atrium/api/search', []],
         'atrium.settings.index' => ['GET', 'atrium/api/settings', []],
         'atrium.settings.show' => ['GET', 'atrium/api/settings/{panel}', []],
+        // The screens suite integrations declare (AC 44).
+        'atrium.screens.show' => ['GET', 'atrium/api/screens/{screen}', []],
         // Plugin routes (AC 12), from the two fixture plugins configured below.
         'atrium.plugins.routed.index' => ['GET', 'atrium/api/plugins/routed', []],
         'atrium.plugins.featured.index' => ['GET', 'atrium/api/plugins/featured', []],

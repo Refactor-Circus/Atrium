@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Navigation\Http\Resources;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
@@ -21,8 +22,19 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
  *
  * Which navigation item is active is the layer's to work out from its own
  * route, so it is not sent. Every link goes out as ClientPath's
- * `{path, external}`, or null for a URL ClientPath refuses.
+ * `{path, external}`, or null for a URL ClientPath refuses. An item the
+ * layer completes from a package API carries its `live` resolver key.
  *
+ * `integrations` lists every registered suite integration, in key order,
+ * with whether it is active for this user and each of its feature flags;
+ * `search.sources` the search sources of the active ones, which the layer
+ * runs beside `atrium.search`, each capped at `search.per_source` results.
+ *
+ * @phpstan-type IntegrationState array{
+ *     integration: RegisteredIntegration,
+ *     active: bool,
+ *     features: array<string, bool>,
+ * }
  * @phpstan-type ShellData array{
  *     app_name: string,
  *     user: Authenticatable|null,
@@ -34,6 +46,8 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
  *     switchable: bool,
  *     panels: list<SettingsPanel>,
  *     min_length: int,
+ *     per_source: int|null,
+ *     integrations: list<IntegrationState>,
  * }
  *
  * @property ShellData $resource
@@ -63,8 +77,56 @@ final class ShellResource extends JsonResource
             'settings' => array_map($this->panel(...), $shell['panels']),
             'search' => [
                 'min_length' => $shell['min_length'],
+                'sources' => $this->sources($shell['integrations']),
+                'per_source' => $shell['per_source'],
             ],
+            'integrations' => array_map($this->integration(...), $shell['integrations']),
         ];
+    }
+
+    /**
+     * @param  IntegrationState  $state
+     * @return array{key: string, label: string, active: bool, api_base: string, features: object}
+     */
+    private function integration(array $state): array
+    {
+        $integration = $state['integration'];
+
+        return [
+            'key' => $integration->key,
+            'label' => $integration->label,
+            'active' => $state['active'],
+            'api_base' => $integration->apiBase,
+            'features' => (object) $state['features'],
+        ];
+    }
+
+    /**
+     * The search sources of the active integrations, in key order.
+     *
+     * @param  list<IntegrationState>  $integrations
+     * @return list<array{key: string, integration: string, label: string, icon: string|null}>
+     */
+    private function sources(array $integrations): array
+    {
+        $sources = [];
+
+        foreach ($integrations as $state) {
+            if (! $state['active']) {
+                continue;
+            }
+
+            foreach ($state['integration']->searchSources as $source) {
+                $sources[] = [
+                    'key' => $source->key,
+                    'integration' => $state['integration']->key,
+                    'label' => $source->label,
+                    'icon' => $source->icon,
+                ];
+            }
+        }
+
+        return $sources;
     }
 
     /**
@@ -110,6 +172,7 @@ final class ShellResource extends JsonResource
             'icon' => $item->icon,
             'link' => ClientPath::for($item->resolveUrl()),
             'badge' => $item->resolveBadge(),
+            'live' => $item->live === null ? null : ['key' => $item->live['key'], 'options' => (object) $item->live['options']],
             'children' => array_map($this->item(...), array_values($item->children)),
         ];
     }

@@ -28,6 +28,7 @@
                             "external": false
                         },
                         "badge": null,
+                        "live": null,
                         "children": []
                     },
                     {
@@ -38,6 +39,7 @@
                             "external": false
                         },
                         "badge": 1,
+                        "live": null,
                         "children": []
                     },
                     {
@@ -48,6 +50,7 @@
                             "external": false
                         },
                         "badge": 6,
+                        "live": null,
                         "children": []
                     }
                 ]
@@ -64,6 +67,7 @@
                         "icon": "i-lucide-chart-column",
                         "link": null,
                         "badge": null,
+                        "live": null,
                         "children": [
                             {
                                 "label": "Sales",
@@ -73,6 +77,7 @@
                                     "external": false
                                 },
                                 "badge": null,
+                                "live": null,
                                 "children": []
                             },
                             {
@@ -83,6 +88,7 @@
                                     "external": false
                                 },
                                 "badge": null,
+                                "live": null,
                                 "children": []
                             }
                         ]
@@ -107,6 +113,7 @@
                             "external": false
                         },
                         "badge": null,
+                        "live": null,
                         "children": []
                     }
                 ]
@@ -300,7 +307,10 @@
             }
         ],
         "search": {
-            "min_length": 2
-        }
+            "min_length": 2,
+            "sources": [],
+            "per_source": 5
+        },
+        "integrations": []
     }
 }

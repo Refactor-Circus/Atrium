@@ -67,6 +67,7 @@ final class AuthApiTest extends TestCase
             'dashboard' => 'missing',
             'widget' => '01900000-0000-7000-8000-000000000000',
             'panel' => 'missing',
+            'screen' => 'missing.screen',
         ];
 
         $routes = [];
@@ -85,7 +86,8 @@ final class AuthApiTest extends TestCase
         }
 
         $this->assertArrayHasKey('atrium.plugins.routed.index', $routes);
-        $this->assertCount(14, $routes);
+        $this->assertArrayHasKey('atrium.screens.show', $routes);
+        $this->assertCount(15, $routes);
 
         return $routes;
     }

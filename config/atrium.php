@@ -7,6 +7,13 @@ use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardPolicy;
 use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardWidgetPolicy;
 use RefactorCircus\Atrium\Domains\Themes\Features\ThemeSwitcherFeature;
+use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
+use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
+use RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusFeature;
+use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
+use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
+use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
 
 return [
 
@@ -290,6 +297,131 @@ return [
     'theme' => [
         // 'primary' => '#4f46e5',
         // 'on-primary' => '#ffffff',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Suite Integrations
+    |--------------------------------------------------------------------------
+    |
+    | Atrium hosts the front ends of the Refactor Circus suite packages:
+    | Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Their
+    | pages, widgets, settings panels and search live in the Nuxt layer, which
+    | calls each package's own JSON API; Atrium's PHP sends their declarations
+    | only and never loads a package's classes.
+    |
+    | Detection: an integration registers when refactor-circus/{pkg} is
+    | installed and its `enabled` is true (read as a boolean, so "false" from
+    | an env file turns it off). Set `enabled` to false to hide a package from
+    | Atrium while keeping it installed.
+    |
+    | API base: where the layer calls the package's API. A non-empty
+    | `api_base` wins (a path such as `/cortex/api`, or an absolute URL for a
+    | package served from another host). Otherwise it is `/` plus the
+    | package's own {pkg}.routes.prefix, while {pkg}.routes.enabled is true.
+    | When neither applies the integration does not register, and Atrium logs
+    | a warning once per process naming both keys.
+    |
+    | Security: the package APIs answer with their own auth. Polycart and
+    | Roster ship with their API off (polycart.routes.enabled and
+    | roster.routes.enabled are false), so their integrations stay away until
+    | you turn the API on, behind your application's
+    | authentication middleware (e.g. auth:sanctum) in that package's
+    | `routes.middleware`.
+    |
+    | features: feature flags that must all be on for the integration to show
+    | to a user: its navigation, widgets, settings panel, search sources and
+    | screens. With Laravel Pennant installed each resolves through
+    | Feature::for($user)->active($name), so you can turn an integration off
+    | globally or per user; each default {Pkg}Feature class is on until you
+    | do. Without Pennant every flag is on. An empty list always shows the
+    | integration. These are separate from the plugin features gated through
+    | Atrium::resolveFeaturesUsing().
+    |
+    | Cross-package hooks, each registered only while both integrations are:
+    |
+    | cortex.redirect_domains.screens: the Roster screens that get Cortex's
+    |              redirect domains, as a `tab` or in a slot (`aside`).
+    | impex.run_link.screens: the Showroom screens whose rows link to their
+    |              Impex run, by row slot.
+    | keen.history: the Keen history section on every screen matched by
+    |              `screens` and not by `exclude`, in `slot`; the activity
+    |              tab for each `tabs` entry (`scope` filters by the record as
+    |              a scope); and the History nav item, sorted by `nav.sort`,
+    |              leaving out `nav.exclude` and grouping packages under the
+    |              Atrium nav groups `nav.groups` names.
+    | showroom.transfers.flow_prefix: the Impex flows Showroom's transfers
+    |              screen lists, by name prefix.
+    |
+    | A target is a screen key (`roster.user`), `{package}.*` or `*`. An
+    | invalid one throws in local and testing, and is reported and skipped
+    | anywhere else.
+    |
+    */
+
+    'integrations' => [
+        'cortex' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [CortexFeature::class],
+            'redirect_domains' => [
+                'screens' => ['roster.organization' => 'tab', 'roster.user' => 'aside'],
+            ],
+        ],
+
+        'impex' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [ImpexFeature::class],
+            'run_link' => [
+                'screens' => ['showroom.transfers' => 'row.actions'],
+            ],
+        ],
+
+        'keen' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [KeenFeature::class],
+            'history' => [
+                'screens' => ['*'],
+                'slot' => 'after',
+                'exclude' => ['keen.*', 'atrium.*'],
+                'tabs' => ['roster.organization' => ['scope' => true]],
+                'nav' => [
+                    'enabled' => true,
+                    'sort' => 90,
+                    'exclude' => [],
+                    'groups' => ['showroom' => 'showroom', 'pennantplus' => 'pennantplus'],
+                ],
+            ],
+        ],
+
+        'pennantplus' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [PennantPlusFeature::class],
+        ],
+
+        'polycart' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [PolycartFeature::class],
+        ],
+
+        'roster' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [RosterFeature::class],
+        ],
+
+        'showroom' => [
+            'enabled' => true,
+            'api_base' => null,
+            'features' => [ShowroomFeature::class],
+            'transfers' => [
+                'flow_prefix' => 'showroom:',
+            ],
+        ],
     ],
 
 ];

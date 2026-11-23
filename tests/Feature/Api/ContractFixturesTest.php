@@ -9,11 +9,16 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Laravel\Pennant\Feature;
+use Laravel\Pennant\PennantServiceProvider;
 use Orchestra\Testbench\Contracts\Config as TestbenchConfig;
 use Orchestra\Testbench\Foundation\Config;
 use PHPUnit\Framework\AssertionFailedError;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
+use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use RefactorCircus\Atrium\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\User;
@@ -90,6 +95,22 @@ class ContractFixturesTest extends TestCase
     public function test_the_shell_matches_its_fixture(): void
     {
         $this->assertResponseMatchesFixture('shell', $this->actingAs($this->admin)->getJson(route('atrium.shell')));
+    }
+
+    /**
+     * The shell with suite integrations registered (AC 42): two fixture
+     * integrations, one of them flagged off for the user through Pennant.
+     */
+    public function test_the_shell_with_integrations_matches_its_fixture(): void
+    {
+        $this->app->register(PennantServiceProvider::class);
+        $this->app->make(Repository::class)->set('pennant.default', 'array');
+
+        IntegrationFixture::registerFakes('cortex', 'polycart');
+
+        Feature::for($this->admin)->deactivate(PolycartFeature::class);
+
+        $this->assertResponseMatchesFixture('shell-integrations', $this->actingAs($this->admin)->getJson(route('atrium.shell')));
     }
 
     public function test_the_default_dashboard_matches_its_fixture(): void
@@ -208,6 +229,87 @@ class ContractFixturesTest extends TestCase
                 "{\n    \"data\": {\n        \"path\": \"/demo/orders\",\n        \"settings\": {},\n        \"rows\": []\n    }\n}\n",
                 file_get_contents($directory.'/sample.json'),
             );
+        });
+    }
+
+    /**
+     * The helper each package's integration test writes its declarations
+     * with (AC 49), under the same rules as the fixtures above.
+     */
+    public function test_the_integration_fixture_helper_compares_and_writes_only_with_update_fixtures(): void
+    {
+        IntegrationFixture::registerFakes('cortex');
+
+        $this->withFixtureDirectory(function (string $directory): void {
+            $this->withUpdateFixtures(null, function () use ($directory): void {
+                try {
+                    IntegrationFixture::assertMatchesFixture('cortex', $directory);
+                    $this->fail('An integration without a fixture must fail.');
+                } catch (AssertionFailedError $error) {
+                    $this->assertStringContainsString('UPDATE_FIXTURES=1', $error->getMessage());
+                }
+            });
+
+            $this->assertFileDoesNotExist($directory.'/cortex.json');
+
+            $this->withUpdateFixtures('1', function () use ($directory): void {
+                IntegrationFixture::assertMatchesFixture('cortex', $directory);
+            });
+
+            $this->assertSame([
+                'key' => 'cortex',
+                'label' => 'Cortex',
+                'api_base' => '/cortex/api',
+                'features' => [CortexFeature::class],
+                'navigation' => [[
+                    'label' => 'Cortex records',
+                    'icon' => 'i-lucide-box',
+                    'group' => 'Cortex',
+                    'sort' => 50,
+                    'link' => ['path' => '/cortex/records', 'external' => false],
+                    'badge' => null,
+                    'live' => ['key' => 'cortex.active-records', 'options' => ['sort' => 90]],
+                    'children' => [],
+                ]],
+                'widgets' => [[
+                    'key' => 'cortex.stats',
+                    'label' => 'Cortex stats',
+                    'description' => null,
+                    'icon' => 'i-lucide-chart-bar',
+                    'component' => 'cortex.stats',
+                    'lazy' => false,
+                    'default_size' => ['width' => 4, 'height' => 2],
+                    'min_size' => ['width' => 1, 'height' => 1],
+                    'data' => [],
+                ]],
+                'settings' => [
+                    'key' => 'cortex',
+                    'label' => 'Cortex',
+                    'description' => null,
+                    'icon' => 'i-lucide-settings',
+                    'component' => 'cortex',
+                    'data' => [],
+                ],
+                'search_sources' => [
+                    ['key' => 'cortex', 'integration' => 'cortex', 'label' => 'Cortex records', 'icon' => 'i-lucide-search'],
+                ],
+                'screens' => [
+                    ['key' => 'cortex.records', 'kind' => 'list', 'path' => '/cortex/records', 'subject_type' => null],
+                    ['key' => 'cortex.record', 'kind' => 'detail', 'path' => '/cortex/records/:record', 'subject_type' => 'cortex.record'],
+                ],
+            ], json_decode((string) file_get_contents($directory.'/cortex.json'), true));
+
+            $contents = (string) file_get_contents($directory.'/cortex.json');
+
+            $this->assertStringContainsString('"data": {}', $contents);
+            $this->assertStringEndsWith("}\n", $contents);
+
+            // A plain run now compares equal, and writes nothing.
+            $this->withUpdateFixtures(null, function () use ($directory): void {
+                IntegrationFixture::assertMatchesFixture('cortex', $directory);
+            });
+
+            $this->assertSame($contents, file_get_contents($directory.'/cortex.json'));
         });
     }
 

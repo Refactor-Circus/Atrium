@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Access\Concerns\Gated;
+use RefactorCircus\Atrium\Exceptions\UnserializableDataException;
 use RefactorCircus\Atrium\Support\Iconify;
+use RefactorCircus\Atrium\Support\JsonData;
 
 class NavItem
 {
@@ -36,6 +38,19 @@ class NavItem
 
     /** @var array<int, NavItem> */
     public private(set) array $children = [];
+
+    /**
+     * The layer resolver that computes this item's badge or children from a
+     * package API, and the static options it is handed.
+     *
+     * @var array{key: string, options: array<array-key, mixed>}|null
+     */
+    public private(set) ?array $live = null;
+
+    /**
+     * A live key: the package, a dot, then the resolver (`impex.active-runs`).
+     */
+    public const string LIVE_KEY_PATTERN = '/^[a-z0-9-]+\.[a-z0-9.-]+$/D';
 
     final public function __construct(public readonly string $label) {}
 
@@ -104,6 +119,31 @@ class NavItem
     public function children(array $children): static
     {
         $this->children = $children;
+
+        return $this;
+    }
+
+    /**
+     * Let the layer compute the badge or children with the resolver it
+     * registered under the key (`$atrium.live(key, ...)`), handing it the
+     * options. Atrium sends the key and options as they are, so they must
+     * be static, JSON-serializable data.
+     *
+     * @param  array<array-key, mixed>  $options
+     *
+     * @throws InvalidArgumentException for a key that is not `{package}.{resolver}`
+     * @throws UnserializableDataException for options JSON cannot carry
+     */
+    public function live(string $key, array $options = []): static
+    {
+        if (preg_match(self::LIVE_KEY_PATTERN, $key) !== 1) {
+            throw new InvalidArgumentException("Nav item [{$this->label}] has the live key [{$key}]; it must be {package}.{resolver} and match ^[a-z0-9-]+\\.[a-z0-9.-]+$.");
+        }
+
+        $this->live = [
+            'key' => $key,
+            'options' => JsonData::check($options, "Nav item [{$this->label}] live options"),
+        ];
 
         return $this;
     }

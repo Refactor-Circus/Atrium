@@ -480,3 +480,50 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
 
 - `composer test:unit`: 904 passed, 3194 assertions.
 - `composer analyse` and `composer lint:check`: passed.
+
+## Group 11 (salvaged)
+
+### What I found
+
+The build agent stopped before committing. There was no index lock and no merge or rebase in progress. Most of the group was already in the tree, uncommitted:
+
+- The `Domains\Integrations` framework: the `Integration` contract and its abstract base, `InstalledPackages` and `ComposerInstalledPackages`, `IntegrationRegistry`, `IntegrationFeatures` with its Pennant seam, `RegisteredIntegration`, `ScreenDeclaration`, `SearchSourceDeclaration`, `InvalidIntegrationException`, and `atrium.screens.show` (route, controller and `ShowIntegrationScreenRequest`). `IntegrationsServiceProvider` was already in `DomainServiceProvider::$providers`.
+- The seven `{Pkg}Feature` classes, and the `integrations` config section with its banner.
+- `NavItem::live()`, the shell's `integrations`, `search.sources` and `search.per_source`, and `ResolvedScreenResource::declaredAt()`.
+- The test fixtures (`FakeInstalledPackages`, `FixtureIntegration`, `IntegrationFixture` with `assertMatchesFixture()`), every group test file, and the route list, gate, shell, contract-fixture and Arch test updates.
+
+Four things were missing:
+
+- the `Surface::route()` call
+- the regenerated `shell.json`
+- the new `shell-integrations.json`
+- the standards-feedback rows
+
+Three of the salvaged tests also failed.
+
+### What I did
+
+- `AtriumServiceProvider` now calls `route('atrium.', 'atrium')` on Keystone's `Surface` (AC 46). The surface is scoped, so this is done in an `afterResolving` callback, and also on an instance that is already resolved.
+- I regenerated `nuxt/layer/test/fixtures/shell.json` and wrote `shell-integrations.json` with `UPDATE_FIXTURES=1`.
+- I added rows to `docs/agent/standards-feedback.md`:
+  - `architecture/dependencies`
+  - `architecture/domain-modules`
+  - `http/authorization`: `ShowIntegrationScreenRequest` reads registries only, as D-018 accepted for the shell, search and settings requests.
+- I fixed the three failing tests:
+  - The config banner broke "authentication middleware" across two lines, so the grep missed it. I rewrapped it.
+  - `NavItemLiveTest`'s closure case wraps the closure, because Pest calls a closure it finds in a dataset.
+  - `ApiBaseTest` now calls `withArgs()` before `once()`. Mockery checks `once()` against every call if it comes first.
+
+### Tests
+
+These were run in this session:
+
+- All the group's test files: Integrations, Surface, NavItemLive, the Routes, Auth, Shell and ContractFixtures API tests, and Arch. All passed after the fixes.
+- PHPStan, Pint (on the changed paths) and type coverage (100%): passed.
+
+The full suite was not run, as the salvage instructions said.
+
+### What is left
+
+- 11.6 (full `vendor/bin/pest` and `composer test`) is unticked. The gate runs it.
+- The layer's TS shell types gain `live`, `integrations` and `search.sources` in group 12.

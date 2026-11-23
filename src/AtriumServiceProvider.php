@@ -9,6 +9,7 @@ use RefactorCircus\Atrium\Console\Commands\InstallCommand;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
 use RefactorCircus\Keystone\Packages\Package;
 use RefactorCircus\Keystone\Support\PackageServiceProvider;
+use RefactorCircus\Keystone\Support\Surface;
 
 class AtriumServiceProvider extends PackageServiceProvider
 {
@@ -44,6 +45,8 @@ class AtriumServiceProvider extends PackageServiceProvider
         $this->app->singleton(Atrium::class);
 
         $this->app->register(DomainServiceProvider::class);
+
+        $this->nameSurface();
     }
 
     /**
@@ -83,6 +86,23 @@ class AtriumServiceProvider extends PackageServiceProvider
         $this->commands([
             InstallCommand::class,
         ]);
+    }
+
+    /**
+     * Calls through routes named `atrium.*` come from the `atrium` surface.
+     * Atrium names its prefix itself instead of relying on a default built
+     * into Keystone. The surface is scoped, so every instance the container
+     * builds is told, and one already built is told now.
+     */
+    private function nameSurface(): void
+    {
+        $this->app->afterResolving(Surface::class, function (Surface $surface): void {
+            $surface->route('atrium.', 'atrium');
+        });
+
+        if ($this->app->resolved(Surface::class)) {
+            $this->app->make(Surface::class)->route('atrium.', 'atrium');
+        }
     }
 
     /**

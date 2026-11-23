@@ -7,6 +7,9 @@ namespace RefactorCircus\Atrium\Domains\Navigation\Http\Requests;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Atrium;
+use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationFeatures;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Http\Resources\ShellResource;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
@@ -26,6 +29,7 @@ final class ShowShellRequest extends Request
         $themes = app(ThemeRegistry::class);
         $name = config('app.name');
         $user = $this->user();
+        $perSource = config('atrium.search.results.per_source');
 
         return new ShellResource([
             'app_name' => is_string($name) ? $name : '',
@@ -38,6 +42,28 @@ final class ShowShellRequest extends Request
             'switchable' => $themes->switchable($this),
             'panels' => array_values(app(SettingsRegistry::class)->panels($this)),
             'min_length' => app(SearchRegistry::class)->minLength(),
+            'per_source' => is_int($perSource) ? $perSource : null,
+            'integrations' => $this->integrations(),
         ])->response();
+    }
+
+    /**
+     * Each registered integration, with its feature flags for this user.
+     *
+     * @return list<array{integration: RegisteredIntegration, active: bool, features: array<string, bool>}>
+     */
+    private function integrations(): array
+    {
+        $features = app(IntegrationFeatures::class);
+
+        return array_values(array_map(function (RegisteredIntegration $integration) use ($features): array {
+            $states = $features->states($integration, $this);
+
+            return [
+                'integration' => $integration,
+                'active' => ! in_array(false, $states, true),
+                'features' => $states,
+            ];
+        }, app(IntegrationRegistry::class)->all()));
     }
 }

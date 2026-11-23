@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Atrium;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavGroup;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
@@ -12,6 +13,9 @@ use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
+use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
+use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
+use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
 /*
@@ -77,7 +81,7 @@ it('answers with the exact shell structure', function (): void {
                     'grouped' => false,
                     'link' => ['path' => '/reports', 'external' => false],
                     'items' => [
-                        ['label' => 'Reports', 'icon' => 'i-lucide-chart-bar', 'link' => ['path' => '/reports', 'external' => false], 'badge' => 3, 'children' => []],
+                        ['label' => 'Reports', 'icon' => 'i-lucide-chart-bar', 'link' => ['path' => '/reports', 'external' => false], 'badge' => 3, 'live' => null, 'children' => []],
                     ],
                 ],
                 [
@@ -87,8 +91,8 @@ it('answers with the exact shell structure', function (): void {
                     'grouped' => true,
                     'link' => ['path' => '/users', 'external' => false],
                     'items' => [
-                        ['label' => 'Users', 'icon' => null, 'link' => ['path' => '/users', 'external' => false], 'badge' => null, 'children' => [
-                            ['label' => 'Invites', 'icon' => null, 'link' => ['path' => '/users/invites', 'external' => false], 'badge' => 'new', 'children' => []],
+                        ['label' => 'Users', 'icon' => null, 'link' => ['path' => '/users', 'external' => false], 'badge' => null, 'live' => null, 'children' => [
+                            ['label' => 'Invites', 'icon' => null, 'link' => ['path' => '/users/invites', 'external' => false], 'badge' => 'new', 'live' => null, 'children' => []],
                         ]],
                     ],
                 ],
@@ -122,8 +126,90 @@ it('answers with the exact shell structure', function (): void {
             'settings' => [
                 ['key' => 'shop', 'label' => 'Shop', 'icon' => 'i-lucide-store', 'component' => 'acme-shop'],
             ],
-            'search' => ['min_length' => 3],
+            'search' => ['min_length' => 3, 'sources' => [], 'per_source' => 5],
+            'integrations' => [],
         ]]);
+});
+
+it('lists each registered integration in key order, with its flags (AC 42)', function (): void {
+    config()->set('atrium.integrations.roster.api_base', 'https://people.example.com/api');
+
+    IntegrationFixture::registerFakes('roster', 'cortex');
+
+    expect(array_keys(app(IntegrationRegistry::class)->all()))->toBe(['cortex', 'roster']);
+
+    $this->actingAs($this->user)->getJson(route('atrium.shell'))
+        ->assertOk()
+        ->assertJsonPath('data.integrations', [
+            [
+                'key' => 'cortex',
+                'label' => 'Cortex',
+                'active' => true,
+                'api_base' => '/cortex/api',
+                'features' => [CortexFeature::class => true],
+            ],
+            [
+                'key' => 'roster',
+                'label' => 'Roster',
+                'active' => true,
+                'api_base' => 'https://people.example.com/api',
+                'features' => [RosterFeature::class => true],
+            ],
+        ]);
+});
+
+it('sends an integration with no feature flags as active, with an empty features object', function (): void {
+    config()->set('atrium.integrations.cortex.features', []);
+    IntegrationFixture::registerFakes('cortex');
+
+    $response = $this->actingAs($this->user)->getJson(route('atrium.shell'))->assertOk()->assertJsonPath('data.integrations.0.active', true);
+
+    expect($response->getContent())->toContain('"features":{}');
+});
+
+it('lists the search sources of active integrations and the per-source cap (AC 42)', function (): void {
+    config()->set('atrium.search.results.per_source', 7);
+    IntegrationFixture::registerFakes('roster', 'cortex');
+
+    $this->actingAs($this->user)->getJson(route('atrium.shell'))
+        ->assertOk()
+        ->assertJsonPath('data.search', [
+            'min_length' => 2,
+            'sources' => [
+                ['key' => 'cortex', 'integration' => 'cortex', 'label' => 'Cortex records', 'icon' => 'i-lucide-search'],
+                ['key' => 'roster', 'integration' => 'roster', 'label' => 'Roster records', 'icon' => 'i-lucide-search'],
+            ],
+            'per_source' => 7,
+        ]);
+});
+
+it('sends per_source null when results per source are not capped', function (): void {
+    config()->set('atrium.search.results.per_source', null);
+
+    $this->actingAs($this->user)->getJson(route('atrium.shell'))->assertOk()->assertJsonPath('data.search.per_source', null);
+});
+
+it('sends a nav item\'s live key and options, and no badge for an integration\'s item (AC 43)', function (): void {
+    IntegrationFixture::registerFakes('cortex');
+
+    $item = $this->actingAs($this->user)->getJson(route('atrium.shell'))->assertOk()->json('data.navigation.0.items.0');
+
+    expect($item)->toBe([
+        'label' => 'Cortex records',
+        'icon' => 'i-lucide-box',
+        'link' => ['path' => '/cortex/records', 'external' => false],
+        'badge' => null,
+        'live' => ['key' => 'cortex.active-records', 'options' => ['sort' => 90]],
+        'children' => [],
+    ]);
+});
+
+it('sends live options as an object, even when there are none', function (): void {
+    app(NavigationRegistry::class)->add(NavItem::make('Runs')->url('/runs')->live('acme.active-runs'));
+
+    $response = $this->actingAs($this->user)->getJson(route('atrium.shell'))->assertOk();
+
+    expect($response->getContent())->toContain('"live":{"key":"acme.active-runs","options":{}}');
 });
 
 it('sends every settings panel summary field, and those only', function (): void {

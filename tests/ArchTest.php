@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardController;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
+use RefactorCircus\Atrium\Domains\Integrations\IntegrationsServiceProvider;
 use RefactorCircus\Atrium\Domains\Screens\Data\ResolvedScreen;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
@@ -122,6 +123,26 @@ arch('atrium requires only keystone among the suite packages')
         fn (string $package): bool => str_starts_with($package, 'refactor-circus/'),
     )))
     ->toBe(['refactor-circus/keystone']);
+
+arch('atrium uses no suite package\'s code, only its API (AC 45)')
+    ->expect('RefactorCircus\Atrium')
+    ->not->toUse([
+        'RefactorCircus\Cortex',
+        'RefactorCircus\Impex',
+        'RefactorCircus\Keen',
+        'RefactorCircus\PennantPlus',
+        'RefactorCircus\Polycart',
+        'RefactorCircus\Roster',
+        'RefactorCircus\Showroom',
+    ]);
+
+arch('the per-package integration definitions import nothing from Pennant')
+    ->expect('RefactorCircus\Atrium\Integrations')
+    ->not->toUse('Laravel\Pennant');
+
+arch('the integrations domain provider is registered by the domain provider')
+    ->expect(fn (): array => new ReflectionProperty(DomainServiceProvider::class, 'providers')->getDefaultValue())
+    ->toContain(IntegrationsServiceProvider::class);
 
 arch('the history screen and audit components left for Keen')
     ->expect(fn (): array => array_values(array_filter(
