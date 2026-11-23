@@ -86,3 +86,43 @@ Out of scope: migrating suite packages. Each gets its own spec, queued with `wai
 - `testing/test-layers`: API tests check wiring only; behavior stays tested at the actions.
 - `atrium/components` (local, rewritten): Atrium owns the suite's Vue components in `nuxt/layer`; packages ship Vue components registered by key, with no stylesheets.
 - `atrium/domains` (local, rewritten): domain providers load `routes.php` through the API group; `loadDashboardRoutesFrom()` is removed.
+
+---
+
+## Reopened 2026-11-23: suite integrations
+
+### Scope
+
+Atrium v2 also hosts the front ends of the seven suite packages: Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Those packages keep only their JSON API and MCP. Foundry and Guardian are out of this round.
+
+1. **One integration per package**, under `src/Integrations/{Package}/` (PHP) and `nuxt/layer/app/integrations/{package}/` (Vue). Each registers only when `Composer\InstalledVersions::isInstalled('refactor-circus/{package}')` and `atrium.integrations.{package}.enabled` (default true) both hold. The PHP side declares navigation, widgets, screens, tabs and sections, settings panels and search sources as data. It never calls the package's models or actions.
+2. **The Vue side calls the package's API** through the package's generated client (`@refactor-circus/{package}-client`, `openapi-typescript` + `openapi-fetch`), pinned as a git dependency on the package's v2.0.0 tag. The shell tells the layer which integrations are on and each package's API base (`{package}.routes.prefix`).
+3. **What gets ported**, from the 2026-11-23 inventory:
+   - about 67 screens: Showroom 25, Roster 14, Cortex 11, Impex 10, Keen 3, Polycart 3, PennantPlus 1
+   - 11 widgets, 3 settings panels, 6 search sources, and the Impex active-runs badge
+   - the public Roster invitation page
+4. **Cross-package hooks move to Atrium config**, with the old defaults:
+   - `atrium.integrations.cortex.redirect_domains.screens` (tab on `roster.organization`, section on `roster.user`)
+   - `atrium.integrations.impex.run_link.screens` (`showroom.transfers`, `row.actions`)
+   - `atrium.integrations.keen.history.*` (section on every screen, tab on `roster.organization`, per-package nav)
+5. **Per-integration feature flags** are resolved through Laravel Pennant when it is installed; otherwise every flag is on. This replaces each package's `<Pkg>SupportFeature` and PennantPlus's Atrium resolver.
+6. **Atrium's own API client:** Atrium exports its OpenAPI with Scramble, commits `openapi.json`, and generates the layer's client from it. The layer's hand-written API types give way to the generated ones, and the contract fixtures (D-007) are kept.
+
+### Decisions (user, 2026-11-23)
+
+- **Atrium knows the suite packages.** The no-cross-package rule now has one exception: Atrium. Packages still know nothing of Atrium or of each other.
+- **Detection:** Composer `InstalledVersions` plus the `atrium.integrations.{package}.enabled` switch.
+- **Data path:** Vue calls the package API through generated clients. Every package, Atrium included, generates its own client.
+- **OpenAPI from `dedoc/scramble`.** The client is `openapi-typescript` + `openapi-fetch`. Each repo commits `openapi.json` and `client/`, and the layer pins the clients as git dependencies.
+- **Missing data becomes package API** (stats, search, settings summary, and the specific gaps). That is each package's spec, not this one.
+- **Cross-package hooks go to Atrium config, with Pennant-resolved feature flags.**
+- **Folded into this v2 spec.** Order: Keystone, then the seven package specs, then these integration groups. Atrium v2.0.0 is tagged last.
+
+### Context
+
+- **Package specs:** `{Package}/docs/agent/specs/2026-11-23-0943-{package}-v2-api-and-mcp-only`, all waiting for `Keystone/docs/agent/specs/2026-11-23-0943-drop-the-atrium-plugin-hook`.
+- **Open for write-spec:**
+  - how the layer reaches several API bases (one per package) with one auth adapter
+  - the build-time behavior when a package isn't installed (the client is still a dependency, and the UI stays hidden)
+  - how screens map to Nuxt routes (`/{package}/...`)
+  - whether integrations are split into one task group per package
