@@ -277,3 +277,15 @@
 - Rationale: The user's order is Keystone, then the packages, then the integrations. Typing screens against guessed schemas would hide exactly the drift this spec guards against.
 - Date: 2026-11-23
 - Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-040: Where does the client sync (group 12) read the package builds from during this local build?
+- Choice: `ATRIUM_SUITE_PATH=/private/tmp/claude-501/-Users-jay-Projects-packages/86612d5b-5a93-4b4f-bd9d-c72c44a795af/scratchpad/suite`. That folder holds one symlink per package (`Cortex`, `Impex`, `Keen`, `PennantPlus`, `Polycart`, `Roster`, `Showroom`) pointing at that package's v2 job worktree (`/Users/jay/Projects/packages/{Pkg}--2026-11-23-0943-{pkg}-v2-api-and-mcp-only`). Each worktree is approved, clean, and has a committed `openapi.json` and `client/`. Run sync, and any test that reads package files, with this variable set. Never read the packages' main checkouts, which are still v1.
+- Rationale: the package v2 branches are not merged or pushed (user: do not push), so the main checkouts do not have the v2 API yet.
+- Date: 2026-11-23
+- Raised by: orchestrator, before the integrations build
+
+## D-041: pnpm is not on PATH on this machine
+- Choice: run Node workspace commands with `PATH=/private/tmp/claude-501/-Users-jay-Projects-packages/86612d5b-5a93-4b4f-bd9d-c72c44a795af/scratchpad/bin:$PATH` (a `pnpm` shim that runs `npx -y pnpm@10.18.0`), or with `npx -y pnpm@10.18.0` directly. `composer test:nuxt` needs the shim on PATH.
+- Rationale: the shim passed `composer test:nuxt` earlier in this job.
+- Date: 2026-11-23
+- Raised by: orchestrator
