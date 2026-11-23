@@ -1355,3 +1355,15 @@ Integration docs, changelog and release checks (AC 76, 77).
 
 - Re-checked tasks 28.1 to 28.5 against AC 76 and 77. The README "Suite integrations" section, the CHANGELOG v2.0.0 integrations entries, the Boost skill, `AGENTS.md` (`CLAUDE.md`), the `atrium/integrations` standard and its index entry, the updated `atrium/components` and `atrium/domains`, the PR template release items with owners, `DocsTest` and `ChangelogUpgradeTest` were all already in commit `befdfd6`. No file changes were needed.
 - `composer test:unit`: 1357 tests (1350 passed, 7 skipped). `composer test`: PHPStan 0 errors, Pint passed, type coverage 100%, Pest the same counts. Nothing under `nuxt/` changed since the `composer test:nuxt` run recorded above.
+
+## Spec review rework, round 1
+
+### Fixes
+
+- Security (minor): the impersonation start on `roster.user` called `navigateTo(url, { external: true })` on whatever URL Roster returned. `nuxt/layer/app/utils/atriumLink.ts` now exports `isExternalUrl()`, the absolute http(s) check `atriumLink` already used. `atriumLink`'s own `isFollowable()` now calls it too. `nuxt/layer/app/pages/roster/users/[user].vue` follows the link only when `isExternalUrl()` accepts it. Any other link (`javascript:`, `data:`, `//host`, a relative path, or an empty one) fails the action, and the impersonate card shows the new `roster.users.impersonate.unsafe_link` message (`nuxt/layer/i18n/locales/integrations/roster-users.en.json`).
+
+### Tests
+
+- `test/integrations/roster/users/user.test.ts`: a new case, run for `javascript:`, `data:`, `//evil.test/…`, `/roster/…` and empty links. In each, the POST is made, `navigateTo` is never called, and the error is shown. These cases would fail against the old code, which navigated to any non-empty URL.
+- `test/navigation.test.ts`: `isExternalUrl()` accepts http(s) URLs and refuses `javascript:`, `data:`, scheme-relative, backslash, relative, padded, host-less, `ftp:` and empty URLs.
+- Both Vitest files pass (36 tests, no type errors), and `nuxt typecheck` passes. `composer test:unit`: 1357 tests (1350 passed, 7 skipped).

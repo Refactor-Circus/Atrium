@@ -27,8 +27,17 @@ export function atriumLink(link: AtriumLink | null | undefined): AtriumLinkProps
   return { to: link.path }
 }
 
+/**
+ * Whether a server-supplied URL is an absolute http(s) URL with a host, the
+ * only kind the layer follows out of the SPA (never `javascript:`, `data:`
+ * or a scheme-relative `//host`).
+ */
+export function isExternalUrl(url: string): boolean {
+  return /^https?:\/\/[^/\\\s]/i.test(url)
+}
+
 function isFollowable(path: string): boolean {
-  if (/^https?:\/\/[^/\\\s]/i.test(path)) {
+  if (isExternalUrl(path)) {
     return true
   }
 

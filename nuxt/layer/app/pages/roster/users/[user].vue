@@ -145,7 +145,11 @@ async function changeStatus(): Promise<void> {
   }
 }
 
-/** Starts impersonating and follows the one-time link, as v1 redirected to it. */
+/**
+ * Starts impersonating and follows the one-time link, as v1 redirected to it.
+ * Like every server-supplied URL (atriumLink), the link is followed only when
+ * it is an absolute http(s) URL; anything else is shown as an error.
+ */
 async function startImpersonation(): Promise<void> {
   if (!client) {
     return
@@ -154,8 +158,14 @@ async function startImpersonation(): Promise<void> {
   const started = { url: '' }
 
   if (await impersonate.run(async () => {
-    started.url = rosterData<RosterImpersonationStarted>(await client.POST('/users/{user}/impersonate', { ...path(), body: { reason: impersonationReason.value } })).url
-  }) && started.url !== '') {
+    const url = rosterData<RosterImpersonationStarted>(await client.POST('/users/{user}/impersonate', { ...path(), body: { reason: impersonationReason.value } })).url
+
+    if (typeof url !== 'string' || !isExternalUrl(url)) {
+      throw new Error(t('roster.users.impersonate.unsafe_link'))
+    }
+
+    started.url = url
+  })) {
     await navigateTo(started.url, { external: true })
   }
 }

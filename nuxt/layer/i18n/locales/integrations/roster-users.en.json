@@ -100,7 +100,8 @@
       "impersonate": {
         "title": "Impersonate",
         "reason_hint": "Why you need to act as this user. It is kept with the impersonation.",
-        "start": "Impersonate"
+        "start": "Impersonate",
+        "unsafe_link": "Roster answered with a link Atrium will not follow."
       },
       "danger": {
         "title": "Danger zone",

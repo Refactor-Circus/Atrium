@@ -314,6 +314,25 @@ describe('roster.user', () => {
     expect(navigate).toHaveBeenCalledWith('https://app.test/roster/impersonate/abc', { external: true })
   })
 
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    '//evil.test/impersonate',
+    '/roster/impersonate/abc',
+    ''
+  ])('never follows an impersonation link that is not an absolute http(s) URL: %s', async (url) => {
+    mockPackageApi('roster', routes({ 'POST /users/{user}/impersonate': { data: impersonation, url } as never }))
+
+    const wrapper = await mountUser()
+    await wrapper.find('[data-testid="roster-user-impersonation-reason"]').setValue('Ticket 42')
+    await wrapper.find('[data-testid="roster-user-impersonate-form"]').trigger('submit')
+    await settle()
+
+    expect(rosterCalls('POST', '/users/{user}/impersonate')).toHaveLength(1)
+    expect(navigate).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-testid="roster-user-impersonate"] [data-testid="roster-action-error"]').text()).toContain('Roster answered with a link Atrium will not follow.')
+  })
+
   it('deletes the user only after a confirmation, then offers restore', async () => {
     const confirm = confirmWith(false)
     mockPackageApi('roster', routes({ 'DELETE /users/{user}': reply(204), 'POST /users/{user}/restore': { data: ada } }))

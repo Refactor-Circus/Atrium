@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { AtriumNavigation } from '#components'
 import { useAtriumShellStore } from '#imports'
-import { atriumLink } from '../app/utils/atriumLink'
+import { atriumLink, isExternalUrl } from '../app/utils/atriumLink'
 import { shell, withSetup } from './support'
 
 describe('atriumLink()', () => {
@@ -26,6 +26,17 @@ describe('atriumLink()', () => {
     }
 
     expect(atriumLink(null)).toBeNull()
+  })
+})
+
+describe('isExternalUrl()', () => {
+  it('accepts only an absolute http(s) URL with a host', () => {
+    expect(isExternalUrl('https://app.test/roster/impersonate/abc')).toBe(true)
+    expect(isExternalUrl('HTTP://app.test')).toBe(true)
+
+    for (const url of ['javascript:alert(1)', 'data:text/html,x', '//evil.test', '/\\evil.test', '/demo/orders', ' https://app.test', 'https:///path', 'ftp://host/file', '']) {
+      expect(isExternalUrl(url), url).toBe(false)
+    }
   })
 })
 
