@@ -585,3 +585,54 @@ I did not run either suite. The instructions say the gate runs `composer test:nu
 ### Deviations
 
 None.
+
+## Group 18 (salvaged)
+
+### What I found
+
+The build agent stopped without returning a result. In the group worktree there was no index lock and no merge or rebase in progress. Every file in the group's list was present but uncommitted: 12 new files, plus `roster.en.json`, which still held only the `{}` placeholder at HEAD. I read each file against tasks 18.1 to 18.3, AC 69 and 70, and the group 11 and 12 framework (`IntegrationRegistry`, `IntegrationFixture`, `useIntegrationQuery`, `integrationData`, `AtriumRegistry`, `test/integrations/support.ts`, the vendored Roster schema). The work looked complete and consistent:
+
+- `RosterIntegration` declares:
+  - the six v1 nav items, all in the Roster group;
+  - the widgets `roster.user-status` and `roster.organizations`, with no resolver;
+  - the search sources `roster-users` and `roster-organizations`;
+  - the 14 screens at the AC 69 paths, with the subject aliases `roster.user` and `roster.organization`, and `roster.invitation` at `/roster/invitations/:token`.
+
+  Its labels are in `lang/en/integrations/roster.php`. The `roster.routes.enabled` gate and its one warning come from the framework's `IntegrationRegistry`.
+- `RosterIntegrationTest` covers:
+  - registration: gating, the API base, disabled, not installed, `roster.routes.enabled` false with one warning, then turned on;
+  - the declarations, Iconify icons, the fixture, the labels and the no-package-code check.
+- `index.ts` has the full `screens` map (route names for the 14 keys) and registers both widgets and both search sources.
+- The two widgets read `roster.stats.users` and `roster.stats.organizations` through `useIntegrationQuery`. A 403 shows `AtriumNoAccess`, and any other failure shows `AtriumErrorCard`.
+- The sources in `components/search/sources.ts` call `/search/users` and `/search/organizations` with `q` and `limit`. Results link to `/roster/users/:id` and `/roster/organizations/:slug`.
+- The Vitest files are `integration.test.ts`, `widgets.test.ts` and `search.test.ts`. They cover the screens map against the fixture, the registrations, both widgets with 403 and error states and one shared request, and both sources with their links, a 403 drop and the inactive case.
+
+`vendor/bin/pint --test` passes on the three PHP files.
+
+### What I committed
+
+Commit `05ff2f8` on `ring-master/2026-11-22-1823-atrium-v2-headless--g18` contains only the group's 13 paths. Tasks 18.1, 18.2 and 18.3 are ticked. The untracked `nuxt/layer/.nuxtrc` and `nuxt/layer/test/zz-probe.test.ts` are outside the group's list, so I did not commit them or touch them.
+
+### What is left
+
+- 18.4 is unticked. As instructed, I ran neither `composer test:nuxt` nor `vendor/bin/pest`, so the gate will be the first run of these Pest and Vitest files.
+- `nuxt/layer/test/zz-probe.test.ts` looks like a leftover probe from the stopped agent. If it is still untracked in the worktree when the gate runs, Vitest will pick it up.
+
+## Group 18
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 18.4 is ticked. 18.1 to 18.3 are also ticked on the group branch, because the salvage ticked them only in the job worktree.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: the salvaged section above and this one.
+
+This retry had only 18.4 left. Tasks 18.1 to 18.3 were already committed in `05ff2f8` (see "Group 18 (salvaged)" above), and I left that work unchanged. No source, test, fixture or locale file changed.
+
+I deleted the untracked `nuxt/layer/test/zz-probe.test.ts` from the group worktree. It was a debug probe the stopped agent left behind. Its only test throws on purpose, so Vitest would have failed the gate with it in place. It was never committed. `nuxt/layer/.nuxtrc` is also untracked and is not in the group's file list, so I left it out of the commit.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 18.4 is ticked on that basis. The gate will be the first run of the Roster Pest and Vitest files.
+
+### Deviations
+
+None.

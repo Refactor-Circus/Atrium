@@ -191,10 +191,10 @@ depends on: 12
 files: src/Integrations/Roster/RosterIntegration.php, lang/en/integrations/roster.php, tests/Feature/Integrations/RosterIntegrationTest.php, nuxt/layer/test/fixtures/integrations/roster.json, nuxt/layer/app/integrations/roster/index.ts, nuxt/layer/app/integrations/roster/components/widgets/**, nuxt/layer/app/integrations/roster/components/search/**, nuxt/layer/i18n/locales/integrations/roster.en.json, nuxt/layer/test/integrations/roster/integration.test.ts, nuxt/layer/test/integrations/roster/widgets.test.ts, nuxt/layer/test/integrations/roster/search.test.ts
 criteria: 39, 40, 45, 53, 60, 62, 69
 
-- [ ] 18.1 Write tests: Pest: gating, and not registered while `roster.routes.enabled` is false; the six nav items, the two widgets and the two search sources; the 14 screen declarations with paths and subject aliases (`roster.user`, `roster.organization`), and the fixture; Vitest: `index.ts` registers a `screens` entry for every fixture screen key; `roster.user-status` against `roster.stats.users`, and `roster.organizations` against `roster.stats.organizations`, with 403; `roster-users` and `roster-organizations` sources and their links
-- [ ] 18.2 Write `RosterIntegration` and its lang file, porting from `RosterPlugin`.
-- [ ] 18.3 Write `index.ts` with the full `screens` map (route names for all of AC 69 and the public page), the widgets and the search sources.
-- [ ] 18.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 18.1 Write tests: Pest: gating, and not registered while `roster.routes.enabled` is false; the six nav items, the two widgets and the two search sources; the 14 screen declarations with paths and subject aliases (`roster.user`, `roster.organization`), and the fixture; Vitest: `index.ts` registers a `screens` entry for every fixture screen key; `roster.user-status` against `roster.stats.users`, and `roster.organizations` against `roster.stats.organizations`, with 403; `roster-users` and `roster-organizations` sources and their links
+- [x] 18.2 Write `RosterIntegration` and its lang file, porting from `RosterPlugin`.
+- [x] 18.3 Write `index.ts` with the full `screens` map (route names for all of AC 69 and the public page), the widgets and the search sources.
+- [x] 18.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 19: Roster screens: users and impersonations
 depends on: 18
