@@ -4,50 +4,31 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Support;
 
-use Illuminate\Contracts\Config\Repository;
+use Closure;
 use Illuminate\Support\Facades\Route;
-use RefactorCircus\Atrium\Domains\Access\Http\Middleware\Authorize;
+use RefactorCircus\Atrium\Domains\Access\Http\Middleware\ForceJsonResponse;
 use RefactorCircus\Keystone\Support\ServiceProvider as BaseServiceProvider;
 
 /**
  * Base class for Atrium's domain service providers.
  *
- * Atrium's routes are dashboard screens rather than a JSON API. Every one
- * shares one group - the configured path, domain and
- * middleware, and the `atrium.` name prefix - so each domain loads its
- * routes file through `loadDashboardRoutesFrom()` rather than building the
- * group itself.
+ * Atrium serves a JSON API. Every route, plugin routes included, sits in one
+ * group: Keystone's `loadApiRoutesFrom()` group from `atrium.routes.enabled`,
+ * `routes.prefix` and `routes.middleware`, named `atrium.`. Each domain loads
+ * its own `routes.php` through it rather than building the group itself.
  */
 abstract class ServiceProvider extends BaseServiceProvider
 {
     /**
-     * Load a routes file inside the dashboard's route group.
+     * Load a routes file, or a closure declaring routes, inside Atrium's API
+     * group, with JSON rendering forced ahead of the configured middleware:
+     * a guest's 401 from the host's guard, a 404 or a 422 is JSON whatever
+     * the request's `Accept` header.
      */
-    protected function loadDashboardRoutesFrom(string $path): void
+    protected function loadApiRoutesFrom(string|Closure $routes): void
     {
-        if ($this->routesAreCached()) {
-            return;
-        }
-
-        Route::group($this->dashboardRouteAttributes(), $path);
-    }
-
-    /**
-     * The attributes every dashboard route is registered with.
-     *
-     * @return array<string, mixed>
-     */
-    protected function dashboardRouteAttributes(): array
-    {
-        $config = $this->app->make(Repository::class);
-
-        return array_filter([
-            'domain' => $config->get('atrium.domain'),
-            'prefix' => $config->get('atrium.path', 'atrium'),
-            // The `middleware` key left the config in v2; until these routes
-            // move to `atrium.routes`, keep them behind Authorize without it.
-            'middleware' => $config->get('atrium.middleware', ['web', Authorize::class]),
-            'as' => 'atrium.',
-        ]);
+        Route::middleware(ForceJsonResponse::class)->group(function () use ($routes): void {
+            parent::loadApiRoutesFrom($routes);
+        });
     }
 }

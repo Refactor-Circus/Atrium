@@ -9,7 +9,6 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Route;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\ClearDiscoveredPluginsCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\DiscoverPluginsCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\MakePluginCommand;
@@ -88,22 +87,15 @@ class PluginsServiceProvider extends ServiceProvider
     }
 
     /**
-     * Plugin routes go in their own group with the dashboard's attributes,
-     * registered once every provider has booted. That ordering lets a host
-     * application register a plugin in its own boot() and still get its
-     * routes, while the shared attributes keep those routes behind Atrium's
-     * prefix and middleware.
+     * Plugin routes go inside Atrium's API group, registered once every
+     * provider has booted. That ordering lets a host application register a
+     * plugin in its own boot() and still get its routes, while the group
+     * keeps them behind Atrium's prefix, middleware and `atrium.` name.
      */
     private function bootRoutes(): void
     {
-        if ($this->routesAreCached()) {
-            return;
-        }
-
-        $attributes = $this->dashboardRouteAttributes();
-
-        $this->app->booted(function () use ($attributes): void {
-            Route::group($attributes, __DIR__.'/routes.php');
+        $this->app->booted(function (): void {
+            $this->loadApiRoutesFrom(__DIR__.'/routes.php');
         });
     }
 }

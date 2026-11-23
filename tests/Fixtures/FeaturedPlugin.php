@@ -38,6 +38,6 @@ class FeaturedPlugin extends Plugin
 
     public function routes(): void
     {
-        Route::get('featured', fn (): string => 'featured page')->name('featured.index');
+        Route::get('/', fn (): array => ['page' => 'featured'])->name('index');
     }
 }

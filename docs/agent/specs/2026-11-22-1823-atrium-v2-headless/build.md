@@ -129,3 +129,36 @@ Dashboard and widget API. Criteria 6, 7, 8, 9, 10, 30, 32, 33. Built on branch `
 ### Relaunch check
 
 - The relaunch found every task finished in `86ee62f` on top of the WIP `6d1e713`, and no uncommitted work. It changed no code. It reviewed the migration, the layout action and version claim, the resources, the one-line controllers, the routes and the binders against AC 6-10, 30, 32 and 33, and confirmed every listed test file covers its criterion. PHPStan (`composer analyse`, 0 errors) and Pint (`--test`) pass. The tests were not run here, as instructed; the gate runs them.
+
+## Group 5 (salvaged)
+
+Route group, auth and plugins. Criteria 1, 2, 3, 5, 12. The build agent ended without a result, leaving its work uncommitted. There was no index lock and no merge or rebase in progress.
+
+### What the salvage found
+
+The work was complete except for one failing test. All of it was uncommitted:
+
+- `src/Support/ServiceProvider.php`: `loadDashboardRoutesFrom()` and `dashboardRouteAttributes()` are gone. `loadApiRoutesFrom()` overrides Keystone's: it wraps the parent group in `Route::middleware(ForceJsonResponse::class)`, so JSON rendering is forced ahead of `atrium.routes.middleware`.
+- `src/Domains/Access/Http/Middleware/Authorize.php`: returns `401 {"message": "Unauthenticated."}` as a `JsonResponse` when `$request->user()` is null, and 403 `This action is unauthorized.` when the gate refuses.
+- `src/Domains/Plugins/PluginsServiceProvider.php` and `routes.php`: plugin routes load through `loadApiRoutesFrom()` after boot, each one under `Route::prefix('plugins/{key}')->name('plugins.{key}.')`, with `EnsureFeaturesAreEnabled:{features}` kept when the plugin declares features. `Contracts/Plugin::routes()` docblock updated.
+- Fixtures: `->view()` dropped from `AlphaPlugin`, `BrowserPlugin` and `FullPlugin`, and their Blade views deleted (`views/alpha-stats`, `views/full-settings`). `RoutedPlugin` and `FeaturedPlugin` serve JSON at `/` named `index`. New `Middleware/MarksAtriumResponse` (a host middleware for the configured stack).
+- Tests: new `Api/RoutesApiTest` (the exact route-name list with method, URI and slug/uuid binding fields, scoped bindings, no other `atrium*` URI, `enabled: false` registers nothing, no `api.php`, no `loadDashboardRoutesFrom`, every domain `routes.php` loaded through `loadApiRoutesFrom`, every `atrium.*` route's middleware is exactly `[ForceJsonResponse, 'api', Authorize]` with only a plugin feature gate after it, and `Authorize` sorted before `SubstituteBindings`) and `Api/AuthApiTest` (a guest gets 401 JSON on all 14 routes for four `Accept` values, both with no guard and with a test token guard, so never a redirect; with a test guard the gate gives 403 outside `local`, lets the user through in `local`, and a defined gate decides in every environment, plugin routes included; a view-only user gets 403 on update, layout and destroy with nothing changed). `PluginRoutesTest`, `PluginFeatureRoutesTest` (a feature that is off gives 404 JSON even for `Accept: text/html`, the gate answers before the feature check, and a disabled plugin registers no route), `ConfiguredPathTest` (`routes.prefix` and `routes.middleware`), `PluginRegistryTest` and `PolicyTest` (JSON calls, `version` in update and layout payloads) are rewritten for the API.
+
+### Outside the group's file list (committed with it)
+
+- `src/Domains/Access/Http/Middleware/ForceJsonResponse.php` (new, `final`, `@internal`): sets `Accept: application/json`, so a host guard's `AuthenticationException`, a 404 or a 422 renders as JSON. `src/Support/ServiceProvider.php` depends on it.
+- `src/Domains/Access/AccessServiceProvider.php`: once the HTTP kernel resolves, calls `addToMiddlewarePriorityBefore(SubstituteBindings::class, Authorize::class)`. `Authorize` stays last in the configured list but runs before route model binding, so a guest gets 401 and a refused user 403 instead of a 404 from the slug binder.
+- `stubs/plugin.stub`: the `routes()` docblock describes the API group, and the example widget uses `->component()` instead of the removed `->view()`.
+
+### What the salvage changed
+
+- `tests/Feature/Api/RoutesApiTest.php`: `test_authorize_runs_before_route_model_binding` failed because the `api` group and the middleware priority only reach the router when the HTTP kernel is built, and the test sends no request. It now resolves `Illuminate\Contracts\Http\Kernel` first.
+
+### Checks
+
+- This group's test files plus `CommandsTest` (which uses `AlphaPlugin`): 65 tests pass. `tests/Feature/Api`, `tests/ArchTest.php` and `tests/Modes` also pass (144 tests), so the forced JSON and the priority change don't break groups 3 and 4.
+- PHPStan (`composer analyse`, 0 errors) and Pint (`--test` on `src` and `tests`) pass. The full suite was not run (D-014); the gate runs it.
+
+### What is left
+
+Nothing in group 5. `PluginDiscoveryTest` and `src/Domains/Domains/DomainServiceProvider.php` needed no change.

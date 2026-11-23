@@ -29,8 +29,7 @@ class BrowserPlugin extends Plugin
         return [
             WidgetDefinition::make('browser.widget')
                 ->label('Browser Widget')
-                ->description('Used by the browser test suite.')
-                ->view('browser-widget'),
+                ->description('Used by the browser test suite.'),
         ];
     }
 

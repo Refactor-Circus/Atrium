@@ -49,10 +49,10 @@ depends on: 3, 4
 files: src/Support/ServiceProvider.php, src/Domains/Access/Http/Middleware/Authorize.php, src/Domains/Plugins/**, src/Domains/Domains/DomainServiceProvider.php, tests/Feature/Api/RoutesApiTest.php, tests/Feature/Api/AuthApiTest.php, tests/Feature/PluginRoutesTest.php, tests/Feature/PluginFeatureRoutesTest.php, tests/Feature/PluginRegistryTest.php, tests/Feature/PluginDiscoveryTest.php, tests/Feature/ConfiguredPathTest.php, tests/Feature/PolicyTest.php, tests/Fixtures/**
 criteria: 1, 2, 3, 5, 12
 
-- [ ] 5.1 Write tests: the exact route-name list; `enabled: false` registers nothing; no `api.php` and no `loadDashboardRoutesFrom`; a guest gets 401 JSON with any `Accept` header and with no guard configured; the gate gives 403 outside `local` and passes in `local`, with a test guard; 403 for view-only users on mutations; every `atrium.*` route carries the group middleware, with `Authorize` last; plugin routes are named `atrium.plugins.{key}.*`, and a disabled plugin's route returns 404
-- [ ] 5.2 Move route loading onto Keystone's `loadApiRoutesFrom()` and remove `loadDashboardRoutesFrom()`. `Authorize` returns 401 JSON for a null user. Force JSON rendering in the group.
-- [ ] 5.3 `Plugin::routes()` registers inside the API group, under the `plugins/{key}` prefix and the `plugins.{key}.` name, keeping the feature middleware.
-- [ ] 5.4 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
+- [x] 5.1 Write tests: the exact route-name list; `enabled: false` registers nothing; no `api.php` and no `loadDashboardRoutesFrom`; a guest gets 401 JSON with any `Accept` header and with no guard configured; the gate gives 403 outside `local` and passes in `local`, with a test guard; 403 for view-only users on mutations; every `atrium.*` route carries the group middleware, with `Authorize` last; plugin routes are named `atrium.plugins.{key}.*`, and a disabled plugin's route returns 404
+- [x] 5.2 Move route loading onto Keystone's `loadApiRoutesFrom()` and remove `loadDashboardRoutesFrom()`. `Authorize` returns 401 JSON for a null user. Force JSON rendering in the group.
+- [x] 5.3 `Plugin::routes()` registers inside the API group, under the `plugins/{key}` prefix and the `plugins.{key}.` name, keeping the feature middleware.
+- [x] 5.4 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
 
 ## Group 6: Remove the Blade UI
 depends on: 5

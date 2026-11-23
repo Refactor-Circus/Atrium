@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\AtriumServiceProvider;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
@@ -17,8 +16,6 @@ use RefactorCircus\Atrium\Tests\Fixtures\Policies\ReadOnlyDashboardPolicy;
 use Workbench\App\Models\User;
 
 beforeEach(function (): void {
-    ValidateCsrfToken::except(['*']);
-
     // The dashboard gate passes in local, so these tests exercise the policies.
     app()->detectEnvironment(fn (): string => 'local');
     app(PluginRegistry::class)->register(AlphaPlugin::class);
@@ -121,18 +118,18 @@ it('uses a dashboard policy swapped in the config, for dashboards and their widg
     expect($this->ann->can('update', $dashboard))->toBeFalse()
         ->and($this->ann->can('create', [DashboardWidgetModel::class, $dashboard]))->toBeFalse();
 
-    $this->actingAs($this->ann)->post(route('atrium.dashboards.store'), ['name' => 'Another'])->assertForbidden();
-    $this->actingAs($this->ann)->put(route('atrium.dashboards.update', $dashboard), ['name' => 'Renamed'])->assertForbidden();
-    $this->actingAs($this->ann)->putJson(route('atrium.dashboards.layout', $dashboard), ['widgets' => []])->assertForbidden();
+    $this->actingAs($this->ann)->postJson(route('atrium.dashboards.store'), ['name' => 'Another'])->assertForbidden();
+    $this->actingAs($this->ann)->putJson(route('atrium.dashboards.update', $dashboard), ['name' => 'Renamed', 'version' => 1])->assertForbidden();
+    $this->actingAs($this->ann)->putJson(route('atrium.dashboards.layout', $dashboard), ['version' => 1, 'widgets' => []])->assertForbidden();
 
-    // The dashboard renders, without edit controls.
-    $this->actingAs($this->ann)->get('/atrium')
+    // The dashboard still reads, and its abilities say it cannot be edited.
+    $this->actingAs($this->ann)->getJson(route('atrium.dashboards.show', $dashboard))
         ->assertOk()
-        ->assertSee('Alpha stats widget')
-        ->assertDontSee('data-testid="remove-alpha-stats"', false);
+        ->assertJsonPath('data.widgets.0.key', 'alpha.stats')
+        ->assertJsonPath('meta.abilities', ['update' => false, 'delete' => true]);
 
     // Deleting is still the owner's call under this policy.
-    $this->actingAs($this->ann)->delete(route('atrium.dashboards.destroy', $dashboard))->assertRedirect();
+    $this->actingAs($this->ann)->deleteJson(route('atrium.dashboards.destroy', $dashboard))->assertNoContent();
 
     expect(DashboardModel::query()->whereKey($dashboard->id)->exists())->toBeFalse();
 });
@@ -144,12 +141,13 @@ it('checks every placement a layout save removes against a widget policy swapped
 
     // Nothing placed yet, so nothing is removed.
     $this->actingAs($this->ann)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), ['widgets' => [['widget_key' => 'alpha.stats']]])
-        ->assertOk();
+        ->putJson(route('atrium.dashboards.layout', $dashboard), ['version' => 1, 'widgets' => [['widget_key' => 'alpha.stats']]])
+        ->assertOk()
+        ->assertJsonPath('data.version', 2);
 
     // Now a save would remove the placement, which the policy forbids.
     $this->actingAs($this->ann)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), ['widgets' => []])
+        ->putJson(route('atrium.dashboards.layout', $dashboard), ['version' => 2, 'widgets' => []])
         ->assertForbidden();
 
     expect($dashboard->widgets()->count())->toBe(1);
@@ -161,7 +159,7 @@ it('keeps the dashboard gate in front of the policies', function (): void {
     $dashboard = ownedDashboard($this->ann);
 
     // No gate is defined, so outside local nobody gets in, owner or not.
-    $this->actingAs($this->ann)->put(route('atrium.dashboards.update', $dashboard), ['name' => 'Renamed'])->assertForbidden();
+    $this->actingAs($this->ann)->putJson(route('atrium.dashboards.update', $dashboard), ['name' => 'Renamed', 'version' => 1])->assertForbidden();
 
     expect($dashboard->fresh()?->name)->toBe('Mine');
 });

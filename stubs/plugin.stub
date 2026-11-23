@@ -21,8 +21,9 @@ class {{ class }} extends Plugin
     }
 
     /**
-     * Routes registered inside Atrium's route group, so the dashboard
-     * prefix, middleware, and route name prefix already apply.
+     * JSON API routes, registered inside Atrium's API group under
+     * `plugins/{key}` and named `atrium.plugins.{key}.*`, so its prefix,
+     * middleware and the plugin's feature gate already apply.
      */
     public function routes(): void
     {
@@ -40,7 +41,7 @@ class {{ class }} extends Plugin
         return [
             // WidgetDefinition::make('reports.summary')
             //     ->label('Report summary')
-            //     ->view('reports::widgets.summary'),
+            //     ->component('reports-summary'),
         ];
     }
 }

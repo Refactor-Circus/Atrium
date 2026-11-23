@@ -32,8 +32,7 @@ class AlphaPlugin extends Plugin
         return [
             WidgetDefinition::make('alpha.stats')
                 ->label('Alpha Stats')
-                ->description('Headline numbers for Alpha.')
-                ->view('alpha-stats'),
+                ->description('Headline numbers for Alpha.'),
         ];
     }
 }

@@ -20,8 +20,7 @@ class FullPlugin extends Plugin
     {
         return SettingsPanel::make('full')
             ->label('Full Settings')
-            ->description('Everything the full plugin can configure.')
-            ->view('full-settings');
+            ->description('Everything the full plugin can configure.');
     }
 
     public function search(): ?SearchSource
