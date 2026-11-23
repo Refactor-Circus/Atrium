@@ -1,1 +1,75 @@
-{}
+{
+  "keen": {
+    "audit_log": "Audit log",
+    "filters": {
+      "source": "Source",
+      "all_sources": "All sources",
+      "source_app": "Application",
+      "action": "Action",
+      "action_hint": "Exact, or a prefix ending in a dot: product.",
+      "subject_type": "Record type",
+      "subject_id": "Record key",
+      "actor_type": "Actor type",
+      "actor_id": "Actor key",
+      "since": "Since",
+      "until": "Until",
+      "apply": "Filter",
+      "clear": "Clear"
+    },
+    "entries": {
+      "when": "When",
+      "action": "Action",
+      "subject": "Record",
+      "actor": "By",
+      "surface": "Through",
+      "app_badge": "App",
+      "none": "—",
+      "system": "System",
+      "empty": "Nothing has been recorded yet.",
+      "load_failed": "The audit log could not be loaded",
+      "pagination": "Pagination",
+      "newest": "Newest",
+      "newer": "Newer",
+      "older": "Older"
+    },
+    "record": {
+      "title": "Record an event",
+      "action": "Action",
+      "action_hint": "Dotted and lower case, such as invoice.paid.",
+      "subject": "Record",
+      "note": "Note",
+      "submit": "Record",
+      "recorded": "Event recorded.",
+      "failed": "The event could not be recorded.",
+      "forbidden": "You don't have permission to record events."
+    },
+    "entry": {
+      "title": "Audit entry",
+      "back": "Audit log",
+      "details": "Details",
+      "source": "Source",
+      "subject": "Record",
+      "actor": "By",
+      "scope": "Scope",
+      "surface": "Through",
+      "ip": "IP address",
+      "user_agent": "User agent",
+      "hash": "Hash",
+      "changes": "Changes",
+      "not_found": "Entry not found",
+      "not_found_description": "No audit entry has this key, or it is not yours to see.",
+      "load_failed": "This entry could not be loaded"
+    },
+    "changes": {
+      "none": "No fields changed.",
+      "field": "Field",
+      "before": "Before",
+      "after": "After"
+    },
+    "history": {
+      "title": "{package} audit log",
+      "not_found": "No history here",
+      "not_found_description": "{package} does not audit, or its history is not yours to read."
+    }
+  }
+}
