@@ -1468,3 +1468,25 @@ My security page (AC 88).
 
 - Vitest: the group's suite is 1 file and 22 tests. `composer test:nuxt` passed every step: Vitest 126 files, 1197 tests, no type errors, and the consumer build.
 - `composer test:unit`: 1405 tests, all passed.
+
+## Group 33
+
+Roles, permissions, role assignments and the user security screen (AC 89, 90).
+
+### Files
+
+- Pages: `pages/guardian/roles/index.vue` and `[role].vue`, `permissions/index.vue`, `role-assignments/index.vue` and `users/[user].vue`, each framed by `<AtriumIntegrationScreen>` and reading `scope_types` from its screen.
+- `integrations/guardian/components/access/`: `access.ts` (types, `scopeTypesOf()`, paths, the role and permission catalogues), `GuardianAssignments.vue` (the shared assignments block: filters, paging, assign, revoke; a fixed user or scope narrows it), `GuardianRolePermissions.vue` (the picker), `GuardianPager.vue` and `GuardianErrors.vue` (every message of a 422).
+- `integrations/guardian/components/users/`: `UserAssignments`, `UserAbilities`, `UserSessions`, `UserTokens` (hidden on 501), `UserEvents`, `UserTwoFactorReset` and `UserSecurity` (sessions, tokens, events and the reset together), each taking a `user` key, so group 36's hook components can mount them.
+- Ported from Roster's removed group 21 screens (`812b797`), adapted to Guardian's schema: slugs and names in place of ids, scopes `global`, `any` and the resolved scope types in place of Roster's organization slug.
+- `guardian-access.en.json` filled.
+- Tests: `test/integrations/guardian/access/` (`roles`, `permissions`, `assignments`, `user`, `pages` and `support.ts`).
+
+### Decisions
+
+- D-068 (keys, paging in component state, 422 messages, system permissions).
+
+### Tests
+
+- Vitest: the group's suites are 5 files and 53 tests. `composer test:nuxt` passed every step: Vitest 131 files, 1250 tests, no type errors, and the consumer build.
+- `composer test:unit`: 1405 tests, all passed.

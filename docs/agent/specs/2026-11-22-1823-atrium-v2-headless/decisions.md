@@ -486,3 +486,13 @@
 - Rationale: The conservative reading of AC 88. Users rarely have more than 50 sessions or devices, and the shared state per section keeps one 403 from hiding the others.
 - Date: 2026-11-23
 - Raised by: implement (group 32); default chosen because no user was available
+
+## D-068: How do the access screens identify roles and permissions, and how do their lists page?
+- Choice:
+  - Roles are addressed by `slug` and permissions by `name`, as Guardian's resources carry no other key and its routes take them in the path.
+  - Each list keeps its page and filters in component state (25 roles or assignments, 50 permissions a page) rather than the route, so the same `GuardianAssignments` block works on the `guardian.user` screen and, in group 36, on Roster's screens without fighting over `?page=`.
+  - A 422 lists every message Guardian sends, so the escalation guard's missing permissions show whatever field it names them under. A super role's update sends no permission list.
+  - A `system` permission keeps its description editable; only its rename and delete are disabled.
+- Rationale: The conservative reading of AC 89 and 90. Route-held filters, as Roster's group 21 screens had, would clash once these blocks are mounted inside another package's screen.
+- Date: 2026-11-23
+- Raised by: implement (group 33); default chosen because no user was available
