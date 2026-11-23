@@ -668,3 +668,349 @@ Each package has its own folders:
 - **Parity regressions.** Nav items no longer hide by permission, operator modes are gone, and old actions without a v2 route are dropped. All three are listed in the CHANGELOG.
 - **Morph aliases** used by the hooks (`subject_type`, `owner_type`) are constants in Atrium. If a package renames its alias, the hook breaks silently. Each package's integration test asserts the constant against the alias its `openapi.json` examples or README name, when present.
 - **Packages not yet built.** The integration groups need each package's v2 `openapi.json`. If a sibling checkout lacks one, group 12 stops with a decision rather than inventing schemas (D-039).
+
+## Addendum 2026-11-23: Guardian integration
+
+The user decided (2026-11-23) that Guardian becomes the suite's security package and takes over roles and permissions from Roster. Guardian v2 ships a JSON API and MCP only, with no UI (`Guardian/docs/agent/specs/2026-11-23-1718-guardian-v2-security-platform`), and Roster v2 drops its Role and Permission domains (Roster spec, addendum criteria 28 to 46). Atrium therefore gains an eighth integration, `guardian`, which hosts the role and permission screens that were Roster's, the current user's security settings, the security admin screens, SSO connections and SCIM tokens (ported from Guardian v1's Atrium UI), and the two-factor challenge page that Guardian's `guardian.two-factor` middleware points to. Decisions D-044 to D-061 settle the open questions. D-045 to D-061 are conservative defaults, chosen without the user (D-044). Where they conflict with criteria 38 to 77, these criteria win. In particular:
+
+- AC 38 now lists eight integration keys, and AC 45 forbids `RefactorCircus\Guardian` too.
+- AC 50's vendored clients include `guardian`.
+- AC 69 and AC 53 lose Roster's roles and permissions (AC 99).
+- The suite-integrations "Out of scope: Foundry and Guardian integrations" no longer covers Guardian.
+
+Guardian's `openapi.json` does not exist yet. Every route below is named as Guardian's spec names it (its criteria 17, 25, 27 to 34, 38, 43, 48, 50, 52 and its existing SSO/SCIM routes). Builders check each call against the vendored `openapi.json` once group 29 has synced it, and D-032 applies to anything missing.
+
+"Guardian" below means the `guardian` integration, `{pkg}` = `guardian`, `{Pkg}` = `Guardian`.
+
+### Acceptance criteria
+
+**Clients and order**
+
+78. **Vendored clients.**
+    - `nuxt/scripts/sync-clients.mjs` and `VendoredClientsTest` list `guardian` => `Guardian`.
+    - `nuxt/layer/app/integrations/guardian/client/` holds Guardian's `openapi.json`, `schema.d.ts` and `openapi.sha256` under AC 50's rules.
+    - Roster's vendored client is synced again from Roster's addendum build. `VendoredClientsTest` asserts that Roster's vendored `openapi.json` has no operation named `roster.roles.*`, `roster.permissions.*`, `roster.users.roles.*`, `roster.users.permissions` or `roster.organizations.role-assignments.index`.
+    - While either build is missing from `$ATRIUM_SUITE_PATH`, the sync fails as D-039 says, and no group writes a schema by hand (D-045).
+
+**Guardian integration (PHP)**
+
+79. **Config.** `atrium.integrations.guardian` has:
+    - `enabled` (`true`), `api_base` (`null`) and `features` (`[GuardianFeature::class]`), as AC 38
+    - `scope_types`, default `['organization' => null, 'team' => null]`. A null value resolves to `config('guardian.adopt.scope_types.{key}')`. A value that does not resolve to a non-empty string is dropped (D-048).
+    - `screens`, the hook placements of AC 97
+
+    The banner says:
+    - Guardian's API ships off (`guardian.routes.enabled`), so the host turns it on behind its auth middleware.
+    - Guardian's `guardian.two-factor` and `guardian.session` middleware can go on Atrium's route group and on the packages' API groups. The layer then sends a pending user to the pages of AC 85 and 86.
+    - How `scope_types` resolves.
+
+    `IntegrationConfigTest` asserts the default array, now with eight keys, and greps the banner for each point.
+80. **Gating.** AC 39 to 41 hold for Guardian:
+    - It registers only when `refactor-circus/guardian` is installed and enabled.
+    - Its API base is `/guardian` from `guardian.routes.prefix`. It is not registered, and one warning is logged, while `guardian.routes.enabled` is false, which is Guardian's default.
+    - Its Pennant flags apply.
+    - It registers whether or not Roster is installed. Only its hooks (AC 97) need Roster.
+
+    `RegistrationTest` and a `GuardianIntegrationTest` cover each case.
+81. **No package code.** AC 45 also covers `RefactorCircus\Guardian`:
+    - ArchTest and the `src/` grep include it.
+    - `composer.json` `require` is unchanged.
+    - Every Guardian declaration sends static data only.
+
+    Reading `guardian.*` config is allowed, as Atrium already reads `{pkg}.routes.*`.
+82. **Declarations.** `GuardianIntegration` declares:
+    - **Nav:** nine items in one nav group labelled "Security", in this order:
+      - My security: `/guardian/security`
+      - Roles: `/guardian/roles`
+      - Permissions: `/guardian/permissions`
+      - Role assignments: `/guardian/role-assignments`
+      - Security events: `/guardian/security-events`
+      - Lockouts: `/guardian/lockouts`
+      - IP rules: `/guardian/ip-rules`
+      - Two-factor policies: `/guardian/two-factor-policies`
+      - Password policy: `/guardian/password-policy`
+
+      Each item has an Iconify icon. Every user the `viewAtrium` gate admits sees them (D-031).
+    - **No** widgets, settings panel or search sources (D-057).
+    - **Screens:**
+
+    | Screen | Kind | Route | Static options |
+    | --- | --- | --- | --- |
+    | `guardian.security` | detail | `/guardian/security` | `token_abilities` (`guardian.tokens.abilities`, default `['*']`), `token_max_lifetime_days` (`guardian.tokens.max_lifetime_days`, default 365) |
+    | `guardian.two-factor-challenge` | detail | `/guardian/two-factor/challenge` | |
+    | `guardian.two-factor-setup` | detail | `/guardian/two-factor/setup` | |
+    | `guardian.roles` | list | `/guardian/roles` | `scope_types` (the resolved list) |
+    | `guardian.role` | detail | `/guardian/roles/:role` | `scope_types` |
+    | `guardian.permissions` | list | `/guardian/permissions` | |
+    | `guardian.role-assignments` | list | `/guardian/role-assignments` | `scope_types` |
+    | `guardian.user` | detail | `/guardian/users/:user` | `scope_types`, `token_abilities` |
+    | `guardian.security-events` | list | `/guardian/security-events` | |
+    | `guardian.security-event` | detail | `/guardian/security-events/:event` | |
+    | `guardian.lockouts` | list | `/guardian/lockouts` | |
+    | `guardian.ip-rules` | list | `/guardian/ip-rules` | `mode` (`guardian.ip_rules.mode`, default `denylist`) |
+    | `guardian.two-factor-policies` | list | `/guardian/two-factor-policies` | `scope_types` |
+    | `guardian.password-policy` | detail | `/guardian/password-policy` | |
+    | `guardian.sso-connection` | detail | `/guardian/sso-connections/:connection` | |
+
+    Labels come from `lang/en/integrations/guardian.php`. The test writes `nuxt/layer/test/fixtures/integrations/guardian.json` (AC 49). The layer's `guardian/index.ts` exports a `screens` entry for every fixture key.
+
+**Layer: two-factor responses and the challenge**
+
+83. **Response handlers.**
+    - `$atrium` gains `responseHandler(key, (response, request) => void | Promise<void>)`.
+    - Every integration client, `useAtriumClient()` and `useAtriumApi()` call each registered handler with each response, in registration order. They do this before the caller sees the result.
+    - A handler that throws is logged and skipped.
+    - The integrations plugin registers handlers at plugin time, so they run even when the shell request itself fails.
+
+    Vitest covers all three clients, the order and a throwing handler (D-049).
+84. **Guardian's handler** (`guardian.two-factor`, registered in `guardian/index.ts` whether or not the shell lists Guardian as active):
+    - A 403 whose JSON `code` is `two_factor_challenge_required` navigates to `/guardian/two-factor/challenge?redirect=<current fullPath>`.
+    - A 403 whose JSON `code` is `two_factor_enrollment_required` navigates to `/guardian/two-factor/setup?redirect=…`.
+    - Concurrent 403s navigate once, and the handler does nothing while one of those two pages is open.
+    - A response that carries `Guardian-Two-Factor-Deadline` shows a dismissible app-wide notice with the deadline, linking to `/guardian/security`.
+    - Any other response is left alone.
+
+    Vitest covers each case.
+85. **Challenge page** `/guardian/two-factor/challenge` (D-050):
+    - **Layout.** It is declared `atrium: { public: true }` with the public layout, so it loads no shell.
+    - **Client.** It reaches Guardian through a client of its own, whose base comes, in order, from the host override, a loaded shell's Guardian `api_base`, or `/guardian` (as D-038's page does).
+    - **Methods.** It reads `GET two-factor` (`guardian.two-factor.show`) and offers each method the user has: TOTP code, email or SMS code with a "send code" button (`POST two-factor/challenge/send`), passkey (`POST two-factor/challenge/passkey-options`, then `navigator.credentials.get()`), and recovery code.
+    - **Submit.** It posts `POST two-factor/challenge` with `method` and `code` or `assertion`.
+    - **Results.**
+      - On 204 it reloads the shell and navigates to `redirect` when that passes the AC 14 link guard, otherwise to `/`.
+      - A 422 shows the error.
+      - A 429 shows a "too many attempts" state.
+      - A 401 calls `onUnauthorized()`.
+    - **Secrets.** Codes go in `autocomplete="one-time-code"` inputs. They are never put in the URL, the title, logs or storage.
+
+    Vitest covers each method, each state, the redirect guard and the absence of the code from URL and storage.
+86. **Setup page** `/guardian/two-factor/setup` uses the same layout and client rules as AC 85:
+    - It shows `allowed_methods` and `enrolment_deadline` from the status.
+    - It offers only the allowed methods, through AC 87's components.
+    - After the first confirmed method it shows the recovery codes once (AC 87), then continues to the guarded `redirect`.
+
+    Vitest covers enrolment with TOTP and the redirect.
+
+**The current user's security settings**
+
+87. **Two-factor components** (shared by AC 86, 88 and 90):
+    - **TOTP.**
+      - `POST two-factor/totp` returns an `otpauth_uri`. The page renders it as an inline SVG QR code in the browser, with the pinned `uqr`, and shows the `secret` for manual entry (D-051).
+      - It confirms with `POST two-factor/totp/confirm`.
+      - The URI and the secret are never sent anywhere else, stored, logged or kept after the component unmounts.
+    - **Recovery codes.**
+      - Codes returned on the first confirmation, or by `POST two-factor/recovery-codes` (regenerate, after a confirmation), show once, with copy and an in-browser `.txt` download.
+      - The status shows only `recovery_codes_remaining`.
+    - **Passkeys.**
+      - The page registers a passkey with `POST two-factor/passkeys/options`, then `navigator.credentials.create()`, then `POST two-factor/passkeys` (with a label). A layer helper converts the JSON to and from base64url, with no new library (D-052).
+      - It lists passkeys and removes one.
+      - The passkey controls are hidden with a note when `passkeys_available` is false, when a passkey endpoint answers 501, or when `window.PublicKeyCredential` is missing.
+    - **Email and SMS.**
+      - `POST two-factor/one-time-codes` takes `{type, destination}`, then `.../confirm`.
+      - A 422 `method_unavailable` shows "not available on this site" and hides that type (D-053).
+      - A 429 on resend shows the wait.
+    - **Removal.**
+      - `DELETE two-factor/methods/{method}` and passkey removal ask for a code from another confirmed factor, or a recovery code.
+      - A 422 `two_factor_required` shows why removal is refused.
+    - **Policy.** When `required` is true, only `allowed_methods` are offered.
+
+    Vitest covers each request's method, path and body, the QR rendered without any `fetch`, and each error state.
+88. **`/guardian/security`** (`guardian.security`) has five sections. Each one handles its own 403 without failing the others.
+    - **Two-factor:** the status of `GET two-factor` and AC 87's components.
+    - **Sessions:**
+      - `guardian.sessions.index`, with the current session flagged
+      - revoke one (`guardian.sessions.destroy`)
+      - "Sign out everywhere else" (`guardian.sessions.others.destroy`), with an "also revoke my API tokens" option that sends `tokens: true`
+      - each revocation asks for confirmation
+    - **Devices:** `guardian.devices.index`, and forgetting a device (`guardian.devices.destroy`) with a confirmation.
+    - **API tokens:**
+      - lists `guardian.tokens.index`
+      - issues a token through `guardian.tokens.store`, with `name`, `abilities` chosen from the `token_abilities` option and an optional `expires_at` no later than `token_max_lifetime_days`; the plain token shows once, with copy, and is never stored
+      - revokes one through `guardian.tokens.destroy`, with a confirmation
+      - when the index answers 501, the section shows "API tokens are not enabled" and no form (D-054)
+    - **Recent activity:** `guardian.me.security-events.index`, cursor-paged.
+
+    Vitest covers each request and state.
+
+**Roles, permissions and assignments (moved from Roster)**
+
+89. **Access screens** call Guardian routes only. Their roles and permissions behavior follows Roster's group 21 screens.
+    - **`guardian.roles`:**
+      - lists `guardian.roles.index`
+      - creates a role with `guardian.roles.store`, sending name, slug, scope, description and permissions; scope is chosen from `global`, `any` and the `scope_types` option
+    - **`guardian.role`:**
+      - shows the role with `guardian.roles.show`
+      - updates it with `guardian.roles.update`, including its permissions through a picker over `guardian.permissions.index`
+      - deletes it with `guardian.roles.destroy`, after a confirmation
+    - **`guardian.permissions`:**
+      - lists, creates, updates and deletes permissions
+      - rows with `system: true` have rename and delete disabled
+    - **`guardian.role-assignments`:**
+      - lists `guardian.role-assignments.index`, filtered by `user`, `role`, `scope_type` and `scope_id`, paged as the endpoint pages
+      - assigns with `guardian.role-assignments.store` (user, role, scope type from the option, scope id)
+      - revokes with `guardian.role-assignments.destroy`, after a confirmation
+    - **Errors:** a 422 from the escalation guard (Guardian AC 15) shows the permissions it names.
+
+    AC 54's contract applies throughout.
+90. **`guardian.user`** (`/guardian/users/:user`) is the admin view of one user. Each block handles its own 403.
+    - **Role assignments:** `guardian.role-assignments.index?user=`, with assign and revoke as in AC 89.
+    - **Abilities:** `guardian.users.abilities.index`, with optional `scope_type` and `scope_id`.
+    - **Sessions:** `guardian.users.sessions.index`, and "revoke all" through `guardian.users.sessions.destroy`.
+    - **API tokens:** `guardian.users.tokens.index`, and "revoke all" through `guardian.users.tokens.destroy`. The block is hidden on 501.
+    - **Recent events:** `guardian.security-events.index?user=`.
+    - **Reset two-factor:** `DELETE users/{user}/two-factor`, after a confirmation that names the user.
+
+    Guardian has no route for another user's two-factor status, so none is shown (D-055). The components are the ones AC 98 reuses. Links to a user from AC 89 and 91 go to this page.
+
+**Security administration**
+
+91. **Security events.**
+    - `guardian.security-events` lists `guardian.security-events.index`, cursor-paged, with these filters:
+      - `type`, a select of Guardian's `SecurityEventType` values, taken from the vendored schema's enum when it has one and otherwise from a layer constant matching Guardian AC 23
+      - `user`
+      - `from` and `to`
+    - `guardian.security-event` shows `guardian.security-events.show`, with its context as key-value rows.
+92. **Lockouts.** `guardian.lockouts` has:
+    - a form that clears an identifier's lockout (`DELETE lockouts`, `guardian.lockouts.destroy`, `{identifier}`), after a confirmation, showing a 422
+    - below it, recent `login.locked_out` events (`guardian.security-events.index?type=login.locked_out`)
+
+    Guardian has no route that lists lockouts (D-056).
+93. **IP rules.** `guardian.ip-rules`:
+    - lists `guardian.ip-rules.index`
+    - creates a rule with `cidr`, `action` (`allow` or `deny`), `description` and an optional `expires_at`; an invalid CIDR shows its 422
+    - deletes a rule, after a confirmation
+    - shows the `mode` option. In `allowlist` mode it shows a warning that a request matching no allow rule is refused, and deleting an allow rule asks for confirmation naming that risk.
+94. **Password policy.** `guardian.password-policy` renders `guardian.password-policy.show` read-only: length bounds, composition rules, breach check, history and maximum age.
+95. **Two-factor policies.** `guardian.two-factor-policies` lists, creates, updates and deletes policies through Guardian's `two-factor-policies` routes. The fields are:
+    - `scope_type`, from the `scope_types` option or none
+    - `scope_id`
+    - `role`
+    - `required`
+    - `methods`, any of `totp`, `email`, `sms` and `passkey`, or none
+    - `grace_days`
+
+**SSO and SCIM (ported from Guardian v1's Atrium UI)**
+
+96. **SSO and SCIM components**, ported from Guardian's `src/Atrium` and `resources/views/atrium`. The v1 Blade forms posted to Atrium-side controllers. These components call Guardian's API.
+    - **The `guardian.sso` tab:**
+      - lists `guardian.organizations.sso-connections.index` for the record
+      - creates a connection (`.store`, with `name` and `protocol`)
+      - links each connection to `/guardian/sso-connections/:connection`
+    - **The `guardian.sso-connection` page:**
+      - shows `guardian.sso-connections.show`
+      - updates it through `.update`, with `name`, `enabled`, `enforced`, `jit` and the protocol fields the vendored schema accepts
+      - deletes it through `.destroy`, after a confirmation
+      - links back to `/roster/organizations/:organization?tab=guardian.sso` when the Roster integration is active and the connection names its organization
+    - **The `guardian.scim` tab:**
+      - lists `guardian.organizations.scim-tokens.index`
+      - issues a token (`.store`, with `name`, `expires_in_days` and an optional `sso_connection`), showing the plain token once
+      - revokes one (`guardian.scim-tokens.destroy`), after a confirmation
+      - shows the SCIM base URL: the origin of Guardian's API base, then the tab's `scim_path`, then `/`, then the organization record (D-058)
+    - **The `guardian.sso-identities` section:**
+      - lists `guardian.users.sso-identities.index` for the record, and renders nothing when the list is empty
+      - unlinks an identity (`guardian.sso-identities.destroy`), after a confirmation
+
+**Cross-package hooks**
+
+97. **Guardian on Roster's screens.**
+    - **Config.** `atrium.integrations.guardian.screens` defaults to `['roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'], 'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities']]`. As in Guardian v1's `guardian.atrium.screens`, a plain value is a tab and a `slot => key` entry is a section (D-047).
+    - **Registration.** A `GuardianScreens` hook registers each entry while Guardian and the target screen's integration are both registered. It registers only on detail screens that declare a subject type.
+    - **Validation.** Targets and slots are validated as in AC 68. An unknown extension key is invalid too.
+    - **Data:**
+      - `guardian.access` on `roster.organization`: `{scope_type}`, from the resolved `scope_types.organization`. While that does not resolve, the tab is skipped and one warning per process names `atrium.integrations.guardian.scope_types` (D-048).
+      - `guardian.access` on `roster.user`: `{scope_type: null}`.
+      - `guardian.user-security` and `guardian.sso-identities`: `{}`.
+      - `guardian.sso` and `guardian.scim`: `{scim_path}`, which is `'/'.trim(config('guardian.scim.prefix', 'scim/v2'), '/')`.
+
+    `HooksTest` covers:
+    - the defaults and a changed config
+    - invalid entries, in both environments
+    - every Guardian hook absent without Roster
+    - the unresolved scope type
+    - the `atrium.screens.show` payloads of `roster.organization` and `roster.user` with every hook on (Cortex, Keen and Guardian)
+98. **Hook components.**
+    - **`guardian.access` on an organization** lists `guardian.role-assignments.index?scope_type=&scope_id=<record>`, assigns a role (user and role) in that scope, revokes, and links each role to `/guardian/roles/:role`.
+    - **`guardian.access` on a user** lists `?user=<record>` and assigns a role globally or in a chosen scope, as AC 90's block does.
+    - **`guardian.user-security`** renders AC 90's sessions, tokens, events and two-factor reset blocks for the record.
+    - **SSO and SCIM** tabs and sections are AC 96's components.
+
+    Each renders the no-access state on 403. Vitest covers each one against a mocked Guardian client.
+
+**Roster integration**
+
+99. **Roles and permissions leave Roster.**
+    - **Declarations.** `RosterIntegration` no longer declares the Roles and Permissions nav items (four items remain: users, organizations, impersonations and transfers). It no longer declares the `roster.roles`, `roster.role` or `roster.permissions` screens (11 screen keys remain).
+    - **Deleted files:**
+      - `pages/roster/roles/**` and `pages/roster/permissions/**`
+      - `RolePermissions.vue`, `RosterUserRoles.vue` and `OrganizationRoles.vue`
+      - the role and permission helpers in `access.ts`, `users.ts` and `organizations.ts`
+      - their Vitest files and test-support entries
+      - their locale and `lang` keys
+    - **Fixtures.** `roster.json` is regenerated.
+    - **Screens.** `roster.user` no longer shows roles or calls `roster.users.roles.*`. `roster.organization` no longer calls `roster.organizations.role-assignments.index`. Guardian's hooks (AC 97) take their place.
+    - **D-032 comment.** The `// Not ported (D-032)` comment moves to the top of `pages/roster/transfers/index.vue`, without its role and permission items.
+    - **Tests.**
+      - A Vitest grep asserts that nothing under `app/` or `test/` calls a removed Roster operation or links to `/roster/roles` or `/roster/permissions`.
+      - `RosterIntegrationTest` asserts the reduced nav and screens.
+    - **No aliases.** The old screen keys get no alias or redirect (D-046).
+
+**Docs and gate**
+
+100. **Docs.**
+     - **README, "Suite integrations":** a Guardian part covering:
+       - turning on `guardian.routes.enabled` behind auth
+       - `scope_types`
+       - putting `guardian.two-factor` and `guardian.session` on Atrium's and the packages' route groups, and the challenge and setup pages
+       - exposing `Guardian-Two-Factor-Deadline` through CORS on split hosts
+       - token drivers, and the 501 state when none is set
+       - passkeys, which need `web-auth/webauthn-lib`, HTTPS and a `guardian.two_factor.passkeys.rp_id` that matches the SPA's host
+       - the hook keys with their defaults
+       - `$atrium.responseHandler()`
+     - **CHANGELOG (v2.0.0):**
+       - the Guardian integration
+       - the removed Roster screens and nav items, with their Guardian replacements (`roster.roles` to `guardian.roles`, `roster.role` to `guardian.role`, `roster.permissions` to `guardian.permissions`, and role assignments to `guardian.access`)
+       - `responseHandler()`
+       - the `uqr` dependency
+       - Guardian's `// Not ported (D-032)` items
+     - **Elsewhere:**
+       - the Boost skill and `CLAUDE.md`
+       - the local standard `atrium/integrations`: response handlers, shell-less pages, and roles living in Guardian
+       - the PR template: Guardian joins the D-020 release step for git dependencies
+     - **Tests.** `DocsTest` and `ChangelogUpgradeTest` assert the new keys.
+101. `composer test` and `composer test:nuxt` pass, with `vendor/bin/pest` included.
+
+### Design notes
+
+- **PHP:**
+  - `src/Integrations/Guardian/` holds `GuardianIntegration`, `GuardianFeature` and `GuardianScopeTypes`. `GuardianScopeTypes` resolves `scope_types` once per process and is shared by the screen options and the hook.
+  - `src/Integrations/Hooks/GuardianScreens.php` is added to `Hooks::HOOKS`.
+  - The registry already finds `GuardianIntegration` from the config key.
+- **Layer:**
+  - `app/integrations/guardian/` holds `index.ts` (the `screens` map and the response handler), the vendored `client/` and these `components/` folders:
+    - `two-factor/`, with the shared AC 87 components, the WebAuthn helper and the QR component
+    - `security/`
+    - `access/`
+    - `users/`
+    - `admin/`
+    - `sso/`
+  - The pages live in `app/pages/guardian/`.
+  - The locale files are `guardian`, `guardian-two-factor`, `guardian-security`, `guardian-access`, `guardian-admin` and `guardian-sso`, and the hook strings go in `hooks.en.json`.
+  - The hook components in `app/integrations/hooks/components/` wrap Guardian's own components.
+- **Shell-less pages.** The challenge and setup pages follow D-038: public page meta, a client of their own, and no `atrium.screens.show` call. AC 49's "every page calls `atrium.screens.show`" check exempts public pages, as it does for `roster.invitation`.
+- **Departures.** The `architecture/dependencies` row in `standards-feedback.md` gains Guardian. There is no new departure.
+
+### Out of scope
+
+- Rotating expired passwords (`guardian.password-fresh` answers `password_expired`). Password change is the host's flow, so the layer shows a no-access state (D-060).
+- Role assignments on `roster.team`, and a per-user two-factor status for admins (Guardian has no route for it).
+- Aliases or redirects for the removed `roster.roles`, `roster.role` and `roster.permissions` keys.
+- Lockout listing, Guardian widgets and settings panels, and Guardian search sources.
+- Any change to Guardian or Roster. Anything missing from their APIs belongs to their own specs.
+
+### Risks
+
+- **Order.** This build needs both Guardian's build and Roster's addendum build in `$ATRIUM_SUITE_PATH`. Until then, group 29 stops as D-039 says.
+- **Scope types.** If a host gives Roster's models a morph map but leaves `guardian.adopt.scope_types` unset, the organization access tab is skipped with a warning. Guardian's own README carries the same requirement.
+- **Passkeys on split hosts.** WebAuthn binds to `rp_id`. A SPA whose host does not match Guardian's `rp_id` cannot register passkeys, and the README says so.
+- **The response handler navigates on every matching 403.** A host whose own API answers `two_factor_challenge_required` for another reason would be redirected too. The codes are Guardian's own.
+- **Breaking for hosts** that extended `roster.roles`, `roster.role` or `roster.permissions`. These are listed in the CHANGELOG.

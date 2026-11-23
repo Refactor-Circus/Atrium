@@ -290,3 +290,102 @@ criteria: 76, 77
 - [x] 28.3 Update the Boost skill and `CLAUDE.md`. Write the local standard `atrium/integrations` (layout, data-only PHP, Vue through clients, gating, hooks, vendored clients), list it in `standards.index.yml`, and update `atrium/components` and `atrium/domains`.
 - [x] 28.4 Add PR template release items: switch the vendored clients to pnpm git dependencies once the v2 tags exist (D-020), confirm Polycart no longer export-ignores `/client`, and widen the Keystone constraint (D-037). Each item has an owner.
 - [x] 28.5 Run composer test, composer test:nuxt and vendor/bin/pest; all green
+
+---
+
+# Guardian integration (addendum 2026-11-23, AC 78 to 101)
+
+Builders: if a design question comes up, choose the most conservative option consistent with spec.md and decisions.md, record it as the next D-entry, and continue. You may change files outside a group's list when the group needs it; commit them with the group.
+
+This build runs after Guardian's build (`Guardian/2026-11-23-1718-guardian-v2-security-platform`) and Roster's addendum build (criteria 28 to 46 of `Roster/2026-11-23-0943-roster-v2-api-and-mcp-only`). Group 29 syncs both clients and fails as D-039 says until both exist in `$ATRIUM_SUITE_PATH`. Before the build, add a `Guardian` symlink to `/Users/jay/Projects/packages/Guardian--2026-11-23-1718-guardian-v2-security-platform` in the D-040 suite folder (D-045). Every Guardian group depends on group 29.
+
+Check every Guardian call against the vendored `nuxt/layer/app/integrations/guardian/client/openapi.json`. A route the spec names but the document lacks is left out (D-032), and it is listed in a `// Not ported (D-032)` comment at the top of the group's main page. The v1 Guardian UI to port, read-only, is at `/Users/jay/Projects/packages/Guardian/src/Atrium` and `resources/views/atrium`. Atrium PHP never imports a Guardian or Roster class (AC 81). Every group runs `composer test:nuxt` beside `vendor/bin/pest` (D-041's `pnpm` shim on PATH).
+
+## Group 29: Client sync and Roster role removal
+depends on: none
+files: nuxt/scripts/sync-clients.mjs, tests/Feature/Integrations/VendoredClientsTest.php, nuxt/layer/app/integrations/guardian/client/**, nuxt/layer/app/integrations/roster/client/**, src/Integrations/Roster/RosterIntegration.php, lang/en/integrations/roster.php, tests/Feature/Integrations/RosterIntegrationTest.php, nuxt/layer/test/fixtures/integrations/roster.json, nuxt/layer/app/integrations/roster/index.ts, nuxt/layer/app/integrations/roster/components/access/**, nuxt/layer/app/integrations/roster/components/users/**, nuxt/layer/app/integrations/roster/components/organizations/**, nuxt/layer/app/pages/roster/roles/**, nuxt/layer/app/pages/roster/permissions/**, nuxt/layer/app/pages/roster/transfers/index.vue, nuxt/layer/app/pages/roster/users/**, nuxt/layer/app/pages/roster/organizations/**, nuxt/layer/i18n/locales/integrations/roster.en.json, nuxt/layer/i18n/locales/integrations/roster-access.en.json, nuxt/layer/i18n/locales/integrations/roster-users.en.json, nuxt/layer/i18n/locales/integrations/roster-organizations.en.json, nuxt/layer/test/integrations/roster/**
+criteria: 78, 99
+
+- [ ] 29.1 Write tests: Pest: `VendoredClientsTest` lists `guardian` => `Guardian`, and asserts Roster's vendored `openapi.json` has no `roster.roles.*`, `roster.permissions.*`, `roster.users.roles.*`, `roster.users.permissions` or `roster.organizations.role-assignments.index` operation; `RosterIntegrationTest` asserts four nav items (users, organizations, impersonations, transfers) and 11 screen keys, without `roster.roles`, `roster.role` or `roster.permissions`; Vitest: `roster/integration.test.ts` maps the 11 keys; a new `roster/removed-access.test.ts` greps `app/` and `test/` for the removed Roster operations and for `/roster/roles` and `/roster/permissions`; `roster.user` and `roster.organization` tests no longer expect role calls
+- [ ] 29.2 Add `guardian: 'Guardian'` to `sync-clients.mjs`, and run `ATRIUM_SUITE_PATH=… pnpm -C nuxt sync:clients guardian roster`. If either source is missing, stop and return a needs-decision (D-039, D-045), and never write a schema by hand.
+- [ ] 29.3 Remove Roster's roles and permissions from the PHP side: the nav items, screen declarations and lang keys in `RosterIntegration` and `lang/en/integrations/roster.php`. Regenerate `roster.json` with `UPDATE_FIXTURES=1`.
+- [ ] 29.4 Remove them from the layer: delete `pages/roster/roles/**`, `pages/roster/permissions/**`, `RolePermissions.vue`, `RosterUserRoles.vue` and `OrganizationRoles.vue`; delete the role and permission helpers in `access.ts`, `users.ts` and `organizations.ts`, keeping what transfers use; update `[user].vue` and `[organization]/index.vue`; drop the role and permission entries from the `screens` map, the locale keys, the Vitest files and the test-support fixtures; move the `// Not ported (D-032)` comment to `pages/roster/transfers/index.vue`, without its role and permission items.
+- [ ] 29.5 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 30: Guardian integration (PHP declarations, gating, layer registration)
+depends on: 29
+files: config/atrium.php, src/Integrations/Guardian/**, lang/en/integrations/guardian.php, tests/Feature/Integrations/GuardianIntegrationTest.php, tests/Feature/Integrations/IntegrationConfigTest.php, tests/Feature/Integrations/RegistrationTest.php, tests/Feature/Integrations/ApiBaseTest.php, tests/Feature/Integrations/NoPackageCodeTest.php, tests/ArchTest.php, nuxt/layer/test/fixtures/integrations/guardian.json, nuxt/layer/app/integrations/guardian/index.ts, nuxt/layer/nuxt.config.ts, nuxt/layer/i18n/locales/integrations/guardian.en.json, nuxt/layer/i18n/locales/integrations/guardian-two-factor.en.json, nuxt/layer/i18n/locales/integrations/guardian-security.en.json, nuxt/layer/i18n/locales/integrations/guardian-access.en.json, nuxt/layer/i18n/locales/integrations/guardian-admin.en.json, nuxt/layer/i18n/locales/integrations/guardian-sso.en.json, nuxt/layer/test/integrations/guardian/integration.test.ts, docs/agent/standards-feedback.md
+criteria: 79, 80, 81, 82
+
+- [ ] 30.1 Write tests: Pest, config: the exact `atrium.integrations` default with eight keys, including `guardian.scope_types` and `guardian.screens` (AC 97's default); the banner points of AC 79; Pest, gating: installed and enabled, not installed, and `enabled` false or `"false"`; the API base `/guardian` from `guardian.routes.prefix`; not registered while `guardian.routes.enabled` is false, with one warning per process; registered without Roster installed; Pennant flag off, on and unavailable; Pest, declarations: the nine nav items in order (labels, icons, paths, the "Security" group); no widgets, panel or search sources; the 15 screen declarations (keys, kinds, paths) with their static options; Pest, `GuardianScopeTypes`: a null value resolving through `guardian.adopt.scope_types.{key}`, an explicit value winning, and an unresolved value dropped; Pest, no package code: ArchTest and the `src/` grep cover `RefactorCircus\Guardian`; Pest, fixture: writing `fixtures/integrations/guardian.json`; Vitest: `guardian/index.ts` exports a `screens` entry for every fixture key.
+- [ ] 30.2 Write `GuardianFeature`, `GuardianScopeTypes` (resolves once per process) and `GuardianIntegration`. The integration's screen options read `guardian.tokens.abilities`, `guardian.tokens.max_lifetime_days` and `guardian.ip_rules.mode`, with their Guardian defaults (D-054). Write `lang/en/integrations/guardian.php`.
+- [ ] 30.3 Add the `guardian` config section and its banner (D-048, D-059). Add Guardian to the `architecture/dependencies` row in `standards-feedback.md`.
+- [ ] 30.4 Write `guardian/index.ts` with the full `screens` map (route names for every AC 82 screen). Create the six Guardian locale files as `{}` and register them in `nuxt.config.ts`.
+- [ ] 30.5 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 31: Two-factor responses, challenge and setup pages
+depends on: 30
+files: nuxt/layer/app/plugins/atrium.ts, nuxt/layer/app/composables/useAtriumIntegration.ts, nuxt/layer/app/composables/useAtriumClient.ts, nuxt/layer/app/composables/useAtriumApi.ts, nuxt/layer/app/types/atrium.ts, nuxt/layer/app/layouts/default.vue, nuxt/layer/app/components/Atrium/ResponseNotice.vue, nuxt/layer/i18n/locales/en.json, nuxt/layer/app/integrations/guardian/index.ts, nuxt/layer/app/integrations/guardian/components/two-factor/**, nuxt/layer/app/pages/guardian/two-factor/**, nuxt/layer/package.json, nuxt/pnpm-lock.yaml, nuxt/layer/i18n/locales/integrations/guardian-two-factor.en.json, nuxt/layer/test/response-handlers.test.ts, nuxt/layer/test/integrations/guardian/two-factor/**
+criteria: 83, 84, 85, 86, 87
+
+- [ ] 31.1 Write Vitest tests. Response handlers: called on every response of an integration client, `useAtriumClient()` and `useAtriumApi()`, in registration order, a throwing handler logged and skipped, and run when the shell request fails. Guardian's handler: `two_factor_challenge_required` goes to the challenge page with `redirect`, `two_factor_enrollment_required` goes to setup, concurrent 403s navigate once, nothing happens on those pages, the deadline header shows the notice, and other 403s are left alone. Challenge page: no shell call, the base-URL order, each method (TOTP, email and SMS with send, passkey with a mocked `navigator.credentials.get`, recovery), 204 reloading the shell and following a guarded `redirect` (an off-site one falls back to `/`), 422, 429 and 401 (`onUnauthorized()`), and the code absent from the URL, `document.title` and storage. Setup page: `allowed_methods`, the deadline, TOTP enrolment, then recovery codes, then the redirect. AC 87 components: TOTP request bodies, the QR rendered as SVG with no `fetch` beyond Guardian's, and the secret dropped on unmount; recovery codes shown once, with copy, download and regenerate after a confirmation; passkeys (options, a mocked `create()`, store, list, remove, hidden on `passkeys_available` false, on 501 and without `PublicKeyCredential`); email and SMS (enrol, confirm, a 422 `method_unavailable` hiding the type, a 429 resend); removal needing another factor's code or a recovery code, and a 422 `two_factor_required`.
+- [ ] 31.2 Add `$atrium.responseHandler()` to the registry and run it in the integration-client middleware, `useAtriumClient()` and `useAtriumApi()`. Add the app-wide notice component, which renders in the default layout, and its `en.json` strings (D-049).
+- [ ] 31.3 Add `uqr`, pinned to an exact version, to `nuxt/layer/package.json` and update the lockfile (D-051). Write the WebAuthn base64url helper (D-052), the shell-less Guardian client (D-050) and the AC 87 components under `components/two-factor/`.
+- [ ] 31.4 Write the challenge and setup pages with the public layout and page meta. Register Guardian's response handler in `index.ts`. Exempt the two pages from AC 49's `atrium.screens.show` check, as `roster.invitation` is.
+- [ ] 31.5 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 32: My security page
+depends on: 31
+files: nuxt/layer/app/pages/guardian/security/**, nuxt/layer/app/integrations/guardian/components/security/**, nuxt/layer/i18n/locales/integrations/guardian-security.en.json, nuxt/layer/test/integrations/guardian/security/**
+criteria: 88
+
+- [ ] 32.1 Write Vitest tests for `guardian.security`, asserting method, path and body for every call: the two-factor status with the group 31 components; sessions: the current one flagged; revoke one; "sign out everywhere else", with and without `tokens: true`; confirmations; devices: list, and forget with a confirmation; API tokens: list; issue, with abilities from the option and `expires_at` capped at the maximum lifetime; the plain token shown once and absent from storage; revoke; the 501 "not enabled" state; recent activity, with cursor paging; each section's own 403 leaving the others working; the page exists for the screen key.
+- [ ] 32.2 Write the page and the section components, reusing `components/two-factor/`.
+- [ ] 32.3 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 33: Roles, permissions, role assignments and the user security screen
+depends on: 30
+files: nuxt/layer/app/pages/guardian/roles/**, nuxt/layer/app/pages/guardian/permissions/**, nuxt/layer/app/pages/guardian/role-assignments/**, nuxt/layer/app/pages/guardian/users/**, nuxt/layer/app/integrations/guardian/components/access/**, nuxt/layer/app/integrations/guardian/components/users/**, nuxt/layer/i18n/locales/integrations/guardian-access.en.json, nuxt/layer/test/integrations/guardian/access/**
+criteria: 89, 90
+
+- [ ] 33.1 Write Vitest tests: `guardian.roles`: list; create, with scope choices `global`, `any` and the `scope_types` option; `guardian.role`: show; update with the permission picker; delete with a confirmation; `guardian.permissions`: list, create, update and delete; `system` rows locked; `guardian.role-assignments`: the filters `user`, `role`, `scope_type` and `scope_id`; paging; assign; revoke with a confirmation; escalation 422s naming the missing permissions; 403 and 404; `guardian.user`: assignments with assign and revoke; abilities with and without a scope; sessions with "revoke all"; tokens with "revoke all", hidden on 501; recent events; the two-factor reset with a confirmation naming the user; each block's own 403; each screen key has its page.
+- [ ] 33.2 Write the pages and the `access/` and `users/` components. Port the role, permission and assignment behavior from Roster's removed group 21 screens (at `git show 812b797:nuxt/layer/app/pages/roster/roles/index.vue` and its siblings), adapted to Guardian's schema. Write the `users/` blocks so group 36's hook components can mount them with a user key.
+- [ ] 33.3 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 34: Security administration screens
+depends on: 30
+files: nuxt/layer/app/pages/guardian/security-events/**, nuxt/layer/app/pages/guardian/lockouts/**, nuxt/layer/app/pages/guardian/ip-rules/**, nuxt/layer/app/pages/guardian/password-policy/**, nuxt/layer/app/pages/guardian/two-factor-policies/**, nuxt/layer/app/integrations/guardian/components/admin/**, nuxt/layer/i18n/locales/integrations/guardian-admin.en.json, nuxt/layer/test/integrations/guardian/admin/**
+criteria: 91, 92, 93, 94, 95
+
+- [ ] 34.1 Write Vitest tests: `guardian.security-events`: the `type` select, `user`, `from` and `to`; cursor paging; `guardian.security-event`: the detail, with its context rows; `guardian.lockouts`: clearing an identifier (`DELETE lockouts`, body `{identifier}`), with a confirmation and a 422; the `login.locked_out` events list; `guardian.ip-rules`: list; create, with a 422 for an invalid CIDR; delete with a confirmation; the `allowlist` warning and the extra confirmation when deleting an allow rule; `guardian.password-policy`: rendered read-only; `guardian.two-factor-policies`: list, create, update and delete, with every field; 403 on every screen; each screen key has its page.
+- [ ] 34.2 Write the pages and the `admin/` components. The event-type list comes from the vendored schema's enum when it has one, and otherwise from a layer constant matching Guardian AC 23.
+- [ ] 34.3 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 35: SSO connections and SCIM tokens
+depends on: 30
+files: nuxt/layer/app/pages/guardian/sso-connections/**, nuxt/layer/app/integrations/guardian/components/sso/**, nuxt/layer/i18n/locales/integrations/guardian-sso.en.json, nuxt/layer/test/integrations/guardian/sso/**
+criteria: 96
+
+- [ ] 35.1 Write Vitest tests: the SSO tab component: list for an organization record; create (`name`, `protocol`); links to the detail page; `guardian.sso-connection`: show; update (`name`, `enabled`, `enforced`, `jit` and the protocol fields); delete with a confirmation; the back link to `/roster/organizations/:organization?tab=guardian.sso` only while Roster is active; the SCIM tab component: list; issue (`name`, `expires_in_days`, `sso_connection`), with the plain token shown once and absent from storage; revoke with a confirmation; the base URL built from Guardian's API origin, `scim_path` and the record; the SSO identities section: list; empty renders nothing; unlink with a confirmation; 403 and 422 throughout; the page exists for `guardian.sso-connection`.
+- [ ] 35.2 Write the page and the `sso/` components, porting from Guardian v1's `Screens.php`, `SsoUiController`, `ScimUiController` and `resources/views/atrium/**` (read-only, in Guardian's main checkout). List the v1 features with no v2 route in a `// Not ported (D-032)` comment at the top of `pages/guardian/sso-connections/[connection].vue`.
+- [ ] 35.3 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 36: Guardian hooks on Roster's screens
+depends on: 29, 30, 33, 35
+files: src/Integrations/Hooks/GuardianScreens.php, src/Integrations/Hooks/Hooks.php, lang/en/integrations/hooks.php, tests/Feature/Integrations/HooksTest.php, nuxt/layer/app/integrations/hooks/**, nuxt/layer/i18n/locales/integrations/hooks.en.json, nuxt/layer/test/integrations/hooks/**
+criteria: 97, 98
+
+- [ ] 36.1 Write tests. Pest: the defaults (`guardian.access`, `guardian.sso` and `guardian.scim` tabs on `roster.organization`; `guardian.access` and `guardian.user-security` tabs and the `guardian.sso-identities` section in `aside` on `roster.user`); a changed config; an unknown key, an invalid target and an invalid slot, each thrown in `local`/`testing` and reported and skipped otherwise; every Guardian hook absent without Roster or without Guardian; an unresolved organization scope type skipping the organization access tab with one warning per process; the data `{scope_type}`, `{scope_type: null}`, `{}` and `{scim_path}`; the `atrium.screens.show` payloads of `roster.organization` and `roster.user` with Cortex, Keen and Guardian all on. Vitest: the organization access tab (list by scope, assign, revoke, role links); the user access tab; the user-security tab mounting group 33's blocks for the record; the SSO, SCIM and identities wrappers; 403 on each; the `hooks/index.ts` registrations.
+- [ ] 36.2 Write `GuardianScreens` and add it to `Hooks::HOOKS`. It validates as AC 68 does and reads `GuardianScopeTypes` and `guardian.scim.prefix`. Add the hook labels to `lang/en/integrations/hooks.php`.
+- [ ] 36.3 Write the Vue hook components, which wrap group 33's `access/` and `users/` components and group 35's `sso/` components. Register them in `hooks/index.ts` and add their strings to `hooks.en.json`.
+- [ ] 36.4 Run composer test:nuxt and vendor/bin/pest; all green
+
+## Group 37: Guardian docs, changelog and release checks
+depends on: 29, 30, 31, 32, 33, 34, 35, 36
+files: README.md, CHANGELOG.md, CLAUDE.md, resources/boost/**, docs/agent/standards/atrium/integrations.md, .github/pull_request_template.md, tests/Feature/DocsTest.php, tests/Feature/ChangelogUpgradeTest.php
+criteria: 100, 101
+
+- [ ] 37.1 Write tests: `DocsTest`: the README's Guardian keys: `guardian.routes.enabled`, `scope_types`, `guardian.two-factor`, `guardian.session`, `Guardian-Two-Factor-Deadline`, `rp_id`, `guardian.tokens.driver`, `atrium.integrations.guardian.screens` and `responseHandler`; `ChangelogUpgradeTest`: `roster.roles`, `roster.role` and `roster.permissions`, each with its Guardian replacement; `guardian.access`; `responseHandler`; `uqr`.
+- [ ] 37.2 Write the README's Guardian part of "Suite integrations", and the CHANGELOG v2.0.0 entries. The CHANGELOG collects Guardian's `// Not ported (D-032)` items and the removed Roster screens and nav items.
+- [ ] 37.3 Update the Boost skill, `CLAUDE.md` and the local standard `atrium/integrations` (response handlers, shell-less pages, roles in Guardian). Add Guardian to the PR template's D-020 release item.
+- [ ] 37.4 Run composer test, composer test:nuxt and vendor/bin/pest; all green

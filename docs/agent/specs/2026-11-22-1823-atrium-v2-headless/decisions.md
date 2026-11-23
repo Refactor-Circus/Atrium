@@ -301,3 +301,144 @@
 - Rationale: The user said "i'd like everything release as v2 to match". This supersedes any earlier choice to keep `^0.1` constraints or release Keystone as v0.2.0.
 - Date: 2026-11-23
 - Raised by: user
+
+## D-044: Is the Guardian integration addendum spec-reviewed before the build?
+- Choice: No. `meta.yml` goes straight to `approved`. D-045 to D-061 are defaults for the user to check.
+- Rationale: The user asked to skip the review, as for D-019.
+- Date: 2026-11-23
+- Raised by: user
+
+## D-045: How does the build get Guardian's client, and when does it run?
+- Choice:
+  - Group 29 adds `guardian` to `sync:clients` and `VendoredClientsTest`, and syncs Roster again from its addendum build, which removes the role routes.
+  - Every Guardian group depends on group 29. Group 29 fails as D-039 says until both Guardian's build (its `openapi.json` and `client/`) and Roster's addendum build exist in `$ATRIUM_SUITE_PATH`.
+  - Before the build, the orchestrator adds a `Guardian` symlink to the Guardian job worktree (`/Users/jay/Projects/packages/Guardian--2026-11-23-1718-guardian-v2-security-platform`) in the D-040 suite folder.
+  - This build runs after Guardian's.
+- Rationale: Guardian's `openapi.json` does not exist yet, and typing screens against guessed schemas would hide drift (D-039). Group 29 also removes Roster's role screens: once Roster's client is synced again, those screens no longer type-check, so the two must land together for the group to end green.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-046: What happens to the `roster.roles`, `roster.role` and `roster.permissions` screen keys and their paths?
+- Choice: They are removed, with no alias or redirect. The Guardian screens get new keys (`guardian.roles`, `guardian.role`, `guardian.permissions`, `guardian.role-assignments`) under `/guardian/…`. The CHANGELOG maps each old key to its replacement.
+- Rationale: Roster's API no longer serves these screens, so an alias would point at a different package's semantics. Every integration keeps its pages under its own `/{pkg}/` paths (D-022). Nothing has been released, so no v2 host depends on the old keys.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-047: How are Guardian's tabs and sections placed on Roster's screens?
+- Choice: `atrium.integrations.guardian.screens` uses Guardian v1's `guardian.atrium.screens` shape: a plain value is a tab, and a `slot => key` entry is a section. The defaults are:
+  - `roster.organization`: `guardian.access`, `guardian.sso` and `guardian.scim`
+  - `roster.user`: `guardian.access` and `guardian.user-security`, plus `guardian.sso-identities` in `aside`
+
+  The extensions register only while Guardian and the target's integration are both registered, and they are validated as in AC 68. Role assignments move from Roster's own page code into the `guardian.access` tab. `roster.team` gets nothing.
+- Rationale: This keeps v1 Guardian's host-facing placement config and Atrium's hook rules (D-034), and keeps Roster's screens free of Guardian code. v1 Roster managed team roles from the organization page, and Guardian's assignment filter can scope to a team, so a team tab is left for later.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-048: Which `scope_type` does Atrium send for organization-scoped roles?
+- Choice: `atrium.integrations.guardian.scope_types` defaults to `['organization' => null, 'team' => null]`.
+  - A null value resolves to `config('guardian.adopt.scope_types.{key}')`, which Guardian already uses to map Roster's scopes.
+  - An unresolved organization type skips the organization `guardian.access` tab, with one warning per process.
+  - The resolved list is also sent as the `scope_types` screen option of the role, assignment, user and policy screens.
+- Rationale: Guardian stores the scope model's morph class, which for Roster today is its class name. Atrium's `roster.organization` subject alias would not match it. Reading Guardian's config, as Atrium reads `{pkg}.routes.*`, avoids naming Roster classes in Atrium. Failing closed means no tab rather than assignments in the wrong scope.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-049: How does the layer react to Guardian's `guardian.two-factor` 403s?
+- Choice: A generic `$atrium.responseHandler(key, handler)` runs on every response of every client: integration clients, `useAtriumClient()` and `useAtriumApi()`. Guardian's `index.ts` registers one handler:
+  - `two_factor_challenge_required` goes to the challenge page.
+  - `two_factor_enrollment_required` goes to the setup page.
+  - A `Guardian-Two-Factor-Deadline` header shows an app-wide notice.
+
+  The handler runs whether or not the shell loaded.
+- Rationale: The host may put `guardian.two-factor` on Atrium's own route group, so the shell itself can answer 403. A generic hook keeps Guardian-specific code in Guardian's integration folder, and it matches only Guardian's own codes.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-050: How do the challenge and setup pages load when the shell is blocked?
+- Choice: As D-038's invitation page does:
+  - `public` page meta and the public layout
+  - a Guardian client of their own, whose base is the host override, then a loaded shell's `api_base`, then `/guardian`
+  - no `atrium.screens.show` call
+
+  A 401 calls `onUnauthorized()`. The `redirect` passes the AC 14 link guard, or the page falls back to `/`.
+- Rationale: A pending user cannot load the shell. Guardian's enrolment, challenge and status routes are never blocked by its middleware, and the guard stops open redirects.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-051: How is the TOTP QR code rendered?
+- Choice: In the browser, as an inline SVG, with `uqr` pinned to an exact version. The secret is also shown for manual entry. Nothing is sent to a QR service, stored or logged, and both values are dropped when the component unmounts.
+- Rationale: Guardian returns only the `otpauth://` URI (Guardian D-009). `uqr` is small, has no dependencies and outputs SVG. A remote QR service would leak the secret.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-052: How does the layer call WebAuthn?
+- Choice: Through the browser's `navigator.credentials` API, with a small in-layer base64url/JSON helper (it uses `PublicKeyCredential.parseCreationOptionsFromJSON` and `toJSON` when they exist) and no npm library. Passkey controls hide when `passkeys_available` is false, on a 501, or when `window.PublicKeyCredential` is missing.
+- Rationale: The ceremony itself is browser-native. Guardian's library already does the verification server side, and a client library would add a dependency for a few lines of encoding.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-053: How does the UI know whether email or SMS codes are available?
+- Choice: No route reports it. The UI offers `email` and `sms`, limited to `allowed_methods` when 2FA is required. A 422 `method_unavailable` shows "not available on this site" and hides that type for the rest of the page's life.
+- Rationale: Guardian AC 29 answers 422 for an unsupported channel, and the default binding has no SMS. Asking Guardian for a capability route is Guardian's spec.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-054: How are API tokens shown when no driver is configured, and what bounds issuing?
+- Choice:
+  - A 501 from the token index hides the form, with an "API tokens are not enabled" note. The admin block hides too.
+  - The ability choices and the maximum lifetime come from `guardian.tokens.abilities` and `guardian.tokens.max_lifetime_days`, sent as static options of the `guardian.security` and `guardian.user` screens. Guardian still validates both.
+  - The plain token shows once and is never stored.
+- Rationale: Guardian defaults to no driver (Guardian D-017). Static options follow D-042.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-055: Where do admins manage another user's security?
+- Choice:
+  - A Guardian screen `guardian.user` (`/guardian/users/:user`), which works without Roster: role assignments, abilities, sessions (revoke all), tokens (revoke all), recent events, and a two-factor reset.
+  - The `guardian.user-security` and `guardian.access` tabs on `roster.user` reuse its components.
+  - No other user's two-factor status is shown.
+- Rationale: Guardian runs without Roster (Guardian AC 3), so its admin view cannot live only on Roster's screen. Guardian has no route for another user's two-factor status, only the reset.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-056: What does the lockouts screen show without a lockout list route?
+- Choice: A form that clears an identifier, plus recent `login.locked_out` security events.
+- Rationale: Guardian AC 50 offers only `DELETE lockouts`. Its events hold an identifier HMAC, not the identifier, so the form is typed by hand.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-057: What does Guardian add to navigation, the dashboard and search?
+- Choice: Nine nav items in one "Security" group, shown to every admitted user, as D-031 says. There are no widgets, settings panel or search sources.
+- Rationale: v1 Guardian had no nav or widgets (its D-025). The screens need entry points now that they are standalone, and adding widgets or sources would go beyond the requested scope.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-058: How is the SCIM base URL shown?
+- Choice: The `guardian.sso` and `guardian.scim` data carries `scim_path`, which is `'/'.trim(config('guardian.scim.prefix', 'scim/v2'), '/')`. The layer shows the origin of Guardian's API base, then `scim_path`, then `/`, then the organization record.
+- Rationale: v1 built `url(prefix/slug)` server side. Guardian's API gives no base URL, and the SCIM endpoints live outside `guardian.routes.prefix`.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-059: What if Guardian's API is off, as it ships?
+- Choice: As AC 40 says for Polycart and Roster: Guardian does not register, and one warning names `guardian.routes.enabled`. The banner and the README tell the host to turn the API on behind auth.
+- Rationale: Guardian D-022 keeps its routes off by default, and the integration fails closed.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-060: How does the layer handle `password_expired` and `session_revoked`?
+- Choice: There is no special handling. `session_revoked` is a 401, so `onUnauthorized()` runs. `password_expired` is a 403, so the screen shows its no-access state.
+- Rationale: Guardian has no password-change route (password change is the host's flow), so there is nothing for the layer to offer.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
+
+## D-061: How are the Guardian groups split?
+- Choice:
+  - Group 29: client sync and the Roster removal.
+  - Group 30: Guardian's PHP declarations, `index.ts`, and every Guardian locale file as `{}`, so later groups do not share `nuxt.config.ts`.
+  - Group 31: response handlers, the challenge and setup pages, and the shared two-factor components.
+  - Groups 32 to 35, in parallel: the security page, access and user screens, admin screens, and SSO/SCIM.
+  - Group 36: the hooks.
+  - Group 37: the docs.
+- Rationale: The file lists stay disjoint, as D-024 requires, and each group fits one session.
+- Date: 2026-11-23
+- Raised by: write-spec (Guardian integration); default chosen because no user was available ("choose conservative defaults")
