@@ -1,3 +1,3 @@
 VERDICT: PASS
 
-Both round 1 findings are resolved. IndexSearchResultRequest trims q in prepareForValidation before min/max run, and caps it at MAX_LENGTH 255. Tests cover padding without TrimStrings, the trimmed value reaching sources, and the max boundary. The D-018 row is in docs/agent/standards-feedback.md. No new findings.
+Round 1 finding resolved: startImpersonation() in nuxt/layer/app/pages/roster/users/[user].vue now follows the API URL only when isExternalUrl() (exported from nuxt/layer/app/utils/atriumLink.ts, shared with atriumLink) accepts it. Otherwise it throws the localized unsafe_link error, which the impersonate card shows. The Vitest case in test/integrations/roster/users/user.test.ts covers javascript:, data:, //host, relative and empty URLs, asserting that navigateTo is not called and the error is shown. No findings.

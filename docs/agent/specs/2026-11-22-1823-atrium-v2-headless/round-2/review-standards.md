@@ -1,3 +1,3 @@
 VERDICT: PASS
 
-Round 1 findings resolved: IndexSearchResultRequest trims q in prepareForValidation and caps it at MAX_LENGTH 255; standards-feedback.md has the D-018 http/authorization row. No new findings.
+Round 1 finding resolved: startImpersonation in nuxt/layer/app/pages/roster/users/[user].vue now checks the URL with isExternalUrl (atriumLink.ts) before navigateTo, and shows the new roster.users.impersonate.unsafe_link string otherwise. No standards findings.
