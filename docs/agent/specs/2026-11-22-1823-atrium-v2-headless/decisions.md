@@ -95,3 +95,9 @@
 - Rationale: The user took the recommendation.
 - Date: 2026-11-23
 - Raised by: factory build (group 6 implementer)
+
+## D-017: How do Nuxt UI's sub-modules (`@nuxt/icon` and the like) reach a host that extends the layer by git?
+- Choice: Add `@nuxt/icon` and any other module `@nuxt/ui` installs by name (`@nuxt/fonts`, `@nuxtjs/color-mode` if needed) as direct, pinned dependencies of `nuxt/layer/package.json`, and update `nuxt/pnpm-lock.yaml`.
+- Rationale: The user took the recommendation: explicit and locked, independent of the host's package-manager settings.
+- Date: 2026-11-23
+- Raised by: factory rework (round 2), consumer build test

@@ -288,3 +288,7 @@ Groups 2 to 5 are gated on their own test files plus PHPStan and Pint, and the f
 
 - AC 16 is amended: `.gitattributes` export-ignores `/nuxt/playground`, `/nuxt/package.json`, `/nuxt/pnpm-workspace.yaml`, `/nuxt/pnpm-lock.yaml` and `/nuxt/layer/test`, and keeps `/nuxt/layer` in the archive. `RemovalTest` asserts both.
 - `Atrium::path()` and `Atrium::url()` are removed, with their facade `@method` lines. `NavItem::isActive()` no longer reads `atrium.path`. The v2.0.0 CHANGELOG lists both removals.
+
+## Addendum 2026-11-23: layer dependencies (D-017)
+
+`nuxt/layer/package.json` lists, as direct pinned dependencies, every Nuxt module that `@nuxt/ui` installs by name (at least `@nuxt/icon`). The AC 22 consumer build passes on a strict pnpm install with no `.npmrc` hoisting.

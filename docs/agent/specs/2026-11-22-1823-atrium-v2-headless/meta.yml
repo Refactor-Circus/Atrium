@@ -33,3 +33,9 @@ runs:
     round: 0
     date: 2026-11-23
     note: "groups 5 (salvaged) and 6 built; D-015 and D-016 answered and added as group 10"
+  - workflow: ring-master-factory
+    run_id: wf_d9ca9c5a-efd
+    result: needs-decision
+    round: 2
+    date: 2026-11-23
+    note: "groups 7-10 built; review round 2 rework stopped on D-017 (layer deps)"
