@@ -89,6 +89,12 @@ final class ClientPath
         $authority = substr($url, (int) strpos($url, '://') + 3);
         $rest = substr($authority, strcspn($authority, '/?#'));
 
+        // `https://app.test//evil.test` names a protocol-relative path on this
+        // host: refused whatever the client path, like `//evil.test` itself.
+        if (str_starts_with($rest, '//')) {
+            return null;
+        }
+
         return $this->local(str_starts_with($rest, '/') ? $rest : '/'.$rest, $url);
     }
 
