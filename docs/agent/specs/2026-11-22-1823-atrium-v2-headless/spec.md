@@ -294,3 +294,377 @@ Groups 2 to 5 are gated on their own test files plus PHPStan and Pint, and the f
 `nuxt/layer/package.json` lists, as direct pinned dependencies, every Nuxt module that `@nuxt/ui` installs by name (at least `@nuxt/icon`). The AC 22 consumer build passes on a strict pnpm install with no `.npmrc` hoisting.
 
 D-017 as applied also pins `tailwindcss` (imported by name from `atrium.css`) beside `@nuxt/icon`, `@nuxt/fonts` and `@nuxtjs/color-mode`.
+
+## Addendum 2026-11-23: suite integrations
+
+Reopened scope (shape.md, "Reopened 2026-11-23: suite integrations"). Atrium v2 hosts the front ends of Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. Each of those packages ships only its JSON API and MCP in v2 (specs `{Package}/docs/agent/specs/2026-11-23-0943-{package}-v2-api-and-mcp-only`), with a committed `openapi.json` and a generated `client/`. Decisions D-019 to D-039 in `decisions.md` settle the open questions. Where they conflict with criteria 1 to 37, these criteria win. In particular, AC 1's route list gains `atrium.screens.show` (AC 44), AC 4's shell gains `integrations`, `search.sources` and the nav item `live` key (AC 42, 43), and the shape's "Out of scope: migrating suite packages" and "An OpenAPI spec" no longer apply.
+
+"Package" below means one of the seven. `{pkg}` is its Composer short name in lower case (`cortex`, `impex`, `keen`, `pennantplus`, `polycart`, `roster`, `showroom`) and `{Pkg}` its studly name.
+
+### Acceptance criteria
+
+**Integration framework (PHP)**
+
+38. **Config.** `config/atrium.php` has an `integrations` section with exactly the seven package keys. Each has `enabled` (default `true`, boolean-coerced), `api_base` (default `null`) and `features` (default `[RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Feature::class]`). The cross-package hooks keep their v1 defaults:
+    - `cortex.redirect_domains.screens`: `['roster.organization' => 'tab', 'roster.user' => 'aside']`
+    - `impex.run_link.screens`: `['showroom.transfers' => 'row.actions']`
+    - `keen.history`: `screens` `['*']`, `slot` `'after'`, `exclude` `['keen.*', 'atrium.*']`, `tabs` `['roster.organization' => ['scope' => true]]`, `nav` `['enabled' => true, 'sort' => 90, 'exclude' => [], 'groups' => ['showroom' => 'showroom', 'pennantplus' => 'pennantplus']]` (group values name Atrium nav groups, D-033)
+    - `showroom.transfers.flow_prefix`: `'showroom:'` (D-035)
+
+    The section banner states the detection rule (installed and `enabled`), the API-base rule (AC 40), that flags resolve through Laravel Pennant when it is installed and are on otherwise, and that Polycart and Roster ship with their API off (`polycart.routes.enabled`, `roster.routes.enabled`), so the host must turn it on behind its auth middleware. `tests/Feature/Integrations/IntegrationConfigTest.php` asserts the exact default array and greps the banner for each point.
+39. **Registration gating.** An integration registers only when both hold: the `InstalledPackages` seam reports `refactor-circus/{pkg}` installed (the default binding wraps `Composer\InstalledVersions::isInstalled()`), and `atrium.integrations.{pkg}.enabled` is true. Tests bind a fake `InstalledPackages` and re-run registration. For each of the seven packages, `tests/Feature/Integrations/RegistrationTest.php` asserts:
+    - installed and enabled: its nav items, widgets, settings panel, search sources and screen declarations are registered
+    - not installed: nothing is registered (the navigation, widget, settings, search and screen registries equal the baseline)
+    - installed but `enabled` false, including the string `"false"`: nothing is registered
+40. **API base.** A registered integration's API base is `atrium.integrations.{pkg}.api_base` when it is a non-empty string. Otherwise it is `'/'.trim(config('{pkg}.routes.prefix'), '/')`, provided `{pkg}.routes.enabled` is true and the prefix is a string. When neither applies, the integration does not register, and Atrium logs one `warning` per process naming `{pkg}.routes.enabled` and `atrium.integrations.{pkg}.api_base`. Tests cover: the prefix read from the package's config, the `api_base` override winning, package routes disabled (not registered, one warning, none on a second boot) and no package config at all.
+41. **Feature flags (Pennant).** A registered integration is active for a request only when every name in its `features` list is active. When Laravel Pennant is available, each name resolves through `Feature::for($request->user())->active($name)`; when it is not, every flag is on. Availability goes through a seam the tests replace. Each default `{Pkg}Feature` class lives in `src/Integrations/{Pkg}/`, has `resolve(mixed $scope): bool` returning `true`, and imports nothing from Pennant. Tests, with Pennant's array driver:
+    - a flag deactivated for the user makes the integration inactive: the shell lists it with `active: false` and none of its nav items, widgets, settings panels or search sources; `atrium.widgets.index` omits its widgets; `atrium.screens.show` answers 404 for its screens
+    - the same flag active makes the integration active
+    - with Pennant reported unavailable, the integration is active
+    - Atrium's plugin feature gate (`Gatekeeper`) is unchanged (D-027)
+42. **Shell.** `ShellResource` adds `integrations`: one entry per registered integration, ordered by key, shaped `{key, label, active, api_base, features: {<name>: bool}}`. It adds `search.sources`: one `{key, integration, label, icon}` per client-side search source of an active integration, and `search.per_source` (from `atrium.search.results.per_source`). With no integration registered, `integrations` and `search.sources` are `[]`. The AC 4 exact-structure test is updated. `nuxt/layer/test/fixtures/shell.json` is regenerated, and a second fixture `shell-integrations.json` is generated from a fake test integration (AC 31 rules apply to both).
+43. **Live nav keys.** `NavItem` gains `live(string $key, array $options = [])`, serialized as `live: {key, options}` (`null` when unset; `options` passes `JsonData::check()`), for items whose badge or children the layer computes from a package API: `impex.active-runs` (AC 63) and `keen.history` (AC 64). Atrium computes no badge for an integration's nav item: `badge` is `null`. A unit test covers the setter and its key pattern (`^[a-z0-9-]+\.[a-z0-9.-]+$`), and the shell test covers the payload.
+44. **Screen route.** A new route `atrium.screens.show` (GET `screens/{screen}`, in the same API group and middleware, with optional `record` and `tab` query strings) answers, for a screen an active integration declares:
+    `{"data": {"key", "kind", "path", "subject_type", "record", "tabs": [...], "sections": {<slot>: [...]}}}`
+    The tabs and sections come from `ScreenExtensions` as in AC 11: only the open tab resolves, and an unknown `tab` falls back to the default. `record` is echoed as a string, and no model is loaded: resolvers receive `null` and read the record key from the resolved screen. Extension data passes through `JsonData::check()` and follows AC 33. An unknown, undeclared or inactive screen key answers 404. AC 1's route-name test lists the new route, and the AC 5 gate test covers it.
+45. **No package code.** Atrium's PHP never loads a package's classes, models or actions:
+    - `tests/ArchTest.php` asserts `RefactorCircus\Atrium` uses nothing from `RefactorCircus\Cortex`, `\Impex`, `\Keen`, `\PennantPlus`, `\Polycart`, `\Roster` or `\Showroom`
+    - a test greps `src/` for those namespaces, including as strings
+    - `composer.json` `require` still names only PHP, Laravel and `refactor-circus/keystone`
+    - every integration widget, settings panel, tab and section sends only static declared data (`{}` or its hook configuration), asserted per package
+46. **Surface.** `AtriumServiceProvider` calls `app(Surface::class)->route('atrium.', 'atrium')`. A test resolves the surface of a request to the route named `atrium.shell` as `atrium`. A second test, against a `Surface` spy, asserts that the provider registers the prefix itself, so the test does not rely on Keystone's built-in prefix (removed by `Keystone/2026-11-23-0943-drop-the-atrium-plugin-hook`).
+
+**Layer framework**
+
+47. **Integration clients.** `useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` `Client<paths>` typed by that integration's vendored `schema.d.ts` (AC 50). It is cached per key per Nuxt app. The base URL is resolved in this order:
+    - `runtimeConfig.public.atrium.integrations.{key}.apiBase`, when the host sets it
+    - otherwise the shell's `api_base`. A path is resolved against the origin of `runtimeConfig.public.atrium.apiBase` when that is absolute, and against `window.location.origin` otherwise.
+
+    Vitest covers each case. For an inactive or absent integration, `active` is `false` and `client` is `null`.
+48. **One auth adapter.** Every integration client uses the adapter registered with `$atrium.auth()`, through `openapi-fetch` middleware:
+    - it sends the adapter's `headers()` and `credentials`, plus `Accept: application/json`
+    - a 401 from any client calls `onUnauthorized()` once
+
+    Vitest covers two integrations at once, together with Atrium's own API (AC 19).
+49. **Routing.**
+    - Integration pages live under `nuxt/layer/app/pages/{pkg}/`, so their paths start with `/{pkg}/`.
+    - A layer route middleware renders `<AtriumIntegrationUnavailable>` (a distinct message for not installed, disabled or flagged off) on any `/{pkg}/…` path whose integration is not active in the shell. In that case it makes no request to the package API.
+    - Each integration exports its `screens` map (screen key to route name). Each package's PHP integration test writes its declarations (nav, widgets, panel, search sources, screens with paths) to `nuxt/layer/test/fixtures/integrations/{pkg}.json` under the AC 31 rules. Vitest asserts that every screen key in that fixture has a page whose path matches the declared one, and that every page's screen calls `atrium.screens.show` with its key, `record` and `tab`.
+    - Hosts can still override any page by defining the same path in their app.
+50. **Vendored clients (D-020).**
+    - For each package, `nuxt/layer/app/integrations/{pkg}/client/` holds:
+      - `openapi.json`, copied from the package
+      - `schema.d.ts`, the package's generated `client/src/schema.d.ts`, verbatim
+      - `openapi.sha256`, the SHA-256 of `openapi.json` with LF line endings
+    - `pnpm -C nuxt sync:clients` (`nuxt/scripts/sync-clients.mjs`) copies them from the sibling checkout. The path is `$ATRIUM_SUITE_PATH/{Pkg}`, and `ATRIUM_SUITE_PATH` defaults to the repository's parent directory. The script fails with a message naming the package and the path when a source is missing.
+    - `tests/Feature/Integrations/VendoredClientsTest.php` needs no Node:
+      - It always asserts that each stamp matches its vendored `openapi.json`.
+      - When the sibling checkout exists, it asserts that the vendored `openapi.json` equals the sibling's (as decoded JSON) and that `schema.d.ts` equals the sibling's `client/src/schema.d.ts`. Otherwise it is skipped with a message naming `pnpm -C nuxt sync:clients`.
+    - The layer depends on a pinned `openapi-fetch`.
+    - Until the release step (D-020), nothing in `nuxt/` imports `@refactor-circus/*-client`. A test greps for it.
+51. **Build without packages.**
+    - `pnpm -C nuxt typecheck`, `build` and Vitest pass with no sibling checkout present.
+    - The AC 22 consumer build compiles every integration.
+    - With a shell whose `integrations` is `[]`, Vitest shows that no integration nav item, widget, panel or search source renders, and that no package API is called.
+52. **Registry additions.** `$atrium` gains two methods:
+    - `searchSource(key, (q) => Promise<AtriumSearchResult[]>)`
+    - `live(key, () => Promise<{badge?: number|null, children?: AtriumNavItem[]}>)`
+
+    ⌘K search calls `atrium.search` and, in parallel, every shell `search.sources` entry that has a registered source. A source that rejects, or answers 401, 403 or 5xx, is dropped without failing the others. Its results pass the AC 14 link guard. Navigation calls the `live` resolver of each item whose `live` key is registered. Vitest covers both.
+53. **Strings.** An integration's server-side labels (nav, widgets, panels, tabs, sections, search sources) come from Atrium's `lang/en/integrations/{pkg}.php`. Its layer strings come from `nuxt/layer/i18n/locales/integrations/{pkg}.en.json`, merged into the `en` locale. Roster and Showroom also have one file per screen area (`roster-users`, `roster-organizations`, `roster-access`, `showroom-catalog`, `showroom-structure`, `showroom-assets`), and the hooks have `hooks.en.json`. Only English ships (D-011). A Pest test asserts every label key an integration uses exists. A Vitest test asserts every `t()` key used under `app/integrations/{pkg}` and `app/pages/{pkg}` exists in those files.
+
+**Screen parity, by package**
+
+54. **Common screen contract.** These rules hold for every ported screen:
+    - **Calls.** It calls only its own package's API, through `useAtriumIntegration()`, plus `atrium.screens.show`. The one exception is a cross-package hook (AC 65–67).
+    - **Lists.** List screens page the way the package endpoint does (cursor or page), and send the old screen's filters and search as that endpoint's query parameters.
+    - **Mutations.** Every action the old Blade screen offered calls the matching v2 route with the old screen's fields, then reloads. Destructive actions keep their confirmation.
+    - **Errors.** A 422 shows the field errors, a 403 shows a no-access state, and a 404 shows a not-found state.
+    - **Extensions.** The screen renders the tabs and sections from AC 44, and switching tab sends `?tab=`.
+    - **Missing routes.** An old action with no v2 API route is left out. It is listed in a `// Not ported (D-032)` comment at the top of the integration's `index.ts` (or, for the split Roster and Showroom screen groups, of the area's index page), and then in the CHANGELOG.
+    - **Tests.** Each screen has a Vitest file under `nuxt/layer/test/integrations/{pkg}/`. It mocks `fetch`, types each mocked payload with `satisfies` against the vendored `components`/`paths`, and asserts the load request, every mutation (method, path and body) and the 403 state.
+55. **Cortex** (11 screens; old keys kept):
+    | Screen | Route |
+    | --- | --- |
+    | `cortex.virtual-agents` | `/cortex/virtual-agents` |
+    | `cortex.virtual-agent-create` | `/cortex/virtual-agents/create` |
+    | `cortex.virtual-agent` | `/cortex/virtual-agents/:slug` |
+    | `cortex.concrete-agents` | `/cortex/concrete-agents` |
+    | `cortex.concrete-agent` | `/cortex/concrete-agents/:agent` |
+    | `cortex.tools` | `/cortex/tools` |
+    | `cortex.tool-description` | `/cortex/tools/:tool/description` |
+    | `cortex.servers` | `/cortex/servers` |
+    | `cortex.server-instructions` | `/cortex/servers/:server/instructions` |
+    | `cortex.redirect-domains` | `/cortex/redirect-domains` |
+    | `cortex.run` | `/cortex/run` |
+
+    - Versioned texts (virtual agents, concrete-agent overrides, tool descriptions, server instructions) list their versions and save a new version. The old "publish a version" action maps to the v2 versions routes; where v2 has no publish route, D-032 applies.
+    - Tool pickers save through `concrete-agents.tools.update` and `servers.tools.update`.
+    - The run form lists agents from `cortex.runnable-agents.index` and runs through `virtual-agents.run` or `concrete-agents.run`.
+    - Nav: the six v1 items.
+    - Settings panel `cortex` (AC 61).
+    - Search source `cortex` (AC 62).
+56. **Impex** (10 screens):
+    | Screen | Route |
+    | --- | --- |
+    | `impex.runs` | `/impex/runs` |
+    | `impex.run` | `/impex/runs/:run` |
+    | `impex.flows` | `/impex/flows` |
+    | `impex.messages` | `/impex/messages` |
+    | `impex.message` | `/impex/messages/:message` |
+    | `impex.channels` | `/impex/channels` |
+    | `impex.channel-create` | `/impex/channels/create` |
+    | `impex.channel` | `/impex/channels/:name` |
+    | `impex.subscriptions` | `/impex/subscriptions` |
+    | `impex.subscription` | `/impex/subscriptions/:subscription` |
+
+    - The run detail shows its steps (`runs.steps.index`) and offers cancel, retry and signal.
+    - Flows offer "run".
+    - Channels offer create, update, delete and rotate secret.
+    - Subscriptions keep pause, resume, ping and replay where v2 has the route.
+    - The status filter on runs and messages is kept.
+    - Nav: the five v1 items, with `runs` carrying `live('impex.active-runs')`.
+    - Widgets, settings panel and search as in AC 60 to 62.
+    - Operator mode (`impex.atrium.show_all`) is not ported (D-032).
+57. **Keen** (3 screens):
+    | Screen | Route | Behavior |
+    | --- | --- | --- |
+    | `keen.entries` | `/keen/entries` | filters `source`, `action`, `subject_type`/`subject_id`, `actor_type`/`actor_id`, `since`/`until`, cursor paging |
+    | `keen.entry` | `/keen/entries/:entry` | the entry with its changes rendered as the old `x-keen::audit.changes` did |
+    | `keen.history` | `/keen/history/:package` | `keen.entries.index` with `source` = the package |
+
+    The "record an entry" form posts to `keen.entries.store`. Nav: the audit-log item, plus the per-package History items of AC 64.
+58. **PennantPlus** (1 screen): `pennantplus.features` at `/pennantplus/features`.
+    - It lists features, their scopes and values: `pennantplus.features.index`, `scopes.index`, `scopes.models` and `values.index`.
+    - It sets a value (`values.update`), deletes a value (`values.destroy`) and purges a feature (`features.destroy`), with the old confirmations.
+    - The old "manages feature flags" check becomes the API's 403, which hides the controls.
+    - Nav: the one v1 item.
+59. **Polycart** (3 screens):
+    | Screen | Route | Behavior |
+    | --- | --- | --- |
+    | `polycart.carts` | `/polycart/carts` | type and status filters |
+    | `polycart.cart` | `/polycart/carts/:cart` | update, delete, clear, convert, status transition, visibility; lines update and remove; members share and unshare |
+    | `polycart.types` | `/polycart/types` | `types.index` |
+
+    Widgets and search as in AC 60 and 62. Operator mode (`polycart.atrium.show_all`) is not ported (D-032).
+60. **Widgets.** Eleven widgets keep their v1 keys, so v1 placements still resolve. Each is declared without a PHP resolver and sends `data: {}`.
+
+    | Widget | Data from |
+    | --- | --- |
+    | `impex.run-status` | `impex.stats.show` `runs.by_status` and `active` |
+    | `impex.recent-failures` | `runs.recent_failures`, linking to `/impex/runs/:id` |
+    | `impex.message-volume` | `messages`; hidden when `messages` is null |
+    | `polycart.carts-by-type` | `polycart.stats.show` `by_type` |
+    | `polycart.recent-carts` | `recent` |
+    | `roster.user-status` | `roster.stats.users` |
+    | `roster.organizations` | `roster.stats.organizations` |
+    | `showroom.product-status` | `showroom.stats.show` `status` |
+    | `showroom.completeness` | `completeness` |
+    | `showroom.review-queue` | `review_queue` |
+    | `showroom.recent-changes` | `recent_versions` |
+
+    - The widgets of one integration on one dashboard share a single stats request per load. Vitest asserts one `fetch` for three Impex widgets.
+    - A widget whose request answers 403 renders the no-access card. Any other failure renders the AC 33 error card.
+61. **Settings panels.** The panels `cortex`, `impex` and `showroom` keep their keys and send `data: {}`. Each Vue panel renders its package's `settings-summary` endpoint as the v1 panel rows did. Vitest covers each one.
+62. **Search sources.** Six client-side sources keep their v1 keys:
+
+    | Source | Endpoint | Results link to |
+    | --- | --- | --- |
+    | `cortex` | `cortex.search.index` | `/cortex/virtual-agents/:key` or `/cortex/concrete-agents/:key`, by `type` |
+    | `impex` | `impex.search.index` | `/impex/runs/:id` |
+    | `polycart` | `polycart.search.index` | `/polycart/carts/:id` |
+    | `roster-users` | `roster.search.users` | `/roster/users/:id` |
+    | `roster-organizations` | `roster.search.organizations` | `/roster/organizations/:slug` |
+    | `showroom` | `showroom.search.index` | the type's detail route |
+
+    Each source caps its results at `atrium.search.results.per_source`, which the shell sends as `search.per_source`. Vitest covers the request and the links of each source.
+63. **Impex active-runs badge.** The `impex.active-runs` live resolver sets the runs nav badge to `impex.stats.show` `runs.active`, or to no badge when that is 0 or the request fails. Vitest covers this.
+64. **Keen History nav.** The `keen.history` live resolver lists `keen.packages.index` as children linking to `/keen/history/:key`:
+    - it leaves out keys in `atrium.integrations.keen.history.nav.exclude`
+    - it groups packages under `nav.groups`
+    - it sorts by `nav.sort`
+
+    The shell carries those three settings in the nav item's static `live` options. With `nav.enabled` false, the item is not declared. Vitest covers the exclusion and the grouping.
+
+**Cross-package hooks**
+
+65. **Cortex redirect domains.** When both Cortex and Roster are registered, Atrium registers the extensions for each entry of `atrium.integrations.cortex.redirect_domains.screens`:
+    - `tab`: the tab `cortex.mcp`
+    - a slot name (`aside`): the section `cortex.redirect-domains` in that slot
+
+    Their data is `{owner_type}`, the Roster morph alias of the screen's record. The Vue components list `cortex.redirect-domains.index?owner_type=&owner_id=` (with the record key), add a domain (`store`) and remove one (`destroy`). When either integration is off, nothing is registered.
+66. **Impex run link.** When both Impex and Showroom are registered, Atrium registers the section `impex.run-link` in the configured row slot (`row.actions`) of `showroom.transfers`. It renders a link to `/impex/runs/:id` for the row's run id.
+67. **Keen history.** When Keen is registered, Atrium registers two kinds of extension:
+    - **The section `keen.history`,** in `history.slot`, on every integration screen matched by `history.screens` and not matched by `history.exclude`. Detail screens pass `{source: <package key>, subject_type}`, and the Vue section adds `subject_id` from the record. List screens pass `{source}` only.
+    - **The tab `keen.activity`,** for each `history.tabs` entry. With `scope: true` it filters by `scope_type`/`scope_id` (the record), and otherwise by subject.
+
+    Both list `keen.entries.index`. A section whose package is missing from `keen.packages.index`, or that answers 403, renders nothing.
+68. **Hook targets and gating.** Each hook target is validated as in v1:
+    - Allowed forms are `*`, `{package}.*` or a screen key. A slot name must match `Screen::NAME_PATTERN`.
+    - An invalid target throws `InvalidArgumentException` in `local` and `testing`. Elsewhere it is reported and skipped.
+
+    Tests cover:
+    - each default
+    - a changed config
+    - an invalid target in both environments
+    - every hook absent when its other integration is not registered
+    - the `atrium.screens.show` payload of `roster.organization`, `roster.user` and `showroom.transfers` with every hook on
+
+    Vitest renders each hook component against mocked Cortex, Impex and Keen clients.
+
+**Roster** (14 screens and the public page)
+
+69. **Roster screens:**
+
+    | Screen | Route | Notes |
+    | --- | --- | --- |
+    | `roster.users` | `/roster/users` | tabs for active and deleted users, status filter |
+    | `roster.user-create` | `/roster/users/create` | |
+    | `roster.user` | `/roster/users/:user` | profile, status, roles and actions (see below) |
+    | `roster.organizations` | `/roster/organizations` | tabs for active and deleted organizations |
+    | `roster.organization-create` | `/roster/organizations/create` | |
+    | `roster.organization` | `/roster/organizations/:organization` | members, teams, invitations, links, role assignments, and actions (see below) |
+    | `roster.team` | `/roster/organizations/:organization/teams/:team` | |
+    | `roster.roles` | `/roster/roles` | |
+    | `roster.role` | `/roster/roles/:role` | |
+    | `roster.permissions` | `/roster/permissions` | |
+    | `roster.impersonations` | `/roster/impersonations` | |
+    | `roster.transfers` | `/roster/transfers` | |
+    | `roster.transfer` | `/roster/transfers/:transfer` | |
+    | `roster.invitation` | the public page of AC 70 | |
+
+    - **User actions:** approve, reject, suspend, deactivate, reactivate, delete, restore, purge, impersonate, switch context and domain join. The old status form maps per Roster AC 6.
+    - **Organization data:** role assignments come from `roster.organizations.role-assignments.index`.
+    - **Organization actions:** update, delete, restore, purge, transfer, link and unlink, add and remove members, invite and revoke.
+
+    Nav: the six v1 items. Widgets and search as in AC 60 and 62. Every action follows AC 54.
+70. **Public invitation page.** `/roster/invitations/:token` is a layer page declared public (`definePageMeta({ atrium: { public: true } })`):
+    - It does not load the shell, and a 401 on it never calls `onUnauthorized()`.
+    - It calls `roster.invitations.lookup` and renders the email, organization name, teams and expiry.
+    - It shows one generic "invitation not available" state for any 404, and a "too many attempts" state for 429.
+    - Accept and decline call `roster.invitations.accept` and `.decline`. When the visitor is not signed in, they call `onUnauthorized()` first.
+    - The token is never written to logs, storage or the title. Vitest covers each state and asserts the token is absent from `document.title` and from `localStorage`/`sessionStorage`.
+    - The page works whether or not the Roster integration is active in a signed-in shell, because its active check is the lookup itself.
+
+**Showroom** (27 screen keys; the inventory's "about 25" did not count flags)
+
+71. **Showroom screens.** Each keeps its v1 key, at `/showroom/…`.
+
+    | Area | Screens |
+    | --- | --- |
+    | Products | `products` (list with status filter), `product-create`, `product` (values, assets, categories, associations, flags, external ids, workflow transitions, versions with revert) |
+    | Product models | `product-models`, `product-model` |
+    | Families | `families`, `family`, `family-variant` |
+    | Attributes | `attributes`, `attribute-create`, `attribute` (with options) |
+    | Attribute groups | `attribute-groups`, `attribute-group` |
+    | Association types | `association-types` |
+    | Categories | `categories` (tree), `category` |
+    | Channels | `channels`, `channel` (with locales) |
+    | Owners | `owners`, `owner`, `owner-types`, `owner-type` (with rules) |
+    | Flags | `flags`, `flag` |
+    | Assets | `assets` (grid and list, upload), `asset` (links) |
+    | Transfers | `transfers` |
+
+    - `/showroom/transfers` lists transfer runs through Impex, as in Showroom's D-001: it takes the `impex.flows.index` flows whose name starts with `flow_prefix`, calls `impex.runs.index?flow=` for each, merges the results and keeps the 20 newest by `created_at`.
+    - The transfers screen starts imports and exports with `showroom.imports.store` and `showroom.exports.store`.
+    - Without an active Impex integration, the transfers list shows a "requires Impex" notice, and import and export stay available.
+
+    Nav: the eleven v1 items. Widgets, the `showroom` panel and search are as in AC 60 to 62.
+
+**Atrium's own OpenAPI and client**
+
+72. **Export.**
+    - `dedoc/scramble` is in `require-dev` only, configured in the workbench, and nothing in `src/` or `config/` references `Dedoc\`.
+    - `composer openapi:export` writes `openapi.json` at the root: OpenAPI 3.1, `info.title` "Atrium API", `info.version` "2.0.0".
+    - The document has one operation per route named `atrium.*`, `atrium.plugins.*` excluded, with `operationId` equal to the route name. A test compares the route list to the operations.
+73. **Schemas.**
+    - Every Atrium resource declares `schema()`. These are `DashboardResource`, `DashboardWidgetResource`, `ShellResource`, `WidgetDefinitionResource`, `ResolvedScreenResource`, `SettingsPanelResource` and `SearchResultResource`.
+    - A workbench-only Scramble extension writes each `schema()` as the operation's success response.
+    - A test asserts that each operation's 2xx schema has the resource's required properties.
+74. **Client and staleness.**
+    - `nuxt/layer/app/client/schema.d.ts` is generated from `openapi.json` by `openapi-typescript`, a pinned dev dependency of the layer, through `pnpm -C nuxt generate:client`.
+    - Its first line is `// openapi.json sha256: <hex>`.
+    - `tests/Feature/OpenApiTest.php` (no Node) fails when a fresh export differs from `openapi.json` (as decoded JSON), or when the header hash differs from the committed file's. Each failure message names `composer openapi:export` and `pnpm -C nuxt generate:client`.
+    - `composer test:nuxt` fails when `generate:client` changes the file.
+75. **Generated types.**
+    - The response types in `nuxt/layer/app/types/atrium.ts` become aliases of `components['schemas']` from the generated client. The public names (`Shell`, `ScreenData` and the `Atrium*` interfaces) are kept.
+    - `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the same auth adapter.
+    - `useAtriumApi()` keeps working unchanged.
+    - The D-007 fixtures still type-check with `satisfies` against the aliased types.
+
+**Docs and gate**
+
+76. **Docs.**
+    - **README:** a "Suite integrations" section covering:
+      - detection and `enabled`
+      - the API base and turning on Polycart's and Roster's APIs behind auth
+      - Pennant flags, and how to turn an integration off per user
+      - the hook keys with their defaults
+      - the Nuxt routes
+      - vendored clients and `sync:clients`
+      - Atrium's `openapi.json` and client
+      - the parity departures (D-031, D-032)
+    - **CHANGELOG (v2.0.0):**
+      - the integrations, `atrium.screens.show`, the shell additions and the old package keys they replace (`{pkg}.ui.*`, `{pkg}.atrium.*`, `{Pkg}SupportFeature`, `pennantplus.atrium.resolve_features`)
+      - every old action left out (D-032)
+      - the release step of D-020
+    - **Elsewhere:** the Boost skill, `CLAUDE.md`, and a new local standard `atrium/integrations` (with `atrium/components` and `atrium/domains` updated).
+    - **PR template:** release items for switching the vendored clients to git dependencies and for the Polycart `client/` export-ignore risk (D-020).
+    - `DocsTest` and `ChangelogUpgradeTest` assert the README keys and every replaced package key.
+77. `composer test` and `composer test:nuxt` pass, with `vendor/bin/pest` included.
+
+### Design notes
+
+**PHP layout (D-024).** The framework lives in `src/Domains/Integrations/`:
+- the `Integration` contract and its abstract base
+- `IntegrationRegistry` and the `InstalledPackages` seam
+- `IntegrationFeatures` for Pennant
+- `ScreenDeclaration` data
+- the `atrium.screens.show` controller, request and route
+- the hook registrars
+
+Each package's definitions live in `src/Integrations/{Pkg}/`: `{Pkg}Integration` and `{Pkg}Feature`. An integration returns data only: nav items, widget definitions, a settings panel, search source descriptors and screen declarations (key, kind, Nuxt path, subject morph alias).
+
+The registry finds integration classes by convention from the config keys, so each package group adds only its own folder. `IntegrationsServiceProvider` joins `DomainServiceProvider::$providers`. Registration runs at boot. Activation runs per request in the shell, widget, settings and screen requests.
+
+**Layer layout (D-022, D-023).** These files are new or changed in the layer:
+- `app/composables/useAtriumIntegration.ts` and `useAtriumClient.ts`
+- `app/middleware/atrium-integration.global.ts`
+- `app/plugins/atrium-integrations.ts`, which registers every `app/integrations/*/index.ts` through `import.meta.glob`
+- `app/components/Atrium/IntegrationUnavailable.vue`
+
+Each package has its own folders:
+- `app/integrations/{pkg}/`: `index.ts` with its widget, extension, panel, search and live registrations and its `screens` map; `components/`; and the vendored `client/`
+- `app/pages/{pkg}/`
+- `i18n/locales/integrations/{pkg}.en.json`
+- `test/integrations/{pkg}/`
+
+**Shared helpers.** `test/integrations/support.ts` provides `mockPackageApi(pkg, routes)`, which types its routes by the vendored `paths`.
+
+**Data flow.**
+- PHP sends `{key, component, data}` with static data only.
+- Vue components read route params, call the package through `useAtriumIntegration(pkg).client`, and call `atrium.screens.show` for extensions.
+- Integration widgets share one request per integration through a small per-dashboard-load cache, `useIntegrationQuery(pkg, operation)`.
+
+**Departures from standards.**
+- `architecture/dependencies` ("no cross-package knowledge"): Atrium names the seven packages, by the user's decision in shape.md. A row goes in `docs/agent/standards-feedback.md`.
+- `architecture/domain-modules`: per-package definitions sit in top-level `src/Integrations/`, which needs a second row.
+
+### Out of scope
+
+- Foundry and Guardian integrations.
+- Operator modes (`impex.atrium.show_all`, `polycart.atrium.show_all`): no v2 API exists (D-032).
+- Permission-filtered navigation (D-031).
+- Package API changes: anything missing is the package's spec.
+- Publishing clients to a registry, and tagging any release.
+- Switching the vendored clients to git dependencies. This is a recorded release step (D-020).
+- Locales other than `en`.
+
+### Risks
+
+- **Vendored clients diverge from the package tags.** This is mitigated by the staleness test (AC 50) and the release step. It departs from the user's choice of git dependencies and is pending review (D-020).
+- **Git dependencies at release.** npm cannot install a git subfolder, so the switch needs pnpm `#v2.0.0&path:/client`. Polycart export-ignores `/client` (Polycart AC 20). A codeload tarball honors that, so the Polycart client would be missing from a git install. Polycart's `.gitattributes` must change first, and the release step checks it.
+- **Weak package schemas.** Scramble may type some package responses loosely, which weakens the Vitest payload typing. Screens type their mocks against whatever the vendored schema says, and gaps go to each package's follow-up.
+- **Parity regressions.** Nav items no longer hide by permission, operator modes are gone, and old actions without a v2 route are dropped. All three are listed in the CHANGELOG.
+- **Morph aliases** used by the hooks (`subject_type`, `owner_type`) are constants in Atrium. If a package renames its alias, the hook breaks silently. Each package's integration test asserts the constant against the alias its `openapi.json` examples or README name, when present.
+- **Packages not yet built.** The integration groups need each package's v2 `openapi.json`. If a sibling checkout lacks one, group 12 stops with a decision rather than inventing schemas (D-039).

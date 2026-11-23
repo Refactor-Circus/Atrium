@@ -107,3 +107,173 @@
 - Rationale: The user took the recommendation: these requests read registries, so there is no model or policy to ask.
 - Date: 2026-11-23
 - Raised by: factory review round 1 (standards)
+
+## D-019: Is the integrations addendum spec-reviewed before the build?
+- Choice: No. The spec review is skipped and `meta.yml` goes straight to `approved`.
+- Rationale: The user asked to proceed without stopping. The review's job is covered by D-020 to D-039, which are each marked as defaults for the user to check.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-020: How does the layer get each package's client during this local build, while the package v2 tags are not pushed?
+- Choice: Vendor each package's generated types. This departs from the user's choice of a git dependency on the v2 tags, and the departure is pending the user's review.
+  - `nuxt/layer/app/integrations/{pkg}/client/` holds:
+    - `openapi.json`
+    - `schema.d.ts`, the package's `client/src/schema.d.ts`, verbatim
+    - `openapi.sha256`
+  - `pnpm -C nuxt sync:clients` (`nuxt/scripts/sync-clients.mjs`) copies them from the sibling checkout at `$ATRIUM_SUITE_PATH/{Pkg}`, which defaults to the repository's parent directory.
+  - A Pest checksum test checks the stamps, and compares the copies with the sibling when it is present.
+  - The layer uses a pinned `openapi-fetch` directly, wrapped by `useAtriumIntegration()`.
+  - Recorded release step: once the package v2 tags exist, replace each vendored folder with a pnpm git dependency, `"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"`. Polycart's `/client` export-ignore must be removed first. Then update the lockfile, drop `sync:clients` and the vendored folders, and switch the imports to `create{Pkg}Client`. It is a PR-template item.
+- Rationale: The tags do not exist and will not during this build, so a git dependency cannot install. Vendoring only the generated types keeps the typed contract and catches drift. It also leaves a mechanical, one-step switch to the user's chosen distribution.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-021: How does the layer reach several API bases (one per package) with one auth adapter?
+- Choice: There is one `openapi-fetch` client per integration, made by `useAtriumIntegration(key)` and cached per app. Each carries middleware that applies the single `$atrium.auth()` adapter: its headers, its credentials, and `onUnauthorized()` on a 401. Base URLs are resolved in this order:
+  1. the host's `runtimeConfig.public.atrium.integrations.{key}.apiBase`
+  2. the shell's `api_base`. A path is resolved against the origin of `runtimeConfig.public.atrium.apiBase` when that is absolute, and against the page's origin otherwise.
+- Rationale: Hosts configure auth once. Package APIs normally share Atrium's host and auth stack, and the override covers split hosts.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-022: How do package screens map to Nuxt routes, and how do extensions reach them?
+- Choice:
+  - Each screen keeps its v1 key and gets a layer page under `app/pages/{pkg}/…`, so its path is `/{pkg}/…`. The paths mirror the v1 Blade URLs, minus the `atrium` prefix.
+  - PHP declares each screen as data: key, kind, path and subject morph alias.
+  - A new route, `atrium.screens.show` (GET `screens/{screen}?record=&tab=`), serves the screen's extension tabs and sections from the existing `ScreenExtensions`, with no model loaded.
+- Rationale: The v1 screen keys stay stable for host extensions and hooks, and the routes are predictable. Extensions remain a server-side registry without Atrium loading package models.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-023: What happens at build time, and at run time, when a package is not installed?
+- Choice:
+  - Build time: every integration always compiles, because the vendored clients make the build independent of which packages a host installs.
+  - Run time: the shell decides. Its `integrations` list says which integrations exist and are active. A global route middleware renders `<AtriumIntegrationUnavailable>` for `/{pkg}/…` paths of absent, disabled or flagged-off integrations, and makes no package request.
+  - There is no build-time pruning option in v2.0.0.
+- Rationale: Build-time pruning would need a host build flag and break the single layer artifact. Integration pages are split into their own chunks by Nuxt, so their cost to hosts that never visit them is small.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-024: Where does integration code live, and is it split into one task group per package?
+- Choice: The code lives in four places:
+  - the framework in `src/Domains/Integrations/`
+  - the per-package definitions in `src/Integrations/{Pkg}/`, as shaped
+  - Vue code in `nuxt/layer/app/integrations/{pkg}/` and `app/pages/{pkg}/`
+  - per-package lang and locale files
+
+  The registry finds `{Pkg}Integration` by convention from the config keys.
+
+  There is one task group per package for PHP and Vue together. Roster's and Showroom's Vue screens are split three ways. Two framework groups come first, and the hooks, Atrium's OpenAPI and the docs follow as their own groups.
+- Rationale: The file lists stay disjoint, so package groups can run in parallel. Each group fits one agent session.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-025: How do tests fake `Composer\InstalledVersions`?
+- Choice: A `Domains\Integrations\Contracts\InstalledPackages` contract, bound as a singleton to `ComposerInstalledPackages`, which wraps `InstalledVersions::isInstalled()`. Tests bind a fake and re-run `IntegrationRegistry::register()`.
+- Rationale: `InstalledVersions` is static and reflects the real vendor directory, so it cannot be faked in place. The contract follows `architecture/container-bindings`.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-026: Where does an integration's API base come from, and what if the package API is off?
+- Choice: A non-empty `atrium.integrations.{pkg}.api_base` wins. Otherwise the API base is `/` plus the trimmed `{pkg}.routes.prefix`, but only while `{pkg}.routes.enabled` is true. When neither applies, the integration does not register, and a warning is logged once per process naming both keys.
+- Rationale: This fails closed: a UI pointing at an API that is not served would only produce 404s. Polycart and Roster ship with their APIs off, so the warning and the config banner tell the host what to turn on.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-027: How are the per-integration feature flags resolved, and does the plugin gate change?
+- Choice:
+  - `atrium.integrations.{pkg}.features` lists Pennant feature names, by default `{Pkg}Feature::class`, a class whose `resolve()` returns true. All of them must be active.
+  - When Pennant is available, each resolves through `Feature::for($user)->active()`; otherwise each is on.
+  - The hooks have no flags of their own: they follow both their integrations.
+  - `Gatekeeper` (the plugin features) keeps its host-supplied resolver unchanged.
+- Rationale: This matches the user's "Pennant when installed, otherwise on", and it replaces `{Pkg}SupportFeature` and PennantPlus's resolver. It also avoids turning off existing plugins: an undefined feature reads as false in Pennant.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-028: What does the shell add for integrations?
+- Choice: The shell adds:
+  - `integrations: [{key, label, active, api_base, features}]`, one entry per registered integration
+  - `search.sources` and `search.per_source`
+  - `live: {key, options} | null` on nav items
+
+  A new fixture, `shell-integrations.json`, comes from a fake integration, and each package writes `test/fixtures/integrations/{pkg}.json`.
+- Rationale: The layer needs to know which integrations are active, where their APIs are, and which client-side resolvers to run. The fixtures keep D-007's drift guard across PHP and Vue.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-029: Where do integration widgets, panels and extensions get their data?
+- Choice: In the browser. PHP declares them with static data only, `{}` or their hook configuration, and no resolver. The Vue component calls the package API. The widgets of one integration share one request per dashboard load.
+- Rationale: The user ruled that Atrium never calls package models or actions. Sharing the request keeps a dashboard with several Impex or Showroom widgets to one stats call per package.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-030: How does ⌘K search cover the packages?
+- Choice: Client-side sources. The shell lists them in `search.sources`, and each registers in the layer with `$atrium.searchSource()`. ⌘K runs `atrium.search` and those sources in parallel. A failing or forbidden source is dropped without failing the others, and its results go through the existing link guard. The v1 source keys are kept.
+- Rationale: PHP-side sources would have to call package code or proxy HTTP. Running in parallel keeps latency at the slowest single source.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-031: Are integration nav items hidden by permission, as in v1?
+- Choice: No, not in v2.0.0. Integration nav items show to every user the `viewAtrium` gate admits while the integration is active. Screens show a no-access state on a package 403. Widgets show a no-access card. Search sources skip silently. The CHANGELOG lists this as a parity change.
+- Rationale: v1 asked package policies in PHP, which Atrium may no longer call. Probing every API from the browser to hide links would cost a request per item. Per-user flags (D-027) remain for hiding a whole integration.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-032: What happens to v1 UI features with no v2 API route?
+- Choice: Each group checks its old screen's actions against the vendored `openapi.json`. An action with no route is left out, and the CHANGELOG names it. Operator mode (`impex.atrium.show_all`, `polycart.atrium.show_all`) is not ported, because Impex D-006 and Polycart give it no API.
+- Rationale: The packages own their APIs. Inventing an Atrium-side substitute would break the no-package-code rule.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-033: Where do the integration labels and strings come from?
+- Choice: Server-side labels come from Atrium's `lang/en/integrations/{pkg}.php`. Layer strings come from `nuxt/layer/i18n/locales/integrations/{pkg}.en.json`, merged into `en`. Keen's `nav.groups` values name Atrium nav groups, not the packages' translation keys. English only.
+- Rationale: The packages no longer ship UI strings. Per-package files keep the parallel groups disjoint. D-011 already limits v2.0.0 to `en`.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-034: How do the cross-package hooks identify the record, and how are invalid targets handled?
+- Choice:
+  - Detail-screen declarations carry the package's morph alias as `subject_type`. The record key arrives as `?record=` and is passed to the Vue components, which add `subject_id`/`owner_id`.
+  - A hook registers only while both its integrations are registered.
+  - Invalid targets and slots throw `InvalidArgumentException` in `local` and `testing`. Elsewhere they are reported and skipped, as Keen's v1 `HistoryExtensions::invalid()` did.
+- Rationale: This keeps v1 behavior and defaults without Atrium loading models.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-035: How does `/showroom/transfers` list transfers?
+- Choice: Through Impex, as Showroom's D-001 says. The screen reads `impex.flows.index` and keeps the flows whose name starts with `atrium.integrations.showroom.transfers.flow_prefix` (`showroom:`). It calls `impex.runs.index?flow=` for each, merges the results and keeps the 20 newest by `created_at`. This is v1's `where flow like 'showroom:%' latest limit 20`. Without Impex, the screen shows a notice and keeps import and export.
+- Rationale: Impex's `flow` filter matches exactly, and the feed flows have dynamic names, so reading the flows first keeps v1's prefix semantics.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-036: How do Atrium's own OpenAPI document and client fit the existing layer?
+- Choice:
+  - Scramble goes in `require-dev`, configured in the workbench.
+  - Atrium's resources gain `schema()`, and a workbench extension writes each one into the document.
+  - `nuxt/layer/app/client/schema.d.ts` carries a sha header. `types/atrium.ts` becomes aliases of the generated types, with the public names kept.
+  - A new `useAtriumClient()` wraps `openapi-fetch`, and `useAtriumApi()` (`$fetch`) stays, so verified composables and tests do not churn.
+- Rationale: The user wants a generated client, and Scramble cannot follow `persist()` without the resources' schemas. Keeping `useAtriumApi()` avoids a rewrite of verified code.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-037: Does Atrium change its Keystone constraint for `Surface::route()`?
+- Choice: No. `Surface::route()` exists in Keystone `^0.1`. Atrium calls it at boot either way, and the test uses a spy, so it does not rely on Keystone's built-in `atrium.` prefix. Widening the constraint to Keystone's next release is a release step.
+- Rationale: The Keystone tag is not cut yet, and the call works on both versions.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-038: How does the public Roster invitation page work inside an authenticated SPA?
+- Choice:
+  - The page is declared public in its page meta. It skips the shell and suppresses `onUnauthorized()` for the lookup.
+  - It renders one generic state for every 404 and a separate state for 429.
+  - Accept and decline call `onUnauthorized()` first when the visitor is not signed in.
+  - The token is never put in the title, the logs or storage.
+- Rationale: The invitee is usually signed out, so a shell call would bounce them to login before they see the invitation. Roster's ACs 3 to 5 make the lookup the security boundary.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
+
+## D-039: What if a package's v2 build (its `openapi.json` and `client/`) is not in the sibling checkout when the integration groups run?
+- Choice: Group 12's `sync:clients` fails for that package, and the build stops with a needs-decision. No group writes or hand-edits a package schema.
+- Rationale: The user's order is Keystone, then the packages, then the integrations. Typing screens against guessed schemas would hide exactly the drift this spec guards against.
+- Date: 2026-11-23
+- Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
