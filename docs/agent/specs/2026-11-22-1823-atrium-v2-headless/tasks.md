@@ -221,7 +221,7 @@ criteria: 54, 69
 
 - [x] 21.1 Write Vitest files for `roster.roles` and `roster.role` (create, update, delete), `roster.permissions` (create, update, delete), `roster.transfers` (import, export, template link) and `roster.transfer` (confirm, cancel, download link), with 403 and 422, and assert that each of these screen keys has its page.
 - [x] 21.2 Write the pages and components, porting from `ui/roles/**`, `permissions/**` and `transfers/**`. List missing routes in a `// Not ported (D-032)` comment at the top of `pages/roster/roles/index.vue`.
-- [ ] 21.3 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 21.3 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 22: Showroom integration (PHP, widgets, panel, search)
 depends on: 12

@@ -1028,3 +1028,27 @@ The build agent ended without a result. There was no index lock and no merge or 
 ### What is left
 
 - 21.3 is not ticked. `pnpm` is not on this session's PATH, so the full `composer test:nuxt` gate was not run. The frozen install, `generate:client --check` and the consumer build (which runs `pnpm install` itself) did not run. The retry can run them with the `pnpm` shim (D-041).
+
+## Group 21
+
+This was a retry for 21.3 only. 21.1 and 21.2 were already committed (salvaged). This run changed no code.
+
+### Files
+
+- None in the group's paths. Only `tasks.md` (21.3 ticked) and this note changed.
+
+### Tests
+
+- **`composer test:nuxt`.** Run with the `pnpm` shim on PATH (D-041) and `ATRIUM_SUITE_PATH` set to the scratch suite (D-040). Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check` (the schema is current);
+  - the layer and playground typechecks;
+  - the playground build;
+  - Vitest, with 87 files and 757 tests passing and no type errors;
+  - the consumer build ("a fresh app extending nuxt/layer builds").
+- **`composer test:unit`** (`vendor/bin/pest`), with `ATRIUM_SUITE_PATH` set: 1215 tests, all passed.
+
+### Deviations
+
+- None. `nuxt/layer/.nuxtrc` is still untracked and not committed. `nuxt prepare` writes it.
