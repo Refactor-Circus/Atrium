@@ -1,1 +1,128 @@
-{}
+{
+  "cortex": {
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page} of {last}",
+    "state": {
+      "not_found": "Not found.",
+      "load_failed": "Cortex could not be reached.",
+      "action_forbidden": "You may not do that."
+    },
+    "agent": {
+      "name": "Name",
+      "slug": "Slug",
+      "slug_hint": "Letters, numbers, dashes and underscores. This cannot be changed later.",
+      "description": "Description",
+      "prompt": "Prompt",
+      "prompt_hint": "Saving a changed prompt adds a new version and publishes it. Earlier versions can be republished below.",
+      "provider": "Provider",
+      "provider_default": "Default",
+      "model": "Model",
+      "settings": "Settings",
+      "temperature": "Temperature",
+      "max_steps": "Max steps",
+      "max_tokens": "Max tokens",
+      "top_p": "Top p",
+      "tools": "Tools",
+      "sub_agents": "Sub-agents",
+      "concrete_sub_agents": "Concrete sub-agents",
+      "save": "Save agent",
+      "cancel": "Cancel"
+    },
+    "virtual_agents": {
+      "title": "Virtual agents",
+      "new": "New virtual agent",
+      "empty": "No virtual agents yet.",
+      "confirm_delete": "Are you sure? This cannot be undone."
+    },
+    "concrete_agents": {
+      "title": "Concrete agents",
+      "description": "Agents defined in code. Their prompt and tools can be overridden here.",
+      "empty": "No concrete agents are registered.",
+      "not_overridable": "This agent does not support overrides, so its prompt cannot be overridden here."
+    },
+    "tools": {
+      "title": "Tools",
+      "empty": "No tools match.",
+      "search": "Search tools",
+      "selected_only": "Selected only",
+      "selected": "{count} selected",
+      "all_tags": "All tags",
+      "tags": "Tags",
+      "description": "Description",
+      "description_title": "Description of {tool}",
+      "edit_description": "Description",
+      "overridden": "Overridden",
+      "count": "Tools: {count}",
+      "save": "Save tools",
+      "restore": "Use the tools declared in code",
+      "confirm_restore": "Use the tools declared in code again? The saved tool list is removed."
+    },
+    "servers": {
+      "title": "Servers",
+      "empty": "No MCP servers are registered.",
+      "instructions": "Instructions",
+      "instructions_title": "Instructions of {server}",
+      "edit_instructions": "Instructions and tools",
+      "missing_tools": "Missing: {tools}",
+      "confirm_empty": "Serve no tools",
+      "confirm_empty_needed": "Check \"Serve no tools\" to save with no tool checked: the server then serves no tools at all."
+    },
+    "versions": {
+      "title": "Versions",
+      "none": "No versions yet.",
+      "published": "Published",
+      "overridden": "Overridden (v{version})",
+      "from_code": "From code",
+      "override_hint": "The published override replaces what is declared in code.",
+      "no_override_hint": "No override exists, so the value declared in code is used.",
+      "view": "View",
+      "hide": "Hide",
+      "publish": "Publish",
+      "new": "New version",
+      "content": "Content",
+      "publish_now": "Publish it now",
+      "add": "Save version",
+      "remove": "Remove override",
+      "confirm_remove": "Remove the override? The value declared in code is used again."
+    },
+    "redirect_domains": {
+      "title": "Redirect domains",
+      "description": "Every origin MCP clients may register OAuth redirect URIs on: global ones added here, and those organizations and users add. Each user still approves the client.",
+      "add": "Add domain",
+      "domain": "Domain",
+      "domain_hint": "A host, origin or full redirect URL; only the origin is kept. A bare host is taken as https.",
+      "source": "Source",
+      "global": "Global",
+      "created": "Created",
+      "remove": "Remove",
+      "empty": "No redirect domains yet."
+    },
+    "run": {
+      "title": "Run agent",
+      "run": "Run",
+      "none": "There are no agents you may run.",
+      "agent": "Agent",
+      "select_agent": "Select an agent",
+      "input": "Input",
+      "response": "Response",
+      "usage": "Usage"
+    },
+    "settings": {
+      "providers": "Providers",
+      "tools": "Registered tools",
+      "concrete_agents": "Concrete agents",
+      "servers": "MCP servers",
+      "cache": "Cache",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "search": {
+      "virtual_agent": "Virtual agent",
+      "concrete_agent": "Concrete agent"
+    }
+  }
+}
