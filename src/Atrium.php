@@ -227,22 +227,4 @@ class Atrium
     {
         return $this->search->search($request ?? request(), $query);
     }
-
-    /**
-     * The configured dashboard URL path.
-     */
-    public function path(): string
-    {
-        $path = config('atrium.path');
-
-        return is_string($path) ? trim($path, '/') : 'atrium';
-    }
-
-    /**
-     * A URL within the dashboard.
-     */
-    public function url(string $path = ''): string
-    {
-        return url(trim($this->path().'/'.ltrim($path, '/'), '/'));
-    }
 }

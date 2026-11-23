@@ -10,7 +10,11 @@
 /pint.json              export-ignore
 /testbench.yaml         export-ignore
 /workbench              export-ignore
-/nuxt                   export-ignore
+/nuxt/playground        export-ignore
+/nuxt/package.json      export-ignore
+/nuxt/pnpm-workspace.yaml export-ignore
+/nuxt/pnpm-lock.yaml    export-ignore
+/nuxt/layer/test        export-ignore
 /.nvmrc                 export-ignore
 /.claude                export-ignore
 /.agents                export-ignore

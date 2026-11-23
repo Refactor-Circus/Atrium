@@ -69,9 +69,9 @@ it('removes the Blade-era traits', function (): void {
     expect(trait_exists('RefactorCircus\\Atrium\\Http\\Controllers\\Concerns\\AuthorizesScreens'))->toBeFalse();
 });
 
-it('drops css() and stylesheet() from the public API', function (string $method): void {
+it('drops the Blade-era helpers from the public API', function (string $method): void {
     expect(method_exists(Atrium::class, $method))->toBeFalse('Atrium::'.$method.'() is removed');
-})->with(['css', 'stylesheet']);
+})->with(['css', 'stylesheet', 'path', 'url']);
 
 it('registers no view namespace, component namespace or view and asset publish tags', function (): void {
     expect(View::getFinder()->getHints())->not->toHaveKey('atrium')
@@ -105,19 +105,44 @@ it('drops the browser and CSS composer scripts and the browser plugin', function
         ->and(json_encode($composer['scripts']))->not->toContain('Browser');
 });
 
-it('keeps the nuxt layer, the workbench and the tests out of the dist', function (string $path): void {
+/**
+ * The `.gitattributes` patterns marked `export-ignore`.
+ *
+ * @return list<string>
+ */
+function exportIgnoredPatterns(): array
+{
     $rules = array_map(
         fn (string $line): array => preg_split('/\s+/', trim($line)) ?: [],
         file(repositoryPath('.gitattributes'), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [],
     );
 
-    $ignored = array_map(
+    return array_values(array_map(
         fn (array $rule): string => $rule[0],
         array_filter($rules, fn (array $rule): bool => in_array('export-ignore', $rule, true)),
+    ));
+}
+
+it('keeps the nuxt dev parts, the workbench and the tests out of the dist', function (string $path): void {
+    expect(exportIgnoredPatterns())->toContain($path);
+})->with([
+    '/nuxt/playground',
+    '/nuxt/package.json',
+    '/nuxt/pnpm-workspace.yaml',
+    '/nuxt/pnpm-lock.yaml',
+    '/nuxt/layer/test',
+    '/workbench',
+    '/tests',
+]);
+
+it('keeps the nuxt layer in the dist, for git extends (D-015)', function (string $path): void {
+    $matching = array_filter(
+        exportIgnoredPatterns(),
+        fn (string $pattern): bool => fnmatch(rtrim($pattern, '/'), $path),
     );
 
-    expect($ignored)->toContain($path);
-})->with(['/nuxt', '/workbench', '/tests']);
+    expect($matching)->toBe([], $path.' is not export-ignored');
+})->with(['/nuxt', '/nuxt/layer', '/nuxt/layer/nuxt.config.ts']);
 
 it('declares the workbench token guard only under workbench/', function (): void {
     $root = str_replace('\\', '/', repositoryPath());
