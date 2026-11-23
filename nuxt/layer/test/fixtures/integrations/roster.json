@@ -33,32 +33,6 @@
             "children": []
         },
         {
-            "label": "Roles",
-            "icon": "i-lucide-shield-check",
-            "group": "Roster",
-            "sort": 30,
-            "link": {
-                "path": "/roster/roles",
-                "external": false
-            },
-            "badge": null,
-            "live": null,
-            "children": []
-        },
-        {
-            "label": "Permissions",
-            "icon": "i-lucide-key-round",
-            "group": "Roster",
-            "sort": 40,
-            "link": {
-                "path": "/roster/permissions",
-                "external": false
-            },
-            "badge": null,
-            "live": null,
-            "children": []
-        },
-        {
             "label": "Impersonations",
             "icon": "i-lucide-eye",
             "group": "Roster",
@@ -183,27 +157,6 @@
             "key": "roster.team",
             "kind": "detail",
             "path": "/roster/organizations/:organization/teams/:team",
-            "subject_type": null,
-            "options": {}
-        },
-        {
-            "key": "roster.roles",
-            "kind": "list",
-            "path": "/roster/roles",
-            "subject_type": null,
-            "options": {}
-        },
-        {
-            "key": "roster.role",
-            "kind": "detail",
-            "path": "/roster/roles/:role",
-            "subject_type": null,
-            "options": {}
-        },
-        {
-            "key": "roster.permissions",
-            "kind": "list",
-            "path": "/roster/permissions",
             "subject_type": null,
             "options": {}
         },

@@ -86,17 +86,6 @@
         "domain_join": "Run domain join",
         "joined": "Domain join finished: {count} organization(s) joined."
       },
-      "roles": {
-        "title": "Roles",
-        "none": "No roles assigned.",
-        "super_admin": "Super admin",
-        "global": "Global",
-        "role": "Role",
-        "choose": "Choose a role",
-        "assign": "Assign",
-        "revoke": "Revoke",
-        "effective": "Effective permissions ({count})"
-      },
       "impersonate": {
         "title": "Impersonate",
         "reason_hint": "Why you need to act as this user. It is kept with the impersonation.",

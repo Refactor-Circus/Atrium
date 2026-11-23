@@ -23,7 +23,7 @@ describe('the roster screens map', () => {
     const declared = fixture.screens.map(screen => screen.key)
 
     expect(Object.keys(screens).sort()).toEqual([...declared].sort())
-    expect(declared).toHaveLength(14)
+    expect(declared).toHaveLength(11)
   })
 
   it('names, for each screen, the page at its declared path', () => {
@@ -40,6 +40,12 @@ describe('the roster screens map', () => {
       'roster.team': 'roster-organizations-organization-teams-team',
       'roster.invitation': 'roster-invitations-token'
     })
+  })
+
+  it('maps no roles or permissions screen, which moved to Guardian (AC 99, D-046)', () => {
+    expect(Object.keys(screens)).not.toContain('roster.roles')
+    expect(Object.keys(screens)).not.toContain('roster.role')
+    expect(Object.keys(screens)).not.toContain('roster.permissions')
   })
 })
 
@@ -76,8 +82,6 @@ describe('the roster registrations', () => {
     expect(fixture.navigation.map(item => item.link?.path)).toEqual([
       '/roster/users',
       '/roster/organizations',
-      '/roster/roles',
-      '/roster/permissions',
       '/roster/impersonations',
       '/roster/transfers'
     ])

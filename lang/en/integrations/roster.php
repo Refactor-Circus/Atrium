@@ -13,8 +13,6 @@ return [
     'label' => 'Roster',
     'users' => 'Users',
     'organizations' => 'Organizations',
-    'roles' => 'Roles',
-    'permissions' => 'Permissions',
     'impersonations' => 'Impersonations',
     'transfers' => 'Imports & exports',
     'widget_user_status' => 'Users by status',

@@ -22,7 +22,6 @@
         "members": "Members",
         "teams": "Teams",
         "invitations": "Invitations",
-        "roles": "Roles",
         "settings": "Settings"
       },
       "filters": {
@@ -87,19 +86,6 @@
           "declined": "Declined",
           "revoked": "Revoked",
           "expired": "Expired"
-        }
-      },
-      "roles": {
-        "title": "Roles",
-        "assignments": "Role assignments",
-        "no_assignments": "No roles are assigned in this organization.",
-        "own": "this organization's own",
-        "shared": "shared",
-        "manage": "Manage roles",
-        "scopes": {
-          "global": "Global",
-          "organization": "Organization",
-          "team": "Team"
         }
       },
       "settings": {

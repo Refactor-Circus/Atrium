@@ -12,9 +12,10 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 
 /**
- * Roster in Atrium: users, organizations and their teams, roles,
- * permissions, impersonations, imports and exports, and the public
- * invitation page, ported from Roster v1's `RosterPlugin` as data only.
+ * Roster in Atrium: users, organizations and their teams, impersonations,
+ * imports and exports, and the public invitation page, ported from Roster
+ * v1's `RosterPlugin` as data only. Roles and permissions moved to the
+ * Guardian integration (AC 99, D-046).
  *
  * The nav items, widgets and search sources keep their v1 keys, labels and
  * order. Nothing here loads Roster's code: the layer's Vue components call
@@ -55,18 +56,6 @@ final class RosterIntegration extends Integration
                 ->url('/roster/organizations')
                 ->group($group)
                 ->sort(20),
-
-            NavItem::make(__('atrium::integrations/roster.roles'))
-                ->icon('i-lucide-shield-check')
-                ->url('/roster/roles')
-                ->group($group)
-                ->sort(30),
-
-            NavItem::make(__('atrium::integrations/roster.permissions'))
-                ->icon('i-lucide-key-round')
-                ->url('/roster/permissions')
-                ->group($group)
-                ->sort(40),
 
             NavItem::make(__('atrium::integrations/roster.impersonations'))
                 ->icon('i-lucide-eye')
@@ -137,9 +126,6 @@ final class RosterIntegration extends Integration
             ScreenDeclaration::make('roster.organization-create', Screen::DETAIL, '/roster/organizations/create'),
             ScreenDeclaration::make('roster.organization', Screen::DETAIL, '/roster/organizations/:organization')->subjectType(self::ORGANIZATION),
             ScreenDeclaration::make('roster.team', Screen::DETAIL, '/roster/organizations/:organization/teams/:team'),
-            ScreenDeclaration::make('roster.roles', Screen::LIST, '/roster/roles'),
-            ScreenDeclaration::make('roster.role', Screen::DETAIL, '/roster/roles/:role'),
-            ScreenDeclaration::make('roster.permissions', Screen::LIST, '/roster/permissions'),
             ScreenDeclaration::make('roster.impersonations', Screen::LIST, '/roster/impersonations'),
             ScreenDeclaration::make('roster.transfers', Screen::LIST, '/roster/transfers'),
             ScreenDeclaration::make('roster.transfer', Screen::DETAIL, '/roster/transfers/:transfer'),

@@ -68,23 +68,13 @@ export interface RosterInvitation {
   created_at: string | null
 }
 
-/** `RoleAssignmentResource` (the schema types its `user` as `unknown[]`). */
-export interface RosterOrganizationAssignment {
-  id: string
-  role: Schemas['RoleAssignmentResource']['role']
-  organization: string | null
-  team: string | null
-  user: RosterUserSummary | null
-  assigned_at: string | null
-}
-
 /** The answer of `organizations.purge`: it is queued. */
 export interface RosterQueued {
   message: string
 }
 
 /** The built-in tabs of the organization page, in v1's order; the first is the default. */
-export const ORGANIZATION_TABS = ['members', 'teams', 'invitations', 'roles', 'settings'] as const
+export const ORGANIZATION_TABS = ['members', 'teams', 'invitations', 'settings'] as const
 
 export type RosterOrganizationTab = typeof ORGANIZATION_TABS[number]
 

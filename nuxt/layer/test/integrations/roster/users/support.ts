@@ -1,7 +1,6 @@
 import { vi } from 'vitest'
 import type { components } from '../../../../app/integrations/roster/client/schema'
 import type {
-  RosterEffectivePermissions,
   RosterImpersonation,
   RosterUser
 } from '../../../../app/integrations/roster/components/users/users'
@@ -76,39 +75,6 @@ export const ops = {
   status_changed_at: null,
   created_at: '2026-10-01T10:00:00+00:00'
 } satisfies Schemas['TeamResource']
-
-export const editor = {
-  id: '01JROLEEDITOR',
-  name: 'Editor',
-  slug: 'editor',
-  description: null,
-  scope: 'organization',
-  organization: null,
-  super: false,
-  system: true
-} satisfies Schemas['RoleResource']
-
-export const auditor = {
-  ...editor,
-  id: '01JROLEAUDITOR',
-  name: 'Auditor',
-  slug: 'auditor',
-  organization: 'umbrella'
-} satisfies Schemas['RoleResource']
-
-export const assignment = {
-  id: '01JASSIGNMENT',
-  role: { id: editor.id, name: 'Editor', slug: 'editor', scope: 'organization' },
-  organization: 'acme',
-  team: null,
-  user: null,
-  assigned_at: '2026-11-01T10:00:00+00:00'
-} satisfies Schemas['RoleAssignmentResource']
-
-export const effective = {
-  super_admin: false,
-  permissions: ['roster.users.view', 'roster.users.update']
-} satisfies RosterEffectivePermissions
 
 export const impersonation = {
   id: '01JIMPERSONATION',

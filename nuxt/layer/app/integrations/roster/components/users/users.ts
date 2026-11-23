@@ -22,8 +22,6 @@ export type RosterClient = AtriumIntegrationClient<'roster'>
 export type RosterUserStatus = Schemas['UserStatus']
 export type RosterOrganization = Schemas['OrganizationResource']
 export type RosterTeam = Schemas['TeamResource']
-export type RosterRole = Schemas['RoleResource']
-export type RosterRoleAssignment = Schemas['RoleAssignmentResource']
 
 /** Every user status, in Roster's order (`roster.statuses.users`). */
 export const USER_STATUSES: readonly RosterUserStatus[] = ['active', 'pending', 'suspended', 'deactivated']
@@ -72,12 +70,6 @@ export interface RosterImpersonation {
   expires_at: string | null
   ended_at: string | null
   end_reason: string | null
-}
-
-/** `users.permissions` (the schema types it as `string`). */
-export interface RosterEffectivePermissions {
-  super_admin: boolean
-  permissions: string[]
 }
 
 /** The answer of `users.impersonate`: the impersonation and its one-time link. */

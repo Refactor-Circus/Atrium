@@ -171,9 +171,8 @@ The packages' Blade pages (`atrium.{pkg}.*` routes under `/atrium/{pkg}/...`) ar
   - Hiding each card and button by the viewer's permissions (v1's `@rosterCan`) (D-031).
   - Screen extensions on the public invitation page: it loads neither the shell nor `atrium.screens.show`, which need a signed-in user (D-038).
   - The session-based accept and decline forms of the invitation page (`roster.invitations.page.accept` / `.decline`): they map to the API's `roster.invitations.accept` / `.decline`, which need a signed-in user.
-- **Roster roles, permissions and transfers**
+- **Roster transfers**
   - Roster's impersonation banner (`roster::impersonation-banner`) on each screen.
-  - Hiding each form and button by the viewer's permissions (v1's `@rosterCan` and `ScreenAccess::allows()`): the new-role and new-permission forms, the role page's read-only view, and the permission edit controls (D-031).
   - Offering only the import and export types the viewer may start, and the transfer page's "may confirm" check: every type is offered and a 403 shows the no-access notice.
   - The "transfers need Impex" notice (v1's `Transfers::available()`): starting a transfer without Impex shows Roster's error message.
   - The transfers page's organization name in its header: the v2 list carries the organization's slug only.

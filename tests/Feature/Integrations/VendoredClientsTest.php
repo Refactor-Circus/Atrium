@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 const VENDORED_CLIENTS_PACKAGES = [
     'cortex' => 'Cortex',
+    'guardian' => 'Guardian',
     'impex' => 'Impex',
     'keen' => 'Keen',
     'pennantplus' => 'PennantPlus',
@@ -152,3 +153,23 @@ it('lets the layer\'s own package names and prose through', function (string $so
     'the layer' => ['"name": "@refactor-circus/atrium-nuxt"'],
     'a comment' => ['// switch to @refactor-circus/impex-client once v2.0.0 is tagged'],
 ]);
+
+it('vendors a Roster client without the role and permission operations that moved to Guardian (AC 78)', function (): void {
+    /** @var array{paths: array<string, array<string, mixed>>} $openapi */
+    $openapi = json_decode(vendoredClientsRead(vendoredClientPath('roster', 'openapi.json')), true, flags: JSON_THROW_ON_ERROR);
+    $operations = [];
+
+    foreach ($openapi['paths'] as $methods) {
+        foreach ($methods as $operation) {
+            if (is_array($operation) && isset($operation['operationId']) && is_string($operation['operationId'])) {
+                $operations[] = $operation['operationId'];
+            }
+        }
+    }
+
+    $removed = array_values(array_filter($operations, fn (string $id): bool => preg_match('/^roster\\.(roles|permissions|users\\.roles)\\./', $id) === 1
+        || in_array($id, ['roster.users.permissions', 'roster.organizations.role-assignments.index'], true)));
+
+    expect($operations)->not->toBeEmpty()
+        ->and($removed)->toBe([]);
+});

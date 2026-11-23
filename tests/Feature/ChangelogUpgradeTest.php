@@ -235,7 +235,7 @@ it('lists the v1 actions left out of each integration (D-032)', function (string
     ['integrations/hooks/index.ts', 'Cross-package hooks'],
     ['pages/roster/users/index.vue', 'Roster users and impersonations'],
     ['pages/roster/organizations/index.vue', 'Roster organizations, teams and invitations'],
-    ['pages/roster/roles/index.vue', 'Roster roles, permissions and transfers'],
+    ['pages/roster/transfers/index.vue', 'Roster transfers'],
     ['integrations/showroom/index.ts', 'Showroom widgets and search'],
     ['pages/showroom/products/index.vue', 'Showroom products, product models and families'],
     ['pages/showroom/attributes/index.vue', 'Showroom attributes, categories, channels and flags'],

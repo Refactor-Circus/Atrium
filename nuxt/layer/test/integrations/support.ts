@@ -277,7 +277,7 @@ export async function mountIntegration<T>(
 // Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
 // into a served asset URL, which `fileURLToPath()` refuses.
 const here = import.meta.url
-const layerRoot = fileURLToPath(new URL('../../', here))
+export const layerRoot = fileURLToPath(new URL('../../', here))
 const localesRoot = join(layerRoot, 'i18n', 'locales')
 
 /**
@@ -326,7 +326,7 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, 'utf8'))
 }
 
-function filesUnder(directory: string): string[] {
+export function filesUnder(directory: string): string[] {
   let entries: string[]
 
   try {

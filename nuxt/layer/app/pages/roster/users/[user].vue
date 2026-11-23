@@ -4,7 +4,6 @@ import RosterProfileFields from '../../../integrations/roster/components/users/R
 import RosterState from '../../../integrations/roster/components/users/RosterState.vue'
 import RosterStatusBadge from '../../../integrations/roster/components/users/RosterStatusBadge.vue'
 import RosterUserMemberships from '../../../integrations/roster/components/users/RosterUserMemberships.vue'
-import RosterUserRoles from '../../../integrations/roster/components/users/RosterUserRoles.vue'
 import {
   blankToNull,
   profileBody,
@@ -27,8 +26,8 @@ import {
  * Its account (`users.update`) and profile (`users.profile.update`); approve
  * and reject while it awaits approval; v1's single status form, which maps
  * the new status to `users.suspend`, `users.deactivate` or `users.reactivate`
- * (Roster AC 6); its memberships with the context switch and domain join; its
- * roles; impersonation, which follows the one-time link Roster answers with;
+ * (Roster AC 6); its memberships with the context switch and domain join;
+ * impersonation, which follows the one-time link Roster answers with;
  * and delete, after which the page offers restore and purge (Roster's
  * `users.show` does not find a deleted user, D-032).
  */
@@ -312,10 +311,6 @@ async function purge(): Promise<void> {
               @switched="reload"
               @joined="memberships.reload"
             />
-          </div>
-
-          <div class="lg:col-span-2">
-            <RosterUserRoles :user="user" :memberships="memberships.data.value ?? []" />
           </div>
 
           <UCard class="lg:col-span-2" data-testid="roster-user-impersonate">

@@ -7,11 +7,7 @@ import { mockPackageApi, reply, resetPackageApis, type PackageRoutes } from '../
 import {
   acme,
   ada,
-  assignment,
-  auditor,
   confirmWith,
-  editor,
-  effective,
   globex,
   grace,
   impersonation,
@@ -24,13 +20,13 @@ import {
 } from './support'
 
 /*
- * `roster.user` (AC 54, 69): the user (`users.show`), its memberships
- * (`organizations.index?user=`), role assignments, assignable roles and
- * effective permissions; then every v1 action, each asserted by method, path
+ * `roster.user` (AC 54, 69, 99): the user (`users.show`) and its memberships
+ * (`organizations.index?user=`), with no roles, which moved to Guardian;
+ * then every v1 action, each asserted by method, path
  * and body: the account and profile updates, approve, reject, suspend,
  * deactivate and reactivate (v1's status form, per Roster AC 6), delete
  * (confirmed), restore, purge (confirmed), impersonate, switch context, domain
- * join, and role assign and revoke; a 422, 403 and 404.
+ * join; a 422, 403 and 404.
  */
 
 const { api, navigate } = vi.hoisted(() => ({ api: vi.fn(), navigate: vi.fn() }))
@@ -43,9 +39,6 @@ function routes(overrides: PackageRoutes<'roster'> = {}): PackageRoutes<'roster'
     'GET /users/{user}': { data: ada },
     'GET /organizations': page([acme, globex]),
     'GET /organizations/{organization}/teams': page([ops]),
-    'GET /users/{user}/roles': page([assignment]),
-    'GET /roles': page([editor, auditor]),
-    'GET /users/{user}/permissions': { data: effective } as never,
     ...overrides
   }
 }
@@ -69,27 +62,19 @@ describe('roster.user', () => {
     await useRouter().replace('/')
   })
 
-  it('loads the user, its memberships, roles and permissions, and its screen with the record', async () => {
+  it('loads the user, its memberships and its screen with the record, and no roles (AC 99)', async () => {
     mockPackageApi('roster', routes())
 
     const wrapper = await mountUser()
 
     expect(rosterCalls('GET', '/users/{user}')[0]?.path).toBe('/users/7')
     expect(rosterCalls('GET', '/organizations')[0]?.query).toEqual({ user: '7', per_page: '100' })
-    expect(rosterCalls('GET', '/users/{user}/roles')[0]?.query).toEqual({ per_page: '100' })
-    expect(rosterCalls('GET', '/roles')[0]?.query).toEqual({ per_page: '100' })
-    expect(rosterCalls('GET', '/users/{user}/permissions')[0]?.path).toBe('/users/7/permissions')
     expect(api).toHaveBeenCalledWith('/screens/roster.user', { query: { record: '7', tab: undefined } })
 
     expect(wrapper.find('[data-testid="roster-user-title"]').text()).toBe('Ada L.')
     expect(wrapper.find('[data-testid="roster-user-status-badge"]').text()).toBe('Active')
     expect(wrapper.find('[data-testid="roster-membership-acme"]').text()).toContain('Current')
-    expect(wrapper.find('[data-testid="roster-assignment-01JASSIGNMENT"]').text()).toContain('Editor')
-    expect(wrapper.find('[data-testid="roster-user-permissions"]').text()).toContain('roster.users.update')
-    // Only shared roles and those of the user's organizations can be assigned.
-    const roles = wrapper.findAll('[data-testid="roster-assign-role"] option').map(option => option.attributes('value'))
-    expect(roles).toContain(editor.id)
-    expect(roles).not.toContain(auditor.id)
+    expect(wrapper.find('[data-testid="roster-user-roles"]').exists()).toBe(false)
   })
 
   it('updates the account through users.update, leaving out a blank password, then reloads', async () => {
@@ -248,58 +233,6 @@ describe('roster.user', () => {
     expect(rosterCalls('GET', '/organizations')).toHaveLength(2)
   })
 
-  it('assigns a role in an organization and team through users.roles.store', async () => {
-    mockPackageApi('roster', routes({ 'POST /users/{user}/roles': { data: assignment } }))
-
-    const wrapper = await mountUser()
-    await wrapper.find('[data-testid="roster-assign-role"]').setValue(editor.id)
-    await wrapper.find('[data-testid="roster-assign-organization"]').setValue('acme')
-    await settle()
-    await wrapper.find('[data-testid="roster-assign-team"]').setValue('ops')
-    await wrapper.find('[data-testid="roster-user-assign-form"]').trigger('submit')
-    await settle()
-
-    const [call] = rosterCalls('POST', '/users/{user}/roles')
-    expect(call?.path).toBe('/users/7/roles')
-    expect(call?.body).toEqual({ role: editor.id, organization: 'acme', team: 'ops' })
-    expect(rosterCalls('GET', '/users/{user}/roles')).toHaveLength(2)
-  })
-
-  it('assigns a role globally, with no organization or team', async () => {
-    mockPackageApi('roster', routes({ 'POST /users/{user}/roles': { data: assignment } }))
-
-    const wrapper = await mountUser()
-    await wrapper.find('[data-testid="roster-assign-role"]').setValue(editor.id)
-    await wrapper.find('[data-testid="roster-user-assign-form"]').trigger('submit')
-    await settle()
-
-    expect(rosterCalls('POST', '/users/{user}/roles')[0]?.body).toEqual({ role: editor.id, organization: null, team: null })
-  })
-
-  it('shows the field errors of a 422 on assign', async () => {
-    mockPackageApi('roster', routes({ 'POST /users/{user}/roles': reply(422, { message: 'Invalid.', errors: { role: ['This role cannot be assigned globally.'] } }) }))
-
-    const wrapper = await mountUser()
-    await wrapper.find('[data-testid="roster-assign-role"]').setValue(editor.id)
-    await wrapper.find('[data-testid="roster-user-assign-form"]').trigger('submit')
-    await settle()
-
-    expect(wrapper.text()).toContain('This role cannot be assigned globally.')
-  })
-
-  it('revokes a role assignment through users.roles.destroy', async () => {
-    mockPackageApi('roster', routes({ 'DELETE /users/{user}/roles/{assignment}': reply(204) }))
-
-    const wrapper = await mountUser()
-    await wrapper.find('[data-testid="roster-revoke-01JASSIGNMENT"]').trigger('click')
-    await settle()
-
-    const [call] = rosterCalls('DELETE', '/users/{user}/roles/{assignment}')
-    expect(call?.path).toBe('/users/7/roles/01JASSIGNMENT')
-    expect(call?.body).toBeUndefined()
-    expect(rosterCalls('GET', '/users/{user}/roles')).toHaveLength(2)
-  })
-
   it('impersonates the user with a reason, then follows the one-time link', async () => {
     mockPackageApi('roster', routes({ 'POST /users/{user}/impersonate': { data: impersonation, url: 'https://app.test/roster/impersonate/abc' } as never }))
 
@@ -387,15 +320,6 @@ describe('roster.user', () => {
 
     expect(wrapper.find('[data-testid="atrium-no-access"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="roster-user-account-form"]').exists()).toBe(true)
-  })
-
-  it('shows the roles card as no access when the roles answer 403', async () => {
-    mockPackageApi('roster', routes({ 'GET /users/{user}/roles': reply(403) }))
-
-    const wrapper = await mountUser()
-
-    expect(wrapper.find('[data-testid="roster-user-roles"] [data-testid="atrium-no-access"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="roster-user-assign-form"]').exists()).toBe(false)
   })
 
   it('shows the no-access state on a 403', async () => {

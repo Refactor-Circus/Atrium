@@ -1,4 +1,16 @@
 <script setup lang="ts">
+// Not ported (D-032)
+// Roster's transfers screens (`roster.transfers`, `roster.transfer`) leave out these
+// v1 features, which have no v2 API route:
+// - Roster's impersonation banner (`roster::impersonation-banner`) on each screen.
+//   It is Roster's own view, with no API route.
+// - Offering only the import and export types the viewer may start, and the
+//   transfer page's "may confirm" check. No API route reports them: every type is
+//   offered and a 403 shows the no-access notice (D-031).
+// - The "transfers need Impex" notice (v1's `Transfers::available()`). No API route
+//   reports it: starting a transfer without Impex shows Roster's error message.
+// - The transfers page's organization name in its header. The v2 list carries the
+//   organization's slug only, so the slug is shown.
 import AccessState from '../../../integrations/roster/components/access/AccessState.vue'
 import TransferStatusBadge from '../../../integrations/roster/components/transfers/TransferStatusBadge.vue'
 import {

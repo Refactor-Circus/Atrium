@@ -7,7 +7,7 @@ import fixture from '../../../fixtures/integrations/roster.json'
 import { missingI18nKeys } from '../../support'
 
 /*
- * The roles, permissions and transfers area of Roster (AC 49, 53, 54, 69):
+ * The transfers area of Roster (AC 49, 53, 54, 69, 99):
  * each of its screen keys has a layer page at the path the PHP integration
  * declares (`fixtures/integrations/roster.json`), framed with its own screen
  * key so it calls `atrium.screens.show` with it; the area's index page lists
@@ -16,9 +16,6 @@ import { missingI18nKeys } from '../../support'
 
 /** Each screen of this area to its page file, under `app/pages/roster/`. */
 const PAGES: Record<string, string> = {
-  'roster.roles': 'roles/index.vue',
-  'roster.role': 'roles/[role].vue',
-  'roster.permissions': 'permissions/index.vue',
   'roster.transfers': 'transfers/index.vue',
   'roster.transfer': 'transfers/[transfer].vue'
 }
@@ -31,7 +28,7 @@ function source(file: string): string {
   return readFileSync(fileURLToPath(new URL(`../../../../app/pages/roster/${file}`, here)), 'utf8')
 }
 
-describe('the roster roles, permissions and transfers pages', () => {
+describe('the roster transfers pages', () => {
   it.each(Object.keys(PAGES))('has a page for %s at its declared path, named in the screens map', (key) => {
     const declared = fixture.screens.find(screen => screen.key === key)
     const name = screens[key]
@@ -46,8 +43,8 @@ describe('the roster roles, permissions and transfers pages', () => {
     expect(source(file)).toContain(`screen-key="${key}"`)
   })
 
-  it('lists the v1 actions it does not port in a Not ported (D-032) comment at the top of the roles index page', () => {
-    const lines = source('roles/index.vue').split('\n')
+  it('lists the v1 actions it does not port in a Not ported (D-032) comment at the top of the transfers index page', () => {
+    const lines = source('transfers/index.vue').split('\n')
 
     expect(lines[0]).toBe('<script setup lang="ts">')
     expect(lines[1]).toBe('// Not ported (D-032)')

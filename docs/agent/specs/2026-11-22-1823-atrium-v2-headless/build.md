@@ -1367,3 +1367,25 @@ Integration docs, changelog and release checks (AC 76, 77).
 - `test/integrations/roster/users/user.test.ts`: a new case, run for `javascript:`, `data:`, `//evil.test/…`, `/roster/…` and empty links. In each, the POST is made, `navigateTo` is never called, and the error is shown. These cases would fail against the old code, which navigated to any non-empty URL.
 - `test/navigation.test.ts`: `isExternalUrl()` accepts http(s) URLs and refuses `javascript:`, `data:`, scheme-relative, backslash, relative, padded, host-less, `ftp:` and empty URLs.
 - Both Vitest files pass (36 tests, no type errors), and `nuxt typecheck` passes. `composer test:unit`: 1357 tests (1350 passed, 7 skipped).
+
+## Group 29
+
+Client sync and Roster role removal (AC 78, 99).
+
+### Files
+
+- `nuxt/scripts/sync-clients.mjs`: `guardian: 'Guardian'`. `pnpm -C nuxt sync:clients guardian roster` ran against the D-040 suite folder (Guardian at `42b1e17`, Roster's addendum build at `de2d7ab`); both builds were present, so D-039 did not apply.
+- `nuxt/layer/app/integrations/guardian/client/` (new) and `roster/client/` (re-synced, no role or permission operations).
+- PHP: `RosterIntegration` drops the Roles and Permissions nav items and the `roster.roles`, `roster.role` and `roster.permissions` screens; `lang/en/integrations/roster.php` drops `roles` and `permissions`; `roster.json` regenerated.
+- Layer: deleted `pages/roster/roles/**`, `pages/roster/permissions/**`, `RolePermissions.vue`, `RosterUserRoles.vue`, `OrganizationRoles.vue` and `access/access.ts` (all of it was role and permission helpers; `AccessState.vue`, which transfers use, stays). Dropped `RosterRole`, `RosterRoleAssignment`, `RosterEffectivePermissions` (`users.ts`), `RosterOrganizationAssignment` and the `roles` tab (`organizations.ts`). `[user].vue` and `[organization]/index.vue` no longer load roles. The screens map, the role and permission locale keys and the three role Vitest files are gone. The `// Not ported (D-032)` comment moved to the top of `pages/roster/transfers/index.vue`, without its role and permission items.
+- Tests: `VendoredClientsTest` (guardian, and no removed Roster operation in the vendored `openapi.json`), `RosterIntegrationTest` (four nav items, 11 screens, no role labels), `roster/integration.test.ts` (11 keys), the new `roster/removed-access.test.ts` (greps `app/` and `test/`), and the user, organization, pages and support files.
+
+### Deviations
+
+- `CHANGELOG.md`, `README.md` and `tests/Feature/ChangelogUpgradeTest.php` (group 37's files) changed here: the D-032 heading follows the comment to `pages/roster/transfers/index.vue` ("Roster transfers"), and the README route table drops `/roster/roles` and `/roster/permissions`. Without this, `ChangelogUpgradeTest` fails on the deleted page. Group 37 adds the Guardian entries.
+- `test/integrations/support.ts` now exports `filesUnder()` and `layerRoot`, for the grep test.
+
+### Tests
+
+- `composer test:unit` (with `ATRIUM_SUITE_PATH`): 1362 tests, all passed.
+- `composer test:nuxt` (pnpm shim, D-041): every step passed; Vitest 119 files, 1099 tests, no type errors.

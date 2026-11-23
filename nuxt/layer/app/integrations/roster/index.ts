@@ -7,9 +7,9 @@ import UserStatusWidget from './components/widgets/UserStatusWidget.vue'
  * Roster in the layer (AC 60, 62, 69): its two widgets, its two ⌘K sources
  * and the map of its screens to their pages. The pages live under
  * `app/pages/roster/`, split by area (users and impersonations;
- * organizations, teams and the public invitation page; roles, permissions and
- * transfers). Each area's index page lists the v1 actions it does not port
- * (D-032).
+ * organizations, teams and the public invitation page; transfers). Each
+ * area's index page lists the v1 actions it does not port (D-032). Roles and
+ * permissions moved to the Guardian integration (AC 99).
  */
 
 /**
@@ -24,9 +24,6 @@ export const screens: Record<string, string> = {
   'roster.organization-create': 'roster-organizations-create',
   'roster.organization': 'roster-organizations-organization',
   'roster.team': 'roster-organizations-organization-teams-team',
-  'roster.roles': 'roster-roles',
-  'roster.role': 'roster-roles-role',
-  'roster.permissions': 'roster-permissions',
   'roster.impersonations': 'roster-impersonations',
   'roster.transfers': 'roster-transfers',
   'roster.transfer': 'roster-transfers-transfer',

@@ -553,7 +553,7 @@ Each integration's pages live in the layer under its key, so their paths start w
 | Keen | `/keen/entries`, `/keen/entries/:entry` and `/keen/history/:package` |
 | PennantPlus | `/pennantplus/features` |
 | Polycart | `/polycart/carts`, `/polycart/carts/:cart` and `/polycart/types` |
-| Roster | `/roster/users`, `/roster/organizations`, `/roster/roles`, `/roster/permissions`, `/roster/impersonations`, `/roster/transfers`, their detail pages, and the public `/roster/invitations/:token` |
+| Roster | `/roster/users`, `/roster/organizations`, `/roster/impersonations`, `/roster/transfers`, their detail pages, and the public `/roster/invitations/:token` |
 | Showroom | `/showroom/products`, `/showroom/product-models`, `/showroom/families`, `/showroom/attributes`, `/showroom/categories`, `/showroom/channels`, `/showroom/owners`, `/showroom/flags`, `/showroom/assets`, `/showroom/transfers` and the rest of its 27 screens |
 
 - Every screen keeps its v1 key, so host extensions registered on `roster.organization` or `showroom.product` still attach. A page fetches its tabs and sections from `atrium.screens.show` (`GET screens/{screen}?record=&tab=`), which serves the screen's extensions without Atrium loading the record.

@@ -18,9 +18,9 @@ use RefactorCircus\Atrium\Support\Iconify;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
- * The Roster integration (AC 39, 40, 45, 53, 60, 62, 69): its six v1 nav
- * items, two widgets and two search sources, and its 14 screens, declared as
- * data only. Roster ships with its API off (`roster.routes.enabled`), so the
+ * The Roster integration (AC 39, 40, 45, 53, 60, 62, 69, 99): its four nav
+ * items, two widgets and two search sources, and its 11 screens, declared as
+ * data only. Roles and permissions moved to the Guardian integration. Roster ships with its API off (`roster.routes.enabled`), so the
  * integration registers only once the host turns it on.
  */
 
@@ -139,7 +139,7 @@ describe('registration', function (): void {
 });
 
 describe('declarations', function (): void {
-    it('declares the six v1 nav items, in the Roster group, linking to the layer pages', function (): void {
+    it('declares the four nav items left after roles and permissions moved to Guardian, in the Roster group, linking to the layer pages', function (): void {
         $items = array_map(fn (NavItem $item): array => [
             'label' => $item->label,
             'icon' => $item->icon,
@@ -152,8 +152,6 @@ describe('declarations', function (): void {
         expect($items)->toBe([
             ['label' => 'Users', 'icon' => 'i-lucide-users', 'url' => '/roster/users', 'group' => 'Roster', 'sort' => 10, 'live' => null],
             ['label' => 'Organizations', 'icon' => 'i-lucide-building-2', 'url' => '/roster/organizations', 'group' => 'Roster', 'sort' => 20, 'live' => null],
-            ['label' => 'Roles', 'icon' => 'i-lucide-shield-check', 'url' => '/roster/roles', 'group' => 'Roster', 'sort' => 30, 'live' => null],
-            ['label' => 'Permissions', 'icon' => 'i-lucide-key-round', 'url' => '/roster/permissions', 'group' => 'Roster', 'sort' => 40, 'live' => null],
             ['label' => 'Impersonations', 'icon' => 'i-lucide-eye', 'url' => '/roster/impersonations', 'group' => 'Roster', 'sort' => 45, 'live' => null],
             ['label' => 'Imports & exports', 'icon' => 'i-lucide-arrow-up-down', 'url' => '/roster/transfers', 'group' => 'Roster', 'sort' => 48, 'live' => null],
         ]);
@@ -168,7 +166,8 @@ describe('declarations', function (): void {
 
         $labels = array_map(fn (NavItem $item): string => $item->label, app(NavigationRegistry::class)->items(Request::create('/')));
 
-        expect($labels)->toContain('Users', 'Organizations', 'Roles', 'Permissions', 'Impersonations', 'Imports & exports');
+        expect($labels)->toContain('Users', 'Organizations', 'Impersonations', 'Imports & exports')
+            ->not->toContain('Roles', 'Permissions');
     });
 
     it('declares the two v1 widgets, keeping their keys, with no resolver and static data', function (): void {
@@ -226,7 +225,7 @@ describe('declarations', function (): void {
         ]);
     });
 
-    it('declares the 14 screens of AC 69, with their kinds, layer paths and subject aliases', function (): void {
+    it('declares the 11 screens left of AC 69 (AC 99), with their kinds, layer paths and subject aliases', function (): void {
         $screens = array_map(fn (ScreenDeclaration $screen): array => [
             $screen->kind,
             $screen->path,
@@ -241,9 +240,6 @@ describe('declarations', function (): void {
             'roster.organization-create' => ['detail', '/roster/organizations/create', null],
             'roster.organization' => ['detail', '/roster/organizations/:organization', 'roster.organization'],
             'roster.team' => ['detail', '/roster/organizations/:organization/teams/:team', null],
-            'roster.roles' => ['list', '/roster/roles', null],
-            'roster.role' => ['detail', '/roster/roles/:role', null],
-            'roster.permissions' => ['list', '/roster/permissions', null],
             'roster.impersonations' => ['list', '/roster/impersonations', null],
             'roster.transfers' => ['list', '/roster/transfers', null],
             'roster.transfer' => ['detail', '/roster/transfers/:transfer', null],
@@ -273,10 +269,16 @@ describe('declarations', function (): void {
 });
 
 describe('labels', function (): void {
+    it('drops the roles and permissions labels (AC 99)', function (): void {
+        expect(trans()->hasForLocale('atrium::integrations/roster.roles', 'en'))->toBeFalse()
+            ->and(trans()->hasForLocale('atrium::integrations/roster.permissions', 'en'))->toBeFalse();
+    });
+
     it('takes every label from lang/en/integrations/roster.php', function (): void {
         $keys = rosterLabelKeys();
 
-        expect($keys)->toContain('label', 'users', 'organizations', 'roles', 'permissions', 'impersonations', 'transfers', 'widget_user_status', 'widget_organizations');
+        expect($keys)->toContain('label', 'users', 'organizations', 'impersonations', 'transfers', 'widget_user_status', 'widget_organizations')
+            ->not->toContain('roles', 'permissions');
 
         foreach ($keys as $key) {
             expect(trans()->hasForLocale('atrium::integrations/roster.'.$key, 'en'))->toBeTrue("Missing label [atrium::integrations/roster.{$key}].");

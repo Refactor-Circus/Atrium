@@ -1,68 +1,13 @@
 import { vi } from 'vitest'
-import type { components } from '../../../../app/integrations/roster/client/schema'
 import type { RosterTransfer } from '../../../../app/integrations/roster/components/transfers/transfers'
-import { auditor, editor } from '../users/support'
 
 /*
- * Shared payloads of the Roster roles, permissions and transfers suites
- * (AC 54, 69), typed with `satisfies` against the vendored `components` or,
- * where Scramble types a resource loosely (a transfer's `progress`,
- * `results`, `error` and `requested_by`), against the shape the page reads
- * (`transfers.ts`). The page mounter, the screen answer and the call filters
+ * Shared payloads of the Roster transfers suites
+ * (AC 54, 69), typed with `satisfies` against the shape the page reads
+ * (`transfers.ts`), as Scramble types a transfer's `progress`, `results`,
+ * `error` and `requested_by` loosely. The page mounter, the screen answer and the call filters
  * come from the users area's `../users/support`.
  */
-
-type Schemas = components['schemas']
-
-export { auditor, editor }
-
-export const editorDetail = {
-  ...editor,
-  description: 'Edits content.',
-  permissions: ['roster.users.view', 'roster.users.update']
-} satisfies Schemas['RoleResource']
-
-export const customRole = {
-  id: '01JROLECUSTOM',
-  name: 'Support',
-  slug: 'support',
-  description: null,
-  scope: 'organization',
-  organization: 'acme',
-  super: false,
-  system: false,
-  permissions: ['roster.users.view']
-} satisfies Schemas['RoleResource']
-
-export const superRole = {
-  id: '01JROLESUPER',
-  name: 'Super admin',
-  slug: 'super-admin',
-  description: null,
-  scope: 'global',
-  organization: null,
-  super: true,
-  system: true,
-  permissions: []
-} satisfies Schemas['RoleResource']
-
-export const usersView = {
-  name: 'roster.users.view',
-  description: 'See users.',
-  system: true
-} satisfies Schemas['PermissionResource']
-
-export const usersUpdate = {
-  name: 'roster.users.update',
-  description: null,
-  system: true
-} satisfies Schemas['PermissionResource']
-
-export const reportsExport = {
-  name: 'reports.export',
-  description: 'Export reports.',
-  system: false
-} satisfies Schemas['PermissionResource']
 
 export const adaSummary = { id: 7, name: 'Ada Lovelace', email: 'ada@example.com' }
 

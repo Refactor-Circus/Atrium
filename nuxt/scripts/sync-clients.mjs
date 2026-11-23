@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url'
 /** The suite packages the layer integrates, by key, with their checkout folder name. */
 const PACKAGES = {
   cortex: 'Cortex',
+  guardian: 'Guardian',
   impex: 'Impex',
   keen: 'Keen',
   pennantplus: 'PennantPlus',

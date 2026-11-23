@@ -3,11 +3,10 @@ import type { RosterInvitationLookup } from '../../../../app/integrations/roster
 import type {
   RosterInvitation,
   RosterMember,
-  RosterOrganizationAssignment,
   RosterTeamDetail
 } from '../../../../app/integrations/roster/components/organizations/organizations'
 import type { RosterUserSummary } from '../../../../app/integrations/roster/components/users/users'
-import { acme, editor, ops } from '../users/support'
+import { acme, ops } from '../users/support'
 
 /*
  * Shared payloads of the Roster organization, team and invitation suites
@@ -20,7 +19,7 @@ import { acme, editor, ops } from '../users/support'
 
 type Schemas = components['schemas']
 
-export { acme, editor, ops }
+export { acme, ops }
 
 export const acmeDetail = {
   ...acme,
@@ -90,15 +89,6 @@ export const acceptedInvitation = {
   status: 'accepted',
   accepted_at: '2026-11-21T10:00:00+00:00'
 } satisfies RosterInvitation
-
-export const orgAssignment = {
-  id: '01JORGASSIGNMENT',
-  role: { id: editor.id, name: 'Editor', slug: 'editor', scope: 'organization' },
-  organization: 'acme',
-  team: 'ops',
-  user: adaSummary,
-  assigned_at: '2026-11-01T10:00:00+00:00'
-} satisfies RosterOrganizationAssignment
 
 export const lookup = {
   email: 'new@example.com',

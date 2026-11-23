@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import OrganizationInvitations from '../../../../integrations/roster/components/organizations/OrganizationInvitations.vue'
 import OrganizationMembers from '../../../../integrations/roster/components/organizations/OrganizationMembers.vue'
-import OrganizationRoles from '../../../../integrations/roster/components/organizations/OrganizationRoles.vue'
 import OrganizationSettings from '../../../../integrations/roster/components/organizations/OrganizationSettings.vue'
 import OrganizationState from '../../../../integrations/roster/components/organizations/OrganizationState.vue'
 import OrganizationTeams from '../../../../integrations/roster/components/organizations/OrganizationTeams.vue'
@@ -25,9 +24,8 @@ import {
 /**
  * `roster.organization`: one organization (`organizations.show`), ported
  * from v1's `organizations/show`, with v1's built-in tabs in `?tab=`:
- * members, teams, invitations, roles (its role assignments, from
- * `organizations.role-assignments.index`) and settings (update, links and
- * delete). Tabs other packages register come from `atrium.screens.show`; an
+ * members, teams, invitations and settings (update, links and delete). Its
+ * role assignments moved to Guardian's `guardian.access` tab (AC 97, 99). Tabs other packages register come from `atrium.screens.show`; an
  * open one replaces the built-in content. After a delete the page offers
  * restore and purge, as Roster's `organizations.show` does not find a deleted
  * organization (D-032).
@@ -144,7 +142,6 @@ async function purge(): Promise<void> {
           <OrganizationMembers v-if="tab === 'members'" :client="client" :organization="organization" @changed="reload" />
           <OrganizationTeams v-else-if="tab === 'teams'" :client="client" :organization="organization" @changed="reload" />
           <OrganizationInvitations v-else-if="tab === 'invitations'" :client="client" :organization="organization" />
-          <OrganizationRoles v-else-if="tab === 'roles'" :organization="organization" />
           <OrganizationSettings v-else :client="client" :organization="organization" @updated="updated" @deleted="deleted = true" />
         </div>
       </OrganizationState>

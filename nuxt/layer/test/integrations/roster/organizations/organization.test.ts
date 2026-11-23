@@ -8,11 +8,9 @@ import { confirmWith, mountRosterPage, page, resetRosterPages, rosterCalls, scre
 import {
   acceptedInvitation,
   acmeDetail,
-  editor,
   invitation,
   linusMember,
   ops,
-  orgAssignment,
   owner,
   pendingMember
 } from './support'
@@ -20,14 +18,13 @@ import {
 /*
  * `roster.organization` (AC 54, 69): one organization with v1's tabs in
  * `?tab=`. Members (add, approve, transfer ownership, remove), teams (list,
- * create), invitations (invite, revoke), role assignments
- * (`roster.organizations.role-assignments.index`) and settings (update, link
- * and unlink, delete, then restore or purge). Each mutation is checked for its
+ * create), invitations (invite, revoke) and settings (update, link and unlink,
+ * delete, then restore or purge). Role assignments moved to Guardian (AC 99). Each mutation is checked for its
  * method, path and body, and the page reloads after it. A 403 shows the
  * no-access state and a 404 the not-found state.
  *
- * Members, invitations and assignments are cast: Scramble types a member's
- * and an assignment's `user` as `unknown[]` and an invitation's `teams` as
+ * Members and invitations are cast: Scramble types a member's `user` as
+ * `unknown[]` and an invitation's `teams` as
  * `string | {}`; `./support` types them as the page reads them.
  */
 
@@ -42,8 +39,6 @@ function rosterWith(overrides: PackageRoutes<'roster'> = {}): void {
     'GET /organizations/{organization}/members': page([owner, pendingMember, linusMember]) as never,
     'GET /organizations/{organization}/teams': page([ops]),
     'GET /organizations/{organization}/invitations': page([invitation, acceptedInvitation]) as never,
-    'GET /organizations/{organization}/role-assignments': page([orgAssignment]) as never,
-    'GET /roles': page([editor]),
     ...overrides
   })
 }
@@ -222,32 +217,6 @@ describe('roster.organization', () => {
       const [call] = rosterCalls('DELETE', '/organizations/{organization}/invitations/{invitation}')
       expect(call?.path).toBe(`/organizations/acme/invitations/${invitation.id}`)
       expect(rosterCalls('GET', '/organizations/{organization}/invitations')).toHaveLength(2)
-    })
-  })
-
-  describe('the roles tab', () => {
-    it('lists the role assignments from roster.organizations.role-assignments.index and the roles it can assign', async () => {
-      rosterWith()
-
-      const wrapper = await mountRosterPage(Page, '/roster/organizations/acme?tab=roles')
-
-      expect(rosterCalls('GET', '/organizations/{organization}/role-assignments')[0]?.path).toBe('/organizations/acme/role-assignments')
-      expect(rosterCalls('GET', '/roles')[0]?.query).toEqual({ organization: 'acme', per_page: '100' })
-
-      const row = wrapper.find(`[data-testid="roster-org-assignment-${orgAssignment.id}"]`)
-      expect(row.text()).toContain('Ada Lovelace')
-      expect(row.text()).toContain('Editor')
-      expect(row.text()).toContain('ops')
-      expect(row.find('a').attributes('href')).toBe('/roster/users/7')
-      expect(wrapper.find('[data-testid="roster-org-role-editor"]').exists()).toBe(true)
-    })
-
-    it('shows the no-access state when the assignments answer 403', async () => {
-      rosterWith({ 'GET /organizations/{organization}/role-assignments': reply(403) })
-
-      const wrapper = await mountRosterPage(Page, '/roster/organizations/acme?tab=roles')
-
-      expect(wrapper.find('[data-testid="atrium-no-access"]').exists()).toBe(true)
     })
   })
 
