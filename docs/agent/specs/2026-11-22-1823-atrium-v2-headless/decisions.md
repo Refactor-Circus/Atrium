@@ -101,3 +101,9 @@
 - Rationale: The user took the recommendation: explicit and locked, independent of the host's package-manager settings.
 - Date: 2026-11-23
 - Raised by: factory rework (round 2), consumer build test
+
+## D-018: Registry-only requests (shell, search, settings) inherit authorize() => true; accept, or add a policy check?
+- Choice: Accept. The route group's viewAtrium gate decides; record the departure as a row in docs/agent/standards-feedback.md.
+- Rationale: The user took the recommendation: these requests read registries, so there is no model or policy to ask.
+- Date: 2026-11-23
+- Raised by: factory review round 1 (standards)

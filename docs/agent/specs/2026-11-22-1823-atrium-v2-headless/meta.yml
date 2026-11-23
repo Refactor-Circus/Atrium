@@ -39,3 +39,9 @@ runs:
     round: 2
     date: 2026-11-23
     note: "groups 7-10 built; review round 2 rework stopped on D-017 (layer deps)"
+  - workflow: ring-master-factory
+    run_id: wf_8a7c299e-6c9
+    result: needs-decision
+    round: 1
+    date: 2026-11-23
+    note: "gate green; review round 1: D-018 plus 1 major (cross-domain Http imports) and 2 minor findings for rework"
