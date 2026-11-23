@@ -899,6 +899,8 @@ Groups 11-18, 27 and part of 22 were built in parallel worktrees and merged by h
 - `tests/Feature/OpenApiTest.php`: the 204 test expected the key `'204'`. PHP casts a numeric-string array key to an int, so `array_keys()` can only return `204`. The test was wrong, so it now expects `[204]`.
 - `src/Domains/Navigation/Services/NavigationState.php`: PHPStan rejected the `??=` assignment of two untyped `new WeakMap`s into the typed per-request map. `for()` now builds both maps with their generic types before storing them. The behaviour is unchanged.
 
+- `tests/Pest.php`, `SearchTest`, `OpenApiTest`: one `composer test` run failed intermittently (1 in 8). `SearchTest` "runs sources in separate processes" got "no commands defined in the atrium namespace". Under `--parallel`, group 27's `OpenApiTest` runs `vendor/bin/testbench`, which rewrites Testbench's skeleton app. At the same time, the search process driver runs `php artisan` in that same skeleton. Both now hold one file lock (`lockTestbenchSkeleton()`, keyed on the skeleton path) while they use the skeleton. Five runs in a row then passed.
+
 ### Nuxt gate (`composer test:nuxt`), Vitest
 
 - `new URL('…', import.meta.url)` in `test/integrations/support.ts`, `integration-absent`, `integration-i18n`, `cortex/integration`, `pennantplus/integration` and `polycart/integration`: Vite rewrites that literal into a served asset URL, which `fileURLToPath()` and `readFileSync()` refuse. These files now read `import.meta.url` through a variable, as the Roster page tests already did.

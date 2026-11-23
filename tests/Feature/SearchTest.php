@@ -38,6 +38,8 @@ beforeEach(function (): void {
     // linked into it. Testbench removes that link after its own commands on
     // Windows, where the link is a junction is_symlink() does not recognise,
     // so make sure it is there for the children and tidy up afterwards.
+    lockTestbenchSkeleton();
+
     $this->skeletonConfig = is_file(skeletonConfigPath()) ? file_get_contents(skeletonConfigPath()) : null;
 
     $this->vendor = new UsesVendor;
@@ -52,6 +54,8 @@ afterEach(function (): void {
     }
 
     $this->vendor->afterEach($this->app);
+
+    releaseTestbenchSkeleton();
 });
 
 /**

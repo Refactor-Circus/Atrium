@@ -61,7 +61,14 @@ function openApiRoot(string $path = ''): string
 function openApiTestbench(array $arguments): string
 {
     $process = new Process([PHP_BINARY, 'vendor/bin/testbench', ...$arguments], openApiRoot(), ['TESTBENCH_WORKING_PATH' => openApiRoot()], timeout: 180);
-    $process->run();
+
+    lockTestbenchSkeleton();
+
+    try {
+        $process->run();
+    } finally {
+        releaseTestbenchSkeleton();
+    }
 
     expect($process->getExitCode())->toBe(0, $process->getErrorOutput().$process->getOutput());
 
