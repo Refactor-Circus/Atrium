@@ -585,3 +585,242 @@ I did not run either suite. The instructions say the gate runs `composer test:nu
 ### Deviations
 
 None.
+
+## Group 15 (salvaged)
+
+### What I found
+
+There was no index lock and no merge or rebase in progress in the `--g15` worktree. The previous agent left this work uncommitted:
+
+- The PHP side was complete: `KeenIntegration` (the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, left out when `history.nav.enabled` is false; the 3 screen declarations), `lang/en/integrations/keen.php`, `KeenIntegrationTest` (gating, the API base from `keen.routes.prefix` and the `api_base` override, both nav items, a malformed config, the shell payload, the screens, the label keys and the fixture) and the generated `fixtures/integrations/keen.json`.
+- The layer side was complete except for its tests: `index.ts` (with its `// Not ported (D-032)` note, which says nothing was left out), the 3 pages, `KeenEntriesBrowser`, `KeenEntriesTable`, `KeenChanges`, `KeenRecordForm`, `entries.ts`, the `keen.history` live resolver in `history.ts`, and `keen.en.json`.
+- There was nothing under `nuxt/layer/test/integrations/keen/`.
+
+### What I committed
+
+Everything above, plus the missing Vitest suites in `nuxt/layer/test/integrations/keen/`:
+
+- `keen.ts`: payload helpers, typed with `satisfies` against the vendored Keen schema, and the `atrium.screens.show` answers.
+- `entries.test.ts`: `keen.entries` loads, the filters come from the route query and from the form, Clear works, cursor paging goes older, newer and back to newest, a 422 shows field errors, a 403 shows no access, and other failures show an error. The record form posts to `keen.entries.store` (method, path and body) and reloads, a 422 shows field errors, and a 403 shows no access.
+- `entry.test.ts`: `formatChange()`, `changeRows()` and `<KeenChanges>` (rendered as v1's `audit.changes`), and the `keen.entry` page: its load request, details, the IP address and user agent only when Keen sends them, and the 404, 403 and failure states.
+- `history.test.ts`: `keen.history` lists `keen.entries.index` with `source` fixed to the package, keeps it when other filters change, ignores `?source=`, shows not-found for an unlisted package, and shows no access on a 403.
+- `live.test.ts`: the `keen.history` resolver is registered, and it handles exclusion, grouping under the nav group's label, sorting by label, link encoding, malformed options, and rejection on 500 and 403.
+- `pages.test.ts`: every fixture screen has a route at its declared path, each page calls `atrium.screens.show` with its key, record and tab, and every `t()` key exists.
+
+Commit `b52c048` on `ring-master/2026-11-22-1823-atrium-v2-headless--g15`, touching only the group's paths.
+
+### What is left
+
+- 15.4 is unticked. As instructed, I did not run `composer test:nuxt` or `vendor/bin/pest`. The new Vitest suites have never been run, so the gate is their first run. The likeliest weak spots are the page-level interactions in happy-dom: driving the Nuxt UI inputs and buttons through `data-testid`, and route-query reactivity after `router.replace`.
+
+## Group 15
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 15.4 ticked. 15.1 to 15.3 are ticked on the group branch too, because the salvage marked them done only in the job worktree.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: the salvaged section above and this one.
+
+This retry had only 15.4 left. Tasks 15.1 to 15.3 were already committed in `b52c048` (see "Group 15 (salvaged)" above), and I kept that work as it was. No source, test, fixture or locale files changed. `nuxt/layer/.nuxtrc` is untracked and not in the group's file list, so it stays out of the commit.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 15.4 is ticked on that basis. The Keen Vitest suites have never been run, so the gate is their first run. The weak spots noted in the salvaged section still apply.
+
+### Deviations
+
+None.
+
+## Group 18 (salvaged)
+
+### What I found
+
+The build agent stopped without returning a result. In the group worktree there was no index lock and no merge or rebase in progress. Every file in the group's list was present but uncommitted: 12 new files, plus `roster.en.json`, which still held only the `{}` placeholder at HEAD. I read each file against tasks 18.1 to 18.3, AC 69 and 70, and the group 11 and 12 framework (`IntegrationRegistry`, `IntegrationFixture`, `useIntegrationQuery`, `integrationData`, `AtriumRegistry`, `test/integrations/support.ts`, the vendored Roster schema). The work looked complete and consistent:
+
+- `RosterIntegration` declares:
+  - the six v1 nav items, all in the Roster group;
+  - the widgets `roster.user-status` and `roster.organizations`, with no resolver;
+  - the search sources `roster-users` and `roster-organizations`;
+  - the 14 screens at the AC 69 paths, with the subject aliases `roster.user` and `roster.organization`, and `roster.invitation` at `/roster/invitations/:token`.
+
+  Its labels are in `lang/en/integrations/roster.php`. The `roster.routes.enabled` gate and its one warning come from the framework's `IntegrationRegistry`.
+- `RosterIntegrationTest` covers:
+  - registration: gating, the API base, disabled, not installed, `roster.routes.enabled` false with one warning, then turned on;
+  - the declarations, Iconify icons, the fixture, the labels and the no-package-code check.
+- `index.ts` has the full `screens` map (route names for the 14 keys) and registers both widgets and both search sources.
+- The two widgets read `roster.stats.users` and `roster.stats.organizations` through `useIntegrationQuery`. A 403 shows `AtriumNoAccess`, and any other failure shows `AtriumErrorCard`.
+- The sources in `components/search/sources.ts` call `/search/users` and `/search/organizations` with `q` and `limit`. Results link to `/roster/users/:id` and `/roster/organizations/:slug`.
+- The Vitest files are `integration.test.ts`, `widgets.test.ts` and `search.test.ts`. They cover the screens map against the fixture, the registrations, both widgets with 403 and error states and one shared request, and both sources with their links, a 403 drop and the inactive case.
+
+`vendor/bin/pint --test` passes on the three PHP files.
+
+### What I committed
+
+Commit `05ff2f8` on `ring-master/2026-11-22-1823-atrium-v2-headless--g18` contains only the group's 13 paths. Tasks 18.1, 18.2 and 18.3 are ticked. The untracked `nuxt/layer/.nuxtrc` and `nuxt/layer/test/zz-probe.test.ts` are outside the group's list, so I did not commit them or touch them.
+
+### What is left
+
+- 18.4 is unticked. As instructed, I ran neither `composer test:nuxt` nor `vendor/bin/pest`, so the gate will be the first run of these Pest and Vitest files.
+- `nuxt/layer/test/zz-probe.test.ts` looks like a leftover probe from the stopped agent. If it is still untracked in the worktree when the gate runs, Vitest will pick it up.
+
+## Group 18
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 18.4 is ticked. 18.1 to 18.3 are also ticked on the group branch, because the salvage ticked them only in the job worktree.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: the salvaged section above and this one.
+
+This retry had only 18.4 left. Tasks 18.1 to 18.3 were already committed in `05ff2f8` (see "Group 18 (salvaged)" above), and I left that work unchanged. No source, test, fixture or locale file changed.
+
+I deleted the untracked `nuxt/layer/test/zz-probe.test.ts` from the group worktree. It was a debug probe the stopped agent left behind. Its only test throws on purpose, so Vitest would have failed the gate with it in place. It was never committed. `nuxt/layer/.nuxtrc` is also untracked and is not in the group's file list, so I left it out of the commit.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 18.4 is ticked on that basis. The gate will be the first run of the Roster Pest and Vitest files.
+
+### Deviations
+
+None.
+
+## Group 17 (salvaged)
+
+### What I found
+
+The build agent stopped without returning a result. The group worktree had no index lock and no merge or rebase in progress. All the group's work was present but uncommitted: 24 new files, plus `polycart.en.json`, which still held the `{}` placeholder at HEAD. The last writes (07:53) were to `PolycartCart.vue` and `cart.test.ts`, which suggests the agent was in the run-and-fix loop of 17.4 when it stopped.
+
+I read each file against tasks 17.1 to 17.3, AC 54, 59, 60 and 62, and the group 11 and 12 framework: `Integration`, `IntegrationRegistry`, `IntegrationFixture`, `useAtriumIntegration`, `useIntegrationQuery`, `AtriumRegistry`, `AtriumIntegrationScreen`, `AtriumNoAccess` and `test/integrations/support.ts`. Every helper, component and type the files use exists. The work is complete and consistent:
+
+- **`PolycartIntegration`** declares:
+  - the two v1 nav items, Carts and Cart types, in the Polycart group at sort 30 and 31;
+  - the widgets `polycart.carts-by-type` and `polycart.recent-carts`, with no resolver;
+  - the search source `polycart`;
+  - the three AC 59 screens, with no `subject_type`, since Polycart sets no morph alias and Atrium may not name its classes.
+
+  It has no settings panel. Its labels are in `lang/en/integrations/polycart.php`.
+- **`PolycartIntegrationTest`** covers:
+  - gating: `polycart.routes.enabled` false gives no registration and exactly one warning across two boots, and true gives a registration;
+  - not installed, and disabled (`false` and `"false"`);
+  - the API base: the prefix, the trimmed prefix, the `api_base` override, and no config;
+  - the declarations, the labels and the no-Polycart-class grep;
+  - the `polycart.json` fixture.
+- **`index.ts`** starts with `// Not ported (D-032)`, which names `polycart.atrium.show_all` and the other v1 departures. It has the `screens` map and registers both widgets and the search source.
+- **Pages and components:**
+  - `/polycart/carts` has the type, status, source and search filters, kept in the query, with cursor paging.
+  - `/polycart/carts/:cart` has update, delete and clear (each confirmed), status transition, convert, visibility, line update and remove, and member share and unshare. Each change reloads. A 422 shows field errors or the type's refusal, a 403 shows the no-access state, and a 404 shows not found.
+  - `/polycart/types` lists the types.
+  - Each page renders inside `AtriumIntegrationScreen`.
+  - The two widgets share one `stats.show` through `usePolycartStats`.
+- **Vitest** has six files: `integration`, `carts`, `cart`, `types`, `widgets` and `search`. Their payloads in `data.ts` are typed with `satisfies` against the vendored schema. Together they cover the fixture's pages and the `screens` map, every AC 59 action (method, path and body), 403 and 422, one shared stats request, the search request and its links, and the i18n keys.
+
+`php -l` and `vendor/bin/pint --test` pass on the three PHP files.
+
+### What I committed
+
+Commit `8451a5a` on `ring-master/2026-11-22-1823-atrium-v2-headless--g17` contains only the group's 25 paths. Tasks 17.1, 17.2 and 17.3 are ticked.
+
+### What is left
+
+- 17.4 is unticked. As instructed, I ran neither `composer test:nuxt` nor `vendor/bin/pest`, so the gate will be the first full run of these Pest and Vitest files.
+
+## Group 17
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 17.4 ticked.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: this section.
+
+This retry had only 17.4 left. Tasks 17.1 to 17.3 were already in commit `8451a5a` on `ring-master/2026-11-22-1823-atrium-v2-headless--g17`, as the salvaged section above describes, and I kept that work as it was. No source, test, fixture, lang or locale files changed. The group worktree was clean, so the group commit is empty and only records the retry.
+
+### Tests
+
+I did not run either suite. The instructions say the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build, so 17.4 is ticked on that basis. The salvaged notes say the original agent was last editing `PolycartCart.vue` and `cart.test.ts` while it was running and fixing tests. If the gate fails, look at those two files first.
+
+### Deviations
+
+None.
+
+## Group 22 (salvaged)
+
+### What I found
+
+The g22 worktree had no `index.lock` and no merge or rebase in progress. All 17 of the group's files were uncommitted: 16 new files, plus `showroom.en.json`, which was still `{}` at HEAD and had been filled in. No path outside the group's file list had changes.
+
+- **PHP.** `ShowroomIntegration` ports the v1 `ShowroomPlugin`. I checked the eleven Catalog nav items (labels, sorts and paths) against `Showroom/src/Atrium/ShowroomPlugin.php`. Their icons are Iconify equivalents of the old heroicons. The four widgets, the `showroom` panel and the `showroom` search source all send `data: {}`. The integration also declares the 27 screens, with `subject_type` set for `showroom_product`, `showroom_product_model` and `showroom_owner`. The lang file has every label key the class uses.
+- **Pest.** `ShowroomIntegrationTest` covers:
+  - discovery by convention, and gating: installed, not installed, and `enabled` set to `false` or `"false"`
+  - the API base from `showroom.routes.prefix` and from the `api_base` override
+  - routes off, with exactly one warning, and no Showroom config at all
+  - the eleven nav items with no badge and no `live`, the four widgets, the panel and the search source
+  - the 27 screen declarations and the `forScreen()` lookup
+  - the lang keys, no `RefactorCircus\Showroom` reference, and the fixture
+- **Fixture.** `fixtures/integrations/showroom.json` matches what the PHP declares.
+- **Layer.**
+  - `index.ts` holds the 27-entry `screens` map and registers the four widgets, the panel and the search source. Its `// Not ported (D-032)` note lists policy hiding and the recent-changes author names.
+  - The widgets share `useShowroomStats()`, which makes one `showroom.stats.show` call through `useIntegrationQuery`.
+  - The panel renders `showroom.settings-summary.show`.
+  - The source calls `GET /search` with `limit` and links each result by `type`.
+  - I checked every field these components read against the vendored `schema.d.ts`.
+- **Vitest.** There are four files:
+  - `integration`: the `screens` map against the fixture, the registrations and the i18n keys
+  - `widgets`: one shared request, 403 and 500, and each widget's content and links
+  - `settings`: the rows, off values, 403 and 500
+  - `search`: the request with `per_source`, a link per type checked against the declared paths, 403 drops the source, and no call while inactive
+
+`vendor/bin/pint --test` passes on the three PHP files. As instructed, I did not run either suite.
+
+### What I committed
+
+Commit `3be10ab` on `ring-master/2026-11-22-1823-atrium-v2-headless--g22` contains only the group's paths, all 17 files. Tasks 22.2 and 22.3 are ticked.
+
+### What is left
+
+- **22.1 is unticked.** The Pest test for "the `transfers.flow_prefix` config read" is missing, and nothing in the group reads `atrium.integrations.showroom.transfers.flow_prefix`. The spec and D-035 say the transfers screen filters flows by that prefix. They do not say how the PHP config reaches the layer. Integration declarations have no free-form data channel: AC 61 fixes the panel at `data: {}`, `ScreenDeclaration` and `atrium.screens.show` have no options field, and AC 43 names only `impex.active-runs` and `keen.history` as live keys. That makes it an architectural choice, so I returned it as a decision and did not pick one.
+- **22.4 is unticked.** Neither `composer test:nuxt` nor `vendor/bin/pest` has been run on this group, so the gate's run will be the first.
+
+## Group 27 (salvaged)
+
+### What I found
+
+The worktree `Atrium--2026-11-22-1823-atrium-v2-headless--g27` had no index lock and no merge or rebase in progress. The previous agent left the PHP half done but uncommitted:
+
+- `dedoc/scramble` `^0.13.55` in `require-dev`; it installs on Laravel 13 and PHP 8.5, so no decision was needed.
+- `composer openapi:export`.
+- `workbench/app/OpenApi/AtriumOpenApi.php`, which holds the Scramble config, the `atrium.*` route filter that leaves out `atrium.plugins.*`, `operationId` set to the route name, and the resource-schema extension.
+- `ExportOpenApiCommand` (`workbench:openapi`), which exports from a fresh in-memory SQLite database.
+- `schema()` on all seven resources.
+- The committed `openapi.json`.
+- `tests/Feature/OpenApiTest.php`.
+- The `Dedoc` ArchTest rules.
+- The pinned `openapi-typescript` `7.13.0` and its lockfile entries.
+- The `generate:client` script, `nuxt/scripts/generate-client.mjs`, which writes the sha header and has a `--check` mode.
+
+Missing were:
+
+- the generated `schema.d.ts`
+- `useAtriumClient()`
+- the `types/atrium.ts` aliases
+- the Vitest files
+- the `test:nuxt` staleness step
+
+### What I did
+
+- **Checked the export.** I re-ran `composer openapi:export`. The fresh document equals the committed `openapi.json` as decoded JSON: OpenAPI 3.1.2, "Atrium API" 2.0.0, 14 operations.
+- **Generated the client.** I generated `nuxt/layer/app/client/schema.d.ts` with `node nuxt/scripts/generate-client.mjs`; pnpm is not on this machine's PATH, and it is the script `generate:client` runs. Its header is `sha256: cdb5e15f…`.
+- **Staleness step.** `composer test:nuxt` now runs `pnpm -C nuxt generate:client --check` right after the frozen install.
+- **Types.** `types/atrium.ts` now aliases `components['schemas']` and keeps every public name. Where JSON Schema cannot express a shape, the alias narrows the generated one:
+  - the recursive nav `children`
+  - the keyed maps: theme `properties`, integration `features`, and screen `sections` and `rows`
+  - the opened panel's `description` and `data`
+  - the integration screen's `path`, `subject_type` and `record`
+
+  `AtriumNavItem.live` stays optional. `search.per_source` is now `number | null`, matching `ShellResource`. `useAtriumSearch` already falls back with `?? 5`.
+- **`useAtriumClient()`.** It returns an `openapi-fetch` `Client<paths>`, one per Nuxt app, based at `runtimeConfig.public.atrium.apiBase` (resolved against the page origin), and signed by the same auth adapter. A 401 calls `onUnauthorized()` except on a public page. The adapter middleware repeats the one in `useAtriumIntegration.ts`, which is outside this group's files and keeps it private.
+- **Vitest.** `test/client.test.ts` covers the adapter's headers, credentials and `Accept`, the adapter read at request time, 401 against 403, and the per-app cache. `fixtures.test-d.ts` checks each fixture against the generated `operations[...]` 200 bodies and the public names against the schemas.
+- **Static checks.** `nuxt typecheck`, `vue-tsc -p test/tsconfig.json` and `pint --test` on the group's PHP files all pass. As instructed, I did not run either suite.
+
+### What I committed
+
+Commit `dc50217` on `ring-master/2026-11-22-1823-atrium-v2-headless--g27` contains only the group's paths, 23 files. `composer.lock` is gitignored, and `testbench.yaml` was unchanged. Tasks 27.1, 27.2 and 27.3 are ticked.
+
+### What is left
+
+- **27.4 is unticked.** Neither `composer test:nuxt` nor `vendor/bin/pest` has been run on this group.

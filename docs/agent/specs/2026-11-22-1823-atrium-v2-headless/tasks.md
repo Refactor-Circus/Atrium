@@ -141,9 +141,9 @@ depends on: 12
 files: src/Integrations/Cortex/CortexIntegration.php, lang/en/integrations/cortex.php, tests/Feature/Integrations/CortexIntegrationTest.php, nuxt/layer/test/fixtures/integrations/cortex.json, nuxt/layer/app/integrations/cortex/index.ts, nuxt/layer/app/integrations/cortex/components/**, nuxt/layer/app/pages/cortex/**, nuxt/layer/i18n/locales/integrations/cortex.en.json, nuxt/layer/test/integrations/cortex/**
 criteria: 39, 40, 45, 53, 54, 55, 61, 62
 
-- [ ] 13.1 Write tests: Pest: gating for Cortex: installed and enabled, not installed, disabled; the API base from `cortex.routes.prefix`; the six nav items (labels, Iconify icons, paths); the `cortex` panel and search source with static data; the 11 screen declarations (keys, kinds, paths, subject aliases); writing `fixtures/integrations/cortex.json`; Vitest: one file per screen of AC 55 (load, each mutation's method, path and body, 403, 422 where there is a form), the settings panel against `cortex.settings-summary.show`, the search source and its links, every fixture screen having a page, and the i18n keys
-- [ ] 13.2 Write `CortexIntegration` and `lang/en/integrations/cortex.php`, porting the labels and icons from the old `CortexPlugin`.
-- [ ] 13.3 Write the Vue pages and components for the 11 screens, the panel, the search source and `index.ts` (registrations and `screens` map). Check every old action against the vendored `openapi.json`, and list the missing ones in `// Not ported (D-032)`.
+- [x] 13.1 Write tests: Pest: gating for Cortex: installed and enabled, not installed, disabled; the API base from `cortex.routes.prefix`; the six nav items (labels, Iconify icons, paths); the `cortex` panel and search source with static data; the 11 screen declarations (keys, kinds, paths, subject aliases); writing `fixtures/integrations/cortex.json`; Vitest: one file per screen of AC 55 (load, each mutation's method, path and body, 403, 422 where there is a form), the settings panel against `cortex.settings-summary.show`, the search source and its links, every fixture screen having a page, and the i18n keys
+- [x] 13.2 Write `CortexIntegration` and `lang/en/integrations/cortex.php`, porting the labels and icons from the old `CortexPlugin`.
+- [x] 13.3 Write the Vue pages and components for the 11 screens, the panel, the search source and `index.ts` (registrations and `screens` map). Check every old action against the vendored `openapi.json`, and list the missing ones in `// Not ported (D-032)`.
 - [ ] 13.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 14: Impex integration
@@ -161,10 +161,10 @@ depends on: 12
 files: src/Integrations/Keen/KeenIntegration.php, lang/en/integrations/keen.php, tests/Feature/Integrations/KeenIntegrationTest.php, nuxt/layer/test/fixtures/integrations/keen.json, nuxt/layer/app/integrations/keen/index.ts, nuxt/layer/app/integrations/keen/components/**, nuxt/layer/app/pages/keen/**, nuxt/layer/i18n/locales/integrations/keen.en.json, nuxt/layer/test/integrations/keen/**
 criteria: 39, 40, 45, 53, 54, 57, 64
 
-- [ ] 15.1 Write tests: Pest: gating; the API base from `keen.routes.prefix`; the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, absent when `history.nav.enabled` is false; the 3 screen declarations; writing `fixtures/integrations/keen.json`; Vitest: `keen.entries` (filters, cursor paging, the record form posting to `keen.entries.store` with 422), `keen.entry` (changes rendering), `keen.history` (`source` filter); the History `live` resolver (exclusion, grouping, sorting, failure); fixture pages; the i18n keys
-- [ ] 15.2 Write `KeenIntegration` and its lang file, porting from `KeenPlugin`.
-- [ ] 15.3 Write the pages, an entries table and a changes component (shared with group 26's section and tab), the `live` resolver and `index.ts`.
-- [ ] 15.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 15.1 Write tests: Pest: gating; the API base from `keen.routes.prefix`; the audit-log nav item; the History item with `live('keen.history', {exclude, groups, sort})`, absent when `history.nav.enabled` is false; the 3 screen declarations; writing `fixtures/integrations/keen.json`; Vitest: `keen.entries` (filters, cursor paging, the record form posting to `keen.entries.store` with 422), `keen.entry` (changes rendering), `keen.history` (`source` filter); the History `live` resolver (exclusion, grouping, sorting, failure); fixture pages; the i18n keys
+- [x] 15.2 Write `KeenIntegration` and its lang file, porting from `KeenPlugin`.
+- [x] 15.3 Write the pages, an entries table and a changes component (shared with group 26's section and tab), the `live` resolver and `index.ts`.
+- [x] 15.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 16: PennantPlus integration
 depends on: 12
@@ -181,20 +181,20 @@ depends on: 12
 files: src/Integrations/Polycart/PolycartIntegration.php, lang/en/integrations/polycart.php, tests/Feature/Integrations/PolycartIntegrationTest.php, nuxt/layer/test/fixtures/integrations/polycart.json, nuxt/layer/app/integrations/polycart/index.ts, nuxt/layer/app/integrations/polycart/components/**, nuxt/layer/app/pages/polycart/**, nuxt/layer/i18n/locales/integrations/polycart.en.json, nuxt/layer/test/integrations/polycart/**
 criteria: 39, 40, 45, 53, 54, 59, 60, 62
 
-- [ ] 17.1 Write tests: Pest: gating; not registered, with one warning, while `polycart.routes.enabled` is false (its shipped default); registered once it is true; the two nav items, the two widgets, the search source, the 3 screen declarations and the fixture; Vitest: carts list with the type and status filters; the cart detail: every action of AC 59 (method, path, body), plus 403 and 422; the types list; both widgets sharing one `polycart.stats.show`; the search source, fixture pages and the i18n keys
-- [ ] 17.2 Write `PolycartIntegration` and its lang file, porting from `PolycartPlugin`.
-- [ ] 17.3 Write the pages, widgets, search source and `index.ts`, with `// Not ported (D-032)` (it names operator mode).
-- [ ] 17.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 17.1 Write tests: Pest: gating; not registered, with one warning, while `polycart.routes.enabled` is false (its shipped default); registered once it is true; the two nav items, the two widgets, the search source, the 3 screen declarations and the fixture; Vitest: carts list with the type and status filters; the cart detail: every action of AC 59 (method, path, body), plus 403 and 422; the types list; both widgets sharing one `polycart.stats.show`; the search source, fixture pages and the i18n keys
+- [x] 17.2 Write `PolycartIntegration` and its lang file, porting from `PolycartPlugin`.
+- [x] 17.3 Write the pages, widgets, search source and `index.ts`, with `// Not ported (D-032)` (it names operator mode).
+- [x] 17.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 18: Roster integration (PHP, widgets, search)
 depends on: 12
 files: src/Integrations/Roster/RosterIntegration.php, lang/en/integrations/roster.php, tests/Feature/Integrations/RosterIntegrationTest.php, nuxt/layer/test/fixtures/integrations/roster.json, nuxt/layer/app/integrations/roster/index.ts, nuxt/layer/app/integrations/roster/components/widgets/**, nuxt/layer/app/integrations/roster/components/search/**, nuxt/layer/i18n/locales/integrations/roster.en.json, nuxt/layer/test/integrations/roster/integration.test.ts, nuxt/layer/test/integrations/roster/widgets.test.ts, nuxt/layer/test/integrations/roster/search.test.ts
 criteria: 39, 40, 45, 53, 60, 62, 69
 
-- [ ] 18.1 Write tests: Pest: gating, and not registered while `roster.routes.enabled` is false; the six nav items, the two widgets and the two search sources; the 14 screen declarations with paths and subject aliases (`roster.user`, `roster.organization`), and the fixture; Vitest: `index.ts` registers a `screens` entry for every fixture screen key; `roster.user-status` against `roster.stats.users`, and `roster.organizations` against `roster.stats.organizations`, with 403; `roster-users` and `roster-organizations` sources and their links
-- [ ] 18.2 Write `RosterIntegration` and its lang file, porting from `RosterPlugin`.
-- [ ] 18.3 Write `index.ts` with the full `screens` map (route names for all of AC 69 and the public page), the widgets and the search sources.
-- [ ] 18.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 18.1 Write tests: Pest: gating, and not registered while `roster.routes.enabled` is false; the six nav items, the two widgets and the two search sources; the 14 screen declarations with paths and subject aliases (`roster.user`, `roster.organization`), and the fixture; Vitest: `index.ts` registers a `screens` entry for every fixture screen key; `roster.user-status` against `roster.stats.users`, and `roster.organizations` against `roster.stats.organizations`, with 403; `roster-users` and `roster-organizations` sources and their links
+- [x] 18.2 Write `RosterIntegration` and its lang file, porting from `RosterPlugin`.
+- [x] 18.3 Write `index.ts` with the full `screens` map (route names for all of AC 69 and the public page), the widgets and the search sources.
+- [x] 18.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 19: Roster screens: users and impersonations
 depends on: 18
@@ -229,8 +229,8 @@ files: src/Integrations/Showroom/ShowroomIntegration.php, lang/en/integrations/s
 criteria: 39, 40, 45, 53, 60, 61, 62, 71
 
 - [ ] 22.1 Write tests: Pest: gating; the API base; the eleven nav items; the four widgets; the `showroom` panel and search source; the 27 screen declarations; the `transfers.flow_prefix` config read; the fixture; Vitest: `index.ts` maps every fixture screen; the four widgets sharing one `showroom.stats.show`; the panel against `showroom.settings-summary.show`; the search source, with a link per `type`
-- [ ] 22.2 Write `ShowroomIntegration` and its lang file, porting from `ShowroomPlugin`.
-- [ ] 22.3 Write `index.ts` with the full `screens` map, the widgets, the panel and the search source.
+- [x] 22.2 Write `ShowroomIntegration` and its lang file, porting from `ShowroomPlugin`.
+- [x] 22.3 Write `index.ts` with the full `screens` map, the widgets, the panel and the search source.
 - [ ] 22.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 23: Showroom screens: products, product models and families
@@ -275,9 +275,9 @@ depends on: 12
 files: composer.json, composer.lock, testbench.yaml, workbench/app/Providers/WorkbenchServiceProvider.php, workbench/app/OpenApi/**, openapi.json, src/Domains/Dashboard/Resources/DashboardResource.php, src/Domains/Dashboard/Resources/DashboardWidgetResource.php, src/Domains/Navigation/Http/Resources/ShellResource.php, src/Domains/Widgets/Http/Resources/WidgetDefinitionResource.php, src/Domains/Screens/Http/Resources/ResolvedScreenResource.php, src/Domains/Settings/Http/Resources/SettingsPanelResource.php, src/Domains/Search/Http/Resources/SearchResultResource.php, tests/Feature/OpenApiTest.php, tests/ArchTest.php, nuxt/package.json, nuxt/pnpm-lock.yaml, nuxt/layer/package.json, nuxt/scripts/generate-client.mjs, nuxt/layer/app/client/schema.d.ts, nuxt/layer/app/composables/useAtriumClient.ts, nuxt/layer/app/types/atrium.ts, nuxt/layer/test/client.test.ts, nuxt/layer/test/fixtures.test-d.ts
 criteria: 72, 73, 74, 75
 
-- [ ] 27.1 Write tests: Pest `OpenApiTest` (no Node): a fresh `scramble:export` equals `openapi.json` as decoded JSON; the operations equal the `atrium.*` routes minus `atrium.plugins.*`, with `operationId` = the route name, and `info` as in AC 72; each 2xx schema has the resource's `schema()` required properties; the `schema.d.ts` header hash matches, and the failure messages name both commands; ArchTest: nothing in `src/` uses `Dedoc\`; Vitest: `useAtriumClient()` carries the auth adapter, and the fixtures `satisfies` the generated aliases
-- [ ] 27.2 Add `dedoc/scramble` to `require-dev`, the workbench Scramble config, the workbench resource-schema extension and `composer openapi:export`. Give each Atrium resource a `schema()`. If no Scramble release supports Laravel 13 / PHP 8.5, stop and return a decision.
-- [ ] 27.3 Add pinned `openapi-typescript` and `generate:client` (`nuxt/scripts/generate-client.mjs`, which writes the sha header), and generate `nuxt/layer/app/client/schema.d.ts`. Make `composer test:nuxt` fail when regeneration changes the file. Point `types/atrium.ts` at the generated `components['schemas']`, keeping its public names. Add `useAtriumClient()`.
+- [x] 27.1 Write tests: Pest `OpenApiTest` (no Node): a fresh `scramble:export` equals `openapi.json` as decoded JSON; the operations equal the `atrium.*` routes minus `atrium.plugins.*`, with `operationId` = the route name, and `info` as in AC 72; each 2xx schema has the resource's `schema()` required properties; the `schema.d.ts` header hash matches, and the failure messages name both commands; ArchTest: nothing in `src/` uses `Dedoc\`; Vitest: `useAtriumClient()` carries the auth adapter, and the fixtures `satisfies` the generated aliases
+- [x] 27.2 Add `dedoc/scramble` to `require-dev`, the workbench Scramble config, the workbench resource-schema extension and `composer openapi:export`. Give each Atrium resource a `schema()`. If no Scramble release supports Laravel 13 / PHP 8.5, stop and return a decision.
+- [x] 27.3 Add pinned `openapi-typescript` and `generate:client` (`nuxt/scripts/generate-client.mjs`, which writes the sha header), and generate `nuxt/layer/app/client/schema.d.ts`. Make `composer test:nuxt` fail when regeneration changes the file. Point `types/atrium.ts` at the generated `components['schemas']`, keeping its public names. Add `useAtriumClient()`.
 - [ ] 27.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 28: Integration docs, changelog and release checks
