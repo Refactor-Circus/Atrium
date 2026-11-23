@@ -337,3 +337,26 @@ There was no index lock and no merge or rebase in progress. Nothing was committe
 ### Deviations
 
 - The layer's composables go beyond the design's list (`Api`, `Dashboard`, `Theme`, `Icon`): the tests written for this group need `useAtriumSearch` and `useAtriumSettingsPanel`, and I added `useAtriumSettings` beside the latter. They are thin `useAsyncData` and `$fetch` wrappers. Group 9's docs should list them, or they could move to `utils/` if the public surface should stay at four.
+
+## Group 8
+
+Nuxt layer and playground, retry. Criteria 19, 20, 22, 25, 26, 27, 28, 34 and 35. Tasks 8.1 to 8.3 were done in the salvaged commit `0856e0e`. This retry had only 8.4 left, which runs the suites.
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 8.4 ticked.
+- No code changed. I checked that the salvaged commit contains everything the group lists:
+  - the layer, with its components, composables, pages, layout, i18n and Vitest suites;
+  - the playground and its plugin;
+  - `nuxt/package.json`, `pnpm-workspace.yaml` and `pnpm-lock.yaml`;
+  - `.nvmrc`;
+  - the `test:nuxt` composer script (fixtures present, frozen install, typecheck, build, Vitest, consumer build);
+  - `.github/workflows/nuxt.yml`.
+
+### Tests
+
+- I did not run them, as instructed. The gate runs `composer test:nuxt` and `vendor/bin/pest` for 8.4. `ApiVersionTest` now runs instead of skipping, because `nuxt/layer/package.json` exists.
+
+### Deviations
+
+- None in this retry. The salvaged section above records the extra composables (`useAtriumSearch`, `useAtriumSettingsPanel`, `useAtriumSettings`).
