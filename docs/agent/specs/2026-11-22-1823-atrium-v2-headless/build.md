@@ -926,3 +926,50 @@ Groups 11-18, 27 and part of 22 were built in parallel worktrees and merged by h
 
 - `composer test`: phpstan, pint and type coverage pass. Pest ran 1215 tests: 1208 passed and 7 skipped.
 - `composer test:nuxt`, run with `ATRIUM_SUITE_PATH` set to the scratch suite (D-040): the frozen install, client check, typecheck, build, Vitest and consumer build all pass. Vitest ran 75 files and 628 tests, all passing, with no type errors.
+
+## Group 20 (salvaged)
+
+The build agent ended without a result. There was no index lock and no merge or rebase in progress.
+
+### What was found
+
+- All the pages and components were on disk, untracked: `pages/roster/organizations/{index,create}.vue`, `[organization]/index.vue`, `[organization]/teams/[team].vue`, `pages/roster/invitations/[token].vue`, and `integrations/roster/components/organizations/*` (`organizations.ts` and the `Organization{State,Members,Teams,Invitations,Roles,Settings}.vue` tabs). `components/invitation/invitation.ts` was there too. The `// Not ported (D-032)` comment was at the top of the organizations index page.
+- `i18n/locales/integrations/roster-organizations.en.json` was still the `{}` stub from group 18. Because the pages were on disk, group 19's `t()` key test (`missingI18nKeys('roster')`) failed on them.
+- There were no tests under `test/integrations/roster/organizations/`.
+
+### What was done
+
+- Wrote `roster-organizations.en.json` with every key the area uses, including the dynamic ones: the tabs, the organization and team statuses, the invitation statuses and the role scopes.
+- `pages/roster/organizations/[organization]/teams/[team].vue`: deleting a team now asks for confirmation first, as AC 54 requires for destructive actions (key `teams.confirm_delete`).
+- Wrote the Vitest files under `test/integrations/roster/organizations/`, with payloads in `support.ts` typed with `satisfies`. Where Scramble types a payload loosely (a member's `user`, an invitation's `teams`), it is typed as the page reads it and cast at the mock.
+  - `organizations.test.ts`: the active and deleted tabs, the filters as the endpoint's query, restore, purge after a confirmation (202 queued notice), and 403 on the load and on an action.
+  - `organization-create.test.ts`: the body, the redirect to the new page, a 422 and a 403.
+  - `organization.test.ts`, one test per action with its method, path and body, and the reload after it:
+    - members: add (with a 422), approve, transfer and remove;
+    - teams: the list and create;
+    - invitations: invite and revoke;
+    - roles: the role assignments from `role-assignments.index` and the roles list;
+    - settings: update (including a slug change and a 422), link, unlink, delete after a confirmation, then restore, or purge after a confirmation;
+    - the load: 403 and 404.
+  - `team.test.ts`: the load, adding a member (picked from the organization's members not yet in the team), removing one, update (with a 422), delete after a confirmation, a 403 on an action, and 403 and 404 on the load.
+  - `invitation.test.ts`, the public page:
+    - its route is public and uses the public layout;
+    - it makes no `useAtriumApi` call (no shell, no screens), and the shell store stays empty;
+    - the details render;
+    - a 401 on the lookup does not call `onUnauthorized()`;
+    - every 404 shows one generic state, with nothing from the server's message, and a 429 shows the "too many attempts" state;
+    - accept and decline send their method, path and body;
+    - a 401 on accept or decline calls `onUnauthorized()` and answers nothing;
+    - the token never appears in `document.title`, `localStorage`, `sessionStorage` or the console.
+  - `pages.test.ts`: each of the five screen keys has a page at its declared path, named in the screens map. The four signed-in pages are framed with their screen key. The invitation page is public and has no screen frame. It also checks the D-032 comment at the top of the index page and every `t()` key.
+
+### Results
+
+- Vitest (the layer's own binary): 81 files and 693 tests pass, with no type errors. The Roster suites alone are 14 files and 143 tests.
+- `nuxt typecheck` on the layer: clean.
+- `composer test:unit`: 1215 tests, 1208 passed and 7 skipped.
+
+### What is left
+
+- 20.3 is not ticked. `pnpm` is not on this session's PATH, so the full `composer test:nuxt` gate was not run: the frozen install, `generate:client --check`, the playground typecheck, the build and the consumer build. The layer's Vitest and typecheck were run directly instead.
+- "`onUnauthorized()` first" (AC 70, D-038) is read as follows. The page cannot tell whether the visitor is signed in without loading the shell, which D-038 rules out. So it sends accept or decline, and on a 401 calls `onUnauthorized()` before anything is answered. It does not retry the call afterwards.
