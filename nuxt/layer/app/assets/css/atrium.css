@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@source "../../**/*.{vue,ts}";
+
+/*
+ * Atrium themes (config `atrium.themes`, and `atrium.theme` for the built-in
+ * one) send their tokens as `--color-*` properties, set on :root by
+ * useAtriumTheme(). Nuxt UI reads `--ui-*`, so a theme's tokens drive it when
+ * present and Nuxt UI's defaults apply otherwise.
+ */
+:root {
+  --ui-primary: var(--color-primary, var(--ui-color-primary-500));
+  --ui-radius: var(--radius-radius, 0.375rem);
+}
+
+.dark {
+  --ui-primary: var(--color-primary-dark, var(--color-primary, var(--ui-color-primary-400)));
+}

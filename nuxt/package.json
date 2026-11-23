@@ -1,0 +1,13 @@
+{
+  "name": "atrium-nuxt-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter atrium-playground dev",
+    "typecheck": "pnpm --filter @refactor-circus/atrium-nuxt typecheck && pnpm --filter atrium-playground typecheck",
+    "build": "pnpm --filter atrium-playground build",
+    "test": "pnpm --filter @refactor-circus/atrium-nuxt test",
+    "test:consumer": "node layer/test/consumer/build.mjs"
+  },
+  "packageManager": "pnpm@10.18.0"
+}

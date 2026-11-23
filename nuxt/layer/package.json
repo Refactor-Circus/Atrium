@@ -1,0 +1,42 @@
+{
+  "name": "@refactor-circus/atrium-nuxt",
+  "version": "2.0.0",
+  "description": "Nuxt layer for headless Atrium: the dashboard shell, widgets, search and settings over Atrium's JSON API.",
+  "private": true,
+  "type": "module",
+  "main": "./nuxt.config.ts",
+  "files": [
+    "app",
+    "i18n",
+    "nuxt.config.ts",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "1.2.158",
+    "@nuxt/ui": "4.1.0",
+    "@nuxtjs/i18n": "10.6.0",
+    "@pinia/nuxt": "0.11.3",
+    "@vueuse/core": "13.9.0",
+    "pinia": "3.0.4",
+    "sortablejs": "1.15.7"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.6.4"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "4.4.0",
+    "@types/node": "24.19.2",
+    "@types/sortablejs": "1.15.9",
+    "@vue/test-utils": "2.6.0",
+    "happy-dom": "21.0.4",
+    "nuxt": "4.6.4",
+    "typescript": "5.9.3",
+    "vitest": "5.1.1",
+    "vue-tsc": "3.3.14"
+  }
+}

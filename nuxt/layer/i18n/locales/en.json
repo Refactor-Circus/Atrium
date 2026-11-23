@@ -1,0 +1,79 @@
+{
+  "atrium": {
+    "app": {
+      "unreachable": "Atrium could not be reached"
+    },
+    "nav": {
+      "settings": "Settings"
+    },
+    "search": {
+      "button": "Search…",
+      "placeholder": "Search everything…",
+      "results": "Results"
+    },
+    "theme": {
+      "label": "Theme"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "default_name": "Dashboard",
+      "switcher": "Dashboards",
+      "new": "New dashboard",
+      "name": "Name",
+      "create": "Create",
+      "untitled": "Untitled",
+      "delete": "Delete dashboard",
+      "load_failed": "This dashboard could not be loaded",
+      "empty": "No widgets yet.",
+      "add_first": "Add your first widget",
+      "edit": "Edit layout",
+      "add": "Add widget",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saved": "Layout saved",
+      "save_failed": "The layout could not be saved",
+      "stale": "This dashboard was changed elsewhere and has been reloaded. Your edits were not saved.",
+      "remove_widget": "Remove widget",
+      "pending_widget": "{title} will load once saved.",
+      "rows": "{count} row | {count} rows"
+    },
+    "picker": {
+      "title": "Add a widget",
+      "description": "Pick a widget to place on this dashboard.",
+      "filter": "Filter widgets",
+      "loading": "Loading…"
+    },
+    "widget": {
+      "orphaned": "This widget ({key}) is no longer installed.",
+      "failed": "This widget failed to load."
+    },
+    "extension": {
+      "failed": "This section failed to load."
+    },
+    "unregistered": {
+      "message": "No Vue component registered for {kind} {key}.",
+      "data": "Data",
+      "kinds": {
+        "widget": "widget",
+        "extension": "screen extension",
+        "panel": "settings panel"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "all": "All settings",
+      "load_failed": "This settings panel could not be loaded",
+      "failed": "This settings panel failed to load."
+    },
+    "version": {
+      "mismatch": "Atrium API {api} and this app's Atrium layer {layer} differ",
+      "hint": "Some screens may not work until both are on the same version.",
+      "dismiss": "Dismiss"
+    },
+    "not_found": {
+      "title": "Page not found",
+      "heading": "No page here yet",
+      "description": "No package's Nuxt layer provides {path}."
+    }
+  }
+}

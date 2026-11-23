@@ -276,3 +276,64 @@ Workbench, contract fixtures and API version. Criteria 21, 28, 31. Tasks 7.1-7.3
 ### Deviations
 
 - None. Every changed file is in the group's list. `RemovalTest`'s check that the `*WorkbenchToken*` class lives only under `workbench/` (group 6) now runs against a real class.
+
+## Group 8 (salvaged)
+
+Nuxt layer and playground. Criteria 19, 20, 22, 25, 26, 27, 28, 34, 35. The build agent ended without returning a result.
+
+### What I found
+
+There was no index lock and no merge or rebase in progress. Nothing was committed. The worktree held the group's start, all untracked and inside its paths:
+
+- **Done:**
+  - The pnpm workspace (`nuxt/package.json` with `packageManager: pnpm@10.18.0`, `pnpm-workspace.yaml`, a lockfile in sync with the manifests) and `.nvmrc` (`26.13.1`).
+  - The layer's `package.json` with exact versions and no `workspace:` dependencies, and its `nuxt.config.ts`: i18n with `en` only, the lucide `serverBundle` with `fallbackToApi: false`, and the layer version in `runtimeConfig.public.atrium.version`.
+  - The types, the `$atrium` registry plugin, the composables (`useAtrium`, `Api`, `Dashboard` with the empty-list create and the 409 reload, `Theme`, `Icon`), the shell store with the locale switch, the utils (`atriumLayout`, `atriumLink`, `atriumVersion`, `atriumStatus`), `app.config.ts` with the fallback icon, `i18n/`, and the playground's `package.json` and `nuxt.config.ts`.
+  - Every Vitest suite for AC 22, plus the test-only `fr` locale and the fixture `satisfies` check.
+- **Missing:**
+  - Every Vue component, page and layout, `app.vue` and the CSS.
+  - The `useAtriumSearch` and `useAtriumSettingsPanel` composables the tests import.
+  - The playground's plugin and demo components.
+  - The consumer build script that `nuxt/package.json` already pointed at, the `test:nuxt` composer script and the CI workflow.
+
+### What I committed
+
+- **Layer components** (`nuxt/layer/app/components/Atrium/`):
+  - `Widget`: lazy fetch by uuid from `atrium.dashboards.widgets.show`; orphan notice; error card for a server `error` or a failed request.
+  - `DashboardGrid`: full layout payload through `atriumLayout`, with `version` sent by `useAtriumDashboard.saveLayout`. Orphans are never sent, because the server keeps them. Sortable loads lazily, and a failed setup leaves editing usable. A failed save stays in edit mode and shows a toast.
+  - `DashboardPage`: switcher, new dashboard, delete.
+  - `WidgetPicker`: loads the catalogue when first opened.
+  - `Screen`: tabs write `?tab=`; renders the `header.actions`, `before`, `after` and `aside` slots and any other declared slot; a registered open tab replaces the built-in content.
+  - `Sections`, `Extension`: error card for an extension `error`.
+  - `SettingsPanel`: error card for a panel `error`.
+  - `Navigation`: `atriumLink` and `badge`; an unsafe link renders as a plain label.
+  - `Search`: ⌘K.
+  - `Icon`: renders `data-icon`, plus `data-fallback` for an unknown icon.
+  - `ErrorCard`, `Unregistered`.
+  - `VersionBanner`: console warning plus a dismissible banner on a minor or major mismatch.
+- **Composables:**
+  - `useAtriumSearch`: respects `min_length`, groups results, builds links with `noopener noreferrer`.
+  - `useAtriumSettingsPanel`, `useAtriumSettings`: send `?tab=` and refetch when it changes.
+- **Pages, layout and app:** `pages/` (dashboard, `d/[slug]`, settings index and panel, catch-all), `layouts/default.vue` (shell, theme switcher, version banner), `app.vue`, `assets/css/atrium.css`.
+- **Playground:** `app/plugins/atrium.ts` registers token auth against the workbench guard, every demo widget, the `demo` settings panel, and the `demo.storefront`, `demo.visit-store` and `demo.help` extensions, with their components.
+- **Gate:**
+  - `composer test:nuxt` runs, in order: `node nuxt/layer/test/fixtures-present.mjs` (fails, naming the regeneration command, when a fixture is missing), `pnpm -C nuxt install --frozen-lockfile`, `typecheck`, `build`, `test` (Vitest), and `test:consumer`.
+  - `nuxt/layer/test/consumer/build.mjs` copies `nuxt/layer` into a temp directory (without `node_modules`, build output or `test/`). It fails on any `workspace:` dependency, installs the layer, and builds a fresh app that extends `../layer` and registers through `useAtrium()`.
+  - `.github/workflows/nuxt.yml` is its own CI job. Actions are pinned by SHA, pnpm comes from `nuxt/package.json`, and Node from `.nvmrc`.
+
+### Checks
+
+- `pnpm -C nuxt install --frozen-lockfile --offline`: the lockfile is up to date (pnpm 10.18.0).
+- `pnpm -C nuxt typecheck`: green for the layer and the playground.
+- `pnpm -C nuxt build`: green.
+- `node nuxt/layer/test/fixtures-present.mjs`: green.
+- Not run, as instructed: Vitest, the consumer build and `vendor/bin/pest`. `ApiVersionTest` stops skipping now that `nuxt/layer/package.json` exists (version `2.0.0`, `API_VERSION` `2.0`).
+
+### What is left
+
+- 8.4 is not ticked. The gate runs `composer test:nuxt` (Vitest and the consumer build need the network for the temp install) and `vendor/bin/pest`.
+- On this machine `pnpm` is not on the PATH. I ran it through Node 22's `pnpm.cjs` with Node 26, and it switched to the pinned 10.18.0.
+
+### Deviations
+
+- The layer's composables go beyond the design's list (`Api`, `Dashboard`, `Theme`, `Icon`): the tests written for this group need `useAtriumSearch` and `useAtriumSettingsPanel`, and I added `useAtriumSettings` beside the latter. They are thin `useAsyncData` and `$fetch` wrappers. Group 9's docs should list them, or they could move to `utils/` if the public surface should stay at four.

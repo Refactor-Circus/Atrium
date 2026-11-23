@@ -91,6 +91,15 @@
             "@test:types",
             "@test:unit"
         ],
+        "test:nuxt": [
+            "Composer\\Config::disableProcessTimeout",
+            "node nuxt/layer/test/fixtures-present.mjs",
+            "pnpm -C nuxt install --frozen-lockfile",
+            "pnpm -C nuxt typecheck",
+            "pnpm -C nuxt build",
+            "pnpm -C nuxt test",
+            "pnpm -C nuxt test:consumer"
+        ],
         "clear": [
             "@php vendor/bin/testbench package:purge-skeleton --ansi"
         ],
