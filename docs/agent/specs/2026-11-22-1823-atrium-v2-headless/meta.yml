@@ -45,3 +45,9 @@ runs:
     round: 1
     date: 2026-11-23
     note: "gate green; review round 1: D-018 plus 1 major (cross-domain Http imports) and 2 minor findings for rework"
+  - workflow: ring-master-factory
+    run_id: wf_d73cf5ed-97f
+    result: approved
+    round: 2
+    date: 2026-11-23
+    note: "gate green, no nits. composer test:nuxt was not in the gate; run by hand, D-017 was found unapplied and fixed (pinned @nuxt/icon, @nuxt/fonts, @nuxtjs/color-mode, tailwindcss); composer test and composer test:nuxt both pass"

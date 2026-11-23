@@ -292,3 +292,5 @@ Groups 2 to 5 are gated on their own test files plus PHPStan and Pint, and the f
 ## Addendum 2026-11-23: layer dependencies (D-017)
 
 `nuxt/layer/package.json` lists, as direct pinned dependencies, every Nuxt module that `@nuxt/ui` installs by name (at least `@nuxt/icon`). The AC 22 consumer build passes on a strict pnpm install with no `.npmrc` hoisting.
+
+D-017 as applied also pins `tailwindcss` (imported by name from `atrium.css`) beside `@nuxt/icon`, `@nuxt/fonts` and `@nuxtjs/color-mode`.
