@@ -77,3 +77,9 @@
 - Rationale: Recommended; the request host is the API's, not the SPA's.
 - Date: 2026-11-22
 - Raised by: spec review pass 2 (testability)
+
+## D-014: How should the factory gate groups 2 to 5 while Blade-era callers remain until group 6?
+- Choice: Accept a red full suite until group 6. Groups 2 to 5 are gated on their own test files plus PHPStan and Pint; the full gate (vendor/bin/pest, composer test) applies from group 6 on.
+- Rationale: The user took the recommendation. The breaking tests belong to groups 3 to 6, which rewrite or delete them.
+- Date: 2026-11-23
+- Raised by: factory build (group 2 implementer)

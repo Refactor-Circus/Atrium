@@ -20,7 +20,7 @@ criteria: 11, 15
 
 - [x] 2.1 Write tests: `component()` defaults to the key and can be overridden; `view()` is absent (reflection) on every listed definition; each `icon()` setter throws `InvalidArgumentException` for a non-Iconify value, and the theme swatch icons do the same
 - [x] 2.2 Remove `view()`, and add `component` as `public private(set)` with a fluent setter. `icon()` setters validate through `Iconify::assert()`. Drop inline-SVG support.
-- [ ] 2.3 Run vendor/bin/pest; all green
+- [x] 2.3 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
 
 ## Group 3: Dashboard and widget API
 depends on: 2
@@ -32,7 +32,7 @@ criteria: 6, 7, 8, 9, 10, 30, 32, 33
 - [ ] 3.3 Resources sit beside the models (`final`, `@mixin`, Keystone `JsonResource`). Each `{Verb}DashboardRequest::persist()` calls the action and returns a resource or 204. Controllers are one line. Bind by `{dashboard:slug}` in `routes.php`, with scoped bindings.
 - [ ] 3.4 The layout action applies full-layout semantics and the version check inside one `DB::transaction()`. Eager widget data goes through `JsonData::resolve()`.
 - [ ] 3.5 Delete the Blade dashboard controllers and requests, and the first-visit auto-create.
-- [ ] 3.6 Run vendor/bin/pest; all green
+- [ ] 3.6 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
 
 ## Group 4: Shell, navigation, search, settings and screens API
 depends on: 2
@@ -42,7 +42,7 @@ criteria: 4, 11, 14, 33, 36
 - [ ] 4.1 Write tests: the exact `ShellResource` structure: `locale`, `api_version`, every theme field, panel summaries, and `atrium.theme` reflected as the built-in theme's properties; nav and search `link` via `ClientPath`, with `link: null` on rejection; search `min_length` 422; `?tab=`: open-tab-only resolution (counter), unknown-tab fallback; screen and settings eager failure isolation vs 500; Rewrite or delete the listed Blade-era tests.
 - [ ] 4.2 Write `ShellResource`, `SettingsPanelResource`, `SearchResultResource`, `ResolvedScreenResource` (`final`, under `Http/Resources`) and the one-line controllers, with each domain's `routes.php` (the Navigation domain gains one).
 - [ ] 4.3 Delete the Blade controllers for shell, search, settings and screens. Delete `AuthorizesScreens` if unused.
-- [ ] 4.4 Run vendor/bin/pest; all green
+- [ ] 4.4 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
 
 ## Group 5: Route group, auth and plugins
 depends on: 3, 4
@@ -52,7 +52,7 @@ criteria: 1, 2, 3, 5, 12
 - [ ] 5.1 Write tests: the exact route-name list; `enabled: false` registers nothing; no `api.php` and no `loadDashboardRoutesFrom`; a guest gets 401 JSON with any `Accept` header and with no guard configured; the gate gives 403 outside `local` and passes in `local`, with a test guard; 403 for view-only users on mutations; every `atrium.*` route carries the group middleware, with `Authorize` last; plugin routes are named `atrium.plugins.{key}.*`, and a disabled plugin's route returns 404
 - [ ] 5.2 Move route loading onto Keystone's `loadApiRoutesFrom()` and remove `loadDashboardRoutesFrom()`. `Authorize` returns 401 JSON for a null user. Force JSON rendering in the group.
 - [ ] 5.3 `Plugin::routes()` registers inside the API group, under the `plugins/{key}` prefix and the `plugins.{key}.` name, keeping the feature middleware.
-- [ ] 5.4 Run vendor/bin/pest; all green
+- [ ] 5.4 Run this group's own test files, PHPStan and Pint; all green (D-014: the full suite may stay red until group 6)
 
 ## Group 6: Remove the Blade UI
 depends on: 5

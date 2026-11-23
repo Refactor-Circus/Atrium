@@ -279,3 +279,7 @@ See `decisions.md`, D-008 to D-013. Where these conflict with the criteria above
 35. **Locales (D-011):** v2.0.0 ships only `en`. A second locale exists only as a Vitest fixture.
 36. **Theme key (D-012):** `atrium.theme` stays, and its values are sent in the shell as the built-in `atrium` theme's properties. A test changes the config and asserts the shell payload.
 37. **ClientPath (D-013):** a URL counts as same-host when its host matches `parse_url(config('app.url'), PHP_URL_HOST)`. A rejected form (`javascript:`, `data:`, `//host` and the other forms in AC 14) returns `null`, and the nav item or search result is then sent with `link: null`.
+
+## Addendum 2026-11-23: build gating (D-014)
+
+Groups 2 to 5 are gated on their own test files plus PHPStan and Pint, and the full suite may be red between them. From group 6 on, and at the factory gate, AC 24 applies in full.
