@@ -88,7 +88,16 @@ depends on: 8
 files: README.md, CHANGELOG.md, CLAUDE.md, resources/boost/**, docs/agent/standards/atrium/components.md, docs/agent/standards/atrium/domains.md, .github/pull_request_template.md, tests/Feature/DocsTest.php, tests/Feature/ChangelogUpgradeTest.php
 criteria: 23, 24, 25
 
-- [ ] 9.1 Write tests: the v2.0.0 CHANGELOG section names every removed symbol, config key and route from AC 16, the published-view cleanup and the migration step; update `DocsTest` for the new README sections
+- [ ] 9.1 Write tests: the v2.0.0 CHANGELOG section names every removed symbol, config key and route from AC 16, the published-view cleanup, the migration step and the removed `Atrium::path()`/`url()` (D-016); update `DocsTest` for the new README sections
 - [ ] 9.2 README: install, host auth (cookie with CORS/CSRF, token with the `Authorization` header, token storage owned by the host, the workbench guard not for production), the `local` gate warning, layer `extends` with `GIGET_AUTH`, SHA pinning, `client_path`, adding icon packs.
 - [ ] 9.3 CHANGELOG v2.0.0 upgrade guide. Rewrite the Boost skill, the `CLAUDE.md` frontend section, and the local standards `atrium/components` and `atrium/domains`. Add PR template checklist items: the MySQL/Postgres migration check, the sibling `^1` constraint grep, the protected `v*` tags, and the manual doc items with their owner.
 - [ ] 9.4 Run composer test and composer test:nuxt; all green
+
+## Group 10: Archive rules and path helpers (D-015, D-016)
+depends on: 6
+files: .gitattributes, tests/Feature/RemovalTest.php, tests/Feature/FacadeDocblockTest.php, src/Atrium.php, src/Facades/Atrium.php, src/Domains/Navigation/Data/NavItem.php, tests/Unit/NavItemActiveTest.php
+criteria: 16
+
+- [ ] 10.1 Write tests: `RemovalTest` asserts the dev parts of `nuxt/` are export-ignored and `/nuxt/layer` is not; `Atrium::path()`/`url()` no longer exist and the facade docblock matches; `NavItem::isActive()` does not read `atrium.path`
+- [ ] 10.2 Narrow the `nuxt/` export-ignore rules (D-015); remove `Atrium::path()`/`url()` and their `@method` lines; update `NavItem::isActive()` (D-016)
+- [ ] 10.3 Run vendor/bin/pest and composer test; all green

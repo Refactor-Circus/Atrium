@@ -283,3 +283,8 @@ See `decisions.md`, D-008 to D-013. Where these conflict with the criteria above
 ## Addendum 2026-11-23: build gating (D-014)
 
 Groups 2 to 5 are gated on their own test files plus PHPStan and Pint, and the full suite may be red between them. From group 6 on, and at the factory gate, AC 24 applies in full.
+
+## Addendum 2026-11-23: archive rules and path helpers (D-015, D-016)
+
+- AC 16 is amended: `.gitattributes` export-ignores `/nuxt/playground`, `/nuxt/package.json`, `/nuxt/pnpm-workspace.yaml`, `/nuxt/pnpm-lock.yaml` and `/nuxt/layer/test`, and keeps `/nuxt/layer` in the archive. `RemovalTest` asserts both.
+- `Atrium::path()` and `Atrium::url()` are removed, with their facade `@method` lines. `NavItem::isActive()` no longer reads `atrium.path`. The v2.0.0 CHANGELOG lists both removals.

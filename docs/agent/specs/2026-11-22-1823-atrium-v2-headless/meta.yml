@@ -27,3 +27,9 @@ runs:
     round: 0
     date: 2026-11-23
     note: "groups 3 and 4 built and merged without conflict (30f8aae); integrator held because the full suite is red (11 failures in group 5/6 files), which D-014 accepts; continuing from group 5"
+  - workflow: ring-master-factory
+    run_id: wf_6115986a-e55
+    result: needs-decision
+    round: 0
+    date: 2026-11-23
+    note: "groups 5 (salvaged) and 6 built; D-015 and D-016 answered and added as group 10"

@@ -83,3 +83,15 @@
 - Rationale: The user took the recommendation. The breaking tests belong to groups 3 to 6, which rewrite or delete them.
 - Date: 2026-11-23
 - Raised by: factory build (group 2 implementer)
+
+## D-015: How should the archive rules treat `nuxt/`, given giget fetches GitHub tarballs built with `git archive`?
+- Choice: Export-ignore only the dev parts (`/nuxt/playground`, `/nuxt/package.json`, `/nuxt/pnpm-workspace.yaml`, `/nuxt/pnpm-lock.yaml`, `/nuxt/layer/test`) and keep `/nuxt/layer` in the archive, so Composer dists carry the layer source too.
+- Rationale: The user took the recommendation; D-001's git `extends` needs the layer in the tarball.
+- Date: 2026-11-23
+- Raised by: factory build (group 6 implementer)
+
+## D-016: What happens to `Atrium::path()`, `Atrium::url()` and `NavItem::isActive()`, which read the removed `atrium.path` key?
+- Choice: Remove `Atrium::path()` and `Atrium::url()` and their facade `@method` lines, list them in the v2.0.0 CHANGELOG, and make `NavItem::isActive()` stop reading `atrium.path`.
+- Rationale: The user took the recommendation.
+- Date: 2026-11-23
+- Raised by: factory build (group 6 implementer)
