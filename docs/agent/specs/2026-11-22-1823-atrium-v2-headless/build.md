@@ -1223,3 +1223,33 @@ The build agent ended without a result. There was no index lock and no merge or 
 
 - Nothing in this group.
 - `nuxt/layer/.nuxtrc` is still untracked and not committed. It is outside the group.
+
+## Group 24
+
+This was a retry. The salvaged commit (`562d755`) already held all of group 24, with 24.1 to 24.3 ticked, so no code changed in this run. This run checked that work and reran the gates.
+
+### Files
+
+- No changes to the group's files. The work is the salvaged commit: the 12 pages under `pages/showroom/{attributes,attribute-groups,association-types,categories,channels,flags}/`, `integrations/showroom/components/structure/`, `showroom-structure.en.json`, and `test/integrations/showroom/structure/` (`support.ts`, 12 screen files and `pages.test.ts`).
+
+### Checks
+
+- The `// Not ported (D-032)` comment is at the top of `pages/showroom/attributes/index.vue`.
+- Every screen file under `test/integrations/showroom/structure/` covers the 403 state. Every screen with a mutation also covers 422. The `attributes` list has no mutation of its own, because create is its own screen.
+- `pages.test.ts` checks that each of the 12 screen keys has its page (AC 71).
+
+### Tests
+
+- **`composer test:unit`.** 1223 tests: 1216 passed and 7 skipped.
+- **`composer test:nuxt`.** It ran with Herd's Node 26.13.1 and the pnpm from Herd's Node 22.22.2 on PATH, because pnpm is not on the default PATH. Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check`;
+  - the typechecks;
+  - the build;
+  - Vitest: 109 files and 1005 tests passed, with no type errors;
+  - the consumer build.
+
+### Deviations
+
+- None.
