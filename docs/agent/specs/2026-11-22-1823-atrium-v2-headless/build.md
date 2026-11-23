@@ -585,3 +585,26 @@ I did not run either suite. The instructions say the gate runs `composer test:nu
 ### Deviations
 
 None.
+
+## Group 27
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 27.1 to 27.4 ticked.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: this section.
+
+This retry had only 27.4 left. The salvaged commit (`dc50217`) already holds the work for 27.1 to 27.3, and I kept it unchanged:
+
+- Tests (27.1): `tests/Feature/OpenApiTest.php`, the `Dedoc\` rule in `tests/ArchTest.php`, `nuxt/layer/test/client.test.ts`, and the generated-alias `satisfies` checks in `nuxt/layer/test/fixtures.test-d.ts`.
+- Scramble and the export (27.2): `dedoc/scramble` `^0.13.55` in `require-dev` (v0.13.55 is installed with Laravel 13 and PHP 8.5). `workbench/app/OpenApi/AtriumOpenApi.php` holds the config and the resource-schema extension. `workbench/app/OpenApi/ExportOpenApiCommand.php` (`workbench:openapi`) exports from a fresh, migrated in-memory SQLite database. `composer openapi:export`, the committed `openapi.json`, and a `schema()` on each listed resource are also in that commit.
+- The client (27.3): `openapi-typescript` is pinned in the layer, and `nuxt/scripts/generate-client.mjs` writes the `// openapi.json sha256:` header. `composer test:nuxt` now runs `pnpm -C nuxt generate:client --check`. The commit also has the generated `nuxt/layer/app/client/schema.d.ts`, `types/atrium.ts` pointed at `components['schemas']` with its public names kept, and `useAtriumClient()`.
+
+`composer.lock` is git-ignored in this repository, so it does not appear in the commit even though it lists `dedoc/scramble`. `testbench.yaml` did not need to change, because the workbench service provider registers the command and the config.
+
+### Tests
+
+I ran neither suite, because the gate runs `composer test:nuxt` and `vendor/bin/pest` after the build. 27.4 is ticked on that basis. As a spot check I ran `node nuxt/scripts/generate-client.mjs --check`, and it confirmed `schema.d.ts` is current with `openapi.json` (sha256 `cdb5e15f…`).
+
+### Deviations
+
+None.
