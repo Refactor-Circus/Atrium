@@ -120,7 +120,7 @@ criteria: 38, 39, 40, 41, 42, 43, 44, 45, 46
 - [x] 11.3 Add the seven `{Pkg}Feature` classes (`resolve()` returns true; no Pennant import). Add the `integrations` config section and its banner.
 - [x] 11.4 Add `NavItem::live()`, the shell additions and `atrium.screens.show`: its controller, `Show{…}Request`, resource reuse and `routes.php` in the Integrations domain. Call `Surface::route('atrium.', 'atrium')` in `AtriumServiceProvider`.
 - [x] 11.5 Add a test helper in `tests/Fixtures/Integrations/` that writes a package's declarations to `nuxt/layer/test/fixtures/integrations/{pkg}.json` under the AC 31 rules. Groups 13 to 22 use it. Regenerate `shell.json` and write `shell-integrations.json` with `UPDATE_FIXTURES=1`. Add the two standards-feedback rows (`architecture/dependencies`, `architecture/domain-modules`).
-- [ ] 11.6 Run vendor/bin/pest and composer test; all green
+- [x] 11.6 Run vendor/bin/pest and composer test; all green
 
 ## Group 12: Layer integration framework
 depends on: 11

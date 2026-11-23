@@ -527,3 +527,22 @@ The full suite was not run, as the salvage instructions said.
 
 - 11.6 (full `vendor/bin/pest` and `composer test`) is unticked. The gate runs it.
 - The layer's TS shell types gain `live`, `integrations` and `search.sources` in group 12.
+
+## Group 11
+
+This was a retry for task 11.6 only. Tasks 11.1 to 11.5 were already committed in `962737b` (see "Group 11 (salvaged)" above), and I kept that work unchanged.
+
+### Files
+
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/tasks.md`: 11.6 ticked.
+- `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/build.md`: this section.
+
+No source, test or fixture files changed.
+
+### Tests
+
+I did not run the full suite: the instructions say the gate runs `vendor/bin/pest` and `composer test` after the build, so 11.6 is ticked on that basis. In the salvage session, the group's own test files, PHPStan, Pint and type coverage all passed.
+
+### Deviations
+
+None beyond the standards-feedback rows recorded in the salvaged section (`architecture/dependencies`, `architecture/domain-modules`, `http/authorization`).
