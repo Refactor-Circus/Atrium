@@ -420,3 +420,24 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
 ### Observations for review
 
 - My first `ringside sync`/`check` ran in the main `Atrium` checkout by mistake, because the shell's `cd` did not persist. It only rewrote gitignored generated files there: no tracked file changed and nothing was committed in that checkout.
+
+## Rework round 2
+
+### Fixes
+
+- Minor (gate): `composer test:nuxt` was not in the gate's command list. CI already runs it: `.github/workflows/nuxt.yml` runs `composer test:nuxt` as its own job on every push and pull request (AC 26), so the workflow is unchanged.
+- No earlier group had run the Node gate, so I ran each step locally. pnpm is not on this machine's PATH, so each step ran through the pinned `pnpm@10.18.0` via `npx`. The fixtures check, frozen install, typecheck and build passed. Vitest and the consumer build failed. Fixes:
+  - Vitest, `test/fixtures.test-d.ts`: `shell.json` did not satisfy `AtriumShellResponse`. TypeScript reads the JSON themes array as one union, giving the built-in theme's empty `properties: {}` every other theme's token keys as `?: undefined`, and those clash with `Record<string, string>`. The API never sends those keys, so the test now checks `Sent<typeof fixture>`, which drops always-undefined keys. `exactOptionalPropertyTypes` (added to `test/tsconfig.json` only) reads the keys some themes leave out as absent, not undefined. The layer's `AtriumTheme` type is unchanged. I checked the test still catches a real mismatch: with `properties` set to `Record<string, number>` it fails.
+  - Vitest, `vitest.config.ts`: the `i18n:registerModule` hook function in `environmentOptions.nuxt.overrides` could not be cloned to Vitest 5's fork workers, so 12 test files never started. The hook now lives in a test-only Nuxt module, `test/locale-module.ts`, which the overrides name by path. It still adds the test-only `fr` locale (D-011).
+- Not fixed, returned as a decision: `test:consumer` fails with `[NUXT_B8017] The module @nuxt/icon could not be loaded`. `@nuxt/ui` installs `@nuxt/icon` by name, and a strict pnpm install of the layer keeps that package nested under `@nuxt/ui`, where neither the app nor the layer can resolve it. A `shamefully-hoist=true` `.npmrc` in the layer makes the consumer build pass (probed, then removed). Choosing how the layer's dependencies reach a host is a dependency/config choice D-001 does not settle.
+
+### Tests
+
+- `composer test:unit`: 893 passed, 3160 assertions.
+- `pnpm -C nuxt install --frozen-lockfile`, `typecheck`, `build`: passed.
+- `pnpm -C nuxt test` (Vitest): 13 files, 69 tests passed, no type errors.
+- `pnpm -C nuxt test:consumer`: fails on `@nuxt/icon`, as above, until the decision is made.
+
+### Observations for review
+
+- `nuxt/layer/.nuxtrc` (`setups.@nuxt/test-utils="4.4.0"`) is written by `@nuxt/test-utils` when Vitest runs. It was already untracked before this round, and I did not commit it. It probably belongs in `nuxt/.gitignore`.

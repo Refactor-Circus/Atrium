@@ -18,21 +18,35 @@ import shell from './fixtures/shell.json'
  * follow it.
  */
 
+/*
+ * TypeScript reads a JSON array of objects with different keys as one union
+ * that gives each object every other object's keys as `?: undefined` (the
+ * built-in theme's empty `properties` beside the others' token maps). The API
+ * never sends those keys, so `Sent` drops them and keeps the keys an object
+ * may leave out optional, which `exactOptionalPropertyTypes` (test/tsconfig)
+ * then reads as absent rather than undefined.
+ */
+type Sent<T> = T extends readonly (infer Item)[]
+  ? Sent<Item>[]
+  : T extends object
+    ? { [K in keyof T as [Exclude<T[K], undefined>] extends [never] ? never : K]: Sent<Exclude<T[K], undefined>> }
+    : T
+
 describe('the API contract fixtures', () => {
   it('shell.json is a shell response', () => {
-    expectTypeOf(shell satisfies AtriumShellResponse).toExtend<AtriumShellResponse>()
+    expectTypeOf<Sent<typeof shell>>().toExtend<AtriumShellResponse>()
   })
 
   it('dashboard.json is a dashboard response', () => {
-    expectTypeOf(dashboard satisfies AtriumDashboardResponse).toExtend<AtriumDashboardResponse>()
+    expectTypeOf<Sent<typeof dashboard>>().toExtend<AtriumDashboardResponse>()
   })
 
   it('screen.json and screen-tab.json are settings panel responses with their screen', () => {
-    expectTypeOf(screen satisfies AtriumSettingsPanelResponse).toExtend<AtriumSettingsPanelResponse>()
-    expectTypeOf(screenTab satisfies AtriumSettingsPanelResponse).toExtend<AtriumSettingsPanelResponse>()
+    expectTypeOf<Sent<typeof screen>>().toExtend<AtriumSettingsPanelResponse>()
+    expectTypeOf<Sent<typeof screenTab>>().toExtend<AtriumSettingsPanelResponse>()
   })
 
   it('settings.json is the settings list response with its screen', () => {
-    expectTypeOf(settings satisfies AtriumSettingsIndexResponse).toExtend<AtriumSettingsIndexResponse>()
+    expectTypeOf<Sent<typeof settings>>().toExtend<AtriumSettingsIndexResponse>()
   })
 })
