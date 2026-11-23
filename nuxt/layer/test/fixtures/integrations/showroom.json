@@ -241,163 +241,192 @@
             "key": "showroom.products",
             "kind": "list",
             "path": "/showroom/products",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.product-create",
             "kind": "detail",
             "path": "/showroom/products/create",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.product",
             "kind": "detail",
             "path": "/showroom/products/:product",
-            "subject_type": "showroom_product"
+            "subject_type": "showroom_product",
+            "options": {}
         },
         {
             "key": "showroom.product-models",
             "kind": "list",
             "path": "/showroom/product-models",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.product-model",
             "kind": "detail",
             "path": "/showroom/product-models/:productModel",
-            "subject_type": "showroom_product_model"
+            "subject_type": "showroom_product_model",
+            "options": {}
         },
         {
             "key": "showroom.families",
             "kind": "list",
             "path": "/showroom/families",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.family",
             "kind": "detail",
             "path": "/showroom/families/:family",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.family-variant",
             "kind": "detail",
             "path": "/showroom/family-variants/:familyVariant",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.attributes",
             "kind": "list",
             "path": "/showroom/attributes",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.attribute-create",
             "kind": "detail",
             "path": "/showroom/attributes/create",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.attribute",
             "kind": "detail",
             "path": "/showroom/attributes/:attribute",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.attribute-groups",
             "kind": "list",
             "path": "/showroom/attribute-groups",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.attribute-group",
             "kind": "detail",
             "path": "/showroom/attribute-groups/:group",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.association-types",
             "kind": "list",
             "path": "/showroom/association-types",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.categories",
             "kind": "list",
             "path": "/showroom/categories",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.category",
             "kind": "detail",
             "path": "/showroom/categories/:category",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.channels",
             "kind": "list",
             "path": "/showroom/channels",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.channel",
             "kind": "detail",
             "path": "/showroom/channels/:channel",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.owners",
             "kind": "list",
             "path": "/showroom/owners",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.owner",
             "kind": "detail",
             "path": "/showroom/owners/:owner",
-            "subject_type": "showroom_owner"
+            "subject_type": "showroom_owner",
+            "options": {}
         },
         {
             "key": "showroom.owner-types",
             "kind": "list",
             "path": "/showroom/owner-types",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.owner-type",
             "kind": "detail",
             "path": "/showroom/owner-types/:ownerType",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.flags",
             "kind": "list",
             "path": "/showroom/flags",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.flag",
             "kind": "detail",
             "path": "/showroom/flags/:flag",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.assets",
             "kind": "list",
             "path": "/showroom/assets",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.asset",
             "kind": "detail",
             "path": "/showroom/assets/:asset",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "showroom.transfers",
             "kind": "list",
             "path": "/showroom/transfers",
-            "subject_type": null
+            "subject_type": null,
+            "options": {
+                "flow_prefix": "showroom:"
+            }
         }
     ]
 }

@@ -52,6 +52,12 @@ describe('the showroom screens map', () => {
       'showroom.transfers': 'showroom-transfers'
     })
   })
+
+  it('sends the transfers screen its flow prefix (D-035, D-042), and no other screen any option', () => {
+    for (const screen of fixture.screens) {
+      expect(screen.options, screen.key).toEqual(screen.key === 'showroom.transfers' ? { flow_prefix: 'showroom:' } : {})
+    }
+  })
 })
 
 describe('the showroom registrations', () => {

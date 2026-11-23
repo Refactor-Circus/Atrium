@@ -141,85 +141,99 @@
             "key": "roster.users",
             "kind": "list",
             "path": "/roster/users",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.user-create",
             "kind": "detail",
             "path": "/roster/users/create",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.user",
             "kind": "detail",
             "path": "/roster/users/:user",
-            "subject_type": "roster.user"
+            "subject_type": "roster.user",
+            "options": {}
         },
         {
             "key": "roster.organizations",
             "kind": "list",
             "path": "/roster/organizations",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.organization-create",
             "kind": "detail",
             "path": "/roster/organizations/create",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.organization",
             "kind": "detail",
             "path": "/roster/organizations/:organization",
-            "subject_type": "roster.organization"
+            "subject_type": "roster.organization",
+            "options": {}
         },
         {
             "key": "roster.team",
             "kind": "detail",
             "path": "/roster/organizations/:organization/teams/:team",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.roles",
             "kind": "list",
             "path": "/roster/roles",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.role",
             "kind": "detail",
             "path": "/roster/roles/:role",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.permissions",
             "kind": "list",
             "path": "/roster/permissions",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.impersonations",
             "kind": "list",
             "path": "/roster/impersonations",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.transfers",
             "kind": "list",
             "path": "/roster/transfers",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.transfer",
             "kind": "detail",
             "path": "/roster/transfers/:transfer",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "roster.invitation",
             "kind": "detail",
             "path": "/roster/invitations/:token",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         }
     ]
 }

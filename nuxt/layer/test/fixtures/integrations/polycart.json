@@ -83,19 +83,22 @@
             "key": "polycart.carts",
             "kind": "list",
             "path": "/polycart/carts",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "polycart.cart",
             "kind": "detail",
             "path": "/polycart/carts/:cart",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "polycart.types",
             "kind": "list",
             "path": "/polycart/types",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         }
     ]
 }

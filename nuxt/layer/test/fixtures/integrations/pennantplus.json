@@ -28,7 +28,8 @@
             "key": "pennantplus.features",
             "kind": "list",
             "path": "/pennantplus/features",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         }
     ]
 }

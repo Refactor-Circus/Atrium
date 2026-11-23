@@ -77,6 +77,7 @@ it('answers a declared detail screen with its declaration, the record echoed and
             'path' => '/cortex/records/:record',
             'subject_type' => 'cortex.record',
             'record' => '42',
+            'options' => [],
             'open_tab' => 'overview',
             'tabs' => [
                 ['key' => 'overview', 'label' => 'Overview', 'icon' => 'i-lucide-layout-grid', 'built_in' => true, 'component' => null],

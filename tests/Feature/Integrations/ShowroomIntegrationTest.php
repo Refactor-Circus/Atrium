@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
@@ -20,6 +21,7 @@ use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
 use RefactorCircus\Atrium\Integrations\Showroom\ShowroomIntegration;
 use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
+use Workbench\App\Models\User;
 
 /*
  * The Showroom integration (AC 39, 40, 45, 53, 60, 61, 62, 71), ported from
@@ -237,6 +239,39 @@ it('declares the 27 v1 screens with their layer paths, and the morph alias of ea
         ['showroom.asset', Screen::DETAIL, '/showroom/assets/:asset', null],
         ['showroom.transfers', Screen::LIST, '/showroom/transfers', null],
     ]);
+});
+
+it('declares showroom.transfers with the flow prefix from atrium.integrations.showroom.transfers.flow_prefix, and no options elsewhere', function (mixed $configured, string $prefix): void {
+    config()->set('atrium.integrations.showroom.transfers.flow_prefix', $configured);
+
+    $options = array_map(fn (ScreenDeclaration $screen): array => $screen->options, showroomIntegration()->screens);
+
+    expect($options['showroom.transfers'])->toBe(['flow_prefix' => $prefix])
+        ->and(array_filter($options, fn (array $screen, string $key): bool => $key !== 'showroom.transfers' && $screen !== [], ARRAY_FILTER_USE_BOTH))->toBe([]);
+})->with([
+    'the shipped default' => ['showroom:', 'showroom:'],
+    'a changed prefix' => ['catalog-feed:', 'catalog-feed:'],
+    'an absent key falls back to the default' => [null, 'showroom:'],
+    'a non-string falls back to the default' => [['showroom:'], 'showroom:'],
+]);
+
+it('sends the flow prefix with showroom.transfers from atrium.screens.show', function (): void {
+    Gate::define('viewAtrium', fn ($user = null): bool => true);
+    config()->set('atrium.integrations.showroom.transfers.flow_prefix', 'pim:');
+    showroomIntegration();
+
+    $user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
+
+    $this->actingAs($user)->getJson(route('atrium.screens.show', ['screen' => 'showroom.transfers']))
+        ->assertOk()
+        ->assertJsonPath('data.key', 'showroom.transfers')
+        ->assertJsonPath('data.path', '/showroom/transfers')
+        ->assertJsonPath('data.options', ['flow_prefix' => 'pim:']);
+
+    $products = $this->actingAs($user)->getJson(route('atrium.screens.show', ['screen' => 'showroom.products']))->assertOk();
+
+    expect($products->json('data.options'))->toBe([])
+        ->and((string) $products->getContent())->toContain('"options":{}');
 });
 
 it('serves each declared screen from atrium.screens.show', function (): void {

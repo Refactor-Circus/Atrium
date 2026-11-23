@@ -48,19 +48,22 @@
             "key": "keen.entries",
             "kind": "list",
             "path": "/keen/entries",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "keen.entry",
             "kind": "detail",
             "path": "/keen/entries/:entry",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "keen.history",
             "kind": "list",
             "path": "/keen/history/:package",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         }
     ]
 }

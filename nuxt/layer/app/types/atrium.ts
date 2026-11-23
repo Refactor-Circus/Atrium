@@ -121,7 +121,7 @@ export type AtriumTab = ScreenSchema['tabs'][number]
 /** A screen section, or a registered tab, rendered by its `component`. */
 export type AtriumExtension = Omit<AtriumTab, 'icon' | 'built_in'>
 
-export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record' | 'sections' | 'rows'> & {
+export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record' | 'options' | 'sections' | 'rows'> & {
   /** Each slot's sections, by slot name (`header.actions`, `before`, `after`, `aside`, ...) */
   sections: Record<string, AtriumExtension[]>
   /** Row-slot sections of a list screen, by row key, then slot */
@@ -134,8 +134,11 @@ export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record'
  * loads the record itself, from the package's API. `path` is the layer route
  * it lives at (`/impex/runs/:run`), `subject_type` the package's morph alias
  * of its record, and `record` the key it was asked for (`?record=`).
+ * `options` is the static configuration the page reads, such as
+ * `showroom.transfers`' `flow_prefix` (D-042); the API always sends it,
+ * `{}` when there is none.
  */
-export type AtriumIntegrationScreen = AtriumScreen & Required<Pick<ScreenSchema, 'path' | 'subject_type' | 'record'>>
+export type AtriumIntegrationScreen = AtriumScreen & Required<Pick<ScreenSchema, 'path' | 'subject_type' | 'record'>> & Pick<ScreenSchema, 'options'>
 
 export interface AtriumIntegrationScreenResponse {
   data: AtriumIntegrationScreen

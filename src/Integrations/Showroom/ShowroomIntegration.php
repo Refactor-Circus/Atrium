@@ -28,6 +28,11 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
  */
 final class ShowroomIntegration extends Integration
 {
+    /**
+     * v1's transfer flows: `where flow like 'showroom:%'`.
+     */
+    public const string FLOW_PREFIX = 'showroom:';
+
     public function label(): string
     {
         return $this->trans('atrium::integrations/showroom.label');
@@ -123,6 +128,8 @@ final class ShowroomIntegration extends Integration
      * The 27 v1 screen keys, at the v1 Blade paths without the `atrium`
      * prefix. Path parameters are Showroom's API route keys: a product and an
      * owner by its lookup key (the id by default), everything else by code.
+     * The transfers screen carries the flow prefix it filters Impex by
+     * (D-042).
      */
     public function screens(): array
     {
@@ -164,8 +171,21 @@ final class ShowroomIntegration extends Integration
             ScreenDeclaration::make('showroom.assets', Screen::LIST, '/showroom/assets'),
             ScreenDeclaration::make('showroom.asset', Screen::DETAIL, '/showroom/assets/:asset'),
 
-            ScreenDeclaration::make('showroom.transfers', Screen::LIST, '/showroom/transfers'),
+            ScreenDeclaration::make('showroom.transfers', Screen::LIST, '/showroom/transfers')
+                ->options(['flow_prefix' => $this->flowPrefix()]),
         ];
+    }
+
+    /**
+     * The name prefix of the Impex flows the transfers screen lists (D-035),
+     * from `atrium.integrations.showroom.transfers.flow_prefix`. A published
+     * config older than the key, or one that is not a string, gets v1's.
+     */
+    private function flowPrefix(): string
+    {
+        $prefix = config('atrium.integrations.showroom.transfers.flow_prefix');
+
+        return is_string($prefix) ? $prefix : self::FLOW_PREFIX;
     }
 
     /**

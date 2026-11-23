@@ -6,11 +6,14 @@ namespace RefactorCircus\Atrium\Domains\Integrations\Data;
 
 use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
+use RefactorCircus\Atrium\Exceptions\UnserializableDataException;
+use RefactorCircus\Atrium\Support\JsonData;
 
 /**
  * A screen an integration declares: its key (`roster.user`, the v1 key), its
- * kind (`detail` or `list`), the layer page's path (`/roster/users/:user`)
- * and, on a detail screen, the morph alias of its record (`subject_type`).
+ * kind (`detail` or `list`), the layer page's path (`/roster/users/:user`),
+ * on a detail screen the morph alias of its record (`subject_type`), and any
+ * static options its page reads (`options`).
  *
  * The layer renders the screen; `atrium.screens.show` serves the tabs and
  * sections other packages register for it, with no model loaded.
@@ -38,6 +41,14 @@ final class ScreenDeclaration
      * The morph alias of the screen's record, on a detail screen.
      */
     public private(set) ?string $subjectType = null;
+
+    /**
+     * Static configuration the layer page needs (`showroom.transfers`'
+     * `flow_prefix`), sent as it is with the screen (D-042).
+     *
+     * @var array<array-key, mixed>
+     */
+    public private(set) array $options = [];
 
     /**
      * @throws InvalidArgumentException for a key, kind or path out of pattern
@@ -76,6 +87,21 @@ final class ScreenDeclaration
         }
 
         $this->subjectType = $subjectType;
+
+        return $this;
+    }
+
+    /**
+     * Hand the layer page static options with the screen. Atrium sends them
+     * as they are, so they must be JSON-serializable data.
+     *
+     * @param  array<array-key, mixed>  $options
+     *
+     * @throws UnserializableDataException for options JSON cannot carry
+     */
+    public function options(array $options): self
+    {
+        $this->options = JsonData::check($options, "Screen [{$this->key}] options");
 
         return $this;
     }

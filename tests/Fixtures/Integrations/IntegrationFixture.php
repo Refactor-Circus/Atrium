@@ -143,6 +143,7 @@ final class IntegrationFixture
                     'kind' => $screen->kind,
                     'path' => $screen->path,
                     'subject_type' => $screen->subjectType,
+                    'options' => (object) $screen->options,
                 ],
                 $integration->screens,
             )),

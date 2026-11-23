@@ -228,10 +228,10 @@ depends on: 12
 files: src/Integrations/Showroom/ShowroomIntegration.php, lang/en/integrations/showroom.php, tests/Feature/Integrations/ShowroomIntegrationTest.php, nuxt/layer/test/fixtures/integrations/showroom.json, nuxt/layer/app/integrations/showroom/index.ts, nuxt/layer/app/integrations/showroom/components/widgets/**, nuxt/layer/app/integrations/showroom/components/settings/**, nuxt/layer/app/integrations/showroom/components/search/**, nuxt/layer/i18n/locales/integrations/showroom.en.json, nuxt/layer/test/integrations/showroom/integration.test.ts, nuxt/layer/test/integrations/showroom/widgets.test.ts, nuxt/layer/test/integrations/showroom/settings.test.ts, nuxt/layer/test/integrations/showroom/search.test.ts
 criteria: 39, 40, 45, 53, 60, 61, 62, 71
 
-- [ ] 22.1 Write tests: Pest: gating; the API base; the eleven nav items; the four widgets; the `showroom` panel and search source; the 27 screen declarations; the `transfers.flow_prefix` config read; the fixture; Vitest: `index.ts` maps every fixture screen; the four widgets sharing one `showroom.stats.show`; the panel against `showroom.settings-summary.show`; the search source, with a link per `type`
+- [x] 22.1 Write tests: Pest: gating; the API base; the eleven nav items; the four widgets; the `showroom` panel and search source; the 27 screen declarations; the `transfers.flow_prefix` config read; the fixture; Vitest: `index.ts` maps every fixture screen; the four widgets sharing one `showroom.stats.show`; the panel against `showroom.settings-summary.show`; the search source, with a link per `type`
 - [x] 22.2 Write `ShowroomIntegration` and its lang file, porting from `ShowroomPlugin`.
 - [x] 22.3 Write `index.ts` with the full `screens` map, the widgets, the panel and the search source.
-- [ ] 22.4 Run composer test:nuxt and vendor/bin/pest; all green
+- [x] 22.4 Run composer test:nuxt and vendor/bin/pest; all green
 
 ## Group 23: Showroom screens: products, product models and families
 depends on: 22

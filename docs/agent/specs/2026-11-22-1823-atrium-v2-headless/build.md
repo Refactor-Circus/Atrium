@@ -1052,3 +1052,45 @@ This was a retry for 21.3 only. 21.1 and 21.2 were already committed (salvaged).
 ### Deviations
 
 - None. `nuxt/layer/.nuxtrc` is still untracked and not committed. `nuxt prepare` writes it.
+
+## Group 22
+
+This was a retry for 22.1 and 22.4. 22.2 and 22.3 were already committed (salvaged). The salvaged run left one item open: how `atrium.integrations.showroom.transfers.flow_prefix` reaches the layer. D-042 settles it, and this run applies it.
+
+### Files
+
+- **D-042, the screen options channel:**
+  - `src/Domains/Integrations/Data/ScreenDeclaration.php`: a `public private(set) array $options` (default `[]`) and a fluent `options()`. The setter checks its input with `JsonData::check()`, as `NavItem::live()` does.
+  - `src/Domains/Screens/Http/Resources/ResolvedScreenResource.php`: `declaredAt()` takes the options. A declared screen always sends `options` as an object (`{}` when there are none). `schema()` declares it, optional, like `path`.
+  - `src/Domains/Integrations/Http/Requests/ShowIntegrationScreenRequest.php`: passes the declaration's options to `declaredAt()`.
+  - `nuxt/layer/app/types/atrium.ts`: `AtriumScreen` omits `options` with the other declared-screen fields. `AtriumIntegrationScreen` carries it, optional, so the hand-built screen payloads in other groups' tests still type-check.
+  - `openapi.json` (`composer openapi:export`) and `nuxt/layer/app/client/schema.d.ts` (`generate:client`) were regenerated. Each adds only `options`.
+- **Showroom:** `src/Integrations/Showroom/ShowroomIntegration.php` declares `showroom.transfers` with `['flow_prefix' => …]`. The value is read from `atrium.integrations.showroom.transfers.flow_prefix`, and an absent or non-string value falls back to `FLOW_PREFIX` (`'showroom:'`, v1's), per `architecture/configuration`.
+- **Fixtures:** `tests/Fixtures/Integrations/IntegrationFixture.php` writes `options` on each screen. All seven `nuxt/layer/test/fixtures/integrations/*.json` files were regenerated with `UPDATE_FIXTURES=1`. Six only gain `"options": {}` per screen, and `showroom.json` also gains `showroom.transfers`' `flow_prefix`.
+- **Tests:**
+  - `tests/Feature/Integrations/ShowroomIntegrationTest.php`: the config read covers the default, a changed prefix, an absent key and a non-string, with no options on any other screen. A second case checks the `atrium.screens.show` payload: `showroom.transfers` carries `options.flow_prefix`, and `showroom.products` sends `"options":{}`.
+  - `tests/Unit/ScreenDeclarationOptionsTest.php` (new): the default, the setter, and the `UnserializableDataException` message for a closure.
+  - `tests/Feature/Integrations/ScreenRouteTest.php` and `tests/Feature/Api/ContractFixturesTest.php`: the exact-shape expectations gain `options`.
+  - `nuxt/layer/test/integrations/showroom/integration.test.ts`: the fixture's transfers screen carries `flow_prefix: 'showroom:'`, and every other screen carries `{}`.
+
+### Tests
+
+- **`composer test:unit`**, with `ATRIUM_SUITE_PATH` set (D-040): 1223 tests, all passed.
+- **`composer analyse`, `composer lint:check` and `composer test:types`:** all passed, with type coverage at 100%.
+- **`composer test:nuxt`**, with the `pnpm` shim (D-041) and `ATRIUM_SUITE_PATH` set. Every step passed:
+  - the fixtures check;
+  - the frozen install;
+  - `generate:client --check`;
+  - the typechecks;
+  - the build;
+  - Vitest, with 87 files and 758 tests passing and no type errors;
+  - the consumer build.
+
+### Deviations
+
+- None from the standards.
+- Files outside the group's list changed, as D-042 allows:
+  - `ScreenDeclaration`, `ResolvedScreenResource`, `ShowIntegrationScreenRequest`, `types/atrium.ts`, `openapi.json` and `schema.d.ts`;
+  - the fixture helper and the six other integration fixtures;
+  - `ScreenRouteTest`, `ContractFixturesTest` and the new `tests/Unit/ScreenDeclarationOptionsTest.php`.
+- Group 25's transfers page should read `options.flow_prefix` from its `atrium.screens.show` response.

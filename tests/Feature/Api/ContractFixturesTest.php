@@ -294,8 +294,8 @@ class ContractFixturesTest extends TestCase
                     ['key' => 'cortex', 'integration' => 'cortex', 'label' => 'Cortex records', 'icon' => 'i-lucide-search'],
                 ],
                 'screens' => [
-                    ['key' => 'cortex.records', 'kind' => 'list', 'path' => '/cortex/records', 'subject_type' => null],
-                    ['key' => 'cortex.record', 'kind' => 'detail', 'path' => '/cortex/records/:record', 'subject_type' => 'cortex.record'],
+                    ['key' => 'cortex.records', 'kind' => 'list', 'path' => '/cortex/records', 'subject_type' => null, 'options' => []],
+                    ['key' => 'cortex.record', 'kind' => 'detail', 'path' => '/cortex/records/:record', 'subject_type' => 'cortex.record', 'options' => []],
                 ],
             ], json_decode((string) file_get_contents($directory.'/cortex.json'), true));
 

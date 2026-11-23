@@ -977,6 +977,10 @@
                             "null"
                         ]
                     },
+                    "options": {
+                        "description": "Static options a declared screen's page reads, such as showroom.transfers' flow_prefix.",
+                        "type": "object"
+                    },
                     "open_tab": {
                         "type": "string"
                     },

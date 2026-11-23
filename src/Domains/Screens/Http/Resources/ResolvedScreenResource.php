@@ -48,20 +48,24 @@ final class ResolvedScreenResource extends JsonResource
     private array $rows = [];
 
     /**
-     * A declared screen's layer path, subject and requested record key.
+     * A declared screen's layer path, subject, requested record key and
+     * static options.
      *
-     * @var array{path: string, subject_type: string|null, record: string|null}|null
+     * @var array{path: string, subject_type: string|null, record: string|null, options: object}|null
      */
     private ?array $declaration = null;
 
     /**
      * Send the screen as declared by a suite integration: the layer path it
-     * renders at, the morph alias of its record and the record key it was
-     * asked for, echoed without loading a model.
+     * renders at, the morph alias of its record, the record key it was asked
+     * for, echoed without loading a model, and the static options its page
+     * reads (D-042), always as an object.
+     *
+     * @param  array<array-key, mixed>  $options
      */
-    public function declaredAt(string $path, ?string $subjectType, ?string $record): self
+    public function declaredAt(string $path, ?string $subjectType, ?string $record, array $options = []): self
     {
-        $this->declaration = ['path' => $path, 'subject_type' => $subjectType, 'record' => $record];
+        $this->declaration = ['path' => $path, 'subject_type' => $subjectType, 'record' => $record, 'options' => (object) $options];
 
         return $this;
     }
@@ -79,8 +83,9 @@ final class ResolvedScreenResource extends JsonResource
     }
 
     /**
-     * A resolved screen as `toArray()` sends it. `path`, `subject_type` and
-     * `record` come only with a screen a suite integration declares.
+     * A resolved screen as `toArray()` sends it. `path`, `subject_type`,
+     * `record` and `options` come only with a screen a suite integration
+     * declares.
      * `sections` holds each slot's sections by slot name, and `rows` each
      * row's row-slot sections by row key, then slot: every section has the
      * shape of a tab's `key`, `label`, `component`, `data` and `error`.
@@ -105,6 +110,7 @@ final class ResolvedScreenResource extends JsonResource
             'path' => $schema->string()->description('The layer route of a declared screen.'),
             'subject_type' => $schema->string()->nullable()->description('The morph alias of a declared screen\'s record.'),
             'record' => $schema->string()->nullable()->description('The record key a declared screen was asked for.'),
+            'options' => $schema->object()->description('Static options a declared screen\'s page reads, such as showroom.transfers\' flow_prefix.'),
             'open_tab' => $schema->string()->required(),
             'tabs' => $schema->array()->items($schema->object([
                 ...$extension(),

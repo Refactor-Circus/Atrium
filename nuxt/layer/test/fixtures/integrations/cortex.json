@@ -107,67 +107,78 @@
             "key": "cortex.virtual-agents",
             "kind": "list",
             "path": "/cortex/virtual-agents",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.virtual-agent-create",
             "kind": "detail",
             "path": "/cortex/virtual-agents/create",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.virtual-agent",
             "kind": "detail",
             "path": "/cortex/virtual-agents/:slug",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.concrete-agents",
             "kind": "list",
             "path": "/cortex/concrete-agents",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.concrete-agent",
             "kind": "detail",
             "path": "/cortex/concrete-agents/:agent",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.tools",
             "kind": "list",
             "path": "/cortex/tools",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.tool-description",
             "kind": "detail",
             "path": "/cortex/tools/:tool/description",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.servers",
             "kind": "list",
             "path": "/cortex/servers",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.server-instructions",
             "kind": "detail",
             "path": "/cortex/servers/:server/instructions",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.redirect-domains",
             "kind": "list",
             "path": "/cortex/redirect-domains",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         },
         {
             "key": "cortex.run",
             "kind": "detail",
             "path": "/cortex/run",
-            "subject_type": null
+            "subject_type": null,
+            "options": {}
         }
     ]
 }
