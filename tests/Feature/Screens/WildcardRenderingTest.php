@@ -8,53 +8,57 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Facades\Atrium;
-use Workbench\App\Atrium\ScreenHost\ScreenHostController;
+use RefactorCircus\Atrium\Tests\Feature\Screens\JsonScreenHost;
 
 beforeEach(function (): void {
-    ScreenHostController::register();
+    JsonScreenHost::register();
 });
 
-it('renders a * section on every screen declaring its slot, with that screen', function (): void {
-    Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.everywhere')->view('screens.marker')->public()
-        ->resolve(fn (?Model $record, Screen $screen): array => ['marker' => 'everywhere for '.$screen->kind]));
+/**
+ * The keys of the sections sent in one slot of a host screen.
+ *
+ * @param  array<string, mixed>  $parameters
+ * @return list<string>
+ */
+function wildcardSectionKeys(object $test, string $route, array $parameters, string $slot = 'before'): array
+{
+    return array_column($test->getJson(route($route, $parameters))->assertOk()->json('data.sections')[$slot] ?? [], 'key');
+}
 
-    $this->get(route('test.host', ['screen' => 'test.a']))
-        ->assertOk()
-        ->assertSee('everywhere for detail on test.a');
+it('sends a * section on every screen declaring its slot, with that screen', function (): void {
+    Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.everywhere')->public()
+        ->resolve(fn (?Model $record, Screen $screen): array => ['marker' => 'everywhere for '.$screen->kind.' on '.$screen->key]));
 
-    $this->get(route('test.list', ['screen' => 'other.screen']))
+    $this->getJson(route('test.host', ['screen' => 'test.a']))
         ->assertOk()
-        ->assertSee('everywhere for list on other.screen');
+        ->assertJsonPath('data.sections.before.0.data.marker', 'everywhere for detail on test.a');
+
+    $this->getJson(route('test.list', ['screen' => 'other.screen']))
+        ->assertOk()
+        ->assertJsonPath('data.sections.before.0.data.marker', 'everywhere for list on other.screen');
 });
 
-it('renders a package section on that package\'s screens only', function (): void {
-    Atrium::screens()->section('test.*', 'before', SectionDefinition::make('acme.test-only')->view('screens.marker')->public()
-        ->resolve(fn (): array => ['marker' => 'test package only']));
+it('sends a package section on that package\'s screens only', function (): void {
+    Atrium::screens()->section('test.*', 'before', SectionDefinition::make('acme.test-only')->public());
 
-    $this->get(route('test.host', ['screen' => 'test.a']))
-        ->assertOk()
-        ->assertSee('test package only on test.a');
-
-    $this->get(route('test.host', ['screen' => 'other.screen']))
-        ->assertOk()
-        ->assertDontSee('test package only')
-        ->assertDontSee('section-acme.test-only', false);
+    expect(wildcardSectionKeys($this, 'test.host', ['screen' => 'test.a']))->toBe(['acme.test-only'])
+        ->and(wildcardSectionKeys($this, 'test.host', ['screen' => 'other.screen']))->toBe([]);
 });
 
 it('opens a * tab through ?tab=', function (): void {
-    Atrium::screens()->tab('*', TabDefinition::make('acme.everywhere')->label('Everywhere')->view('screens.marker')->public()
-        ->resolve(fn (): array => ['marker' => 'the everywhere panel']));
+    Atrium::screens()->tab('*', TabDefinition::make('acme.everywhere')->label('Everywhere')->public()
+        ->resolve(fn (?Model $record, Screen $screen): array => ['marker' => 'the everywhere panel on '.$screen->key]));
 
-    $this->get(route('test.host', ['screen' => 'other.screen', 'tab' => 'acme.everywhere']))
+    $this->getJson(route('test.host', ['screen' => 'other.screen', 'tab' => 'acme.everywhere']))
         ->assertOk()
-        ->assertSee('data-testid="tab-panel-acme.everywhere"', false)
-        ->assertSee('the everywhere panel on other.screen');
+        ->assertJsonPath('data.open_tab', 'acme.everywhere')
+        ->assertJsonPath('data.tabs.1.data.marker', 'the everywhere panel on other.screen');
 });
 
 it('never runs a wildcard section\'s closures on a screen without its slot', function (): void {
     $calls = 0;
 
-    Atrium::screens()->section('*', 'sidebar', SectionDefinition::make('acme.sidebar')->view('screens.marker')
+    Atrium::screens()->section('*', 'sidebar', SectionDefinition::make('acme.sidebar')
         ->authorize(function () use (&$calls): bool {
             $calls++;
 
@@ -66,8 +70,8 @@ it('never runs a wildcard section\'s closures on a screen without its slot', fun
             return [];
         }));
 
-    $this->get(route('test.host', ['screen' => 'test.a']))->assertOk()->assertDontSee('section-acme.sidebar', false);
-    $this->get(route('test.list', ['screen' => 'other.screen']))->assertOk()->assertDontSee('section-acme.sidebar', false);
+    $this->getJson(route('test.host', ['screen' => 'test.a']))->assertOk()->assertJsonMissingPath('data.sections.sidebar');
+    $this->getJson(route('test.list', ['screen' => 'other.screen']))->assertOk()->assertJsonMissingPath('data.sections.sidebar');
 
     expect($calls)->toBe(0);
 });
@@ -75,7 +79,7 @@ it('never runs a wildcard section\'s closures on a screen without its slot', fun
 it('makes no resolver call where a wildcard authorize returns early on the screen key', function (): void {
     $resolvedOn = [];
 
-    Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.picky')->view('screens.marker')
+    Atrium::screens()->section('*', 'before', SectionDefinition::make('acme.picky')
         ->authorize(fn (Request $request, ?Model $record, Screen $screen): bool => $screen->key === 'test.a')
         ->resolve(function (?Model $record, Screen $screen) use (&$resolvedOn): array {
             $resolvedOn[] = $screen->key;
@@ -83,9 +87,8 @@ it('makes no resolver call where a wildcard authorize returns early on the scree
             return ['marker' => 'picky'];
         }));
 
-    $this->get(route('test.host', ['screen' => 'other.screen']))->assertOk()->assertDontSee('picky on');
-    $this->get(route('test.list', ['screen' => 'test.b']))->assertOk()->assertDontSee('picky on');
-    $this->get(route('test.host', ['screen' => 'test.a']))->assertOk()->assertSee('picky on test.a');
-
-    expect($resolvedOn)->toBe(['test.a']);
+    expect(wildcardSectionKeys($this, 'test.host', ['screen' => 'other.screen']))->toBe([])
+        ->and(wildcardSectionKeys($this, 'test.list', ['screen' => 'test.b']))->toBe([])
+        ->and(wildcardSectionKeys($this, 'test.host', ['screen' => 'test.a']))->toBe(['acme.picky'])
+        ->and($resolvedOn)->toBe(['test.a']);
 });

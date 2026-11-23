@@ -12,6 +12,7 @@ use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
 use RefactorCircus\Atrium\Facades\Atrium;
 use RefactorCircus\Atrium\Tests\Fixtures\FeaturedPlugin;
+use Workbench\App\Models\User;
 
 /**
  * @return array<int, string>
@@ -188,8 +189,8 @@ it('gates host routes with the atrium.feature middleware', function (): void {
     $this->get('/beta-only')->assertNotFound();
 });
 
-it('leaves hidden children out of the rendered sidebar', function (): void {
-    app()->detectEnvironment(fn (): string => 'local');
+it('leaves hidden children out of the shell', function (): void {
+    Gate::define('viewAtrium', fn ($user = null): bool => true);
 
     features(['secret' => false]);
 
@@ -198,5 +199,10 @@ it('leaves hidden children out of the rendered sidebar', function (): void {
         NavItem::make('Top secret')->url('/reports/secret')->feature('secret'),
     ]));
 
-    $this->get('/atrium')->assertOk()->assertSee('Sales')->assertDontSee('Top secret');
+    $user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
+
+    $this->actingAs($user)->getJson(route('atrium.shell'))
+        ->assertOk()
+        ->assertJsonPath('data.navigation.0.items.0.label', 'Reports')
+        ->assertJsonPath('data.navigation.0.items.0.children.*.label', ['Sales']);
 });

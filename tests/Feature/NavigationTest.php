@@ -111,24 +111,6 @@ it('never marks a fragment-only url active', function (): void {
     expect(NavItem::make('Sales')->url('#sales')->isActive(Request::create('http://localhost/')))->toBeFalse();
 });
 
-it('renders only the current page as active in the sidebar', function (): void {
-    app()->detectEnvironment(fn (): string => 'local');
-
-    app(NavigationRegistry::class)
-        ->add(NavItem::make('Home')->route('atrium.dashboard'))
-        ->add(NavItem::make('Settings')->url('/atrium/settings'));
-
-    $html = $this->get('/atrium/settings')->assertOk()->getContent();
-
-    // The sidebar and the top layout's bar each mark it once; the theme's
-    // layout decides which of the two is shown.
-    [$sidebar, $topbar] = explode('data-testid="top-nav"', $html, 2);
-
-    expect(substr_count($sidebar, 'aria-current="page"'))->toBe(1)
-        ->and(substr_count($topbar, 'aria-current="page"'))->toBe(1)
-        ->and(strpos($sidebar, 'aria-current="page"'))->toBeGreaterThan(strpos($sidebar, 'href="/atrium/settings"'));
-});
-
 /**
  * A request for a path, matched to a route with the given name.
  */

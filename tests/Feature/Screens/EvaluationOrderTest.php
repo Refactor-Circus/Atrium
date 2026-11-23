@@ -7,23 +7,22 @@ use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Facades\Atrium;
-use Workbench\App\Atrium\ScreenHost\ScreenHostController;
+use RefactorCircus\Atrium\Tests\Feature\Screens\JsonScreenHost;
 
 beforeEach(function (): void {
-    ScreenHostController::register();
+    JsonScreenHost::register();
 });
 
 /**
  * A resolver that counts its calls under its name.
  *
- * @param  array<string, int>  $calls
  * @return Closure(): array<string, mixed>
  */
-function evaluationResolver(array &$calls, string $name): Closure
+function evaluationResolver(ArrayObject $calls, string $name): Closure
 {
     $calls[$name] = 0;
 
-    return function () use (&$calls, $name): array {
+    return function () use ($calls, $name): array {
         $calls[$name]++;
 
         return ['marker' => $name.' data'];
@@ -49,73 +48,59 @@ it('runs no closure of any extension for a viewer the host refuses', function ()
     };
 
     Atrium::screens()
-        ->tab('test.host', TabDefinition::make('acme.tab')->view('screens.marker')->authorize($authorize)->resolve($resolve))
-        ->section('test.host', 'before', SectionDefinition::make('acme.section')->view('screens.marker')->authorize($authorize)->resolve($resolve));
+        ->tab('test.host', TabDefinition::make('acme.tab')->authorize($authorize)->resolve($resolve))
+        ->section('test.host', 'before', SectionDefinition::make('acme.section')->authorize($authorize)->resolve($resolve));
 
-    $this->get(route('test.host'))->assertForbidden();
-    $this->get(route('test.host', ['tab' => 'acme.tab']))->assertForbidden();
+    $this->getJson(route('test.host'))->assertForbidden();
+    $this->getJson(route('test.host', ['tab' => 'acme.tab']))->assertForbidden();
 
     expect($asked)->toBe(0)
         ->and($resolved)->toBe(0);
 });
 
-it('runs resolvers only for the open registered tab and the sections that render', function (): void {
-    config(['screen-host.slots' => ['unrendered']]);
-
-    $calls = [];
+it('runs resolvers only for the open registered tab and the sections sent', function (): void {
+    $calls = new ArrayObject;
 
     Atrium::screens()
-        ->tab('test.host', TabDefinition::make('acme.open')->view('screens.marker')->public()->resolve(evaluationResolver($calls, 'open tab')))
-        ->tab('test.host', TabDefinition::make('acme.unopened')->view('screens.marker')->public()->resolve(evaluationResolver($calls, 'unopened tab')))
-        ->tab('test.host', TabDefinition::make('acme.hidden')->view('screens.marker')->resolve(evaluationResolver($calls, 'hidden tab')))
-        ->section('test.host', 'header.actions', SectionDefinition::make('acme.shown')->view('screens.marker')->public()->resolve(evaluationResolver($calls, 'shown section')))
-        ->section('test.host', 'header.actions', SectionDefinition::make('acme.hidden')->view('screens.marker')->authorize(fn (): bool => false)->resolve(evaluationResolver($calls, 'hidden section')))
-        ->section('test.host', 'unrendered', SectionDefinition::make('acme.unrendered')->view('screens.marker')->public()->resolve(evaluationResolver($calls, 'unrendered section')));
+        ->tab('test.host', TabDefinition::make('acme.open')->public()->resolve(evaluationResolver($calls, 'open tab')))
+        ->tab('test.host', TabDefinition::make('acme.unopened')->public()->resolve(evaluationResolver($calls, 'unopened tab')))
+        ->tab('test.host', TabDefinition::make('acme.hidden')->resolve(evaluationResolver($calls, 'hidden tab')))
+        ->section('test.host', 'header.actions', SectionDefinition::make('acme.shown')->public()->resolve(evaluationResolver($calls, 'shown section')))
+        ->section('test.host', 'header.actions', SectionDefinition::make('acme.hidden')->authorize(fn (): bool => false)->resolve(evaluationResolver($calls, 'hidden section')))
+        ->section('test.host', 'before', SectionDefinition::make('acme.beside')->public()->resolve(evaluationResolver($calls, 'section beside the tab')));
 
-    $this->get(route('test.host', ['tab' => 'acme.open']))
+    $this->getJson(route('test.host', ['tab' => 'acme.open']))
         ->assertOk()
-        ->assertSee('open tab data on test.host')
-        ->assertSee('shown section data on test.host')
-        ->assertDontSee('unrendered section data');
+        ->assertJsonPath('data.tabs.1.data.marker', 'open tab data')
+        ->assertJsonPath('data.sections', [
+            'header.actions' => [['key' => 'acme.shown', 'label' => 'acme.shown', 'component' => 'acme.shown', 'data' => ['marker' => 'shown section data']]],
+            'before' => [],
+            'after' => [],
+            'aside' => [],
+        ]);
 
-    expect($calls)->toBe([
+    expect($calls->getArrayCopy())->toBe([
         'open tab' => 1,
         'unopened tab' => 0,
         'hidden tab' => 0,
         'shown section' => 1,
         'hidden section' => 0,
-        'unrendered section' => 0,
+        'section beside the tab' => 0,
     ]);
 });
 
-it('spreads a view\'s data first, so the host\'s screen, record and tab win', function (): void {
-    $data = fn (): array => ['screen' => 'from resolver', 'record' => 'from resolver', 'tab' => 'from resolver', 'extra' => 'kept'];
-
+it('hands each resolver the screen\'s record and the screen', function (): void {
     Atrium::screens()
-        ->tab('test.host', TabDefinition::make('acme.tab')->view('screens.spread')->public()->resolve($data))
-        ->section('test.host', 'before', SectionDefinition::make('acme.section')->view('screens.spread')->public()->resolve($data));
+        ->tab('test.host', TabDefinition::make('acme.tab')->public()
+            ->resolve(fn ($record, $screen): array => ['record' => $record?->name, 'screen' => $screen->key]))
+        ->section('test.host', 'before', SectionDefinition::make('acme.section')->public()
+            ->resolve(fn ($record, $screen): array => ['record' => $record?->name, 'screen' => $screen->key]));
 
-    $this->get(route('test.host'))
+    $this->getJson(route('test.host'))
         ->assertOk()
-        ->assertSee('screen=test.host;record=Host record;tab=overview;extra=kept');
+        ->assertJsonPath('data.sections.before.0.data', ['record' => 'Host record', 'screen' => 'test.host']);
 
-    $this->get(route('test.host', ['tab' => 'acme.tab']))
+    $this->getJson(route('test.host', ['tab' => 'acme.tab']))
         ->assertOk()
-        ->assertSee('screen=test.host;record=Host record;tab=acme.tab;extra=kept');
-});
-
-it('gives a component its resolver data as one data prop', function (): void {
-    $data = fn (): array => ['marker' => 'probed', 'total' => 3];
-
-    Atrium::screens()
-        ->tab('test.host', TabDefinition::make('acme.tab')->component('screen-probe')->public()->resolve($data))
-        ->section('test.host', 'before', SectionDefinition::make('acme.section')->component('screen-probe')->public()->resolve($data));
-
-    $this->get(route('test.host'))
-        ->assertOk()
-        ->assertSee('component data: marker,total = probed,3; data only');
-
-    $this->get(route('test.host', ['tab' => 'acme.tab']))
-        ->assertOk()
-        ->assertSee('component data: marker,total = probed,3; data only');
+        ->assertJsonPath('data.tabs.1.data', ['record' => 'Host record', 'screen' => 'test.host']);
 });

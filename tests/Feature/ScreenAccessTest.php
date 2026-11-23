@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Route;
 use RefactorCircus\Atrium\Domains\Plugins\Support\Plugin;
 use RefactorCircus\Atrium\Support\ScreenAccess;
-use RefactorCircus\Atrium\Tests\Fixtures\Billing\RefundController;
 use RefactorCircus\Keystone\Packages\Package;
 use RefactorCircus\Keystone\Packages\PackageRegistry;
 
@@ -42,21 +40,6 @@ it('reads the loadable features from config', function (): void {
     };
 
     expect($plugin->features())->toBe(['billing-beta', stdClass::class]);
-});
-
-it('refuses a screen for the package its controller belongs to', function (): void {
-    app(PackageRegistry::class)->register(Package::make('billing', 'RefactorCircus\Atrium\Tests\Fixtures\Billing')->authorization());
-    Gate::define('refund', fn (): bool => false);
-    Route::get('refund', RefundController::class);
-
-    $user = new User;
-    $user->id = 1;
-
-    $this->actingAs($user)->get('/refund')->assertForbidden();
-
-    config()->set('billing.authorization', false);
-
-    $this->actingAs($user)->get('/refund')->assertOk()->assertSee('refunded');
 });
 
 it('passes further policy arguments after the subject', function (): void {

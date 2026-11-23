@@ -5,28 +5,27 @@ declare(strict_types=1);
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Facades\Atrium;
-use Workbench\App\Atrium\ScreenHost\ScreenHostController;
+use RefactorCircus\Atrium\Tests\Feature\Screens\JsonScreenHost;
 
 beforeEach(function (): void {
-    ScreenHostController::register();
+    JsonScreenHost::register();
 });
 
 /**
- * A tab and a section, counting its resolver, in every slot of the screen.
+ * A tab, and a section counting its resolver in every slot of the screen.
  *
  * @param  list<string>  $slots
- * @param  array<string, int>  $calls
  */
-function openTabRegister(string $screen, array $slots, array &$calls): void
+function openTabRegister(string $screen, array $slots, ArrayObject $calls): void
 {
-    Atrium::screens()->tab($screen, TabDefinition::make('acme.tab')->label('Acme')->view('screens.marker')->public()
+    Atrium::screens()->tab($screen, TabDefinition::make('acme.tab')->label('Acme')->public()
         ->resolve(fn (): array => ['marker' => 'the acme panel']));
 
     foreach ($slots as $slot) {
         $calls[$slot] = 0;
 
-        Atrium::screens()->section($screen, $slot, SectionDefinition::make('acme.'.$slot)->view('screens.marker')->public()
-            ->resolve(function () use (&$calls, $slot): array {
+        Atrium::screens()->section($screen, $slot, SectionDefinition::make('acme.'.$slot)->public()
+            ->resolve(function () use ($calls, $slot): array {
                 $calls[$slot]++;
 
                 return ['marker' => 'in '.$slot];
@@ -34,35 +33,48 @@ function openTabRegister(string $screen, array $slots, array &$calls): void
     }
 }
 
-it('renders every slot on a built-in tab and only header.actions around an open registered tab', function (string $route, string $screen, array $slots): void {
-    $calls = [];
-    openTabRegister($screen, $slots, $calls);
+/**
+ * The keys of every section sent, in the screen's slots and its rows' slots.
+ *
+ * @param  array<string, mixed>  $screen
+ * @return list<string>
+ */
+function openTabSectionKeys(array $screen): array
+{
+    $keys = [];
 
-    $builtIn = $this->get(route($route))->assertOk()->assertSee('data-testid="host-content"', false);
-
-    foreach ($slots as $slot) {
-        $builtIn->assertSee('data-testid="section-acme.'.$slot.'"', false)->assertSee('in '.$slot.' on '.$screen);
+    foreach ([$screen['sections'], ...array_values($screen['rows'])] as $slots) {
+        foreach ($slots as $sections) {
+            foreach ($sections as $section) {
+                $keys[] = $section['key'];
+            }
+        }
     }
 
-    $builtIn->assertDontSee('data-testid="tab-panel-acme.tab"', false);
+    return array_values(array_unique($keys));
+}
+
+it('sends every slot on a built-in tab and only header.actions around an open registered tab', function (string $route, array $slots): void {
+    $calls = new ArrayObject;
+    openTabRegister($route, $slots, $calls);
+
+    $builtIn = $this->getJson(route($route))->assertOk()->json('data');
+
+    expect($builtIn['open_tab'])->toBe('overview')
+        ->and(openTabSectionKeys($builtIn))->toEqualCanonicalizing(array_map(fn (string $slot): string => 'acme.'.$slot, $slots))
+        ->and($builtIn['tabs'][1])->not->toHaveKey('data');
 
     // A fresh request, so nothing is remembered from the one above.
     app()->forgetScopedInstances();
-    $calls = array_map(fn (): int => 0, $calls);
+    $calls->exchangeArray(array_map(fn (): int => 0, $calls->getArrayCopy()));
 
-    $open = $this->get(route($route, ['tab' => 'acme.tab']))
-        ->assertOk()
-        ->assertSee('data-testid="tab-panel-acme.tab"', false)
-        ->assertSee('the acme panel on '.$screen)
-        ->assertSee('data-testid="section-acme.header.actions"', false)
-        ->assertDontSee('data-testid="host-content"', false);
+    $open = $this->getJson(route($route, ['tab' => 'acme.tab']))->assertOk()->json('data');
 
-    foreach (array_diff($slots, ['header.actions']) as $slot) {
-        $open->assertDontSee('data-testid="section-acme.'.$slot.'"', false)->assertDontSee('in '.$slot.' on');
-    }
-
-    expect($calls)->toBe([...array_map(fn (): int => 0, $calls), 'header.actions' => 1]);
+    expect($open['open_tab'])->toBe('acme.tab')
+        ->and($open['tabs'][1]['data'])->toBe(['marker' => 'the acme panel'])
+        ->and(openTabSectionKeys($open))->toBe(['acme.header.actions'])
+        ->and($calls->getArrayCopy())->toBe([...array_map(fn (): int => 0, $calls->getArrayCopy()), 'header.actions' => 1]);
 })->with([
-    'a detail screen' => ['test.host', 'test.host', ['header.actions', 'before', 'after', 'aside']],
-    'a list screen' => ['test.list', 'test.list', ['header.actions', 'before', 'after', 'row.actions']],
+    'a detail screen' => ['test.host', ['header.actions', 'before', 'after', 'aside']],
+    'a list screen' => ['test.list', ['header.actions', 'before', 'after', 'row.actions']],
 ]);
