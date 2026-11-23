@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Resources;
 
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Http\Request;
+use Illuminate\JsonSchema\Types\Type;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
@@ -41,6 +43,23 @@ final class DashboardResource extends JsonResource
         $this->placementData = $data;
 
         return $this;
+    }
+
+    /**
+     * A dashboard as `toArray()` sends it. `widgets` is not required: the
+     * dashboard list leaves the placements out.
+     *
+     * @return array<string, Type>
+     */
+    public static function schema(JsonSchema $schema): array
+    {
+        return [
+            'slug' => $schema->string()->required(),
+            'name' => $schema->string()->required(),
+            'is_default' => $schema->boolean()->required(),
+            'version' => $schema->integer()->description('Bumped by every change; sent back with a layout or update (409 when stale).')->required(),
+            'widgets' => $schema->array()->items($schema->object(DashboardWidgetResource::schema($schema)))->description('Absent in the dashboard list.'),
+        ];
     }
 
     /**

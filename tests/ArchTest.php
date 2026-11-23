@@ -136,6 +136,23 @@ arch('atrium uses no suite package\'s code, only its API (AC 45)')
         'RefactorCircus\Showroom',
     ]);
 
+arch('scramble stays in the workbench: the package source uses nothing from Dedoc (AC 72)')
+    ->expect('RefactorCircus\Atrium')
+    ->not->toUse('Dedoc');
+
+arch('no source or config file names Dedoc, not even as a string (AC 72)')
+    ->expect(fn (): array => array_values(array_filter(
+        array_values(array_filter(
+            array_map(fn (SplFileInfo $file): string => $file->getPathname(), [
+                ...iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../src', FilesystemIterator::SKIP_DOTS)), false),
+                ...iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../config', FilesystemIterator::SKIP_DOTS)), false),
+            ]),
+            fn (string $path): bool => str_ends_with($path, '.php'),
+        )),
+        fn (string $path): bool => str_contains(str_replace('\\\\', '\\', (string) file_get_contents($path)), 'Dedoc\\'),
+    )))
+    ->toBeEmpty();
+
 arch('the per-package integration definitions import nothing from Pennant')
     ->expect('RefactorCircus\Atrium\Integrations')
     ->not->toUse('Laravel\Pennant');

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Domains\Navigation\Http\Resources;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Http\Request;
+use Illuminate\JsonSchema\Types\Type;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
@@ -54,6 +56,88 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
  */
 final class ShellResource extends JsonResource
 {
+    /**
+     * The shell as `toArray()` sends it. A nav item's `children` are nav
+     * items of the same shape; theme `properties`, integration `features` and
+     * live `options` are JSON objects keyed by name.
+     *
+     * @return array<string, Type>
+     */
+    public static function schema(JsonSchema $schema): array
+    {
+        $link = fn (): Type => $schema->object([
+            'path' => $schema->string()->description('A path inside the SPA, or an absolute http(s) URL when external.')->required(),
+            'external' => $schema->boolean()->required(),
+        ])->nullable()->description('Null for a URL ClientPath refuses.')->required();
+
+        $item = $schema->object([
+            'label' => $schema->string()->required(),
+            'icon' => $schema->string()->nullable()->description('An Iconify name.')->required(),
+            'link' => $link(),
+            'badge' => $schema->union(['string', 'integer'])->nullable()->required(),
+            'live' => $schema->object([
+                'key' => $schema->string()->description('The live resolver key, `{package}.{name}`.')->required(),
+                'options' => $schema->object()->description('The resolver\'s static options.')->required(),
+            ])->nullable()->required(),
+            'children' => $schema->array()->items($schema->object()->description('A nav item, shaped as its parent.'))->required(),
+        ]);
+
+        return [
+            'app' => $schema->object([
+                'name' => $schema->string()->required(),
+            ])->required(),
+            'user' => $schema->object([
+                'name' => $schema->string()->nullable()->required(),
+                'email' => $schema->string()->nullable()->required(),
+            ])->nullable()->required(),
+            'locale' => $schema->string()->description('The app\'s current locale.')->required(),
+            'api_version' => $schema->string()->description('Atrium\'s API major.minor.')->required(),
+            'navigation' => $schema->array()->items($schema->object([
+                'key' => $schema->string()->required(),
+                'label' => $schema->string()->required(),
+                'icon' => $schema->string()->nullable()->required(),
+                'grouped' => $schema->boolean()->required(),
+                'link' => $link(),
+                'items' => $schema->array()->items($item)->required(),
+            ]))->required(),
+            'themes' => $schema->object([
+                'default' => $schema->string()->nullable()->required(),
+                'switchable' => $schema->boolean()->required(),
+                'all' => $schema->array()->items($schema->object([
+                    'key' => $schema->string()->required(),
+                    'label' => $schema->string()->required(),
+                    'layout' => $schema->string()->required(),
+                    'swatch' => $schema->string()->required(),
+                    'icon' => $schema->string()->nullable()->required(),
+                    'properties' => $schema->object()->description('The CSS custom properties the theme sets, by name.')->required(),
+                ]))->required(),
+            ])->required(),
+            'settings' => $schema->array()->items($schema->object([
+                'key' => $schema->string()->required(),
+                'label' => $schema->string()->required(),
+                'icon' => $schema->string()->nullable()->required(),
+                'component' => $schema->string()->required(),
+            ]))->required(),
+            'search' => $schema->object([
+                'min_length' => $schema->integer()->required(),
+                'sources' => $schema->array()->items($schema->object([
+                    'key' => $schema->string()->required(),
+                    'integration' => $schema->string()->required(),
+                    'label' => $schema->string()->required(),
+                    'icon' => $schema->string()->nullable()->required(),
+                ]))->required(),
+                'per_source' => $schema->integer()->nullable()->required(),
+            ])->required(),
+            'integrations' => $schema->array()->items($schema->object([
+                'key' => $schema->string()->required(),
+                'label' => $schema->string()->required(),
+                'active' => $schema->boolean()->required(),
+                'api_base' => $schema->string()->required(),
+                'features' => $schema->object()->description('Each feature flag and whether it is on for the user.')->required(),
+            ]))->required(),
+        ];
+    }
+
     /**
      * @return array<string, mixed>
      */

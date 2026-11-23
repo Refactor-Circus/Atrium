@@ -1,111 +1,75 @@
 /**
- * Shapes of Atrium's JSON API (`atrium.*` routes). The PHP suite writes the
- * contract fixtures in `test/fixtures` from the API, and Vitest checks each
- * against these types, so a change on either side shows up as a failure.
+ * Shapes of Atrium's JSON API (`atrium.*` routes). The response types are
+ * aliases of `components['schemas']` in the client generated from
+ * openapi.json (`app/client/schema.d.ts`, AC 75), so they follow each
+ * resource's `schema()`. Where JSON Schema cannot say what the payload holds
+ * (a nav item's recursive `children`, the JSON objects keyed by name), the
+ * alias narrows the generated shape, and only there.
+ *
+ * The PHP suite writes the contract fixtures in `test/fixtures` from the API,
+ * and Vitest checks each against these types, so a change on either side
+ * shows up as a failure.
  */
 
-/** Where a nav item or search result leads (ClientPath on the PHP side). */
-export interface AtriumLink {
-  /** A path inside the SPA (`/demo/orders`), or an absolute http(s) URL when external */
-  path: string
-  external: boolean
-}
+import type { components, operations } from '../client/schema'
+
+type Schemas = components['schemas']
+type ShellSchema = Schemas['ShellResource']
+type NavItemSchema = ShellSchema['navigation'][number]['items'][number]
+type ScreenSchema = Schemas['ResolvedScreenResource']
+type PanelSchema = Schemas['SettingsPanelResource']
+
+/** Where a nav item or search result leads (ClientPath on the PHP side): a SPA path, or an absolute http(s) URL when external. */
+export type AtriumLink = NonNullable<Schemas['SearchResultResource']['link']>
 
 /** Why a resolver's data is missing: it failed and the server isolated it. */
-export interface AtriumDataError {
-  message: string
-}
+export type AtriumDataError = NonNullable<Schemas['DashboardWidgetResource']['error']>
 
 /**
  * A nav item whose badge or children the layer computes from a package API
  * (`NavItem::live()`): the resolver registered with `$atrium.live(key, …)`
  * runs with these static `options`.
  */
-export interface AtriumNavLive {
-  /** `{package}.{name}`, e.g. `impex.active-runs` */
-  key: string
-  options: Record<string, unknown>
-}
+export type AtriumNavLive = NonNullable<NavItemSchema['live']>
 
-export interface AtriumNavItem {
-  label: string
-  /** An Iconify name (`i-lucide-house`) */
-  icon: string | null
-  link: AtriumLink | null
-  badge: string | number | null
-  /** Sent by the API on every item (null when unset); optional on items a live resolver returns */
+/**
+ * A nav item. The API sends `live` on every item (null when unset); it is
+ * optional on the items a live resolver returns.
+ */
+export type AtriumNavItem = Omit<NavItemSchema, 'live' | 'children'> & {
   live?: AtriumNavLive | null
   children: AtriumNavItem[]
 }
 
-export interface AtriumNavSection {
-  key: string
-  label: string
-  icon: string | null
-  grouped: boolean
-  link: AtriumLink | null
+export type AtriumNavSection = Omit<ShellSchema['navigation'][number], 'items'> & {
   items: AtriumNavItem[]
 }
 
-export interface AtriumTheme {
-  key: string
-  label: string
-  layout: string
-  swatch: string
-  icon: string | null
+export type AtriumTheme = Omit<ShellSchema['themes']['all'][number], 'properties'> & {
   /** CSS custom properties (`--color-primary`) the theme sets on :root */
   properties: Record<string, string>
 }
 
-export interface AtriumSettingsSummary {
-  key: string
-  label: string
-  icon: string | null
-  component: string
-}
+export type AtriumSettingsSummary = ShellSchema['settings'][number]
 
 /**
  * A suite integration Atrium registered (the package is installed, enabled
  * and serves its API). `active` is false when one of its feature flags is
- * off for the user.
+ * off for the user; `api_base` is a path on Atrium's host (`/impex/api`) or
+ * an absolute URL.
  */
-export interface AtriumIntegration {
-  /** The package key (`impex`), also the first segment of its pages' paths */
-  key: string
-  label: string
-  active: boolean
-  /** Where its API is: a path on Atrium's host (`/impex/api`) or an absolute URL */
-  api_base: string
+export type AtriumIntegration = Omit<ShellSchema['integrations'][number], 'features'> & {
   /** Each feature flag the integration needs, and whether it is on for the user */
   features: Record<string, boolean>
 }
 
 /** A client-side search source, run with the resolver `$atrium.searchSource(key, …)` registers. */
-export interface AtriumSearchSource {
-  key: string
-  /** The integration whose API it searches */
-  integration: string
-  label: string
-  icon: string | null
-}
+export type AtriumSearchSource = ShellSchema['search']['sources'][number]
 
-export interface AtriumShell {
-  app: { name: string }
-  user: { name: string | null, email: string | null } | null
-  /** The app's current locale (`app()->getLocale()`), which the layer switches to */
-  locale: string
-  /** Atrium's API major.minor (`Atrium::API_VERSION`) */
-  api_version: string
+/** The shell; `search.per_source` is null when the host sets no cap. */
+export type AtriumShell = Omit<ShellSchema, 'navigation' | 'themes' | 'integrations'> & {
   navigation: AtriumNavSection[]
-  themes: { default: string | null, switchable: boolean, all: AtriumTheme[] }
-  settings: AtriumSettingsSummary[]
-  search: {
-    min_length: number
-    /** The client-side sources of active integrations */
-    sources: AtriumSearchSource[]
-    /** How many results each source may add */
-    per_source: number
-  }
+  themes: Omit<ShellSchema['themes'], 'all'> & { all: AtriumTheme[] }
   /** Every registered integration, by key */
   integrations: AtriumIntegration[]
 }
@@ -114,45 +78,19 @@ export interface AtriumShellResponse {
   data: AtriumShell
 }
 
-export interface AtriumGrid {
-  row: number | null
-  column: number | null
-  width: number | null
-  height: number | null
-}
+export type AtriumGrid = Schemas['DashboardWidgetResource']['grid']
 
 /**
  * A widget placed on a dashboard. `data` is absent on a lazy placement, which
  * fetches it from `atrium.dashboards.widgets.show` by `uuid`. An orphaned
  * placement (its widget is no longer registered) has a null `component`.
  */
-export interface AtriumPlacement {
-  uuid: string
-  key: string
-  component: string | null
-  title: string | null
-  icon: string | null
-  lazy: boolean
-  grid: AtriumGrid
-  settings: Record<string, unknown>
-  data?: Record<string, unknown> | null
-  error?: AtriumDataError
-}
+export type AtriumPlacement = Schemas['DashboardWidgetResource']
 
-export interface AtriumDashboard {
-  slug: string
-  name: string
-  is_default: boolean
-  /** Bumped by every change; sent back with a layout or update (409 when stale) */
-  version: number
-  /** Absent in the dashboard list */
-  widgets?: AtriumPlacement[]
-}
+/** A dashboard; `widgets` is absent in the dashboard list, and `version` goes back with a layout or update (409 when stale). */
+export type AtriumDashboard = Schemas['DashboardResource']
 
-export interface AtriumAbilities {
-  update: boolean
-  delete: boolean
-}
+export type AtriumAbilities = NonNullable<operations['atrium.dashboards.show']['responses'][200]['content']['application/json']['meta']>['abilities']
 
 export interface AtriumDashboardResponse {
   data: AtriumDashboard | null
@@ -175,38 +113,15 @@ export interface AtriumLayoutWidget {
   settings: Record<string, unknown>
 }
 
-export interface AtriumWidgetDefinition {
-  key: string
-  label: string
-  description: string | null
-  icon: string | null
-  component: string
-  lazy: boolean
-  default_size: { width: number, height: number }
-  min_size: { width: number, height: number }
-}
+export type AtriumWidgetDefinition = Schemas['WidgetDefinitionResource']
+
+/** A registered tab: a built-in one (no component) the page renders itself. `data` is absent on a tab that is not open. */
+export type AtriumTab = ScreenSchema['tabs'][number]
 
 /** A screen section, or a registered tab, rendered by its `component`. */
-export interface AtriumExtension {
-  key: string
-  label: string
-  component: string | null
-  /** Absent on a tab that is not open */
-  data?: Record<string, unknown> | null
-  error?: AtriumDataError
-}
+export type AtriumExtension = Omit<AtriumTab, 'icon' | 'built_in'>
 
-export interface AtriumTab extends AtriumExtension {
-  icon: string | null
-  /** A tab the page renders itself (no component) */
-  built_in: boolean
-}
-
-export interface AtriumScreen {
-  key: string
-  kind: string
-  open_tab: string
-  tabs: AtriumTab[]
+export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record' | 'sections' | 'rows'> & {
   /** Each slot's sections, by slot name (`header.actions`, `before`, `after`, `aside`, ...) */
   sections: Record<string, AtriumExtension[]>
   /** Row-slot sections of a list screen, by row key, then slot */
@@ -216,16 +131,11 @@ export interface AtriumScreen {
 /**
  * A screen a suite integration declares (`atrium.screens.show`): its
  * declaration and the extensions other packages registered for it. The page
- * loads the record itself, from the package's API.
+ * loads the record itself, from the package's API. `path` is the layer route
+ * it lives at (`/impex/runs/:run`), `subject_type` the package's morph alias
+ * of its record, and `record` the key it was asked for (`?record=`).
  */
-export interface AtriumIntegrationScreen extends AtriumScreen {
-  /** The layer route it lives at (`/impex/runs/:run`) */
-  path: string
-  /** The package's morph alias of the screen's record, on a detail screen */
-  subject_type: string | null
-  /** The record key the screen was asked for (`?record=`), as a string */
-  record: string | null
-}
+export type AtriumIntegrationScreen = AtriumScreen & Required<Pick<ScreenSchema, 'path' | 'subject_type' | 'record'>>
 
 export interface AtriumIntegrationScreenResponse {
   data: AtriumIntegrationScreen
@@ -235,11 +145,8 @@ export interface AtriumIntegrationScreenResponse {
 export type ScreenData = AtriumScreen
 export type Shell = AtriumShell
 
-export interface AtriumSettingsPanel extends AtriumSettingsSummary {
-  description: string | null
-  data: Record<string, unknown> | null
-  error?: AtriumDataError
-}
+/** An opened settings panel: its `description` and `data` always come with it. */
+export type AtriumSettingsPanel = Omit<PanelSchema, 'description' | 'data'> & Required<Pick<PanelSchema, 'description' | 'data'>>
 
 export interface AtriumSettingsIndexResponse {
   data: AtriumSettingsSummary[]
@@ -251,13 +158,7 @@ export interface AtriumSettingsPanelResponse {
   screen: AtriumScreen
 }
 
-export interface AtriumSearchResult {
-  title: string
-  subtitle: string | null
-  icon: string | null
-  group: string | null
-  link: AtriumLink | null
-}
+export type AtriumSearchResult = Schemas['SearchResultResource']
 
 /**
  * A client-side search source (`$atrium.searchSource(key, resolver)`): it

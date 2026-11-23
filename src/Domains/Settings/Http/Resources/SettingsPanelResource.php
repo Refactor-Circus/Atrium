@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Settings\Http\Resources;
 
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\JsonSchema\Types\Type;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Support\JsonData;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
@@ -37,6 +39,28 @@ final class SettingsPanelResource extends JsonResource
         $this->withData = true;
 
         return $this;
+    }
+
+    /**
+     * A panel as `toArray()` sends it: the summary is always there;
+     * `description` and `data` (and `error`, for an isolated failure) only
+     * when the panel is opened.
+     *
+     * @return array<string, Type>
+     */
+    public static function schema(JsonSchema $schema): array
+    {
+        return [
+            'key' => $schema->string()->required(),
+            'label' => $schema->string()->required(),
+            'icon' => $schema->string()->nullable()->description('An Iconify name.')->required(),
+            'component' => $schema->string()->required(),
+            'description' => $schema->string()->nullable()->description('Sent with an opened panel.'),
+            'data' => $schema->object()->nullable()->description('Sent with an opened panel; null when it failed.'),
+            'error' => $schema->object([
+                'message' => $schema->string()->required(),
+            ])->description('Present only when resolving failed and was isolated.'),
+        ];
     }
 
     /**

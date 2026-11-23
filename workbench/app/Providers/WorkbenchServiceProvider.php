@@ -11,11 +11,17 @@ use Workbench\App\Atrium\DemoPlugin;
 use Workbench\App\Atrium\DemoScreens;
 use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
 use Workbench\App\Models\User;
+use Workbench\App\OpenApi\AtriumOpenApi;
+use Workbench\App\OpenApi\ExportOpenApiCommand;
 
 /**
  * The workbench app is a host application of Atrium's JSON API: `composer
  * serve` serves it on :8000, and the Nuxt playground (`nuxt/playground`, on
  * :3000) renders it.
+ *
+ * It also holds the one Scramble configuration `workbench:openapi` exports
+ * openapi.json with (`composer openapi:export`, AtriumOpenApi). Nothing in
+ * src/ knows about Scramble: it is a dev dependency.
  */
 class WorkbenchServiceProvider extends ServiceProvider
 {
@@ -44,6 +50,7 @@ class WorkbenchServiceProvider extends ServiceProvider
             'cors.allowed_methods' => ['*'],
             'cors.allowed_headers' => ['*'],
             'cors.supports_credentials' => false,
+            ...AtriumOpenApi::config(),
         ]);
     }
 
@@ -52,6 +59,12 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([ExportOpenApiCommand::class]);
+        }
+
+        AtriumOpenApi::register();
+
         // Installed packages are discovered from their composer.json; the
         // workbench app is the host, so it registers its plugin explicitly.
         Atrium::plugin(DemoPlugin::class);
