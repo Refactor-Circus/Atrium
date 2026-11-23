@@ -858,3 +858,34 @@ Only the group's paths (the 19 files above, with the test fixes), plus this note
 ### What is left
 
 - **19.3 is unticked.** `composer test:nuxt` cannot pass until the shared `test/integrations/support.ts` line 277 is fixed (group 12's file) and the Cortex and Impex type errors are fixed. `vendor/bin/pest` needs `composer install` for `dedoc/scramble` and the OpenAPI 204 fix. None of these are in group 19's paths.
+
+## Group 19
+
+This was a retry for 19.3 only. 19.1 and 19.2 were already committed (salvaged). This run changed no code.
+
+### Files
+
+- None in the group's paths. Only this note changed.
+
+### Tests
+
+- **Setup.** `composer install` brought `dedoc/scramble` into `vendor/`. pnpm is not on this machine's PATH, so every Node step ran through `npx pnpm@10.18.0`, the version `nuxt/package.json` pins.
+- **`composer test:unit`.** 1215 tests: 1207 passed, 7 skipped and 1 failed. The failure is `OpenApiTest` "answers a deleted dashboard with 204 and no body". It compares `'204'` against `204`, which is group 27's OpenAPI export. With scramble installed, the 14 errors from the salvaged run are gone.
+- **`pnpm -C nuxt install --frozen-lockfile`.** Passed.
+- **Vitest, group 19 as committed.** All 5 files fail on import. The cause is the shared `test/integrations/support.ts:277` (group 12): `fileURLToPath(new URL('../../', import.meta.url))` throws "The URL must be of scheme file", because Vite rewrites the literal `new URL(…, import.meta.url)`.
+- **Vitest, group 19 with that line patched.** I read the URL through a variable (`const here = import.meta.url`), ran the suites, then reverted the patch, so nothing outside the group changed. Result: 5 files and 55 tests passed, with no type errors.
+- **Full layer Vitest, with the same temporary patch.** 597 tests: 549 passed and 48 failed. None of the failures are in `test/integrations/roster/**`. They are in `integration-absent`, `integration-client`, `integration-i18n`, `integration-routing`, `integration-search`, the `cortex/*` suites, `impex/i18n`, `pennantplus/features`, `pennantplus/integration`, and `polycart/cart`, `carts`, `integration` and `widgets`. Three of them (`integration-i18n`, `pennantplus/integration` and `polycart/integration`) use the same `new URL(…, import.meta.url)` pattern. Most of the others fail on confirm dialogs (`window.confirm`) or on screen-frame calls.
+- **`pnpm -C nuxt typecheck`.** 8 errors, none in group 19's files: `CortexToolPicker.vue` (2), `CortexVersions.vue`, `ImpexChannelFields.vue`, `pages/cortex/redirect-domains.vue`, `pages/impex/channels/[name].vue` (2) and `pages/impex/runs/[run].vue`.
+- **Not reached:** `build` and `test:consumer`. The `composer test:nuxt` chain stops at the typecheck.
+
+### Deviations
+
+- None. `nuxt/layer/.nuxtrc` is still untracked and not committed. `nuxt prepare` writes it.
+
+### What is left
+
+- **19.3 stays unticked.** Group 19's own suites pass. The gate stays red because of files outside the group's paths:
+  - `test/integrations/support.ts:277` (group 12), the one-line fix above;
+  - the 8 Cortex and Impex type errors;
+  - the 48 Vitest failures in other groups' suites;
+  - the `OpenApiTest` 204 mismatch (group 27).
