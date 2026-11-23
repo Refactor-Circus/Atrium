@@ -1,15 +1,6 @@
-VERDICT: PASS
+VERDICT: CHANGES
 
-Security review of the whole diff against main. No findings at or above minor.
+Security review, round 1. Authorize fails closed (401 JSON on a null user, 403 off local), ClientPath and the layer link check reject the listed bypass forms, layout uuids are scoped to the dashboard, widget binding is scoped, the version lock is a conditional update, JsonData hides resolver errors outside local/testing, and the workbench token guard is local-only and marked workbench-only.
 
-Checked:
-- Authorize: 401 JSON for guests, 403 on gate failure, fail closed outside local; runs before route binding.
-- ForceJsonResponse: no redirect on a missing guard.
-- Layout save: uuid validated as existing in this dashboard (422 otherwise); widget keys filtered by availability; optimistic version lock applied by one conditional update inside the transaction.
-- Lazy widget show: scoped binding, dashboard id check, orphan 404, definition authorization.
-- JsonData: Htmlable and closures rejected; depth and cycle guards; production isolation returns a generic message and reports the exception.
-- ClientPath: rejects javascript:, data:, //host, backslash, control chars, userinfo, mixed-case schemes, and http:host; never throws.
-- Layer: no v-html, external links carry rel noopener noreferrer, Iconify remote fetch off by default, token storage left to the host.
-- Workbench token guard: workbench-only, local-only, labelled, export-ignored. CORS there has credentials off.
-- Config banner documents the no-auth note, Authorize last, CORS and CSRF, and the local gate fallback.
-- Removed-config-key warning does not inherit the old middleware key.
+Findings
+- minor: IndexSearchResultRequest validates q with min:N before trimming, so whitespace padding passes min_length, and q has no max length (every search source gets an unbounded string). Fix: add max:255 (or a configurable cap) and trim before validating (prepareForValidation or the TrimStrings middleware), then keep the min check on the trimmed value. File: src/Domains/Search/Http/Requests/IndexSearchResultRequest.php

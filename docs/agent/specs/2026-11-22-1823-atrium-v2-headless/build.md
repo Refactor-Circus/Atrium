@@ -467,3 +467,16 @@ Docs, upgrade guide and release checks. Criteria 23, 24 and 25.
 
 - The open question about registry-only requests inheriting `authorize() => true` is unchanged, as instructed.
 - Navigation still reads Settings', Themes' and Search's registries from `Services/`. The dependencies standard lists `Contracts/`, `Data/` and models as the seams. The finding proposed `SearchRegistry` as the seam, and the shell already used the other registries, so I followed that.
+
+## Review fixes, round 2
+
+### Fixes
+
+- Minor (input validation): `IndexSearchResultRequest` now trims `q` in `prepareForValidation()`, so the `min` rule counts the trimmed query even when a host drops the `TrimStrings` middleware. It also adds `max:` `IndexSearchResultRequest::MAX_LENGTH` (255), so no search source is handed an unbounded string. `persist()` passes the already-trimmed value. No config key was added: the limit is a class constant.
+  - New tests in `tests/Feature/Api/SearchApiTest.php`: a padded one-character query is refused, and every source gets the trimmed query, both with `TrimStrings` disabled. A query one character over the maximum is refused with 422 and runs no source, and one at the maximum is accepted.
+- Minor (`http/authorization`, D-018): `docs/agent/standards-feedback.md` has a row for `ShowShellRequest`, `IndexSearchResultRequest`, `IndexSettingsPanelRequest` and `ShowSettingsPanelRequest`. They inherit `authorize() => true` because they read registries only, so the route group's `viewAtrium` gate decides.
+
+### Tests
+
+- `composer test:unit`: 904 passed, 3194 assertions.
+- `composer analyse` and `composer lint:check`: passed.

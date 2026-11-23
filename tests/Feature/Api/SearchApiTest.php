@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Gate;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
+use RefactorCircus\Atrium\Domains\Search\Http\Requests\IndexSearchResultRequest;
 use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
 use Workbench\App\Models\User;
 
@@ -111,6 +113,48 @@ it('refuses a query shorter than search.min_length with 422, running no source',
     'padded with spaces' => [' a '],
     'blank' => [''],
 ]);
+
+it('checks the minimum against the trimmed query, even without the TrimStrings middleware', function (): void {
+    $calls = 0;
+    searchApiSource([SearchResult::make('Hit', '/hit')], $calls);
+
+    $this->withoutMiddleware(TrimStrings::class);
+
+    $this->actingAs($this->user)->getJson(route('atrium.search', ['q' => '   a   ']))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('q');
+
+    expect($calls)->toBe(0);
+});
+
+it('hands every source the trimmed query', function (): void {
+    $received = null;
+    app(SearchRegistry::class)->add(SearchSource::make('people')->using(function (string $q) use (&$received): array {
+        $received = $q;
+
+        return [];
+    }));
+
+    $this->withoutMiddleware(TrimStrings::class);
+
+    $this->actingAs($this->user)->getJson(route('atrium.search', ['q' => '  ada  ']))->assertOk();
+
+    expect($received)->toBe('ada');
+});
+
+it('refuses a query longer than the maximum with 422, running no source', function (): void {
+    $calls = 0;
+    searchApiSource([SearchResult::make('Hit', '/hit')], $calls);
+
+    $this->actingAs($this->user)->getJson(route('atrium.search', ['q' => str_repeat('a', IndexSearchResultRequest::MAX_LENGTH + 1)]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('q');
+
+    $this->actingAs($this->user)->getJson(route('atrium.search', ['q' => str_repeat('a', IndexSearchResultRequest::MAX_LENGTH)]))
+        ->assertOk();
+
+    expect($calls)->toBe(1);
+});
 
 it('refuses a request without a query', function (): void {
     $this->actingAs($this->user)->getJson(route('atrium.search'))
