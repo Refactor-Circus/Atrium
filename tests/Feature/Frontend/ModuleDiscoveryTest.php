@@ -18,7 +18,7 @@ use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleDiscovery;
  *
  * @param  list<array<string, mixed>>  $packages
  */
-function fakeVendor(array $packages): string
+function moduleVendor(array $packages): string
 {
     $vendor = sys_get_temp_dir().'/atrium-modules-'.bin2hex(random_bytes(4));
     mkdir($vendor.'/composer', 0777, true);
@@ -28,7 +28,7 @@ function fakeVendor(array $packages): string
 }
 
 it('discovers the scripts and styles a package declares, relative to its folder, keyed by its name', function (): void {
-    $vendor = fakeVendor([
+    $vendor = moduleVendor([
         ['name' => 'acme/billing', 'install-path' => '../acme/billing', 'extra' => ['atrium' => ['scripts' => ['dist/atrium/atrium.js'], 'styles' => ['./dist/atrium/atrium.css']]]],
         ['name' => 'acme/plain', 'install-path' => '../acme/plain', 'extra' => ['laravel' => []]],
         ['name' => 'refactor-circus/roster', 'install-path' => '../refactor-circus/roster', 'extra' => ['atrium' => ['key' => 'roster', 'scripts' => 'dist/atrium/atrium.js']]],
@@ -43,7 +43,7 @@ it('discovers the scripts and styles a package declares, relative to its folder,
 });
 
 it('drops a path that could leave the package: absolute, `..`, backslashes', function (): void {
-    $vendor = fakeVendor([
+    $vendor = moduleVendor([
         ['name' => 'acme/sly', 'extra' => ['atrium' => ['scripts' => ['/etc/passwd', '../other/a.js', 'dist\\a.js', 'dist/ok.js']]]],
     ]);
 
@@ -51,7 +51,7 @@ it('drops a path that could leave the package: absolute, `..`, backslashes', fun
 });
 
 it('caches the list with paths relative to vendor/, reads the cache, and clears it', function (): void {
-    $vendor = fakeVendor([
+    $vendor = moduleVendor([
         ['name' => 'acme/billing', 'install-path' => '../acme/billing', 'extra' => ['atrium' => ['scripts' => ['dist/atrium/atrium.js']]]],
     ]);
     $cache = $vendor.'/cache/atrium-modules.php';
