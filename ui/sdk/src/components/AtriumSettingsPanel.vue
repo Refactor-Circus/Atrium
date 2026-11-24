@@ -3,14 +3,14 @@ import { computed } from 'vue'
 import { useAtrium } from '../registry'
 import { useI18n } from 'vue-i18n'
 
-import type { AtriumScreen, AtriumSettingsPanel } from '../types/atrium'
+import type { AtriumScreenData, AtriumSettingsPanelData } from '../types/atrium'
 
 /**
  * A settings panel on its screen: the panel's registered component on the
  * built-in tab, a registered tab in its place when that tab is open, and the
  * screen's sections around it.
  */
-const props = defineProps<{ panel: AtriumSettingsPanel, screen: AtriumScreen | null | undefined }>()
+const props = defineProps<{ panel: AtriumSettingsPanelData, screen: AtriumScreenData | null | undefined }>()
 
 const atrium = useAtrium()
 const { t } = useI18n()

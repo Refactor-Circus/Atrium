@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAtriumIcon } from '../composables/useAtriumIcon'
 
-import type { AtriumScreen } from '../types/atrium'
+import type { AtriumScreenData } from '../types/atrium'
 
 /**
  * A screen: its tabs and the sections of every slot it declares.
@@ -13,7 +13,7 @@ import type { AtriumScreen } from '../types/atrium'
  * page refetches. A built-in tab renders the default slot (with the tab's
  * key); a registered tab renders its package's component with its data.
  */
-const props = defineProps<{ screen: AtriumScreen | null | undefined, record?: unknown }>()
+const props = defineProps<{ screen: AtriumScreenData | null | undefined, record?: unknown }>()
 
 const route = useRoute()
 const router = useRouter()

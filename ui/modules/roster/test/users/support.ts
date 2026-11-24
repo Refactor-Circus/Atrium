@@ -4,7 +4,7 @@ import type {
   RosterImpersonation,
   RosterUser
 } from '../../src/components/users/users'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mountIntegration, packageCalls, type PackageCall } from '@refactor-circus/atrium/testing'
 
@@ -104,7 +104,7 @@ export function page<T>(data: T[], current = 1, last = 1): { data: T[], meta: { 
 }
 
 /** The `atrium.screens.show` answer for a Roster screen with no extensions. */
-export function screenOf(key: string, record: string | null = null): { data: AtriumIntegrationScreen } {
+export function screenOf(key: string, record: string | null = null): { data: AtriumIntegrationScreenData } {
   return {
     data: {
       key,

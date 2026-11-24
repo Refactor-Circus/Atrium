@@ -280,10 +280,6 @@ export function atriumModule(options) {
  * and Nuxt UI inlined, happy-dom, and the SDK's test setup (a fresh app,
  * router, Pinia and i18n per file: `@refactor-circus/atrium/testing`).
  */
-export async function atriumTestConfigAsync(options = {}) {
-  return atriumTestConfig(options)
-}
-
 export function atriumTestConfig({ root = process.cwd(), include = ['test/**/*.test.ts'], setupFiles = [], dirs = [], ...rest } = {}) {
   return {
     root,
@@ -293,6 +289,18 @@ export function atriumTestConfig({ root = process.cwd(), include = ['test/**/*.t
     },
     test: {
       environment: 'happy-dom',
+      // Nothing a test renders may load a file or leave for the network.
+      environmentOptions: {
+        happyDOM: {
+          url: 'http://localhost:3000',
+          settings: {
+            disableJavaScriptFileLoading: true,
+            disableCSSFileLoading: true,
+            disableIframePageLoading: true,
+            handleDisabledFileLoadingAsSuccess: true
+          }
+        }
+      },
       include,
       setupFiles: [join(ATRIUM_SDK_ROOT, 'src/testing/setup.ts'), ...setupFiles],
       server: { deps: { inline: ['@nuxt/ui', '@refactor-circus/atrium'] } },

@@ -84,9 +84,17 @@ export function localeFilesIn(directory: string): string[] {
 
 /**
  * Every `t()` key used under `sources` that neither Atrium's `en.json` nor
- * any of `locales` holds, as `file: key` (relative to `root`).
+ * any of `locales` holds, as `file: key` (relative to `root`). Given a
+ * module's key instead, its suite's folder is the module: `src/`, with the
+ * `*.en.json` files in `src/locales`.
  */
-export function missingI18nKeys(options: { root: string, sources: string[], locales: string[] }): string[] {
+export function missingI18nKeys(options: string | { root: string, sources: string[], locales: string[] }): string[] {
+  if (typeof options === 'string') {
+    const root = process.cwd()
+
+    return missingI18nKeys({ root, sources: [join(root, 'src')], locales: localeFilesIn(join(root, 'src/locales')) })
+  }
+
   const messages = [atriumLocaleFile, ...options.locales].map(file => JSON.parse(readFileSync(file, 'utf8')) as unknown)
 
   return options.sources.flatMap(directory => filesUnder(directory)).flatMap(file => i18nKeysIn(readFileSync(file, 'utf8'))

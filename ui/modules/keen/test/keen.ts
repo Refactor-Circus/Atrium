@@ -1,6 +1,6 @@
 import type { components } from '../client/schema'
 import type { KeenAuditEntry, KeenAuditedPackage, KeenEntriesPage } from '../src/components/entries'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 
 /*
  * Payloads for the Keen suites, typed against the vendored Keen schema
@@ -42,7 +42,7 @@ export const keenPackages = [
 ] satisfies KeenAuditedPackage[]
 
 /** `atrium.screens.show` for a Keen screen, with no extension registered. */
-export function keenScreen(key: string, kind: 'list' | 'detail', path: string, record: string | null = null): { data: AtriumIntegrationScreen } {
+export function keenScreen(key: string, kind: 'list' | 'detail', path: string, record: string | null = null): { data: AtriumIntegrationScreenData } {
   return {
     data: {
       key,
@@ -59,7 +59,7 @@ export function keenScreen(key: string, kind: 'list' | 'detail', path: string, r
 }
 
 /** The Keen screen `atrium.screens.show` would answer for `path` (`/screens/keen.entry`). */
-export function keenScreenFor(path: string, record: unknown): { data: AtriumIntegrationScreen } {
+export function keenScreenFor(path: string, record: unknown): { data: AtriumIntegrationScreenData } {
   const key = decodeURIComponent(path.replace(/^\/screens\//, ''))
   const value = typeof record === 'string' ? record : null
 

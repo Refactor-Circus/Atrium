@@ -1,4 +1,4 @@
-import type { KeenEntriesQuery } from '../../keen/components/entries'
+import type { KeenEntriesQuery } from '../entries'
 
 /*
  * What the cross-package hooks read from their extension's static `data`

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DOMWrapper, VueWrapper } from '@vue/test-utils'
 import FeaturesPage from '../src/pages/features.vue'
 import type { components } from '../client/schema'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mockPackageApi, mountIntegration, reply, resetPackageApis, type PackageCall, type PackageRoutes } from '@refactor-circus/atrium/testing'
 import { clearAtriumData, mockAtriumApi, useRouter } from '@refactor-circus/atrium/testing'
@@ -82,7 +82,7 @@ const richValue = {
   updated_at: null
 } satisfies Schemas['FeatureValueResource']
 
-const screen: AtriumIntegrationScreen = {
+const screen: AtriumIntegrationScreenData = {
   key: 'pennantplus.features',
   kind: 'list',
   path: '/pennantplus/features',

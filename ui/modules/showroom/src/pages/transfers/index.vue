@@ -28,7 +28,7 @@ import {
   type ImportMode,
   type TransferRun
 } from '../../components/transfers/transfers'
-import type { AtriumExtension } from '@refactor-circus/atrium'
+import type { AtriumExtensionData } from '@refactor-circus/atrium'
 
 /**
  * `showroom.transfers`, ported from v1's `transfers/index` (D-035, D-042).

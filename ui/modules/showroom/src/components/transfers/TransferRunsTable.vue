@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AtriumExtension } from '@refactor-circus/atrium'
+import type { AtriumExtensionData } from '@refactor-circus/atrium'
 import { formatDate } from '../catalog/catalog'
 import { runError, runStatusColor, type TransferRun } from './transfers'
 
@@ -9,7 +9,7 @@ import { runError, runStatusColor, type TransferRun } from './transfers'
  * sections packages place in the screen's `row.actions` slot, given the run
  * id as their record.
  */
-defineProps<{ runs: TransferRun[], rowActions: AtriumExtension[] }>()
+defineProps<{ runs: TransferRun[], rowActions: AtriumExtensionData[] }>()
 
 const { t } = useI18n()
 </script>

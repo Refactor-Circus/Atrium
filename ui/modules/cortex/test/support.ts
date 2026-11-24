@@ -8,7 +8,7 @@ import type {
   CortexSettingsSummary,
   CortexTool
 } from '../src/components/cortex'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mountIntegration, packageCalls, type PackageCall } from '@refactor-circus/atrium/testing'
 
@@ -110,7 +110,7 @@ export const runnableAgents = [
 ] satisfies Schemas['AgentReferenceResource'][]
 
 /** The `atrium.screens.show` answer for a Cortex screen with no extensions. */
-export function screenOf(key: string, record: string | null = null): { data: AtriumIntegrationScreen } {
+export function screenOf(key: string, record: string | null = null): { data: AtriumIntegrationScreenData } {
   return {
     data: {
       key,

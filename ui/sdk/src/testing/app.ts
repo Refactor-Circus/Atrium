@@ -2,7 +2,7 @@ import { createHead } from '@unhead/vue/client'
 import { flushPromises, mount, type ComponentMountingOptions, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { defineComponent, h, nextTick, reactive, Suspense, type App, type Component, type Plugin } from 'vue'
-import { createRouter, createWebHistory, type RouteLocationRaw, type RouteRecordRaw, type Router } from 'vue-router'
+import { createRouter, createWebHistory, START_LOCATION, type RouteLocationRaw, type RouteRecordRaw, type Router } from 'vue-router'
 // Resolved by Nuxt UI's Vite plugin, which the test config always loads.
 import ui from '@nuxt/ui/vue-plugin'
 import { setAtriumApp } from '../runtime/context'
@@ -79,9 +79,9 @@ export async function mountSuspended<T>(component: T, options: MountSuspendedOpt
 
   if (route !== undefined) {
     await test.router.push(route)
+  } else if (test.router.currentRoute.value === START_LOCATION) {
+    await test.router.push('/')
   }
-
-  await test.router.isReady()
 
   const state = reactive<Record<string, unknown>>({ ...(attrs ?? {}), ...(props ?? {}) })
 

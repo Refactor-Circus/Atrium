@@ -119,13 +119,13 @@ export type AtriumWidgetDefinition = Schemas['WidgetDefinitionResource']
 export type AtriumTab = ScreenSchema['tabs'][number]
 
 /** A screen section, or a registered tab, rendered by its `component`. */
-export type AtriumExtension = Omit<AtriumTab, 'icon' | 'built_in'>
+export type AtriumExtensionData = Omit<AtriumTab, 'icon' | 'built_in'>
 
-export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record' | 'options' | 'sections' | 'rows'> & {
+export type AtriumScreenData = Omit<ScreenSchema, 'path' | 'subject_type' | 'record' | 'options' | 'sections' | 'rows'> & {
   /** Each slot's sections, by slot name (`header.actions`, `before`, `after`, `aside`, ...) */
-  sections: Record<string, AtriumExtension[]>
+  sections: Record<string, AtriumExtensionData[]>
   /** Row-slot sections of a list screen, by row key, then slot */
-  rows: Record<string, Record<string, AtriumExtension[]>>
+  rows: Record<string, Record<string, AtriumExtensionData[]>>
 }
 
 /**
@@ -138,27 +138,27 @@ export type AtriumScreen = Omit<ScreenSchema, 'path' | 'subject_type' | 'record'
  * `showroom.transfers`' `flow_prefix` (D-042); the API always sends it,
  * `{}` when there is none.
  */
-export type AtriumIntegrationScreen = AtriumScreen & Required<Pick<ScreenSchema, 'path' | 'subject_type' | 'record'>> & Pick<ScreenSchema, 'options'>
+export type AtriumIntegrationScreenData = AtriumScreenData & Required<Pick<ScreenSchema, 'path' | 'subject_type' | 'record'>> & Pick<ScreenSchema, 'options'>
 
 export interface AtriumIntegrationScreenResponse {
-  data: AtriumIntegrationScreen
+  data: AtriumIntegrationScreenData
 }
 
 /** The layer's public names for a screen payload and the shell. */
-export type ScreenData = AtriumScreen
+export type ScreenData = AtriumScreenData
 export type Shell = AtriumShell
 
 /** An opened settings panel: its `description` and `data` always come with it. */
-export type AtriumSettingsPanel = Omit<PanelSchema, 'description' | 'data'> & Required<Pick<PanelSchema, 'description' | 'data'>>
+export type AtriumSettingsPanelData = Omit<PanelSchema, 'description' | 'data'> & Required<Pick<PanelSchema, 'description' | 'data'>>
 
 export interface AtriumSettingsIndexResponse {
   data: AtriumSettingsSummary[]
-  screen: AtriumScreen
+  screen: AtriumScreenData
 }
 
 export interface AtriumSettingsPanelResponse {
-  data: AtriumSettingsPanel
-  screen: AtriumScreen
+  data: AtriumSettingsPanelData
+  screen: AtriumScreenData
 }
 
 export type AtriumSearchResult = Schemas['SearchResultResource']

@@ -1,5 +1,5 @@
 import type { components } from '../client/schema'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import { settle } from '@refactor-circus/atrium/testing'
 import { integrationEntry, integrationShell, type PackageBody, type PackageCall, resetPackageApis, useShell } from '@refactor-circus/atrium/testing'
 import { clearAtriumData, mountSuspended, useRouter } from '@refactor-circus/atrium/testing'
@@ -166,7 +166,7 @@ export function page<T>(data: T[], nextCursor: string | null = null) {
 }
 
 /** What `atrium.screens.show` answers for an Impex screen: no extensions. */
-export function screenAnswer(key: string, record: string | null = null): { data: AtriumIntegrationScreen } {
+export function screenAnswer(key: string, record: string | null = null): { data: AtriumIntegrationScreenData } {
   return {
     data: {
       key,

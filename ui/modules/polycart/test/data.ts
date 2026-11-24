@@ -1,6 +1,6 @@
 import type { DOMWrapper, VueWrapper } from '@vue/test-utils'
 import type { components } from '../client/schema'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import type { PackageCall } from '@refactor-circus/atrium/testing'
 
 /*
@@ -168,7 +168,7 @@ export function cursorPage<T>(data: T[], next: string | null = null, prev: strin
 }
 
 /** An `atrium.screens.show` payload for one of Polycart's screens. */
-export function screenPayload(key: string, kind: 'list' | 'detail', path: string, record: string | null = null): AtriumIntegrationScreen {
+export function screenPayload(key: string, kind: 'list' | 'detail', path: string, record: string | null = null): AtriumIntegrationScreenData {
   return { key, kind, path, subject_type: null, record, open_tab: 'overview', tabs: [], sections: {}, rows: {} }
 }
 

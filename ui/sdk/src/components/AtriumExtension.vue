@@ -3,13 +3,13 @@ import { computed } from 'vue'
 import { useAtrium } from '../registry'
 import { useI18n } from 'vue-i18n'
 
-import type { AtriumExtension } from '../types/atrium'
+import type { AtriumExtensionData } from '../types/atrium'
 
 /**
  * A screen extension (a registered tab or a section), rendered by the
  * component registered for its key, or an error card when its data failed.
  */
-const props = defineProps<{ extension: AtriumExtension, record?: unknown }>()
+const props = defineProps<{ extension: AtriumExtensionData, record?: unknown }>()
 
 const atrium = useAtrium()
 const { t } = useI18n()

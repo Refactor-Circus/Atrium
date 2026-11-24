@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { AtriumIntegrationScreen } from '@refactor-circus/atrium'
+import type { AtriumIntegrationScreenData } from '@refactor-circus/atrium'
 import fixture from '@refactor-circus/atrium/fixtures/integrations/guardian.json'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mountIntegration, packageCalls, type PackageCall } from '@refactor-circus/atrium/testing'
@@ -20,13 +20,13 @@ export function screenOptions(key: string, options: Record<string, unknown>): vo
 }
 
 /** The `atrium.screens.show` answer for a Guardian screen with no extensions. */
-export function guardianScreen(key: string, record: string | null = null): { data: AtriumIntegrationScreen } {
+export function guardianScreen(key: string, record: string | null = null): { data: AtriumIntegrationScreenData } {
   const declared = fixture.screens.find(screen => screen.key === key)
 
   return {
     data: {
       key,
-      kind: (declared?.kind ?? 'list') as AtriumIntegrationScreen['kind'],
+      kind: (declared?.kind ?? 'list') as AtriumIntegrationScreenData['kind'],
       path: declared?.path ?? '/guardian',
       subject_type: null,
       record,
@@ -34,7 +34,7 @@ export function guardianScreen(key: string, record: string | null = null): { dat
       tabs: [],
       sections: {},
       rows: {},
-      options: (optionOverrides.get(key) ?? declared?.options ?? {}) as AtriumIntegrationScreen['options']
+      options: (optionOverrides.get(key) ?? declared?.options ?? {}) as AtriumIntegrationScreenData['options']
     }
   }
 }
