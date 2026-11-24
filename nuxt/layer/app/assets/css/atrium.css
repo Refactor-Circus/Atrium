@@ -612,12 +612,30 @@
   }
 }
 
-/* A panel (UCard, and anything Nuxt UI draws as one): hairline, lit top edge. */
+/* A panel (UCard, and anything Nuxt UI draws as one): hairline, lit top edge,
+ * and a HUD bracket in the primary colour on its top-left corner. */
 .atrium-card {
+  position: relative;
   background:
     linear-gradient(180deg, var(--atrium-edge), transparent 2.5rem),
     var(--ui-bg);
   box-shadow: inset 0 0 0 1px var(--ui-border), 0 1px 0 0 var(--atrium-edge), 0 12px 32px -24px rgb(0 0 0 / 0.35);
+}
+
+.atrium-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  pointer-events: none;
+  border-top-left-radius: calc(var(--ui-radius) * 1.5);
+  background:
+    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 100% 1px no-repeat,
+    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 1px 100% no-repeat;
+  opacity: 0.7;
+  filter: drop-shadow(0 0 3px var(--atrium-glow));
 }
 
 .dark .atrium-card {
