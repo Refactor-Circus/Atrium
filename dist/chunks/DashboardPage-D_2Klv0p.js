@@ -1,1 +1,0 @@
-import{t as e}from"./AtriumDashboardPage-CKR3JOmR.js";import{b as t,gt as n,j as r,jn as i}from"./runtime-core.esm-bundler-DdPnhzZn.js";import{G as a}from"./devtools-RytpElE1-Cb4cD7Ml.js";var o=r({__name:`DashboardPage`,setup(r){let o=a();return(r,a)=>{let s=e;return n(),t(s,{slug:String(i(o).params.slug)},null,8,[`slug`])}}});export{o as default};
