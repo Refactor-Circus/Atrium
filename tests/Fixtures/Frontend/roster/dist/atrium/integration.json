@@ -49,7 +49,7 @@
       "key": "roster.record",
       "kind": "detail",
       "path": "/roster/records/:record",
-      "subject_type": "roster.record"
+      "subject_type": "roster_record"
     }
   ]
 }

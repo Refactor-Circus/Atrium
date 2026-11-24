@@ -117,7 +117,15 @@
         "key": { "$ref": "#/$defs/dottedKey" },
         "kind": { "enum": ["detail", "list"] },
         "path": { "$ref": "#/$defs/screenPath" },
-        "subject_type": { "type": "string", "pattern": "\\S" },
+        "subject_type": {
+          "type": "string",
+          "pattern": "\\S",
+          "description": "The screen's subject: a morph alias, or the suite's name for it (`roster.organization`) when the morph type depends on the host, with `subject_model` then giving the model. Hook targeting and `$subject_scope` read it."
+        },
+        "subject_model": {
+          "anyOf": [{ "type": "string", "pattern": "\\S" }, { "$ref": "#/$defs/configExpression" }],
+          "description": "The model the subject is stored as, a class or morph alias, or a `$config` expression reading it. Atrium sends its morph type (the host's alias, else the class) as `$screen` `subject_type`; the record a screen passes is the model's route key. Needs `subject_type`."
+        },
         "options": { "$ref": "#/$defs/values" }
       }
     },

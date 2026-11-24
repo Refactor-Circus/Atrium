@@ -132,8 +132,9 @@ export type AtriumScreenData = Omit<ScreenSchema, 'path' | 'subject_type' | 'rec
  * A screen a suite integration declares (`atrium.screens.show`): its
  * declaration and the extensions other packages registered for it. The page
  * loads the record itself, from the package's API. `path` is the layer route
- * it lives at (`/impex/runs/:run`), `subject_type` the package's morph alias
- * of its record, and `record` the key it was asked for (`?record=`).
+ * it lives at (`/impex/runs/:run`), `subject_type` the morph type the host
+ * stores its record as (D-092), and `record` the record's route key it was
+ * asked for (`?record=`).
  * `options` is the static configuration the page reads, such as
  * `showroom.transfers`' `flow_prefix` (D-042); the API always sends it,
  * `{}` when there is none.

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Workbench\App\Atrium;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use stdClass;
 
 /**
@@ -25,6 +28,14 @@ use stdClass;
  *
  * Demo states: a path holding `__fail` answers 500, and a list queried with
  * `__empty` in any parameter answers an empty page.
+ *
+ * Record references are checked as a host checks them (D-092): an
+ * `owner_type`, `scope_type` or `subject_type` must name a morph type, an
+ * alias in the morph map, an Eloquent model class or the morph type a
+ * registered screen's `subject_model` declares (the packages' models are not
+ * installed here), else it answers 422 as the packages' APIs do. The suite's
+ * name for a record (`roster.organization`) is no morph type: a hook that sent
+ * one rendered here and failed on every real host.
  *
  * A port of the Nuxt playground's stand-in, value for value, so the design
  * bench shows the same records it did.
@@ -69,6 +80,12 @@ final class SuiteStandIn
 
         if ($method === 'options') {
             return new Response('', 204, $headers);
+        }
+
+        $refused = self::unresolvedReference($request);
+
+        if ($refused !== null) {
+            return new JsonResponse(['message' => $refused[1], 'errors' => [$refused[0] => [$refused[1]]]], 422, $headers);
         }
 
         $segments = explode('/', $path);
@@ -134,6 +151,54 @@ final class SuiteStandIn
         $body = $this->generate($resolved, 'root', $ctx);
 
         return new JsonResponse($isList && is_array($body) && isset($body['data']) && is_array($body['data']) && array_is_list($body['data']) ? $this->withPaging($body, $query) : $body, (int) $status, $headers);
+    }
+
+    /**
+     * The first record reference no host could resolve, as `[field, message]`:
+     * a `{owner,scope,subject}_type` that is no morph type (see the class
+     * docblock). Null when every reference resolves.
+     *
+     * @return array{string, string}|null
+     */
+    public static function unresolvedReference(Request $request): ?array
+    {
+        foreach (['owner', 'scope', 'subject'] as $reference) {
+            $type = $request->input($reference.'_type');
+
+            if (! is_string($type) || $type === '' || self::morphType($type)) {
+                continue;
+            }
+
+            return [$reference.'_type', str_contains($type, '.')
+                ? "[{$type}] is the suite's name for a record, not a morph type: no host can resolve it."
+                : "No model has the morph type [{$type}]."];
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether a type names a model as a host stores it: an alias in the morph
+     * map, an Eloquent model class, or the morph type of a registered screen's
+     * subject model.
+     */
+    private static function morphType(string $type): bool
+    {
+        $class = Relation::getMorphedModel($type) ?? $type;
+
+        if (class_exists($class) && is_subclass_of($class, Model::class)) {
+            return true;
+        }
+
+        foreach (app(IntegrationRegistry::class)->all() as $integration) {
+            foreach ($integration->screens as $screen) {
+                if ($screen->subjectMorphType === $type || ($screen->subjectType === $type && ! str_contains($type, '.'))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

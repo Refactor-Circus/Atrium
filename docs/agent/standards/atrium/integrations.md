@@ -20,10 +20,11 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the e
 
 ## A manifest declares data only
 
-- A manifest holds nav items, widget definitions, a settings panel, search source descriptors and screen declarations (key, kind, front-end path, subject morph alias, optional `options`), `features` and `hooks`. Every widget, settings panel, tab and section sends static data only: `{}` or its hook configuration, never a resolver that reads package state. Values the host configures are `$config` expressions, read at registration, limited to `{pkg}.*` and `atrium.integrations.{pkg}.*` so a manifest cannot send a host secret to the browser.
+- A manifest holds nav items, widget definitions, a settings panel, search source descriptors and screen declarations (key, kind, front-end path, subject type and optional subject model, optional `options`), `features` and `hooks`. Every widget, settings panel, tab and section sends static data only: `{}` or its hook configuration, never a resolver that reads package state. Values the host configures are `$config` expressions, read at registration, limited to `{pkg}.*` and `atrium.integrations.{pkg}.*` so a manifest cannot send a host secret to the browser.
 - Atrium's PHP never loads a package's classes, models or actions: nothing in `src/` names `RefactorCircus\Cortex`, `\Guardian`, `\Impex`, `\Keen`, `\PennantPlus`, `\Polycart`, `\Roster` or `\Showroom`, not even as a string, and `composer.json` `require` names only PHP, Laravel and `refactor-circus/keystone`.
 - Screen, widget, live and hook extension keys start with `{pkg}.`, screen and nav paths with `/{pkg}/`; a bad manifest throws `InvalidIntegrationException` naming the file and the JSON pointer. v1 keys are kept, so host extensions still attach.
-- Morph aliases a hook needs (`subject_type`, `owner_type`) are the screens' `subject_type` in the owning package's manifest.
+- Morph aliases a hook needs (`subject_type`, `owner_type`) come from the screens of the owning package's manifest: `$screen` `subject_type` is the screen's `subject_model` (a class, alias or `$config`, such as Roster's `roster.users.model`) resolved through the host's morph map, else its `subject_type`. A `subject_type` that is the suite's name for a record (`roster.organization`) and not a morph alias needs a `subject_model` (D-092).
+- A detail screen passes its route parameter as the record: the subject model's route key (an organization's slug). An API a hook calls resolves its record reference (`owner_id`, `scope_id`, `subject_id`) by the model's route key, as models/stored-identifiers says, so the identifier a screen shows is the one the hook sends.
 
 ## Vue calls the package through its client
 
@@ -46,7 +47,7 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the e
 
 - A hook is declared in the manifest of the package whose API its component calls (Cortex's redirect domains, Impex's run link, Keen's history and activity, Guardian's tabs and section). It registers only while both of its integrations are registered, and follows both their flags; it has no flag of its own.
 - Its placements are its manifest `default`, or the host's `atrium.integrations.{pkg}.{config}` (the v1 config shapes: `map`, `lists`, `targets`, `options`). A target is `*`, `{package}.*` or a screen key, and a slot matches `Screen::NAME_PATTERN`. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped elsewhere.
-- Hook data is the manifest's `data`, with `$screen` (`subject_type`, `package`, `key`), `$option` and `$subject_scope` read per screen; the Vue component adds the record key from `?record=`.
+- Hook data is the manifest's `data`, with `$screen` (`subject_type`, `package`, `key`), `$option` and `$subject_scope` read per screen; the Vue component adds the record's route key from `?record=`.
 - A hook's Vue component lives in `src/components/hooks/` of the module whose package API it calls, and wraps that module's own components (Guardian's `guardian.access` wraps `GuardianAssignments`), which take their record as a prop rather than reading the route.
 
 ## Roles and permissions live in Guardian

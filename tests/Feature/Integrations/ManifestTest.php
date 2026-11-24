@@ -215,7 +215,7 @@ describe('expressions', function (): void {
 
         manifestAcme();
 
-        expect(manifestTabData('roster.user', 'acme.notes'))->toBe(['owner' => 'roster.user'])
+        expect(manifestTabData('roster.user', 'acme.notes'))->toBe(['owner' => 'App\\Models\\User'])
             ->and(manifestTabData('roster.user', 'acme.access'))->toBe(['scope' => null])
             ->and(manifestTabData('roster.organization', 'acme.activity'))->toBe(['scope' => true])
             ->and(array_map(fn ($section) => $section->key, app(ScreenExtensions::class)->sections('roster.organization', 'aside')))->toBe(['acme.note-list']);
@@ -226,7 +226,7 @@ describe('expressions', function (): void {
 
         manifestAcme();
 
-        expect(manifestTabData('roster.organization', 'acme.notes'))->toBe(['owner' => 'roster.organization'])
+        expect(manifestTabData('roster.organization', 'acme.notes'))->toBe(['owner' => 'RefactorCircus\\Roster\\Domains\\Organization\\Models\\OrganizationModel'])
             ->and(manifestTabData('roster.user', 'acme.notes'))->toBeNull();
     });
 

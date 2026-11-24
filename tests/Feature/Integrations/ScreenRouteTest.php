@@ -74,7 +74,7 @@ it('answers a declared detail screen with its declaration, the record echoed and
             'key' => 'cortex.record',
             'kind' => 'detail',
             'path' => '/cortex/records/:record',
-            'subject_type' => 'cortex.record',
+            'subject_type' => 'cortex_record',
             'record' => '42',
             'options' => [],
             'open_tab' => 'overview',

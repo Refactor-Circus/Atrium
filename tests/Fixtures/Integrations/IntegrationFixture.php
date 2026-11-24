@@ -145,7 +145,7 @@ final class IntegrationFixture
             'search_sources' => [['key' => $key, 'label' => $label.' records', 'icon' => 'i-lucide-search']],
             'screens' => [
                 ['key' => $key.'.records', 'kind' => 'list', 'path' => '/'.$key.'/records'],
-                ['key' => $key.'.record', 'kind' => 'detail', 'path' => '/'.$key.'/records/:record', 'subject_type' => $key.'.record'],
+                ['key' => $key.'.record', 'kind' => 'detail', 'path' => '/'.$key.'/records/:record', 'subject_type' => $key.'_record'],
             ],
         ];
     }

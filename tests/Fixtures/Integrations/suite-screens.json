@@ -409,12 +409,12 @@
             "after": {
                 "keen.history": {
                     "source": "roster",
-                    "subject_type": "roster.user"
+                    "subject_type": "App\\Models\\User"
                 }
             },
             "aside": {
                 "cortex.redirect-domains": {
-                    "owner_type": "roster.user"
+                    "owner_type": "App\\Models\\User"
                 },
                 "guardian.sso-identities": []
             }
@@ -442,7 +442,7 @@
     "roster.organization": {
         "tabs": {
             "cortex.mcp": {
-                "owner_type": "roster.organization"
+                "owner_type": "RefactorCircus\\Roster\\Domains\\Organization\\Models\\OrganizationModel"
             },
             "guardian.access": {
                 "scope_type": "roster_organization"
@@ -455,7 +455,7 @@
             },
             "keen.activity": {
                 "source": "roster",
-                "subject_type": "roster.organization",
+                "subject_type": "RefactorCircus\\Roster\\Domains\\Organization\\Models\\OrganizationModel",
                 "scope": true
             }
         },
@@ -463,7 +463,7 @@
             "after": {
                 "keen.history": {
                     "source": "roster",
-                    "subject_type": "roster.organization"
+                    "subject_type": "RefactorCircus\\Roster\\Domains\\Organization\\Models\\OrganizationModel"
                 }
             }
         }

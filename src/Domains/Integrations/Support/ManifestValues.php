@@ -17,11 +17,13 @@ use stdClass;
  *   (`atrium.integrations.{pkg}.*`), cast (see `cast()`); missing or null is
  *   the default.
  * - `{"$screen": "subject_type" | "package" | "key", "kinds": [...]}`: the
- *   screen a hook extension is placed on; left out on a screen of another kind.
+ *   screen a hook extension is placed on (`subject_type`: the morph type its
+ *   record is stored as, its `subject_model`'s when it names one); left out on
+ *   a screen of another kind.
  * - `{"$option": name, "type": cast, "default": value}`: an option of an
  *   `options` hook's placement.
  * - `{"$subject_scope": map, "self": "user"}`: the scope a screen's record
- *   is (the last `.` part of its subject type), looked up in the map; null when
+ *   is (the last `.` part of its declared subject type), looked up in the map; null when
  *   it is `self`, and the extension is skipped where it does not resolve.
  *
  * The manifest's schema and rules have already been checked, so every
@@ -257,7 +259,7 @@ final class ManifestValues
         }
 
         return match ($expression['$screen']) {
-            'subject_type' => $screen->subjectType,
+            'subject_type' => $screen->morphType(),
             'package' => $this->package,
             default => $screen->key,
         };

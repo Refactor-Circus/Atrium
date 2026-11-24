@@ -12,8 +12,11 @@ use RefactorCircus\Atrium\Support\JsonData;
 /**
  * A screen an integration declares: its key (`roster.user`, the v1 key), its
  * kind (`detail` or `list`), the front end page's path (`/roster/users/:user`),
- * on a detail screen the morph alias of its record (`subject_type`), and any
- * static options its page reads (`options`).
+ * on a detail screen its subject (`subject_type`: a morph alias, or the
+ * suite's name for it) and the morph type the host stores its record as
+ * (`morphType()`: the subject model's, else `subject_type`), and any static
+ * options its page reads (`options`). The record the page passes is the
+ * subject model's route key (D-092).
  *
  * The front end renders the screen; `atrium.screens.show` serves the tabs and
  * sections other packages register for it, with no model loaded.
@@ -38,9 +41,18 @@ final class ScreenDeclaration
     public private(set) string $path;
 
     /**
-     * The morph alias of the screen's record, on a detail screen.
+     * The screen's subject, on a detail screen: a morph alias, or the suite's
+     * name for it (`roster.organization`) when the morph type depends on the
+     * host. Hook targeting and `$subject_scope` read it.
      */
     public private(set) ?string $subjectType = null;
+
+    /**
+     * The morph type the host stores the subject's record as, when the screen
+     * names its model (`subject_model`); `morphType()` falls back to the
+     * subject type.
+     */
+    public private(set) ?string $subjectMorphType = null;
 
     /**
      * Static configuration the front end page needs (`showroom.transfers`'
@@ -89,6 +101,33 @@ final class ScreenDeclaration
         $this->subjectType = $subjectType;
 
         return $this;
+    }
+
+    /**
+     * The morph type the host stores the subject's record as (its alias in
+     * the host's morph map, else its class), from the model the screen names.
+     *
+     * @throws InvalidArgumentException for an empty morph type
+     */
+    public function subjectMorphType(string $morphType): self
+    {
+        if (trim($morphType) === '') {
+            throw new InvalidArgumentException("Screen [{$this->key}] needs a non-empty subject morph type.");
+        }
+
+        $this->subjectMorphType = $morphType;
+
+        return $this;
+    }
+
+    /**
+     * The morph type of the screen's record, as packages store and look it up
+     * (`$screen` `subject_type` in hook data): the subject model's, else the
+     * subject type itself; null on a screen with no subject.
+     */
+    public function morphType(): ?string
+    {
+        return $this->subjectType === null ? null : $this->subjectMorphType ?? $this->subjectType;
     }
 
     /**

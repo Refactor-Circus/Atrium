@@ -6,6 +6,8 @@ namespace RefactorCircus\Atrium\Domains\Integrations\Services;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleRegistry;
@@ -263,6 +265,12 @@ final class IntegrationRegistry
 
             if (isset($screen->subject_type)) {
                 $declaration->subjectType($screen->subject_type);
+
+                $model = isset($screen->subject_model) ? $values->read($screen->subject_model) : null;
+
+                if (is_string($model) && trim($model) !== '') {
+                    $declaration->subjectMorphType(self::morphType($model));
+                }
             }
 
             if (isset($screen->options)) {
@@ -353,6 +361,23 @@ final class IntegrationRegistry
         }
 
         return $navigation;
+    }
+
+    /**
+     * The morph type a screen's subject model is stored as (D-092): an
+     * Eloquent model class's alias in the host's morph map, else the class;
+     * anything else (an alias already, or a model this app does not have) as
+     * it is.
+     */
+    private static function morphType(string $model): string
+    {
+        if (class_exists($model) && is_subclass_of($model, Model::class)) {
+            $alias = Relation::getMorphAlias($model);
+
+            return is_string($alias) && $alias !== '' ? $alias : $model;
+        }
+
+        return $model;
     }
 
     private static function widget(stdClass $widget): WidgetDefinition

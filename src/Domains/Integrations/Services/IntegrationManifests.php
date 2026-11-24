@@ -21,6 +21,10 @@ use stdClass;
  * - screen keys, widget keys, live keys and hook tab and section keys start
  *   with `{key}.`; screen and nav paths with `/{key}/`;
  * - screen, widget and search source keys are unique;
+ * - a screen's `subject_model` comes with its `subject_type`, and a
+ *   `subject_type` with a `.` (the suite's name for a record, such as
+ *   `roster.organization`, which no host's morph map holds) with its
+ *   `subject_model`;
  * - `$config` (and a `fallback`) reads only `{key}.*` or
  *   `atrium.integrations.{key}.*`; `$screen` and `$subject_scope` appear only
  *   in hook data, `$option` only in an `options` hook's; a `$subject_scope`
@@ -118,6 +122,22 @@ final class IntegrationManifests
 
             if (! str_starts_with($screen->path, '/'.$key.'/')) {
                 return ["/screens/{$index}/path", "[{$screen->path}] must start with [/{$key}/]"];
+            }
+
+            if (isset($screen->subject_type) && str_contains($screen->subject_type, '.') && ! isset($screen->subject_model)) {
+                return ["/screens/{$index}/subject_type", "[{$screen->subject_type}] is the suite's name for the record, not a morph type a host stores: declare its subject_model"];
+            }
+
+            if (isset($screen->subject_model)) {
+                if (! isset($screen->subject_type)) {
+                    return ["/screens/{$index}/subject_model", 'a subject model needs the subject_type it is the model of'];
+                }
+
+                $error = $this->value($screen->subject_model, "/screens/{$index}/subject_model", $key, null);
+
+                if ($error !== null) {
+                    return $error;
+                }
             }
 
             if (isset($screen->options)) {

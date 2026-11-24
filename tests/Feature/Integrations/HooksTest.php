@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,16 @@ use Workbench\App\Models\User;
  * only while both its integrations are registered, sends only static data
  * (its hook configuration), and shows per request only while both are active.
  */
+
+/*
+ * The morph types Roster's screens send hooks (D-092): its manifest names the
+ * organization's model, and the user's through `roster.users.model` (by
+ * default `App\Models\User`); neither class exists here, so each is sent as
+ * it is.
+ */
+const HOOKS_ORGANIZATION_MORPH = 'RefactorCircus\\Roster\\Domains\\Organization\\Models\\OrganizationModel';
+
+const HOOKS_USER_MORPH = 'App\\Models\\User';
 
 beforeEach(function (): void {
     IntegrationFixture::forgetWarnings();
@@ -106,8 +117,8 @@ describe('Cortex redirect domains (AC 65)', function (): void {
     it('registers the cortex.mcp tab on roster.organization and the section in roster.user\'s aside by default', function (): void {
         hooksRegistered('cortex', 'roster');
 
-        expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']])
-            ->and(hooksSections('roster.user', 'aside'))->toBe(['cortex.redirect-domains' => ['owner_type' => 'roster.user']])
+        expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]])
+            ->and(hooksSections('roster.user', 'aside'))->toBe(['cortex.redirect-domains' => ['owner_type' => HOOKS_USER_MORPH]])
             ->and(hooksTabs('roster.user'))->toBe([])
             ->and(hooksSections('roster.organization', 'aside'))->toBe([]);
     });
@@ -117,13 +128,39 @@ describe('Cortex redirect domains (AC 65)', function (): void {
 
         hooksRegistered('cortex', 'roster');
 
-        expect(hooksSections('roster.organization', 'before'))->toBe(['cortex.redirect-domains' => ['owner_type' => 'roster.organization']])
-            ->and(hooksTabs('roster.user'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.user']])
-            ->and(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']])
+        expect(hooksSections('roster.organization', 'before'))->toBe(['cortex.redirect-domains' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]])
+            ->and(hooksTabs('roster.user'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_USER_MORPH]])
+            ->and(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]])
             // Only detail screens with a record type own domains.
             ->and(hooksTabs('roster.users'))->toBe([])
             ->and(hooksTabs('roster.team'))->toBe([])
             ->and(hooksSections('roster.user', 'aside'))->toBe([]);
+    });
+
+    it('sends the morph type the host stores each subject as, not the suite\'s name for it (D-092)', function (): void {
+        $morphMap = Relation::morphMap();
+        Relation::morphMap(['member' => User::class]);
+        config()->set('roster.users.model', User::class);
+
+        try {
+            hooksRegistered('cortex', 'roster');
+
+            // The user's model through the host's morph map; the organization's
+            // model is not installed here, so its class is sent as it is.
+            expect(hooksSections('roster.user', 'aside'))->toBe(['cortex.redirect-domains' => ['owner_type' => 'member']])
+                ->and(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]])
+                ->and(hooksScreen($this, 'roster.user', ['record' => '7'])['subject_type'])->toBe('member');
+        } finally {
+            Relation::morphMap($morphMap, false);
+        }
+    });
+
+    it('sends a subject model the host has not aliased as its class', function (): void {
+        config()->set('roster.users.model', User::class);
+
+        hooksRegistered('cortex', 'roster');
+
+        expect(hooksSections('roster.user', 'aside'))->toBe(['cortex.redirect-domains' => ['owner_type' => User::class]]);
     });
 
     it('registers nothing for an empty list', function (): void {
@@ -186,7 +223,7 @@ describe('Keen history (AC 67)', function (): void {
     it('puts the keen.history section after every integration screen but Keen\'s own', function (): void {
         hooksEverything();
 
-        expect(hooksSections('roster.user', 'after'))->toBe(['keen.history' => ['source' => 'roster', 'subject_type' => 'roster.user']])
+        expect(hooksSections('roster.user', 'after'))->toBe(['keen.history' => ['source' => 'roster', 'subject_type' => HOOKS_USER_MORPH]])
             ->and(hooksSections('roster.users', 'after'))->toBe(['keen.history' => ['source' => 'roster']])
             ->and(hooksSections('showroom.product', 'after'))->toBe(['keen.history' => ['source' => 'showroom', 'subject_type' => 'showroom_product']])
             ->and(hooksSections('showroom.transfers', 'after'))->toBe(['keen.history' => ['source' => 'showroom']])
@@ -222,7 +259,7 @@ describe('Keen history (AC 67)', function (): void {
     it('adds the scoped keen.activity tab on roster.organization by default', function (): void {
         hooksRegistered('keen', 'roster');
 
-        expect(hooksTabs('roster.organization'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => 'roster.organization', 'scope' => true]])
+        expect(hooksTabs('roster.organization'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => HOOKS_ORGANIZATION_MORPH, 'scope' => true]])
             ->and(hooksTabs('roster.user'))->toBe([]);
     });
 
@@ -236,12 +273,12 @@ describe('Keen history (AC 67)', function (): void {
 
         hooksRegistered('keen', 'roster', 'showroom');
 
-        expect(hooksSections('roster.user', 'aside'))->toBe(['keen.history' => ['source' => 'roster', 'subject_type' => 'roster.user']])
+        expect(hooksSections('roster.user', 'aside'))->toBe(['keen.history' => ['source' => 'roster', 'subject_type' => HOOKS_USER_MORPH]])
             ->and(hooksSections('roster.user', 'after'))->toBe([])
             ->and(hooksSections('roster.users', 'aside'))->toBe([])
             ->and(hooksSections('showroom.product', 'aside'))->toBe(['keen.history' => ['source' => 'showroom', 'subject_type' => 'showroom_product']])
             ->and(hooksSections('showroom.products', 'aside'))->toBe([])
-            ->and(hooksTabs('roster.user'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => 'roster.user', 'scope' => false]])
+            ->and(hooksTabs('roster.user'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => HOOKS_USER_MORPH, 'scope' => false]])
             ->and(hooksTabs('roster.organization'))->toBe([])
             // A tab with no options is scoped, as in v1.
             ->and(hooksTabs('showroom.product'))->toBe(['keen.activity' => ['source' => 'showroom', 'subject_type' => 'showroom_product', 'scope' => true]])
@@ -253,7 +290,7 @@ describe('Keen history (AC 67)', function (): void {
 
         expect(hooksSections('roster.user', 'after'))->toBe([])
             ->and(hooksSections('showroom.transfers', 'after'))->toBe([])
-            ->and(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']]);
+            ->and(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]]);
     });
 
     it('registers on no screen of an integration that is not registered', function (): void {
@@ -300,7 +337,7 @@ describe('hook targets and slots (AC 68)', function (): void {
         hooksEverything();
 
         expect(hooksSections('roster.user', 'aside'))->toHaveKey('cortex.redirect-domains')
-            ->and(hooksTabs('roster.organization'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => 'roster.organization', 'scope' => true]])
+            ->and(hooksTabs('roster.organization'))->toBe(['keen.activity' => ['source' => 'roster', 'subject_type' => HOOKS_ORGANIZATION_MORPH, 'scope' => true]])
             ->and(hooksSections('showroom.transfers', 'row.actions'))->toBe(['impex.run-link' => []])
             ->and(hooksSections('roster.user', 'after'))->toHaveKey('keen.history')
             ->and(hooksSections('roster.users', 'after'))->toBe([]);
@@ -352,7 +389,7 @@ describe('hook targets and slots (AC 68)', function (): void {
 
         hooksRegistered('cortex', 'roster');
 
-        expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']]);
+        expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]]);
     });
 });
 
@@ -365,7 +402,7 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
         $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme']);
 
         expect($screen['record'])->toBe('acme')
-            ->and($screen['subject_type'])->toBe('roster.organization')
+            ->and($screen['subject_type'])->toBe(HOOKS_ORGANIZATION_MORPH)
             ->and($screen['tabs'])->toBe([
                 ['key' => 'overview', 'label' => 'Overview', 'icon' => 'i-lucide-layout-grid', 'built_in' => true, 'component' => null],
                 ['key' => 'cortex.mcp', 'label' => 'MCP', 'icon' => 'i-lucide-globe', 'built_in' => false, 'component' => 'cortex.mcp'],
@@ -375,7 +412,7 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
                 'header.actions' => [],
                 'before' => [],
                 'after' => [
-                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.organization']],
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => HOOKS_ORGANIZATION_MORPH]],
                 ],
                 'aside' => [],
             ]);
@@ -385,7 +422,7 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
         $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme', 'tab' => 'cortex.mcp']);
 
         expect($screen['open_tab'])->toBe('cortex.mcp')
-            ->and($screen['tabs'][1]['data'])->toBe(['owner_type' => 'roster.organization'])
+            ->and($screen['tabs'][1]['data'])->toBe(['owner_type' => HOOKS_ORGANIZATION_MORPH])
             ->and($screen['tabs'][2])->not->toHaveKey('data');
     });
 
@@ -393,7 +430,7 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
         $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme', 'tab' => 'keen.activity']);
 
         expect($screen['open_tab'])->toBe('keen.activity')
-            ->and($screen['tabs'][2]['data'])->toBe(['source' => 'roster', 'subject_type' => 'roster.organization', 'scope' => true]);
+            ->and($screen['tabs'][2]['data'])->toBe(['source' => 'roster', 'subject_type' => HOOKS_ORGANIZATION_MORPH, 'scope' => true]);
     });
 
     it('sends roster.user with the cortex.redirect-domains aside and the keen.history section', function (): void {
@@ -404,10 +441,10 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
                 'header.actions' => [],
                 'before' => [],
                 'after' => [
-                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.user']],
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => HOOKS_USER_MORPH]],
                 ],
                 'aside' => [
-                    ['key' => 'cortex.redirect-domains', 'label' => 'Redirect domains', 'component' => 'cortex.redirect-domains', 'data' => ['owner_type' => 'roster.user']],
+                    ['key' => 'cortex.redirect-domains', 'label' => 'Redirect domains', 'component' => 'cortex.redirect-domains', 'data' => ['owner_type' => HOOKS_USER_MORPH]],
                 ],
             ]);
     });
@@ -658,7 +695,7 @@ describe('atrium.screens.show with Cortex, Keen and Guardian on (AC 97)', functi
                 'header.actions' => [],
                 'before' => [],
                 'after' => [
-                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.organization']],
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => HOOKS_ORGANIZATION_MORPH]],
                 ],
                 'aside' => [],
             ]);
@@ -688,10 +725,10 @@ describe('atrium.screens.show with Cortex, Keen and Guardian on (AC 97)', functi
                 'header.actions' => [],
                 'before' => [],
                 'after' => [
-                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => 'roster.user']],
+                    ['key' => 'keen.history', 'label' => 'History', 'component' => 'keen.history', 'data' => ['source' => 'roster', 'subject_type' => HOOKS_USER_MORPH]],
                 ],
                 'aside' => [
-                    ['key' => 'cortex.redirect-domains', 'label' => 'Redirect domains', 'component' => 'cortex.redirect-domains', 'data' => ['owner_type' => 'roster.user']],
+                    ['key' => 'cortex.redirect-domains', 'label' => 'Redirect domains', 'component' => 'cortex.redirect-domains', 'data' => ['owner_type' => HOOKS_USER_MORPH]],
                     ['key' => 'guardian.sso-identities', 'label' => 'SSO identities', 'component' => 'guardian.sso-identities', 'data' => []],
                 ],
             ]);
@@ -712,7 +749,7 @@ it('registers the hooks at boot, after the integrations', function (): void {
     // the integrations register, then the hooks.
     new IntegrationsServiceProvider($this->app)->boot();
 
-    expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']]);
+    expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => HOOKS_ORGANIZATION_MORPH]]);
 });
 
 it('labels each hook from its manifest, through the host\'s lang JSON (D-090)', function (): void {

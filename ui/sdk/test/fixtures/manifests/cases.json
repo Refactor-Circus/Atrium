@@ -72,7 +72,12 @@
         "key": "acme.record",
         "kind": "detail",
         "path": "/acme/records/:record",
-        "subject_type": "acme.record"
+        "subject_type": "acme.record",
+        "subject_model": {
+          "$config": "acme.records.model",
+          "type": "string",
+          "default": "Acme\\Models\\Record"
+        }
       }
     ],
     "hooks": [
@@ -271,7 +276,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -471,7 +481,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -671,7 +686,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -872,7 +892,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -1072,7 +1097,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -1273,7 +1303,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -1473,7 +1508,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -1679,7 +1719,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -1879,7 +1924,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -2079,7 +2129,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -2279,7 +2334,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -2488,7 +2548,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -2688,7 +2753,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -2888,7 +2958,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -3088,7 +3163,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -3288,7 +3368,821 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/{record}",
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "config": "notes.screens",
+            "format": "map",
+            "default": {
+              "roster.user": "tab",
+              "roster.*": "aside"
+            },
+            "screens": {
+              "kind": "detail",
+              "subject": true
+            },
+            "tabs": {
+              "acme.notes": {
+                "label": "Notes",
+                "icon": "i-lucide-notebook",
+                "data": {
+                  "owner": {
+                    "$screen": "subject_type"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.note-list": {
+                "label": "Notes"
+              }
+            }
+          },
+          {
+            "config": "access",
+            "format": "lists",
+            "default": {
+              "roster.user": [
+                "acme.access",
+                {
+                  "aside": "acme.summary"
+                }
+              ]
+            },
+            "screens": {
+              "others": true
+            },
+            "tabs": {
+              "acme.access": {
+                "label": "Access",
+                "data": {
+                  "scope": {
+                    "$subject_scope": {
+                      "$config": "atrium.integrations.acme.scopes",
+                      "type": "map",
+                      "fallback": "acme.adopt.scopes",
+                      "default": {
+                        "organization": null
+                      }
+                    },
+                    "self": "user"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.summary": {
+                "label": "Summary",
+                "data": {}
+              }
+            }
+          },
+          {
+            "config": "history",
+            "format": "targets",
+            "default": {
+              "screens": [
+                "*"
+              ],
+              "slot": "after",
+              "exclude": [
+                "acme.*"
+              ]
+            },
+            "sections": {
+              "acme.history": {
+                "label": "History",
+                "data": {
+                  "source": {
+                    "$screen": "package"
+                  },
+                  "subject": {
+                    "$screen": "subject_type",
+                    "kinds": [
+                      "detail"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "config": "history.tabs",
+            "format": "options",
+            "default": {
+              "roster.organization": {
+                "scope": true
+              }
+            },
+            "tabs": {
+              "acme.activity": {
+                "label": "Activity",
+                "data": {
+                  "scope": {
+                    "$option": "scope",
+                    "type": "bool",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a suite-named subject type without its model",
+      "pointer": "/screens/1/subject_type",
+      "manifest": {
+        "version": 1,
+        "key": "acme",
+        "label": "Acme",
+        "features": [
+          "acme.atrium"
+        ],
+        "navigation": [
+          {
+            "label": "Records",
+            "path": "/acme/records",
+            "icon": "i-lucide-box",
+            "group": "Acme",
+            "sort": 10,
+            "live": {
+              "key": "acme.active",
+              "options": {
+                "sort": {
+                  "$config": "atrium.integrations.acme.nav.sort",
+                  "type": "int",
+                  "default": 10
+                }
+              }
+            }
+          }
+        ],
+        "widgets": [
+          {
+            "key": "acme.stats",
+            "label": "Stats",
+            "icon": "i-lucide-chart-bar",
+            "size": {
+              "width": 6,
+              "height": 2
+            }
+          }
+        ],
+        "settings": {
+          "key": "acme",
+          "label": "Acme",
+          "icon": "i-lucide-settings"
+        },
+        "search_sources": [
+          {
+            "key": "acme",
+            "label": "Records",
+            "icon": "i-lucide-search"
+          }
+        ],
+        "screens": [
+          {
+            "key": "acme.records",
+            "kind": "list",
+            "path": "/acme/records",
+            "options": {
+              "prefix": {
+                "$config": "acme.prefix",
+                "type": "string",
+                "default": "a:"
+              },
+              "static": {
+                "nested": [
+                  1,
+                  "two",
+                  null
+                ]
+              }
+            }
+          },
+          {
+            "key": "acme.record",
+            "kind": "detail",
+            "path": "/acme/records/:record",
             "subject_type": "acme.record"
+          }
+        ],
+        "hooks": [
+          {
+            "config": "notes.screens",
+            "format": "map",
+            "default": {
+              "roster.user": "tab",
+              "roster.*": "aside"
+            },
+            "screens": {
+              "kind": "detail",
+              "subject": true
+            },
+            "tabs": {
+              "acme.notes": {
+                "label": "Notes",
+                "icon": "i-lucide-notebook",
+                "data": {
+                  "owner": {
+                    "$screen": "subject_type"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.note-list": {
+                "label": "Notes"
+              }
+            }
+          },
+          {
+            "config": "access",
+            "format": "lists",
+            "default": {
+              "roster.user": [
+                "acme.access",
+                {
+                  "aside": "acme.summary"
+                }
+              ]
+            },
+            "screens": {
+              "others": true
+            },
+            "tabs": {
+              "acme.access": {
+                "label": "Access",
+                "data": {
+                  "scope": {
+                    "$subject_scope": {
+                      "$config": "atrium.integrations.acme.scopes",
+                      "type": "map",
+                      "fallback": "acme.adopt.scopes",
+                      "default": {
+                        "organization": null
+                      }
+                    },
+                    "self": "user"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.summary": {
+                "label": "Summary",
+                "data": {}
+              }
+            }
+          },
+          {
+            "config": "history",
+            "format": "targets",
+            "default": {
+              "screens": [
+                "*"
+              ],
+              "slot": "after",
+              "exclude": [
+                "acme.*"
+              ]
+            },
+            "sections": {
+              "acme.history": {
+                "label": "History",
+                "data": {
+                  "source": {
+                    "$screen": "package"
+                  },
+                  "subject": {
+                    "$screen": "subject_type",
+                    "kinds": [
+                      "detail"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "config": "history.tabs",
+            "format": "options",
+            "default": {
+              "roster.organization": {
+                "scope": true
+              }
+            },
+            "tabs": {
+              "acme.activity": {
+                "label": "Activity",
+                "data": {
+                  "scope": {
+                    "$option": "scope",
+                    "type": "bool",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a subject model without a subject type",
+      "pointer": "/screens/1/subject_model",
+      "manifest": {
+        "version": 1,
+        "key": "acme",
+        "label": "Acme",
+        "features": [
+          "acme.atrium"
+        ],
+        "navigation": [
+          {
+            "label": "Records",
+            "path": "/acme/records",
+            "icon": "i-lucide-box",
+            "group": "Acme",
+            "sort": 10,
+            "live": {
+              "key": "acme.active",
+              "options": {
+                "sort": {
+                  "$config": "atrium.integrations.acme.nav.sort",
+                  "type": "int",
+                  "default": 10
+                }
+              }
+            }
+          }
+        ],
+        "widgets": [
+          {
+            "key": "acme.stats",
+            "label": "Stats",
+            "icon": "i-lucide-chart-bar",
+            "size": {
+              "width": 6,
+              "height": 2
+            }
+          }
+        ],
+        "settings": {
+          "key": "acme",
+          "label": "Acme",
+          "icon": "i-lucide-settings"
+        },
+        "search_sources": [
+          {
+            "key": "acme",
+            "label": "Records",
+            "icon": "i-lucide-search"
+          }
+        ],
+        "screens": [
+          {
+            "key": "acme.records",
+            "kind": "list",
+            "path": "/acme/records",
+            "options": {
+              "prefix": {
+                "$config": "acme.prefix",
+                "type": "string",
+                "default": "a:"
+              },
+              "static": {
+                "nested": [
+                  1,
+                  "two",
+                  null
+                ]
+              }
+            }
+          },
+          {
+            "key": "acme.record",
+            "kind": "detail",
+            "path": "/acme/records/:record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "config": "notes.screens",
+            "format": "map",
+            "default": {
+              "roster.user": "tab",
+              "roster.*": "aside"
+            },
+            "screens": {
+              "kind": "detail",
+              "subject": true
+            },
+            "tabs": {
+              "acme.notes": {
+                "label": "Notes",
+                "icon": "i-lucide-notebook",
+                "data": {
+                  "owner": {
+                    "$screen": "subject_type"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.note-list": {
+                "label": "Notes"
+              }
+            }
+          },
+          {
+            "config": "access",
+            "format": "lists",
+            "default": {
+              "roster.user": [
+                "acme.access",
+                {
+                  "aside": "acme.summary"
+                }
+              ]
+            },
+            "screens": {
+              "others": true
+            },
+            "tabs": {
+              "acme.access": {
+                "label": "Access",
+                "data": {
+                  "scope": {
+                    "$subject_scope": {
+                      "$config": "atrium.integrations.acme.scopes",
+                      "type": "map",
+                      "fallback": "acme.adopt.scopes",
+                      "default": {
+                        "organization": null
+                      }
+                    },
+                    "self": "user"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.summary": {
+                "label": "Summary",
+                "data": {}
+              }
+            }
+          },
+          {
+            "config": "history",
+            "format": "targets",
+            "default": {
+              "screens": [
+                "*"
+              ],
+              "slot": "after",
+              "exclude": [
+                "acme.*"
+              ]
+            },
+            "sections": {
+              "acme.history": {
+                "label": "History",
+                "data": {
+                  "source": {
+                    "$screen": "package"
+                  },
+                  "subject": {
+                    "$screen": "subject_type",
+                    "kinds": [
+                      "detail"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "config": "history.tabs",
+            "format": "options",
+            "default": {
+              "roster.organization": {
+                "scope": true
+              }
+            },
+            "tabs": {
+              "acme.activity": {
+                "label": "Activity",
+                "data": {
+                  "scope": {
+                    "$option": "scope",
+                    "type": "bool",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a subject model read from another package's config",
+      "pointer": "/screens/1/subject_model/$config",
+      "manifest": {
+        "version": 1,
+        "key": "acme",
+        "label": "Acme",
+        "features": [
+          "acme.atrium"
+        ],
+        "navigation": [
+          {
+            "label": "Records",
+            "path": "/acme/records",
+            "icon": "i-lucide-box",
+            "group": "Acme",
+            "sort": 10,
+            "live": {
+              "key": "acme.active",
+              "options": {
+                "sort": {
+                  "$config": "atrium.integrations.acme.nav.sort",
+                  "type": "int",
+                  "default": 10
+                }
+              }
+            }
+          }
+        ],
+        "widgets": [
+          {
+            "key": "acme.stats",
+            "label": "Stats",
+            "icon": "i-lucide-chart-bar",
+            "size": {
+              "width": 6,
+              "height": 2
+            }
+          }
+        ],
+        "settings": {
+          "key": "acme",
+          "label": "Acme",
+          "icon": "i-lucide-settings"
+        },
+        "search_sources": [
+          {
+            "key": "acme",
+            "label": "Records",
+            "icon": "i-lucide-search"
+          }
+        ],
+        "screens": [
+          {
+            "key": "acme.records",
+            "kind": "list",
+            "path": "/acme/records",
+            "options": {
+              "prefix": {
+                "$config": "acme.prefix",
+                "type": "string",
+                "default": "a:"
+              },
+              "static": {
+                "nested": [
+                  1,
+                  "two",
+                  null
+                ]
+              }
+            }
+          },
+          {
+            "key": "acme.record",
+            "kind": "detail",
+            "path": "/acme/records/:record",
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "roster.users.model",
+              "type": "string"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "config": "notes.screens",
+            "format": "map",
+            "default": {
+              "roster.user": "tab",
+              "roster.*": "aside"
+            },
+            "screens": {
+              "kind": "detail",
+              "subject": true
+            },
+            "tabs": {
+              "acme.notes": {
+                "label": "Notes",
+                "icon": "i-lucide-notebook",
+                "data": {
+                  "owner": {
+                    "$screen": "subject_type"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.note-list": {
+                "label": "Notes"
+              }
+            }
+          },
+          {
+            "config": "access",
+            "format": "lists",
+            "default": {
+              "roster.user": [
+                "acme.access",
+                {
+                  "aside": "acme.summary"
+                }
+              ]
+            },
+            "screens": {
+              "others": true
+            },
+            "tabs": {
+              "acme.access": {
+                "label": "Access",
+                "data": {
+                  "scope": {
+                    "$subject_scope": {
+                      "$config": "atrium.integrations.acme.scopes",
+                      "type": "map",
+                      "fallback": "acme.adopt.scopes",
+                      "default": {
+                        "organization": null
+                      }
+                    },
+                    "self": "user"
+                  }
+                }
+              }
+            },
+            "sections": {
+              "acme.summary": {
+                "label": "Summary",
+                "data": {}
+              }
+            }
+          },
+          {
+            "config": "history",
+            "format": "targets",
+            "default": {
+              "screens": [
+                "*"
+              ],
+              "slot": "after",
+              "exclude": [
+                "acme.*"
+              ]
+            },
+            "sections": {
+              "acme.history": {
+                "label": "History",
+                "data": {
+                  "source": {
+                    "$screen": "package"
+                  },
+                  "subject": {
+                    "$screen": "subject_type",
+                    "kinds": [
+                      "detail"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "config": "history.tabs",
+            "format": "options",
+            "default": {
+              "roster.organization": {
+                "scope": true
+              }
+            },
+            "tabs": {
+              "acme.activity": {
+                "label": "Activity",
+                "data": {
+                  "scope": {
+                    "$option": "scope",
+                    "type": "bool",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "an empty subject model",
+      "pointer": "/screens/1/subject_model",
+      "manifest": {
+        "version": 1,
+        "key": "acme",
+        "label": "Acme",
+        "features": [
+          "acme.atrium"
+        ],
+        "navigation": [
+          {
+            "label": "Records",
+            "path": "/acme/records",
+            "icon": "i-lucide-box",
+            "group": "Acme",
+            "sort": 10,
+            "live": {
+              "key": "acme.active",
+              "options": {
+                "sort": {
+                  "$config": "atrium.integrations.acme.nav.sort",
+                  "type": "int",
+                  "default": 10
+                }
+              }
+            }
+          }
+        ],
+        "widgets": [
+          {
+            "key": "acme.stats",
+            "label": "Stats",
+            "icon": "i-lucide-chart-bar",
+            "size": {
+              "width": 6,
+              "height": 2
+            }
+          }
+        ],
+        "settings": {
+          "key": "acme",
+          "label": "Acme",
+          "icon": "i-lucide-settings"
+        },
+        "search_sources": [
+          {
+            "key": "acme",
+            "label": "Records",
+            "icon": "i-lucide-search"
+          }
+        ],
+        "screens": [
+          {
+            "key": "acme.records",
+            "kind": "list",
+            "path": "/acme/records",
+            "options": {
+              "prefix": {
+                "$config": "acme.prefix",
+                "type": "string",
+                "default": "a:"
+              },
+              "static": {
+                "nested": [
+                  1,
+                  "two",
+                  null
+                ]
+              }
+            }
+          },
+          {
+            "key": "acme.record",
+            "kind": "detail",
+            "path": "/acme/records/:record",
+            "subject_type": "acme.record",
+            "subject_model": ""
           }
         ],
         "hooks": [
@@ -3488,7 +4382,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -3689,7 +4588,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -3889,7 +4793,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -4092,7 +5001,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -4292,7 +5206,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -4495,7 +5414,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -4695,7 +5619,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -4898,7 +5827,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -5103,7 +6037,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -5297,7 +6236,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -5497,7 +6441,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -5692,7 +6641,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -5893,7 +6847,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [
@@ -6092,7 +7051,12 @@
             "key": "acme.record",
             "kind": "detail",
             "path": "/acme/records/:record",
-            "subject_type": "acme.record"
+            "subject_type": "acme.record",
+            "subject_model": {
+              "$config": "acme.records.model",
+              "type": "string",
+              "default": "Acme\\Models\\Record"
+            }
           }
         ],
         "hooks": [

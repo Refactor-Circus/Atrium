@@ -342,6 +342,22 @@ function rules(manifest) {
       return [`/screens/${index}/path`, `[${screen.path}] must start with [/${key}/]`]
     }
 
+    if (screen.subject_type !== undefined && screen.subject_type.includes('.') && screen.subject_model === undefined) {
+      return [`/screens/${index}/subject_type`, `[${screen.subject_type}] is the suite's name for the record, not a morph type a host stores: declare its subject_model`]
+    }
+
+    if (screen.subject_model !== undefined) {
+      if (screen.subject_type === undefined) {
+        return [`/screens/${index}/subject_model`, 'a subject model needs the subject_type it is the model of']
+      }
+
+      const error = value(screen.subject_model, `/screens/${index}/subject_model`, key, null)
+
+      if (error) {
+        return error
+      }
+    }
+
     if (screen.options !== undefined) {
       const error = values(screen.options, `/screens/${index}/options`, key, null)
 

@@ -108,8 +108,8 @@ final class ResolvedScreenResource extends JsonResource
             'key' => $schema->string()->required(),
             'kind' => $schema->string()->required(),
             'path' => $schema->string()->description('The front end route of a declared screen.'),
-            'subject_type' => $schema->string()->nullable()->description('The morph alias of a declared screen\'s record.'),
-            'record' => $schema->string()->nullable()->description('The record key a declared screen was asked for.'),
+            'subject_type' => $schema->string()->nullable()->description('The morph type a declared screen\'s record is stored as: its subject model\'s alias in the host\'s morph map, else its class, else the declared subject type.'),
+            'record' => $schema->string()->nullable()->description('The record a declared screen was asked for: its route key.'),
             'options' => $schema->object()->description('Static options a declared screen\'s page reads, such as showroom.transfers\' flow_prefix.'),
             'open_tab' => $schema->string()->required(),
             'tabs' => $schema->array()->items($schema->object([

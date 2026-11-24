@@ -288,7 +288,7 @@ editor. Polycart's, shortened:
 | `widgets` | `key` (`{pkg}.…`), `label`, `description`, `icon`, `component` (default `key`), `size` and `min_size` (`{width, height}`), `lazy` |
 | `settings` | One panel: `key`, `label`, `description`, `icon`, `component`, `sort` |
 | `search_sources` | `key` (the module's `searchSources` key), `label`, `icon` |
-| `screens` | `key` (`{pkg}.…`), `kind` (`list` or `detail`), `path` (under `/{pkg}/`, `:param`s), `subject_type` (the record's morph alias, for hooks), `options` (static data the page reads) |
+| `screens` | `key` (`{pkg}.…`), `kind` (`list` or `detail`), `path` (under `/{pkg}/`, `:param`s), `subject_type` (the record's morph alias, or the suite's name for it when the morph type depends on the host), `subject_model` (then the model it is stored as: a class, alias or `$config`; Atrium sends hooks its morph type), `options` (static data the page reads) |
 | `hooks` | Tabs and sections this package adds to other packages' screens (below) |
 
 Labels are plain English: Atrium passes them through Laravel's `__()`, so a
@@ -325,6 +325,12 @@ declares it, as the package whose API the component calls:
 }
 ```
 
+- `$screen` `subject_type` is the morph type the host stores the screen's
+  record as: the screen's `subject_model` resolved through the host's morph
+  map (Roster's user is `roster.users.model`, so `App\Models\User` or its
+  alias), else its `subject_type`. The record the component gets is the
+  screen's route parameter, the model's route key (an organization's slug,
+  a user's id), so an API a hook calls accepts the route key (D-092).
 - `default` places the hook; a host replaces it with
   `atrium.integrations.{pkg}.{config}`. Targets are `*`, `{package}.*` or a
   screen key.

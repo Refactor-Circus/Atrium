@@ -26,7 +26,7 @@ export interface IntegrationManifest {
   widgets?: Record<string, unknown>[]
   settings?: Record<string, unknown> | null
   search_sources?: Record<string, unknown>[]
-  screens?: { key: string, kind: 'detail' | 'list', path: string, subject_type?: string, options?: Record<string, unknown> }[]
+  screens?: { key: string, kind: 'detail' | 'list', path: string, subject_type?: string, subject_model?: string | Record<string, unknown>, options?: Record<string, unknown> }[]
   hooks?: Record<string, unknown>[]
   [field: string]: unknown
 }

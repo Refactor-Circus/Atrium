@@ -45,7 +45,7 @@ final class ShowIntegrationScreenRequest extends Request
                 ->allows($permission, $row === null ? [] : [$row]));
 
         return new ResolvedScreenResource(app(ScreenExtensions::class)->resolve($screen, $this))
-            ->declaredAt($declaration->path, $declaration->subjectType, is_string($record) ? $record : null, $declaration->options)
+            ->declaredAt($declaration->path, $declaration->morphType(), is_string($record) ? $record : null, $declaration->options)
             ->response();
     }
 
