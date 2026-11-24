@@ -91,6 +91,16 @@ try {
     throw new Error('[consumer] the build did not ship the module\'s integration manifest, or does not hash it')
   }
 
+  // The SDK's theme (theme.css) owns the field-row tokens: a module's own
+  // stylesheet emits the utilities it uses from them, with no tokens of its own.
+  const styles = readFileSync(join(module, 'dist/atrium/atrium.css'), 'utf8')
+
+  for (const [utility, value] of [['mt-field-label', 'margin-top:calc(var(--text-xs--line-height) + var(--spacing))'], ['h-field', 'height:calc(var(--text-sm--line-height) + var(--spacing) * 2)']]) {
+    if (!styles.includes(`.${utility}{${value}}`)) {
+      throw new Error(`[consumer] the module's stylesheet does not compile .${utility} from the SDK's theme`)
+    }
+  }
+
   step('pnpm', ['exec', 'vue-tsc', '--noEmit', '-p', 'tsconfig.json'], module)
 
   const output = step('pnpm', ['exec', 'vitest', 'run'], module)

@@ -771,3 +771,12 @@
 - Rationale: Found in a real host's browser check (Catalog on the dashboard and Settings). Falling back to whichever module sorts first tells the user they are somewhere they are not; Atrium's own pages belong to Atrium's own sections.
 - Date: 2026-11-24
 - Raised by: browser check on a real host; choices made by the implementing agent without a user available
+
+## D-097: Where do the field-row alignment tokens live?
+- Choice:
+  - **In the SDK's theme.** The eight suite modules each added `--spacing-field-label: calc(var(--text-xs--line-height) + var(--spacing))` and `--spacing-field: calc(var(--text-sm--line-height) + var(--spacing) * 2)` in an `@theme inline` block of their own `atrium/src/atrium.css`, against the standard that modules ship no design tokens. They now sit in `ui/sdk/css/theme.css` (`@theme inline`, so the utilities compute from the tokens they derive from), which Atrium's stylesheet and `module.css` both import; the modules drop their blocks and repin the SDK. Atrium's own sources use neither utility, so `core-classes.css` does not list them and a module's build emits `mt-field-label` / `h-field` itself, in the `atrium-modules` layer, as before.
+  - **The rule.** A row of fields is `items-start`; a label-less control takes `mt-field-label` (the `formField` label row: the label's `text-xs` line plus the container's `mt-1`, 1.225rem); a lone checkbox or switch takes `mt-field-label h-field items-center` (`h-field`: a control's `text-sm` line plus `py-1` top and bottom, 1.7rem). Documented in MODULES.md and the `atrium/components` standard.
+  - **Tests.** `ui/sdk/test/field-row.test.ts` checks the tokens are in theme.css (imported by `module.css` and `atrium.css`) and that they derive from the `formField` and `input` theme slots; the consumer check (`pnpm -C ui test:consumer`) builds a module using both utilities and fails unless its stylesheet compiles them from the SDK's theme.
+- Rationale: The same two tokens in eight modules is a shared style, which the SDK owns; one definition follows any change to the form field's theme.
+- Date: 2026-11-24
+- Raised by: field-row alignment fix across the suite modules; choices made by the implementing agent without a user available

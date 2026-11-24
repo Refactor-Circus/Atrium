@@ -34,3 +34,18 @@
   /* Every Tailwind spacing step a tenth tighter (p-4 is 14.4px, not 16px). */
   --spacing: 0.225rem;
 }
+
+/*
+ * Field-row alignment. A form field (Atrium's `formField` theme) is its
+ * label's row, `text-xs` with the control `mt-1` below it, then the control.
+ * In a row of fields (`items-start`, so labels share a line and a hint or
+ * error below a control moves nothing), a control with no label of its own
+ * drops by that label row (`mt-field-label`) to line up with the fields'
+ * controls; a lone checkbox or switch also takes a control's height
+ * (`mt-field-label h-field items-center`) so it is centred on them.
+ * `inline`: the utilities compute from the tokens they derive from.
+ */
+@theme inline {
+  --spacing-field-label: calc(var(--text-xs--line-height) + var(--spacing));
+  --spacing-field: calc(var(--text-sm--line-height) + var(--spacing) * 2);
+}

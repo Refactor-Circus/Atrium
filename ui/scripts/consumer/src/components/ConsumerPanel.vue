@@ -21,6 +21,11 @@ const size = ref<SelectValue>(1n)
     <AtriumState icon="i-lucide-inbox" title="Nothing yet" />
     <AtriumSelect v-model="scope" :items="scopes" blank="Global" :blank-value="null" data-testid="consumer-scope" />
     <AtriumSelect v-model="size" :items="grouped" data-testid="consumer-size" />
+    <!-- A field row: the SDK's theme gives a label-less control its offset (mt-field-label, h-field). -->
+    <div class="flex items-start gap-2" data-testid="consumer-field-row">
+      <UFormField label="Name"><UInput /></UFormField>
+      <div class="mt-field-label h-field flex items-center"><UCheckbox label="Active" /></div>
+    </div>
     <AtriumDetails :items="[{ key: 'constructor', label: 'Constructor', value: 'Object', href: '/x', linkTestid: 'consumer-link', rowAttrs: { 'data-source': 'env' } }]" />
   </div>
 </template>

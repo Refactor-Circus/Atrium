@@ -150,6 +150,15 @@ export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: {
   already define, against Atrium's theme, into the `atrium-modules` layer.
   Ship no design tokens of your own; build on Nuxt UI and the `Atrium*`
   components.
+- Field rows (D-097): a row of form fields is `flex items-start`, so the
+  labels share a line and a field's hint or error below its control moves
+  nothing. A control with no label of its own (a submit button) takes
+  `mt-field-label`, which drops it by the field's label row, to line up with
+  the fields' controls; a lone checkbox or switch takes
+  `mt-field-label h-field items-center` (in a flex box), which also gives it a
+  control's height so it is centred on them. `--spacing-field-label` and
+  `--spacing-field` come from the SDK's theme (`theme.css`, imported by
+  `module.css`); never define them, or any token, in a module's stylesheet.
 - Components (D-093): besides Nuxt UI, the SDK gives every module
   `<AtriumPageHeader>` (`title`, `overline`, `description`, `links`, `back`
   for a back button, and the slots `title` (a status badge beside the

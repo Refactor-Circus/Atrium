@@ -13,7 +13,7 @@
     "sdk/package.json",
     "pnpm-lock.yaml"
   ],
-  "hash": "c11c62e08fd7c5209cdbb8e865b2c80945a40cdfa0fcf6f6663a024db9fc30a1",
+  "hash": "d26670d94b63f6de2a55237ecca494d6d73579527fcf364ef1c0ea921113e4b3",
   "entry": {
     "script": "atrium-BEFII7ww.js",
     "styles": [
