@@ -283,3 +283,11 @@ arch('tables are named through Tables, never as literals')
         array_values(Tables::DEFAULTS),
     ))
     ->toBeEmpty();
+
+arch('only the Frontend domain renders a view: Atrium\'s one page (D-079)')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(fn (SplFileInfo $file): string => str_replace('\\', '/', $file->getPathname()), iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../src', FilesystemIterator::SKIP_DOTS)))),
+        fn (string $path): bool => str_ends_with($path, '.php') && preg_match('/->view\(/', (string) file_get_contents($path)) === 1,
+    )))
+    ->toHaveCount(1)
+    ->each->toEndWith('src/Domains/Frontend/Http/Requests/ShowAppRequest.php');
