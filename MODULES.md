@@ -150,6 +150,21 @@ export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: {
   already define, against Atrium's theme, into the `atrium-modules` layer.
   Ship no design tokens of your own; build on Nuxt UI and the `Atrium*`
   components.
+- Components (D-093): besides Nuxt UI, the SDK gives every module
+  `<AtriumPageHeader>` (`title`, `overline`, `description`, `links`, `back`
+  for a back button, and the slots `title` (a status badge beside the
+  title, still in the `<h1>`), `leading`, `headline`, `description`, `meta`
+  and the default one for actions; a `data-testid` the page passes replaces
+  `atrium-page-header`), `<AtriumDetails>` (a record's facts as a compact
+  description list: `items: { key?, label, value?, mono?, href?, wide?, testid? }[]`,
+  `columns` 1–3, `empty`, and a slot per item `key` replacing its value)
+  and `<AtriumSelect>` (a `<USelect>` with a blank item: `blank="Any"` puts
+  it first and keeps `''` in the model, or `null` with `:blank-value="null"`;
+  `<USelect>` refuses an item whose value is `''`, so no `NONE` stand-ins).
+  Nuxt UI's types (`TableColumn`, `SelectItem`, `FormSubmitEvent`,
+  `ButtonProps`, ...) come type-only from `@refactor-circus/atrium/ui`, never
+  from `@nuxt/ui`. `<UTable>` takes the deck's look from Atrium's theme
+  (mono caps headings, 34px rows, a lit hovered row): add no classes for it.
 
 ### 5. The SDK at development time
 
@@ -250,6 +265,69 @@ it('declares a valid integration', () => {
 
 Atrium's integration fixtures (the shell payload of the suite's manifests)
 are `@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
+
+**Driving Nuxt UI** (D-093). A module's fields are Nuxt UI, not native
+elements: a `<USelect>` is a Reka listbox rendered in a portal only while
+open, `<UCheckbox>` / `<USwitch>` are `role="checkbox"` / `role="switch"`
+buttons, `<UInputNumber>` commits on blur, and a `<UTable>` row takes no
+attributes. The testing entry drives them by `data-testid`; use these
+instead of local helpers:
+
+| Helper | What it does |
+| --- | --- |
+| `tableRows(root, testid?)` | the `<UTable>`'s data rows (not its empty row), as `DOMWrapper<HTMLTableRowElement>[]` |
+| `tableRow(root, testid)` / `hasTableRow(root, testid)` | the row holding the element marked `testid` (a wrapper whose `exists()` is false when none does) |
+| `tableHeaders(root, testid?)` | the column headings' text |
+| `tableCell(row, column)` / `tableCellText(row, column)` | a row's cell by heading (case-insensitive) or index |
+| `tableColumn(root, testid, column)` | every row's text in a column |
+| `findSelect(wrapper, testid)` | the `<AtriumSelect>`, `<USelect>` or `<USelectMenu>` marked `testid` |
+| `selectItems()` / `selectValues()` / `selectLabels()` / `selectValue()` | what it offers (`{ value, label }`, groups flattened, separators left out) and holds |
+| `chooseOption(wrapper, testid, value)` | sets it through `v-model` (`update:modelValue`), failing on a value it does not offer: the quick way |
+| `pickOption(wrapper, testid, label)` / `openSelectLabels(wrapper, testid)` | opens the portal listbox and clicks the option labelled `label` (or reads the labels): the end-to-end way; mount with `attachTo: document.body` |
+| `isChecked(root, testid)` / `toggle()` / `setChecked(root, testid, on)` | a `<UCheckbox>` or `<USwitch>`, clicked as a person does |
+| `findInput(root, testid)` / `setNumber(root, testid, n)` | the `<input>` Nuxt UI wraps; types a number into a `<UInputNumber>` and commits it |
+| `findField()` / `hasField()` / `fieldValue()` / `isDisabled()` / `setField(wrapper, testid, value)` | any Nuxt UI field by the `data-testid` it was given, set through `v-model` |
+| `rawHtmlIn(dir, allow?)` / `rawHtmlElements(source)` | the Nuxt UI guard below |
+
+**The `<UTable>` row convention.** `UTable` (4.1) sets no attribute on a
+`<tr>`, so a page puts the row's test id on its **first cell's content**,
+and tests find the row from it:
+
+```vue
+<UTable :data="runs" :columns="columns" data-testid="impex-runs">
+  <template #flow-cell="{ row }">
+    <ULink :to="runPath(row.original.id)" :data-testid="`impex-run-row-${row.original.id}`">{{ row.original.flow }}</ULink>
+  </template>
+</UTable>
+```
+
+```ts
+const row = tableRow(wrapper, 'impex-run-row-run-1')
+expect(tableCellText(row, 'Status')).toBe('running')
+expect(tableRows(wrapper, 'impex-runs')).toHaveLength(2)
+await chooseOption(wrapper, 'impex-runs-status', 'failed')
+```
+
+**The Nuxt UI guard.** Every module composes Nuxt UI, as Atrium's own
+components do (D-091): no page or component renders a raw `<button>`,
+`<input>`, `<select>`, `<textarea>`, `<table>`, `<details>` or `<a href>`
+(use `<UButton>`, `<UInput>` / `<USelect>` / `<AtriumSelect>` / `<UTextarea>`,
+`<UTable>`, `<UCollapsible>`, `<UButton to>` / `<ULink>`, or `<AtriumLink>`
+for an API link that may be external). Atrium no longer styles raw tables,
+native selects, `.atrium-querybar` or `.atrium-empty` (D-093). Copy this
+test:
+
+```ts
+// test/nuxt-ui-guard.test.ts
+import { rawHtmlIn } from '@refactor-circus/atrium/testing'
+
+it('composes Nuxt UI, with no raw HTML controls (D-091)', () => {
+  expect(rawHtmlIn('src')).toEqual([])
+})
+```
+
+`rawHtmlIn(dir, { 'components/Download.vue': ['<a href>'] })` lets a file
+keep a named element; each finding is `{ file, elements }`.
 
 ### 8. The integration manifest: `src/integration.json`
 

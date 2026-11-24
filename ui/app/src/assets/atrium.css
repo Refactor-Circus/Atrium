@@ -226,10 +226,11 @@
 }
 
 /* ===========================================================================
- * What modules' pages render inside the shell (`<main data-atrium-content>`):
- * plain tables, headings, native selects, filter bars (`.atrium-querybar`)
- * and empty notes (`.atrium-empty`) read as the deck. Kept for the suite's
- * modules, which render these elements; Atrium's own components use Nuxt UI.
+ * The plain text modules' pages render inside the shell
+ * (`<main data-atrium-content>`): headings, description lists, code and
+ * figures read as the deck. Their tables, fields, filter bars and empty
+ * states are Nuxt UI (`UTable`, `USelect`, `UEmpty`, ...), styled by
+ * `ui/sdk/vite/ui-config.mjs` (D-093).
  * ======================================================================== */
 @layer utilities {
   /* Page titles: tight display type behind a lit caret. */
@@ -282,124 +283,6 @@
     color: var(--ui-text-highlighted);
   }
 
-  /* Tables: tracked caps for heads, 34px rows, a sweep of light on hover. */
-  [data-atrium-content] table {
-    font-size: 0.78125rem;
-    line-height: 1.125rem;
-    font-variant-numeric: tabular-nums;
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-
-  [data-atrium-content] thead {
-    color: var(--ui-text-muted);
-  }
-
-  [data-atrium-content] thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    height: 1.875rem;
-    padding-block: 0.375rem;
-    padding-inline: 0.625rem;
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    text-align: start;
-    background: color-mix(in oklab, var(--ui-bg) 92%, var(--atrium-canvas));
-    border-block-end: 1px solid var(--atrium-control-ring);
-  }
-
-  [data-atrium-content] thead th:first-child {
-    box-shadow: inset 2px 0 0 color-mix(in oklab, var(--ui-primary) 70%, transparent);
-  }
-
-  [data-atrium-content] tbody td,
-  [data-atrium-content] tbody th {
-    height: 2.125rem;
-    padding-block: 0.3125rem;
-    padding-inline: 0.625rem;
-    border-block-end: 1px solid var(--ui-border);
-    vertical-align: middle;
-    transition: box-shadow var(--atrium-speed) var(--atrium-ease);
-  }
-
-  [data-atrium-content] tbody tr:last-child > * {
-    border-block-end: 0;
-  }
-
-  [data-atrium-content] tbody tr:hover {
-    background-color: var(--atrium-row-hover);
-  }
-
-  [data-atrium-content] tbody tr:hover > :first-child {
-    box-shadow: inset 2px 0 0 var(--ui-primary);
-  }
-
-  [data-atrium-content] :is(td, th).text-right {
-    text-align: end;
-  }
-
-  [data-atrium-content] tbody :is(td, th) a:not([class*="inline-flex"]) {
-    color: var(--ui-text-highlighted);
-    text-decoration: none;
-  }
-
-  [data-atrium-content] tbody :is(td, th) a:not([class*="inline-flex"]):hover {
-    color: var(--ui-primary);
-    text-shadow: 0 0 12px var(--atrium-glow-soft);
-  }
-
-  /* Monospaced first columns (identifiers) read dimmer than the data. */
-  [data-atrium-content] tbody td.font-mono,
-  [data-atrium-content] tbody td .font-mono {
-    letter-spacing: 0.01em;
-  }
-
-  [data-atrium-content] .overflow-x-auto:not(.atrium-panel .overflow-x-auto):has(> table) {
-    border-radius: calc(var(--ui-radius) * 1.5);
-    background: var(--atrium-glass);
-    backdrop-filter: blur(var(--atrium-blur));
-    box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 var(--atrium-highlight), var(--atrium-shadow);
-  }
-
-  /* Native selects, as the deck's fields. */
-  [data-atrium-content] select {
-    height: 1.75rem;
-    padding-block: 0;
-    padding-inline: 0.5rem 1.75rem;
-    font-size: 0.8125rem;
-    border-radius: var(--ui-radius);
-    border-color: var(--atrium-control-ring);
-    background-color: var(--atrium-field);
-    color: var(--ui-text-highlighted);
-    appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--ui-primary) 50%), linear-gradient(135deg, var(--ui-primary) 50%, transparent 50%);
-    background-position: calc(100% - 0.8125rem) 55%, calc(100% - 0.5rem) 55%;
-    background-size: 0.3125rem 0.3125rem;
-    background-repeat: no-repeat;
-    transition: border-color var(--atrium-speed) var(--atrium-ease), box-shadow var(--atrium-speed) var(--atrium-ease);
-  }
-
-  [data-atrium-content] select:hover {
-    border-color: color-mix(in oklab, var(--ui-primary) 45%, var(--atrium-control-ring));
-  }
-
-  [data-atrium-content] select:focus-visible {
-    outline: none;
-    border-color: var(--ui-primary);
-    box-shadow: 0 0 0 3px var(--atrium-glow-soft), 0 0 16px -4px var(--atrium-glow);
-  }
-
-  [data-atrium-content] select[multiple] {
-    height: auto;
-    padding: 0.25rem;
-    background-image: none;
-  }
-
   [data-atrium-content] dl dt {
     color: var(--ui-text-muted);
   }
@@ -424,118 +307,6 @@
 
 }
 
-/* A filter form in a panel is a command line: a prompt, inline tokens. */
-.atrium-panel:has(.atrium-querybar) {
-  overflow: visible;
-}
-
-@layer utilities {
-  .atrium-querybar.atrium-querybar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem 1rem;
-  }
-
-  .atrium-querybar::before {
-    content: "›_";
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.875rem;
-    color: var(--ui-primary);
-    text-shadow: 0 0 10px var(--atrium-glow);
-    letter-spacing: -0.05em;
-  }
-
-  .atrium-querybar > div:has(label) {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-  }
-
-  .atrium-querybar > div > div:has(> div > label),
-  .atrium-querybar > div > div:has(> label) {
-    flex: none;
-  }
-
-  .atrium-querybar label {
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ui-text-muted);
-    white-space: nowrap;
-  }
-
-  .atrium-querybar label::after {
-    content: ":";
-    color: var(--ui-primary);
-  }
-
-  .atrium-querybar > div > .mt-1 {
-    margin-top: 0;
-  }
-
-  .atrium-querybar input,
-  .atrium-querybar select {
-    height: 1.625rem;
-    border-radius: 0;
-    border: 0;
-    background-color: transparent;
-    box-shadow: inset 0 -1px 0 var(--atrium-control-ring);
-  }
-
-  .atrium-querybar input:focus-visible,
-  .atrium-querybar select:focus-visible {
-    box-shadow: inset 0 -2px 0 var(--ui-primary), 0 8px 14px -10px var(--atrium-glow);
-  }
-
-  .atrium-querybar [class*=" w-"],
-  .atrium-querybar [class^="w-"] {
-    width: auto;
-    min-width: 8rem;
-  }
-}
-
-/* A list with nothing in it: a framed note with a radar sweep. */
-.atrium-empty {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1.75rem 1rem;
-  border-radius: calc(var(--ui-radius) * 1.5);
-  font-family: var(--font-mono);
-  font-size: 0.71875rem;
-  letter-spacing: 0.04em;
-  text-align: center;
-  color: var(--ui-text-muted);
-  background:
-    linear-gradient(var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
-    linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
-    color-mix(in oklab, var(--ui-bg) 55%, transparent);
-  border: 1px dashed var(--ui-border-accented);
-}
-
-.atrium-empty::before {
-  content: "";
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  background:
-    conic-gradient(from 0deg, color-mix(in oklab, var(--ui-primary) 55%, transparent), transparent 25%),
-    radial-gradient(circle, transparent 45%, color-mix(in oklab, var(--ui-primary) 30%, transparent) 46% 50%, transparent 51%);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 40%, transparent), 0 0 18px -6px var(--atrium-glow);
-  animation: atrium-radar 3s linear infinite;
-}
-
-@keyframes atrium-radar {
-  to { rotate: 1turn; }
-}
-
 /* A widget's own title reads as a panel heading. */
 @layer utilities {
   [data-atrium-content] .atrium-panel h3:first-child {
@@ -544,12 +315,6 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-  }
-}
-
-@media (max-width: 48rem) {
-  [data-atrium-content] tbody :is(td, th) {
-    white-space: nowrap;
   }
 }
 

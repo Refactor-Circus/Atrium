@@ -250,6 +250,19 @@ export const atriumUiConfig = {
   separator: {
     slots: { border: 'border-default' }
   },
+  // Module tables read as the deck (D-093): tracked mono caps for heads, 34px
+  // rows, a lit edge on the first column and on the hovered row, links in
+  // cells highlighted. What atrium.css once did for raw `<table>`s.
+  table: {
+    slots: {
+      base: 'text-[0.78125rem] leading-[1.125rem] tabular-nums',
+      th: 'h-7.5 px-2.5 py-1.5 font-mono text-[0.625rem] leading-4 font-medium tracking-[0.12em] uppercase whitespace-nowrap text-start text-muted bg-[color-mix(in_oklab,var(--ui-bg)_92%,var(--atrium-canvas))] first:shadow-[inset_2px_0_0_color-mix(in_oklab,var(--ui-primary)_70%,transparent)]',
+      td: 'h-8.5 px-2.5 py-1.25 text-[0.78125rem] leading-[1.125rem] align-middle [&_a:not(.inline-flex)]:text-highlighted [&_a:not(.inline-flex):hover]:text-primary [&_a:not(.inline-flex):hover]:[text-shadow:0_0_12px_var(--atrium-glow-soft)]',
+      tbody: '[&>tr]:transition-colors [&>tr]:duration-150 [&>tr:hover]:bg-(--atrium-row-hover) [&>tr:hover>td:first-child]:shadow-[inset_2px_0_0_var(--ui-primary)] [&>tr]:data-[selectable=true]:focus-visible:outline-primary',
+      separator: 'bg-(--atrium-control-ring)',
+      empty: 'py-6 text-center font-mono text-[0.71875rem] tracking-[0.04em] text-muted'
+    }
+  },
   navigationMenu: {
     slots: {
       link: 'text-[0.8125rem] font-normal text-toned',

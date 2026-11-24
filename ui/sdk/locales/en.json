@@ -114,6 +114,9 @@
       "command": "Command",
       "jump": "Jump anywhere",
       "escape": "Esc to close"
+    },
+    "page_header": {
+      "back": "Back"
     }
   }
 }

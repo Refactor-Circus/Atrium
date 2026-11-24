@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { ref } from 'vue'
+import { h, ref } from 'vue'
 import { AtriumErrorCard, AtriumNoAccess, AtriumPageHeader, AtriumStat, AtriumState, AtriumStatusBar, AtriumTopbar, useAtriumNavigation, useAtriumPalette, useAtriumShellStore } from '../src/index'
+import { UBadge } from '../src/ui'
 import { inApp, mountSuspended, shell, withSetup, useRouter } from '../src/testing/index'
 
 /*
@@ -193,5 +194,49 @@ describe('the shared deck blocks', () => {
     expect(wrapper.text()).toContain('Catalog')
     expect(wrapper.text()).toContain('42 products')
     expect(wrapper.text()).toContain('New product')
+  })
+
+  it('puts a page header\'s title slot (a status badge beside the text) in its <h1>', async () => {
+    const wrapper = await mountSuspended(AtriumPageHeader, {
+      props: { title: 'ignored' },
+      slots: { title: () => [h('span', 'orders.sync'), h(UBadge, { label: 'running', 'data-testid': 'status' })] }
+    })
+
+    expect(wrapper.find('h1').text()).toContain('orders.sync')
+    expect(wrapper.find('h1 [data-testid="status"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="atrium-page-header-back"]').exists()).toBe(false)
+  })
+
+  it('leads a page header\'s title with a back button, or the leading slot', async () => {
+    const back = await mountSuspended(AtriumPageHeader, { props: { title: 'Run', back: '/impex/runs' } })
+    const button = back.find('[data-testid="atrium-page-header-back"]')
+
+    expect(button.attributes('href')).toBe('/impex/runs')
+    expect(button.attributes('aria-label')).toBe('Back')
+    expect(back.find('h1').text()).toBe('Run')
+
+    const named = await mountSuspended(AtriumPageHeader, { props: { title: 'Run', back: '/impex/runs', backLabel: 'All runs' } })
+    expect(named.find('[data-testid="atrium-page-header-back"]').attributes('aria-label')).toBe('All runs')
+
+    const leading = await mountSuspended(AtriumPageHeader, { props: { title: 'Run' }, slots: { leading: () => h('span', { 'data-testid': 'lead' }, '<') } })
+    expect(leading.find('h1 [data-testid="lead"]').exists()).toBe(true)
+  })
+
+  it('takes a page header\'s description, meta, headline and links slots, and the page\'s own test id', async () => {
+    const wrapper = await mountSuspended(AtriumPageHeader, {
+      props: { title: 'Products', links: [{ label: 'Docs', to: '/docs' }] },
+      attrs: { 'data-testid': 'showroom-products-header' },
+      slots: {
+        headline: () => h('span', { 'data-testid': 'headline' }, 'Catalog'),
+        description: () => h('p', { 'data-testid': 'description' }, '42 products'),
+        meta: () => h('p', { 'data-testid': 'meta' }, 'Updated today')
+      }
+    })
+
+    expect(wrapper.attributes('data-testid')).toBe('showroom-products-header')
+    expect(wrapper.find('[data-testid="headline"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="description"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="meta"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Docs')
   })
 })

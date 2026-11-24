@@ -104,3 +104,35 @@ export { defineShortcuts } from '@nuxt/ui/composables/defineShortcuts.js'
 export { defineLocale } from '@nuxt/ui/composables/defineLocale.js'
 export { useLocale } from '@nuxt/ui/composables/useLocale.js'
 export { useKbd } from '@nuxt/ui/composables/useKbd.js'
+
+/*
+ * Nuxt UI's public types, type-only (D-093): a module types its columns,
+ * items and form handlers from here, never from '@nuxt/ui' itself.
+ */
+export type {
+  AccordionItem,
+  AlertProps,
+  BadgeProps,
+  BreadcrumbItem,
+  ButtonProps,
+  CardProps,
+  CheckboxProps,
+  CommandPaletteGroup,
+  CommandPaletteItem,
+  DropdownMenuItem,
+  EmptyProps,
+  FormError,
+  FormSubmitEvent,
+  InputNumberProps,
+  InputProps,
+  ModalProps,
+  NavigationMenuItem,
+  SelectItem,
+  SelectMenuItem,
+  SelectProps,
+  SwitchProps,
+  TableColumn,
+  TableProps,
+  TableRow,
+  TabsItem
+} from '@nuxt/ui'
