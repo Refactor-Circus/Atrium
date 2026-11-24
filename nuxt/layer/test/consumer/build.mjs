@@ -2,12 +2,14 @@
 // workspace, the way a host gets the layer from git (giget downloads only
 // the `nuxt/layer` subdirectory). It fails when the layer reaches outside its
 // own folder, depends on a `workspace:` package, or does not build for an
-// app that extends it.
+// app that extends it, or when the client lacks the bundled Lucide icons a
+// static SPA (no `/api/_nuxt_icon` server) needs: names the source never
+// mentions, since the API sends them at runtime.
 //
 //   node nuxt/layer/test/consumer/build.mjs        (KEEP_CONSUMER=1 keeps the temp dir)
 
 import { spawnSync } from 'node:child_process'
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -97,7 +99,16 @@ try {
   run(app, ['install', '--no-frozen-lockfile'])
   run(app, ['run', 'build'])
 
-  console.log('[consumer] a fresh app extending nuxt/layer builds.')
+  const assets = join(app, '.output', 'public', '_nuxt')
+  const client = readdirSync(assets).filter(file => file.endsWith('.js')).map(file => readFileSync(join(assets, file), 'utf8')).join('\n')
+
+  for (const icon of ['ferris-wheel', 'shopping-cart']) {
+    if (!client.includes(`"${icon}"`) && !client.includes(`'${icon}'`)) {
+      throw new Error(`the client bundle lacks the Lucide icon [${icon}]: a static SPA would render no icons`)
+    }
+  }
+
+  console.log('[consumer] a fresh app extending nuxt/layer builds, with the Lucide icons in its client bundle.')
 } catch (error) {
   console.error(`[consumer] ${error instanceof Error ? error.message : String(error)}`)
   process.exitCode = 1

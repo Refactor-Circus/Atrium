@@ -30,7 +30,7 @@ const themeItems = computed(() => [theme.themes.value.map(item => ({
 
 <template>
   <UDashboardGroup>
-    <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
+    <UDashboardSidebar collapsible resizable class="atrium-sidebar" :ui="{ footer: 'border-t border-default' }">
       <template #header="{ collapsed }">
         <NuxtLink to="/" class="truncate font-semibold" :class="collapsed ? 'sr-only' : ''">
           {{ store.shell?.app.name ?? 'Atrium' }}
@@ -57,7 +57,7 @@ const themeItems = computed(() => [theme.themes.value.map(item => ({
       </template>
     </UDashboardSidebar>
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="atrium-canvas flex min-w-0 flex-1 flex-col">
       <AtriumVersionBanner />
       <AtriumResponseNotice />
       <div v-if="store.error" class="m-6">

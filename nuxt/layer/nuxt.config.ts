@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }
+
+// Every Lucide icon, bundled into the client (see `icon` below). Icon names
+// come from the API at runtime, so a scan of the source cannot find them.
+const lucide = createRequire(import.meta.url)('@iconify-json/lucide/icons.json') as { icons: Record<string, unknown> }
+const lucideIcons = Object.keys(lucide.icons).map(name => `lucide:${name}`)
 
 // The suite integrations the layer ships (app/integrations/{key}).
 const integrations = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']
@@ -49,15 +55,24 @@ export default defineNuxtConfig({
     }
   },
 
-  // Icons come from collections installed with the app, served by the app's
-  // own icon endpoint: nothing leaves for the Iconify API unless a host opts
-  // in with `icon: { fallbackToApi: true }` (or `provider: 'iconify'`).
+  // Icons come from collections installed with the app: nothing leaves for
+  // the Iconify API unless a host opts in with `icon: { fallbackToApi: true }`
+  // (or `provider: 'iconify'`). The Lucide collection is bundled into the
+  // client, so it renders in a static SPA (`nuxt generate`, served by
+  // Laravel) where no server answers `/api/_nuxt_icon`; the server bundle
+  // serves it, and any pack a host adds, when the app runs a Nitro server.
   // Hosts add packs by installing `@iconify-json/<set>` and listing the set
-  // in `icon.serverBundle.collections`.
+  // in `icon.serverBundle.collections` (a static host lists its icons in
+  // `icon.clientBundle.icons` instead).
   icon: {
     provider: 'server',
     serverBundle: {
       collections: ['lucide']
+    },
+    clientBundle: {
+      icons: lucideIcons,
+      scan: true,
+      sizeLimitKb: 0
     },
     fallbackToApi: false
   },

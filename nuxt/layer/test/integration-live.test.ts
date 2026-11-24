@@ -4,7 +4,7 @@ import { AtriumNavigation } from '#components'
 import { useAtrium } from '#imports'
 import { AtriumRegistry } from '../app/plugins/atrium'
 import type { AtriumNavItem, AtriumNavSection } from '../app/types/atrium'
-import { settle, withSetup } from './support'
+import { inApp, settle, withSetup } from './support'
 import { integrationEntry, integrationShell, useShell } from './integrations/support'
 
 /*
@@ -124,7 +124,7 @@ describe('live nav items', () => {
     const runs = vi.fn(async () => ({ badge: 1 }))
     atrium.live('impex.active-runs', runs)
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(inApp(AtriumNavigation))
     await settle()
     await wrapper.setProps({ collapsed: true })
     await settle()

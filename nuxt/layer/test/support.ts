@@ -1,7 +1,8 @@
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, type Component } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { AtriumShell } from '../app/types/atrium'
 import shellFixture from './fixtures/shell.json'
+import { UApp } from '#components'
 
 /**
  * Runs `setup` inside a mounted component, so composables that need the Nuxt
@@ -19,6 +20,18 @@ export async function withSetup<T>(setup: () => T): Promise<T> {
   }))
 
   return result as T
+}
+
+/**
+ * `component` inside <UApp>, as app.vue mounts pages, for components that
+ * need its providers (tooltips). Attributes, `setProps()` included, go to
+ * the component.
+ */
+export function inApp(component: Component): Component {
+  return defineComponent({
+    inheritAttrs: false,
+    setup: (_, { attrs }) => () => h(UApp, null, { default: () => h(component, attrs) })
+  })
 }
 
 /** A fresh copy of the shell fixture, changed by `overrides`. */

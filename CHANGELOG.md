@@ -249,6 +249,8 @@ The pull request template carries these as release items.
 
 ### Fixed
 
+- The layer's sidebar groups each navigation section as its own collapsible section (open only while the current page is inside it, with a separator between sections and the sections' icons with their pages in a popover when the sidebar is collapsed) instead of one long list with every group open. Themes now drive Nuxt UI's backgrounds, text, borders and status colours, not only the primary colour and radius, and the sidebar sits on the surface colour against the page's canvas.
+- The layer bundles every Lucide icon into the client, so a static SPA (`nuxt generate`, served by Laravel) renders icons without a server for `/api/_nuxt_icon` or any host config.
 - Search sources run in child processes returned no results on Laravel 13.40 and later, whose `invoke-serialized-closure` command frames its result in a signed envelope. `atrium:search-source` now unwraps it, and still reads the bare JSON earlier versions write.
 
 ## [v0.1.0](https://github.com/Refactor-Circus/Atrium/commits/v0.1.0) - 2026-10-30

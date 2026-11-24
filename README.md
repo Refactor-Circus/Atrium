@@ -161,7 +161,7 @@ const { data } = await useAtriumApi()<{ data: Invoice[] }>('/plugins/billing/inv
 
 ### Icons
 
-Icons are [Iconify](https://iconify.design) names such as `i-lucide-home`, on the PHP side (`->icon('i-lucide-home')`, checked when the definition is built) and in components. The layer bundles the `lucide` collection and serves icons locally (`icon.serverBundle`), with the remote Iconify API off, so it works offline and under a strict CSP. An unknown icon renders a fallback, not an error.
+Icons are [Iconify](https://iconify.design) names such as `i-lucide-home`, on the PHP side (`->icon('i-lucide-home')`, checked when the definition is built) and in components. The layer bundles every `lucide` icon into the client (`icon.clientBundle`) and serves the collection from the app's server too (`icon.serverBundle`), with the remote Iconify API off, so it works offline, under a strict CSP and as a static SPA (`nuxt generate`, served by Laravel) with no config. An unknown icon renders a fallback, not an error.
 
 Add another pack by installing it and listing it:
 
@@ -176,6 +176,8 @@ icon: {
   // fallbackToApi: true, // opt in to fetching unknown icons from the Iconify API
 },
 ```
+
+A static SPA has no server to answer `/api/_nuxt_icon`, so list another pack's icons in `icon.clientBundle.icons` (`['heroicons:home', ...]`) instead.
 
 ### Locales
 
@@ -678,6 +680,8 @@ Atrium ships six themes, sent in the shell with their design tokens. People pick
 | **Midnight** | Violet on deep indigo, the roundest corners |
 | **Ledger** | Monochrome, near-square corners |
 
+The layer applies a theme's tokens to Nuxt UI: `surface` is the background of cards, menus and the sidebar (`--ui-bg`), `surface-alt` the muted and elevated backgrounds, `canvas` the page behind the content, `on-surface` and `on-surface-strong` the text, `outline` and `outline-strong` the borders, and `primary`, `secondary`, `info`, `success`, `warning` and `danger` Nuxt UI's colours of the same names (`danger` is `error`). Dark mode reads the `-dark` tokens. A token a theme leaves out keeps Nuxt UI's default.
+
 Each theme also carries a `layout` (`sidebar` or `top`) for a layer that lays the shell out by theme; the bundled layer uses its sidebar layout for every theme.
 
 ```php
@@ -726,7 +730,7 @@ The switcher shows only when there is more than one theme and the feature named 
 
 ## Navigation
 
-Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`.
+Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`. The layer's sidebar lists the loose pages first, then each group as its own collapsible section, open while the current page is inside it.
 
 Items join a section with `NavItem::group('Billing')`. Describe the group to give its section an icon and a place in the list; otherwise it uses its first page's icon and sorts by its first page:
 
