@@ -64,9 +64,10 @@ describe('⌘K search', () => {
 
     expect(internal.exists()).toBe(true)
     expect(internal.attributes('target')).toBeUndefined()
-    // Nuxt UI's Vue-mode <ULink> renders no `rel` (D-087); a browser opens
-    // a target="_blank" link with noopener all the same.
+    // Nuxt UI's Vue-mode <ULink> drops `rel` (D-087); Atrium's build gives
+    // every external Nuxt UI link `rel="noopener noreferrer"` (D-091).
     expect(external.attributes('target')).toBe('_blank')
+    expect(external.attributes('rel')).toBe('noopener noreferrer')
     expect(wrapper.html()).not.toContain('javascript:')
   })
 })

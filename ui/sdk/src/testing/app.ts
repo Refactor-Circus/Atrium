@@ -5,6 +5,7 @@ import { defineComponent, h, nextTick, reactive, Suspense, type App, type Compon
 import { createRouter, createWebHistory, START_LOCATION, type RouteLocationRaw, type RouteRecordRaw, type Router } from 'vue-router'
 // Resolved by Nuxt UI's Vite plugin, which the test config always loads.
 import ui from '@nuxt/ui/vue-plugin'
+import UApp from '@nuxt/ui/components/App.vue'
 import { setAtriumApp } from '../runtime/context'
 import { atriumI18n } from '../runtime/i18n'
 import { installAtriumIcons } from '../runtime/icons'
@@ -88,7 +89,8 @@ export async function mountSuspended<T>(component: T, options: MountSuspendedOpt
   const Root = defineComponent({
     name: 'AtriumTestRoot',
     setup() {
-      return () => h(Suspense, null, { default: () => h(component as Component, { ...state }, slots as never) })
+      // Inside <UApp>, as every page is, so tooltips, toasts and overlays work.
+      return () => h(UApp, null, { default: () => h(Suspense, null, { default: () => h(component as Component, { ...state }, slots as never) }) })
     }
   })
 

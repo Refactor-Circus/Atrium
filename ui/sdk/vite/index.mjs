@@ -340,7 +340,7 @@ export function nuxtUi({ dts = false, dirs = [] } = {}) {
   const autoImportsDts = dts ? `${dts}/auto-imports.d.ts` : false
   const componentsDts = dts ? `${dts}/components.d.ts` : false
 
-  return import('@nuxt/ui/vite').then(({ default: ui }) => ui({
+  return import('@nuxt/ui/vite').then(({ default: ui }) => [linkRel(), ...[ui({
     ui: atriumUiConfig,
     colorMode: true,
     // The SDK's own sources import what they use: a library must not lean
@@ -352,5 +352,36 @@ export function nuxtUi({ dts = false, dirs = [] } = {}) {
     // they are skipped here too and Atrium's own suites see what a module's
     // see. (defu replaces a RegExp, where it would concatenate an array.)
     components: { dirs: [], resolvers: [atriumComponentResolver({ ui: false, direct: true })], dts: componentsDts, exclude: componentsExclude }
-  }))
+  })].flat()])
+}
+
+/**
+ * Gives Nuxt UI's Vue-mode <ULink> what Nuxt's <NuxtLink> does for an
+ * external link: `rel="noopener noreferrer"` (or the `rel` it was given),
+ * which it otherwise drops (D-087). Every Nuxt UI link renders through it
+ * (<UButton to>, <UNavigationMenu>, <UCommandPalette>, <UBreadcrumb>), so
+ * Atrium's components and every module's get the same safe external links
+ * as <AtriumLink>. Fails the build when a Nuxt UI release reshapes the file.
+ */
+function linkRel() {
+  const target = "target: isExternal ? '_blank' : void 0,"
+  const patched = `${target}\n  rel: props.rel ?? (isExternal && !props.noRel ? 'noopener noreferrer' : void 0),`
+
+  return {
+    name: 'atrium:link-rel',
+    enforce: 'pre',
+    transform(code, id) {
+      if (id.includes('?') || !/[\\/]runtime[\\/]vue[\\/]components[\\/]Link\.vue$/.test(id)) {
+        return
+      }
+
+      const parts = code.split(target)
+
+      if (parts.length !== 3) {
+        throw new Error(`[atrium] Nuxt UI's Vue-mode Link.vue changed shape: expected two external branches, found ${parts.length - 1}.`)
+      }
+
+      return { code: parts.join(patched), map: null }
+    }
+  }
 }

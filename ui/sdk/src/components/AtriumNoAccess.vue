@@ -1,26 +1,30 @@
 <script setup lang="ts">
-import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
+import UAlert from '@nuxt/ui/components/Alert.vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 /**
  * In place of a screen, widget or section the user may not see: its API
  * answered 403. Integration pages, widgets and hooks render it rather than an
- * error (D-031). Drawn as a terminal readout in the warning tone (D-078).
+ * error (D-031). A warning <UAlert> (a fault line in the deck's theme, D-078)
+ * coded `403`; `compact` leaves out the default description.
  */
-defineProps<{ title?: string, description?: string, compact?: boolean }>()
+const props = defineProps<{ title?: string, description?: string, compact?: boolean }>()
 
 const { t } = useI18n()
+
+const detail = computed(() => props.description ?? (props.compact ? undefined : t('atrium.no_access.description')))
 </script>
 
 <template>
-  <div class="atrium-terminal" data-tone="locked" role="status" data-testid="atrium-no-access">
-    <div v-if="!compact" class="atrium-terminal-head" data-code="403" aria-hidden="true">{{ t('atrium.shell.restricted') }}</div>
-    <div class="atrium-terminal-body">
-      <UIcon name="i-lucide-lock" class="mt-0.5 size-3.5 shrink-0 text-warning" />
-      <div class="min-w-0 font-sans text-sm">
-        <p class="font-medium text-highlighted">{{ title ?? t('atrium.no_access.title') }}</p>
-        <p v-if="!compact || description" class="text-muted">{{ description ?? t('atrium.no_access.description') }}</p>
-      </div>
-    </div>
-  </div>
+  <UAlert
+    color="warning"
+    variant="subtle"
+    icon="i-lucide-lock"
+    :title="props.title ?? t('atrium.no_access.title')"
+    :description="detail"
+    role="status"
+    data-code="403"
+    data-testid="atrium-no-access"
+  />
 </template>

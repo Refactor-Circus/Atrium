@@ -1,20 +1,25 @@
 <script setup lang="ts">
 import AtriumSearch from './AtriumSearch.vue'
+import UBadge from '@nuxt/ui/components/Badge.vue'
+import UBreadcrumb from '@nuxt/ui/components/Breadcrumb.vue'
 import UButton from '@nuxt/ui/components/Button.vue'
+import UColorModeButton from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeButton.vue'
+import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue'
 import UDropdownMenu from '@nuxt/ui/components/DropdownMenu.vue'
-import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 import { computed } from 'vue'
 import { useAtriumTheme } from '../composables/useAtriumTheme'
 import { useAtriumNavigation } from '../composables/useAtriumNavigation'
 import { useRoute } from 'vue-router'
-import { useColorMode } from '../runtime/colorMode'
 import { useI18n } from 'vue-i18n'
 
+import type { BreadcrumbItem, DropdownMenuItem } from '@nuxt/ui'
+
 /**
- * The shell's top bar (D-077): the navigation toggles (the drawer below
- * `lg`, the section panel above), where you are (a short code such as
- * `CAT/PRD`, then section / page), ⌘K, the theme switcher and the colour
- * mode. The API's status lives in <AtriumStatusBar>.
+ * The shell's top bar (D-077), a <UDashboardNavbar>: the navigation toggles
+ * (the drawer below `lg`, the section panel above), where you are (a short
+ * code such as `CAT/PRD`, then a <UBreadcrumb> of section / page), ⌘K, the
+ * theme switcher and the colour mode. The API's status lives in
+ * <AtriumStatusBar>.
  */
 const collapsed = defineModel<boolean>('collapsed', { default: false })
 const emit = defineEmits<{ menu: [] }>()
@@ -22,7 +27,6 @@ const emit = defineEmits<{ menu: [] }>()
 const theme = useAtriumTheme()
 const nav = useAtriumNavigation()
 const route = useRoute()
-const colorMode = useColorMode()
 const { t } = useI18n()
 
 const section = computed(() => nav.current.value?.label ?? null)
@@ -48,7 +52,12 @@ function abbreviate(label: string | null): string {
 
 const code = computed(() => [section.value, page.value].filter(Boolean).map(abbreviate).filter(Boolean).join('/'))
 
-const themeItems = computed(() => [theme.themes.value.map(item => ({
+const crumbs = computed<BreadcrumbItem[]>(() => [
+  ...section.value ? [{ label: section.value, class: 'hidden sm:inline-flex font-mono text-[0.65625rem] font-medium tracking-[0.08em] uppercase text-muted' }] : [],
+  ...page.value ? [{ label: page.value, active: true, class: 'font-medium text-highlighted' }] : []
+])
+
+const themeItems = computed<DropdownMenuItem[][]>(() => [theme.themes.value.map(item => ({
   label: item.label,
   type: 'checkbox' as const,
   checked: item.key === theme.current.value?.key,
@@ -57,52 +66,59 @@ const themeItems = computed(() => [theme.themes.value.map(item => ({
   swatch: item.swatch
 }))])
 
-const dark = computed(() => colorMode.value === 'dark')
-
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
-}
-
-function toggleMode() {
-  colorMode.preference = dark.value ? 'light' : 'dark'
 }
 </script>
 
 <template>
-  <header class="atrium-topbar sticky top-0 z-20 flex shrink-0 items-center gap-2 px-2 sm:px-3" data-testid="atrium-topbar">
-    <UButton
-      icon="i-lucide-menu"
-      color="neutral"
-      variant="ghost"
-      size="sm"
-      class="lg:hidden"
-      :aria-label="t('atrium.shell.open_menu')"
-      data-testid="atrium-menu"
-      @click="emit('menu')"
-    />
-    <UButton
-      :icon="collapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
-      color="neutral"
-      variant="ghost"
-      size="sm"
-      class="hidden lg:inline-flex"
-      :aria-label="collapsed ? t('atrium.shell.expand') : t('atrium.shell.collapse')"
-      :aria-pressed="collapsed"
-      data-testid="atrium-collapse"
-      @click="toggleCollapsed"
-    />
+  <UDashboardNavbar
+    :toggle="false"
+    class="sticky top-0 z-20 h-(--atrium-bar-height) gap-2 border-b border-default bg-(--atrium-canvas)/70 px-2 pt-0 backdrop-blur-md backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-px after:bg-[linear-gradient(90deg,var(--ui-primary),color-mix(in_oklab,var(--ui-primary)_30%,transparent)_25%,transparent_60%)] after:shadow-[0_0_10px_var(--atrium-glow-soft)] sm:px-3 lg:px-3"
+    data-testid="atrium-topbar"
+  >
+    <template #leading>
+      <UButton
+        icon="i-lucide-menu"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="lg:hidden"
+        :aria-label="t('atrium.shell.open_menu')"
+        data-testid="atrium-menu"
+        @click="emit('menu')"
+      />
+      <UButton
+        :icon="collapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="hidden lg:inline-flex"
+        :aria-label="collapsed ? t('atrium.shell.expand') : t('atrium.shell.collapse')"
+        :aria-pressed="collapsed"
+        data-testid="atrium-collapse"
+        @click="toggleCollapsed"
+      />
+    </template>
 
-    <nav class="flex min-w-0 items-center gap-1.5" :aria-label="t('atrium.shell.breadcrumb')" data-testid="atrium-breadcrumb">
-      <span v-if="code" class="atrium-code hidden sm:inline-flex" data-testid="atrium-code" aria-hidden="true">{{ code }}</span>
-      <span v-if="section" class="atrium-label hidden truncate sm:inline">{{ section }}</span>
-      <UIcon v-if="section && page" name="i-lucide-chevron-right" class="hidden size-3 shrink-0 text-dimmed sm:inline" />
-      <span v-if="page" class="truncate text-[0.8125rem] font-medium text-highlighted" aria-current="page">{{ page }}</span>
-    </nav>
+    <template #title>
+      <nav class="flex min-w-0 items-center gap-2" :aria-label="t('atrium.shell.breadcrumb')" data-testid="atrium-breadcrumb">
+        <UBadge
+          v-if="code"
+          :label="code"
+          icon="i-lucide-chevrons-right"
+          color="primary"
+          variant="soft"
+          class="hidden tracking-[0.1em] uppercase sm:inline-flex"
+          data-testid="atrium-code"
+          aria-hidden="true"
+        />
+        <UBreadcrumb :items="crumbs" separator-icon="i-lucide-chevron-right" :ui="{ separator: 'max-sm:hidden' }" class="min-w-0" />
+      </nav>
+    </template>
 
-    <div class="ms-auto flex items-center gap-1.5">
-      <div class="flex md:w-64">
-        <AtriumSearch />
-      </div>
+    <template #right>
+      <AtriumSearch />
 
       <UDropdownMenu v-if="theme.switchable.value && theme.themes.value.length > 1" :items="themeItems" :content="{ align: 'end' }">
         <UButton icon="i-lucide-palette" color="neutral" variant="ghost" size="sm" :aria-label="t('atrium.theme.label')" data-testid="atrium-theme" />
@@ -110,15 +126,7 @@ function toggleMode() {
           <span class="size-2.5 rounded-full ring-1 ring-(--ui-border-accented)" :style="{ background: (item as { swatch?: string }).swatch }" />
         </template>
       </UDropdownMenu>
-      <UButton
-        :icon="dark ? 'i-lucide-sun' : 'i-lucide-moon'"
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        :aria-label="dark ? t('atrium.shell.light_mode') : t('atrium.shell.dark_mode')"
-        data-testid="atrium-color-mode"
-        @click="toggleMode"
-      />
-    </div>
-  </header>
+      <UColorModeButton size="sm" data-testid="atrium-color-mode" />
+    </template>
+  </UDashboardNavbar>
 </template>

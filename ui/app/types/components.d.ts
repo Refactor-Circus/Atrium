@@ -12,7 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AtriumDashboardPage: typeof import('./../../sdk/src/components/AtriumDashboardPage.vue')['default']
-    AtriumIcon: typeof import('./../../sdk/src/components/AtriumIcon.vue')['default']
     AtriumIntegrationUnavailable: typeof import('./../../sdk/src/components/AtriumIntegrationUnavailable.vue')['default']
     AtriumNavigation: typeof import('./../../sdk/src/components/AtriumNavigation.vue')['default']
     AtriumResponseNotice: typeof import('./../../sdk/src/components/AtriumResponseNotice.vue')['default']
@@ -30,8 +29,10 @@ declare module 'vue' {
     UDashboardGroup: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/DashboardGroup.vue')['default']
     UDashboardNavbar: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/DashboardNavbar.vue')['default']
     UDashboardPanel: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/DashboardPanel.vue')['default']
+    UDashboardSidebar: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/DashboardSidebar.vue')['default']
     UIcon: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/vue/components/Icon.vue')['default']
+    UPageCard: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/PageCard.vue')['default']
+    UPageGrid: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/PageGrid.vue')['default']
     USkeleton: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue')['default']
-    USlideover: typeof import('./../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/components/Slideover.vue')['default']
   }
 }

@@ -84,7 +84,8 @@ describe('AtriumStatusBar', () => {
 
     expect(wrapper.find('[data-testid="atrium-status"]').text()).toContain('Online')
     expect(wrapper.find('[data-integration="impex"]').attributes('data-active')).toBe('true')
-    expect(wrapper.find('[data-integration="polycart"] .atrium-live-dot').attributes('data-state')).toBe('off')
+    expect(wrapper.find('[data-integration="impex"] [data-testid="atrium-live-dot"]').attributes('data-state')).toBe('on')
+    expect(wrapper.find('[data-integration="polycart"] [data-testid="atrium-live-dot"]').attributes('data-state')).toBe('off')
     expect(wrapper.find('[data-testid="atrium-latency"]').text()).toBe('42 ms')
     expect(wrapper.text()).toContain('API v2.0')
     expect(wrapper.find('[data-testid="atrium-clock"]').text()).toMatch(/^\d{2}:\d{2}:\d{2} UTC$/)
@@ -171,14 +172,14 @@ describe('the shared deck blocks', () => {
     expect(wrapper.find('[data-testid="atrium-stat-spark"]').exists()).toBe(false)
   })
 
-  it('reads a failure as a terminal fault and a 403 as a restricted readout', async () => {
+  it('reads a failure as a coded fault alert and a 403 as a restricted one', async () => {
     const error = await mountSuspended(AtriumErrorCard, { props: { message: 'Nothing loaded.' } })
     const locked = await mountSuspended(AtriumNoAccess)
 
     expect(error.find('[data-testid="atrium-error-card"]').attributes('role')).toBe('alert')
     expect(error.text()).toContain('Nothing loaded.')
-    expect(error.find('.atrium-terminal-head').attributes('data-code')).toBe('ERR')
-    expect(locked.find('.atrium-terminal-head').attributes('data-code')).toBe('403')
+    expect(error.find('[data-testid="atrium-error-card"]').attributes('data-code')).toBe('ERR')
+    expect(locked.find('[data-testid="atrium-no-access"]').attributes('data-code')).toBe('403')
     expect(locked.text()).toContain('No access')
   })
 

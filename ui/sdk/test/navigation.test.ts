@@ -97,7 +97,6 @@ describe('AtriumNavigation', () => {
     const buttons = wrapper.findAll('[data-testid="atrium-rail-section"]')
 
     expect(rail(wrapper)).toEqual(['Workspace', 'Insights', 'Administration'])
-    expect(buttons.map(button => button.attributes('data-tip'))).toEqual(['Workspace', 'Insights', 'Administration'])
     expect(buttons.map(button => button.attributes('data-current'))).toEqual(['false', 'false', 'true'])
     expect(wrapper.find('[data-testid="atrium-nav-panel"]').attributes('data-section')).toBe('group-administration')
     expect(wrapper.find('a[href="/demo/billing"]').attributes('aria-current')).toBe('page')
@@ -130,19 +129,19 @@ describe('AtriumNavigation', () => {
     const panel = wrapper.find('[data-testid="atrium-nav-panel"]')
 
     expect(panel.attributes('data-section')).toBe('group-insights')
-    expect(panel.findAll('button[aria-expanded="true"]').map(button => button.attributes('aria-label'))).toEqual(['Reports'])
+    expect(panel.findAll('button[aria-expanded="true"]').map(button => button.text())).toEqual(['Reports'])
     expect(panel.find('a[href="/demo/reports/sales"]').attributes('aria-current')).toBe('page')
   })
 
   it('opens and closes a nested item with its disclosure', async () => {
     const wrapper = await mountSuspended(AtriumNavigation, { route: '/demo/reports/sales' })
-    const toggle = wrapper.find('button[aria-label="Reports"]')
+    const reports = () => wrapper.findAll('button[aria-expanded]').find(button => button.text() === 'Reports')!
 
-    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(reports().attributes('aria-expanded')).toBe('true')
 
-    await toggle.trigger('click')
+    await reports().trigger('click')
 
-    expect(wrapper.find('button[aria-label="Reports"]').attributes('aria-expanded')).toBe('false')
+    expect(reports().attributes('aria-expanded')).toBe('false')
   })
 
   it('shows a package section for its pages the nav does not list', async () => {
@@ -178,7 +177,7 @@ describe('AtriumNavigation', () => {
     const panel = wrapper.find('[data-testid="atrium-nav-panel"]')
 
     expect(panel.find('a[href="/"]').text()).toContain('Dashboard')
-    expect(panel.find('button[aria-expanded]').exists()).toBe(false)
+    expect(panel.find('[aria-expanded]').exists()).toBe(false)
   })
 
   it('shows only the rail while collapsed, with each section\'s pages in a flyout', async () => {

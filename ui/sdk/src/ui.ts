@@ -5,6 +5,10 @@
  * preset resolves `<UButton>` and friends to it) and never bundle Nuxt UI.
  *
  * Part of the shared module API: removing an export is a major change.
+ * It carries the dashboard shell (`UDashboard*`, `UDashboardSearch`), the
+ * navigation and page building blocks (`UNavigationMenu`, `UPage*`,
+ * `UEmpty`) and the colour-mode controls Atrium's own components are built
+ * from, so a module composes its pages from the same pieces (D-091).
  * Left out on purpose: the marketing, blog, changelog, pricing and chat
  * components, which an admin module has no use for.
  */
@@ -15,6 +19,7 @@ export { default as UApp } from '@nuxt/ui/components/App.vue'
 export { default as UAvatar } from '@nuxt/ui/components/Avatar.vue'
 export { default as UAvatarGroup } from '@nuxt/ui/components/AvatarGroup.vue'
 export { default as UBadge } from '@nuxt/ui/components/Badge.vue'
+export { default as UBanner } from '@nuxt/ui/components/Banner.vue'
 export { default as UBreadcrumb } from '@nuxt/ui/components/Breadcrumb.vue'
 export { default as UButton } from '@nuxt/ui/components/Button.vue'
 export { default as UCalendar } from '@nuxt/ui/components/Calendar.vue'
@@ -23,6 +28,9 @@ export { default as UCheckbox } from '@nuxt/ui/components/Checkbox.vue'
 export { default as UCheckboxGroup } from '@nuxt/ui/components/CheckboxGroup.vue'
 export { default as UChip } from '@nuxt/ui/components/Chip.vue'
 export { default as UCollapsible } from '@nuxt/ui/components/Collapsible.vue'
+export { default as UColorModeButton } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeButton.vue'
+export { default as UColorModeSelect } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeSelect.vue'
+export { default as UColorModeSwitch } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeSwitch.vue'
 export { default as UColorPicker } from '@nuxt/ui/components/ColorPicker.vue'
 export { default as UCommandPalette } from '@nuxt/ui/components/CommandPalette.vue'
 export { default as UContainer } from '@nuxt/ui/components/Container.vue'
@@ -32,6 +40,8 @@ export { default as UDashboardGroup } from '@nuxt/ui/components/DashboardGroup.v
 export { default as UDashboardNavbar } from '@nuxt/ui/components/DashboardNavbar.vue'
 export { default as UDashboardPanel } from '@nuxt/ui/components/DashboardPanel.vue'
 export { default as UDashboardResizeHandle } from '@nuxt/ui/components/DashboardResizeHandle.vue'
+export { default as UDashboardSearch } from '@nuxt/ui/components/DashboardSearch.vue'
+export { default as UDashboardSearchButton } from '@nuxt/ui/components/DashboardSearchButton.vue'
 export { default as UDashboardSidebar } from '@nuxt/ui/components/DashboardSidebar.vue'
 export { default as UDashboardSidebarCollapse } from '@nuxt/ui/components/DashboardSidebarCollapse.vue'
 export { default as UDashboardSidebarToggle } from '@nuxt/ui/components/DashboardSidebarToggle.vue'
@@ -51,11 +61,20 @@ export { default as UInputNumber } from '@nuxt/ui/components/InputNumber.vue'
 export { default as UInputTags } from '@nuxt/ui/components/InputTags.vue'
 export { default as UKbd } from '@nuxt/ui/components/Kbd.vue'
 export { default as ULink } from '@nuxt/ui/runtime/vue/components/Link.vue'
+export { default as UMain } from '@nuxt/ui/components/Main.vue'
 export { default as UModal } from '@nuxt/ui/components/Modal.vue'
 export { default as UNavigationMenu } from '@nuxt/ui/components/NavigationMenu.vue'
 export { default as UPage } from '@nuxt/ui/components/Page.vue'
+export { default as UPageAside } from '@nuxt/ui/components/PageAside.vue'
+export { default as UPageBody } from '@nuxt/ui/components/PageBody.vue'
 export { default as UPageCard } from '@nuxt/ui/components/PageCard.vue'
+export { default as UPageColumns } from '@nuxt/ui/components/PageColumns.vue'
+export { default as UPageFeature } from '@nuxt/ui/components/PageFeature.vue'
+export { default as UPageGrid } from '@nuxt/ui/components/PageGrid.vue'
 export { default as UPageHeader } from '@nuxt/ui/components/PageHeader.vue'
+export { default as UPageLinks } from '@nuxt/ui/components/PageLinks.vue'
+export { default as UPageList } from '@nuxt/ui/components/PageList.vue'
+export { default as UPageSection } from '@nuxt/ui/components/PageSection.vue'
 export { default as UPagination } from '@nuxt/ui/components/Pagination.vue'
 export { default as UPinInput } from '@nuxt/ui/components/PinInput.vue'
 export { default as UPopover } from '@nuxt/ui/components/Popover.vue'

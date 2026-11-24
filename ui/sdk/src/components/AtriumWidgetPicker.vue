@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import AtriumIcon from './AtriumIcon.vue'
-import UInput from '@nuxt/ui/components/Input.vue'
+import UCommandPalette from '@nuxt/ui/components/CommandPalette.vue'
 import UModal from '@nuxt/ui/components/Modal.vue'
 import { watch, ref, computed } from 'vue'
 import { useAtriumApi } from '../composables/useAtriumApi'
+import { useAtriumIcon } from '../composables/useAtriumIcon'
 import { useI18n } from 'vue-i18n'
 import { useAsyncData } from '../runtime/asyncData'
 
+import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 import type { AtriumWidgetDefinition } from '../types/atrium'
 
-/** The widget catalogue (`atrium.widgets.index`), loaded when first opened. */
+/**
+ * The widget catalogue (`atrium.widgets.index`), loaded when first opened:
+ * a <UModal> holding a filterable <UCommandPalette> of every widget, its
+ * description beside it. Choosing one emits `pick` and closes.
+ */
 const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ pick: [widget: AtriumWidgetDefinition] }>()
 
 const api = useAtriumApi()
+const { resolve } = useAtriumIcon()
 const { t } = useI18n()
 
 const { data: catalogue, status, execute } = useAsyncData(
@@ -29,8 +35,18 @@ watch(open, (opened) => {
 }, { immediate: true })
 
 const query = ref('')
-const filtered = computed(() => (Array.isArray(catalogue.value) ? catalogue.value : []).filter(w =>
-  `${w.label} ${w.description ?? ''}`.toLowerCase().includes(query.value.toLowerCase())))
+
+const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => [{
+  id: 'atrium-widgets',
+  label: t('atrium.picker.title'),
+  items: (Array.isArray(catalogue.value) ? catalogue.value : []).map(widget => ({
+    label: widget.label,
+    suffix: widget.description ?? undefined,
+    icon: resolve(widget.icon ?? 'i-lucide-layout-grid'),
+    value: widget.key,
+    onSelect: () => choose(widget)
+  }))
+}])
 
 function choose(widget: AtriumWidgetDefinition) {
   emit('pick', widget)
@@ -39,26 +55,16 @@ function choose(widget: AtriumWidgetDefinition) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="t('atrium.picker.title')" :description="t('atrium.picker.description')">
+  <UModal v-model:open="open" :title="t('atrium.picker.title')" :description="t('atrium.picker.description')" :ui="{ body: 'p-0 sm:p-0' }">
     <template #body>
-      <UInput v-model="query" icon="i-lucide-search" :placeholder="t('atrium.picker.filter')" class="mb-3 w-full" />
-      <p v-if="status === 'pending'" class="text-sm text-muted">{{ t('atrium.picker.loading') }}</p>
-      <ul v-else class="divide-y divide-default">
-        <li v-for="widget in filtered" :key="widget.key">
-          <button
-            type="button"
-            class="flex w-full items-start gap-3 rounded px-2 py-3 text-left hover:bg-elevated"
-            :data-testid="`atrium-pick-${widget.key}`"
-            @click="choose(widget)"
-          >
-            <AtriumIcon :icon="widget.icon ?? 'i-lucide-layout-grid'" />
-            <span>
-              <span class="block font-medium">{{ widget.label }}</span>
-              <span v-if="widget.description" class="block text-sm text-muted">{{ widget.description }}</span>
-            </span>
-          </button>
-        </li>
-      </ul>
+      <UCommandPalette
+        v-model:search-term="query"
+        :groups="groups"
+        :loading="status === 'pending'"
+        :placeholder="t('atrium.picker.filter')"
+        class="h-[min(24rem,60vh)]"
+        data-testid="atrium-widget-picker"
+      />
     </template>
   </UModal>
 </template>

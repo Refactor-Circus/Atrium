@@ -1,23 +1,29 @@
 <script setup lang="ts">
+import UPageHeader from '@nuxt/ui/components/PageHeader.vue'
+
 /**
- * A page's header in the deck's style (D-077): an optional overline (the
- * section, a record type), the title, a description or meta line, and the
- * page's actions on the right (default slot). Pages that render their own
- * `<h1>` get the same title style from atrium.css.
+ * A page's header in the deck's style (D-077), Nuxt UI's <UPageHeader>: an
+ * optional overline (the section, a record type) as its headline, the
+ * title, a description or `meta` line, and the page's actions on the right
+ * (default slot).
  */
 defineProps<{ title: string, overline?: string | null, description?: string | null }>()
 </script>
 
 <template>
-  <header class="flex flex-wrap items-start justify-between gap-3" data-testid="atrium-page-header">
-    <div class="min-w-0">
-      <p v-if="overline" class="atrium-label mb-0.5">{{ overline }}</p>
-      <h1 class="truncate">{{ title }}</h1>
-      <p v-if="description" class="mt-0.5 text-sm text-muted">{{ description }}</p>
+  <UPageHeader
+    :headline="overline ?? undefined"
+    :title="title"
+    :description="description ?? undefined"
+    :ui="{ title: 'truncate' }"
+    data-testid="atrium-page-header"
+  >
+    <template v-if="$slots.meta" #description>
+      <p v-if="description">{{ description }}</p>
       <slot name="meta" />
-    </div>
-    <div v-if="$slots.default" class="flex flex-wrap items-center gap-1.5">
+    </template>
+    <template v-if="$slots.default" #links>
       <slot />
-    </div>
-  </header>
+    </template>
+  </UPageHeader>
 </template>

@@ -13,7 +13,6 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import { integrationGuard } from './integration-guard'
-import { installSpotlight } from './plugins/spotlight'
 import { coreRoutes } from './routes'
 
 /*
@@ -43,5 +42,3 @@ app.use(router)
 await router.isReady()
 
 app.mount('#atrium')
-
-installSpotlight()

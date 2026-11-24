@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
+import UEmpty from '@nuxt/ui/components/Empty.vue'
+import { computed } from 'vue'
+
 /**
- * An empty, failed or forbidden state in the deck's style (D-077): an icon
- * in a lit frame, a title, an optional description and actions (default
- * slot). `compact` fits it inside a panel or table.
+ * An empty, failed or forbidden state in the deck's style (D-077): Nuxt
+ * UI's <UEmpty> with an icon in a lit socket, a title, an optional
+ * description and actions (default slot). `compact` fits it inside a panel
+ * or table.
  */
 const props = withDefaults(defineProps<{
   kind?: 'empty' | 'error' | 'locked' | 'info'
@@ -14,25 +17,29 @@ const props = withDefaults(defineProps<{
 }>(), { kind: 'empty', description: null, icon: undefined, compact: false })
 
 const icons = { empty: 'i-lucide-inbox', error: 'i-lucide-triangle-alert', locked: 'i-lucide-lock', info: 'i-lucide-info' } as const
+
+const tone = computed(() => ({
+  error: 'text-error shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--ui-error)_45%,transparent),0_0_24px_-8px_var(--ui-error)]',
+  locked: 'text-warning shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--ui-warning)_45%,transparent),0_0_24px_-8px_var(--ui-warning)]',
+  empty: '',
+  info: ''
+})[props.kind])
 </script>
 
 <template>
-  <div
-    class="atrium-state flex flex-col items-center text-center"
-    :class="props.compact ? 'gap-2 px-3 py-6' : 'gap-3 px-4 py-14'"
+  <UEmpty
+    :icon="props.icon ?? icons[props.kind]"
+    :title="props.title"
+    :description="props.description ?? undefined"
+    :size="props.compact ? 'xs' : 'md'"
+    :variant="props.compact ? 'naked' : 'outline'"
+    :ui="{ root: props.compact ? 'py-6' : 'py-14', avatar: tone }"
     :data-kind="props.kind"
     :role="props.kind === 'error' ? 'alert' : 'status'"
     data-testid="atrium-state"
   >
-    <span class="atrium-state-icon grid place-items-center" :class="props.compact ? 'size-8' : 'size-11'">
-      <UIcon :name="props.icon ?? icons[props.kind]" :class="props.compact ? 'size-4' : 'size-5'" />
-    </span>
-    <div class="max-w-md space-y-1">
-      <p class="font-semibold text-highlighted" :class="props.compact ? 'text-sm' : 'text-[0.9375rem]'">{{ props.title }}</p>
-      <p v-if="props.description" class="text-sm text-muted">{{ props.description }}</p>
-    </div>
-    <div v-if="$slots.default" class="mt-1 flex flex-wrap justify-center gap-2">
+    <template v-if="$slots.default" #actions>
       <slot />
-    </div>
-  </div>
+    </template>
+  </UEmpty>
 </template>

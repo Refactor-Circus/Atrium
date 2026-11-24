@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import UButton from '@nuxt/ui/components/Button.vue'
-import UCommandPalette from '@nuxt/ui/components/CommandPalette.vue'
-import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
-import UKbd from '@nuxt/ui/components/Kbd.vue'
-import UModal from '@nuxt/ui/components/Modal.vue'
+import UBadge from '@nuxt/ui/components/Badge.vue'
+import UDashboardSearch from '@nuxt/ui/components/DashboardSearch.vue'
+import UDashboardSearchButton from '@nuxt/ui/components/DashboardSearchButton.vue'
 import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { useAtriumSearch } from '../composables/useAtriumSearch'
 import { useAtriumPalette } from '../composables/useAtriumPalette'
 
 import { refDebounced } from '@vueuse/core'
-import { defineShortcuts } from '@nuxt/ui/composables/defineShortcuts.js'
 
 /**
- * ⌘K: jump anywhere (D-077). The launcher button (a full one from `md`, an
- * icon below) opens a palette of the pages visited lately, every page in the
+ * ⌘K: jump anywhere (D-077), Nuxt UI's <UDashboardSearchButton> and
+ * <UDashboardSearch>. The launcher (a full one from `md`, an icon below)
+ * opens a palette of the pages visited lately, every page in the
  * navigation, the search results once the term is long enough
- * (useAtriumSearch) and the shell actions (useAtriumPalette).
+ * (useAtriumSearch) and the shell actions (useAtriumPalette, which carries
+ * the colour modes and themes, so the palette's own colour-mode group is off).
  */
 const { t } = useI18n()
 const open = ref(false)
@@ -26,11 +25,11 @@ const debounced = refDebounced(term, 250)
 const { groups: results, loading, search } = useAtriumSearch(() => { open.value = false })
 const { groups } = useAtriumPalette(term, results, () => { open.value = false })
 
+// Inside a <UDashboardGroup> the button also toggles the palette through the
+// dashboard's context; setting it here keeps it working anywhere else.
 function show() {
   open.value = true
 }
-
-defineShortcuts({ meta_k: () => { open.value = !open.value } })
 
 watch(debounced, q => search(q))
 watch(open, (value) => {
@@ -41,47 +40,38 @@ watch(open, (value) => {
 </script>
 
 <template>
-  <UButton
-    color="neutral"
-    variant="outline"
-    class="hidden h-7 w-full justify-start gap-2 ps-2 pe-1 text-muted md:flex"
+  <UDashboardSearchButton
+    :label="t('atrium.search.button')"
+    class="hidden w-56 md:flex lg:w-64"
     data-testid="atrium-search"
     @click="show"
-  >
-    <UIcon name="i-lucide-search" class="size-3.5 shrink-0" />
-    <span class="flex-1 truncate text-start">{{ t('atrium.search.button') }}</span>
-    <span class="flex gap-0.5">
-      <UKbd value="meta" size="sm" />
-      <UKbd value="K" size="sm" />
-    </span>
-  </UButton>
-  <UButton
-    icon="i-lucide-search"
-    color="neutral"
-    variant="ghost"
+  />
+  <UDashboardSearchButton
+    :label="t('atrium.search.button')"
+    collapsed
     size="sm"
     class="md:hidden"
-    :aria-label="t('atrium.search.button')"
     data-testid="atrium-search-compact"
     @click="show"
   />
 
-  <UModal v-model:open="open" :ui="{ content: 'atrium-hud p-0 sm:max-w-2xl top-[12vh] translate-y-0 sm:top-[14vh] ring-0' }" :title="t('atrium.search.button')" :description="t('atrium.search.placeholder')">
-    <template #content>
-      <div class="flex items-center gap-2 border-b border-default px-3 py-1.5" aria-hidden="true">
-        <span class="atrium-code">{{ t('atrium.shell.command') }}</span>
+  <UDashboardSearch
+    v-model:open="open"
+    v-model:search-term="term"
+    :groups="groups"
+    :loading="loading"
+    :color-mode="false"
+    :title="t('atrium.search.button')"
+    :description="t('atrium.search.placeholder')"
+    :placeholder="t('atrium.search.placeholder')"
+    data-testid="atrium-palette"
+  >
+    <template #footer>
+      <div class="flex items-center gap-2 px-2 py-0.5" aria-hidden="true">
+        <UBadge :label="t('atrium.shell.command')" color="primary" variant="soft" class="tracking-[0.1em] uppercase" />
         <span class="atrium-label">{{ t('atrium.shell.jump') }}</span>
         <span class="atrium-label ms-auto">{{ t('atrium.shell.escape') }}</span>
       </div>
-      <UCommandPalette
-        v-model:search-term="term"
-        :groups="groups"
-        :loading="loading"
-        :placeholder="t('atrium.search.placeholder')"
-        class="h-[min(28rem,70vh)]"
-        data-testid="atrium-palette"
-        @update:open="(value: boolean) => open = value"
-      />
     </template>
-  </UModal>
+  </UDashboardSearch>
 </template>

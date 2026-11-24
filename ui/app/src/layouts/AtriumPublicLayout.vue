@@ -8,8 +8,11 @@
 </script>
 
 <template>
-  <div class="atrium-canvas atrium-content flex min-h-svh items-center justify-center p-4 sm:p-6" data-testid="atrium-public-layout">
-    <main class="w-full max-w-md">
+  <div
+    class="flex min-h-svh items-center justify-center bg-(--atrium-canvas) bg-(image:--atrium-canvas-image) p-4 sm:p-6"
+    data-testid="atrium-public-layout"
+  >
+    <main class="w-full max-w-md text-sm" data-atrium-content>
       <slot />
     </main>
   </div>

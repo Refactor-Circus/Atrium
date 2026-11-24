@@ -3,6 +3,7 @@ import AtriumWidget from './AtriumWidget.vue'
 import AtriumWidgetPicker from './AtriumWidgetPicker.vue'
 import UButton from '@nuxt/ui/components/Button.vue'
 import UCard from '@nuxt/ui/components/Card.vue'
+import UEmpty from '@nuxt/ui/components/Empty.vue'
 import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 import USelect from '@nuxt/ui/components/Select.vue'
 import { ref, useTemplateRef, computed, nextTick, onBeforeUnmount } from 'vue'
@@ -175,16 +176,23 @@ onBeforeUnmount(() => sortable?.destroy())
       </UButton>
     </div>
 
-    <div v-if="!cells.length" class="atrium-empty">
-      <p>{{ t('atrium.dashboard.empty') }}</p>
-      <UButton v-if="editable && !editing" class="mt-3" variant="soft" @click="startPicking">
-        {{ t('atrium.dashboard.add_first') }}
-      </UButton>
-    </div>
+    <UEmpty
+      v-if="!cells.length"
+      icon="i-lucide-layout-grid"
+      :title="t('atrium.dashboard.empty')"
+      data-testid="atrium-grid-empty"
+    >
+      <template v-if="editable && !editing" #actions>
+        <UButton variant="soft" @click="startPicking">
+          {{ t('atrium.dashboard.add_first') }}
+        </UButton>
+      </template>
+    </UEmpty>
 
-    <div ref="grid" class="atrium-grid grid auto-rows-[8rem] grid-cols-12 gap-3" data-testid="atrium-grid">
+    <!-- On a phone every widget takes the full row (beating its inline span). -->
+    <div ref="grid" class="grid auto-rows-[8rem] grid-cols-12 gap-3 max-sm:*:col-span-full!" data-testid="atrium-grid">
       <div v-for="(cell, index) in cells" :key="cell.id" :style="span(cell.grid)" class="relative min-w-0">
-        <div v-if="editing" class="absolute inset-x-2 top-2 z-10 flex items-center gap-1 rounded-md bg-default/90 p-1 shadow">
+        <div v-if="editing" class="absolute inset-x-2 top-2 z-10 flex items-center gap-1 rounded-(--ui-radius) bg-default/90 p-1 shadow ring ring-default backdrop-blur">
           <UIcon name="i-lucide-grip-vertical" class="size-4 cursor-grab text-muted" data-drag />
           <span class="truncate text-xs font-medium">{{ cell.title ?? cell.key }}</span>
           <span class="flex-1" />
