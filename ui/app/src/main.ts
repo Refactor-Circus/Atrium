@@ -6,7 +6,8 @@ import {
   installAtriumModules,
   setAtriumApp,
   setAtriumLocale,
-  useAtriumBoot
+  useAtriumBoot,
+  watchFieldRows
 } from '@refactor-circus/atrium'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -42,3 +43,6 @@ app.use(router)
 await router.isReady()
 
 app.mount('#atrium')
+
+// A label-less control that wrapped onto a line of its own drops its label offset (D-098).
+watchFieldRows(document.getElementById('atrium')!)

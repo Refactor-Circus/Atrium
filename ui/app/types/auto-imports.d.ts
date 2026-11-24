@@ -14,6 +14,7 @@ declare global {
   const AtriumIntegrationError: typeof import('@refactor-circus/atrium').AtriumIntegrationError
   const AtriumRegistry: typeof import('@refactor-circus/atrium').AtriumRegistry
   const EffectScope: typeof import('vue').EffectScope
+  const FIELD_WRAPPED_ATTRIBUTE: typeof import('@refactor-circus/atrium').FIELD_WRAPPED_ATTRIBUTE
   const acceptHMRUpdate: typeof import('pinia').acceptHMRUpdate
   const addAtriumIcons: typeof import('@refactor-circus/atrium').addAtriumIcons
   const addAtriumMessages: typeof import('@refactor-circus/atrium').addAtriumMessages
@@ -129,6 +130,7 @@ declare global {
   const setAtriumBoot: typeof import('@refactor-circus/atrium').setAtriumBoot
   const setAtriumLocale: typeof import('@refactor-circus/atrium').setAtriumLocale
   const setMapStoreSuffix: typeof import('pinia').setMapStoreSuffix
+  const settleFieldRow: typeof import('@refactor-circus/atrium').settleFieldRow
   const shallowReactive: typeof import('vue').shallowReactive
   const shallowReadonly: typeof import('vue').shallowReadonly
   const shallowRef: typeof import('vue').shallowRef
@@ -189,6 +191,7 @@ declare global {
   const useToast: typeof import('../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/composables/useToast.js').useToast
   const watch: typeof import('vue').watch
   const watchEffect: typeof import('vue').watchEffect
+  const watchFieldRows: typeof import('@refactor-circus/atrium').watchFieldRows
   const watchPostEffect: typeof import('vue').watchPostEffect
   const watchSyncEffect: typeof import('vue').watchSyncEffect
 }
@@ -233,6 +236,7 @@ declare module 'vue' {
     readonly AtriumIntegrationError: UnwrapRef<typeof import('@refactor-circus/atrium')['AtriumIntegrationError']>
     readonly AtriumRegistry: UnwrapRef<typeof import('@refactor-circus/atrium')['AtriumRegistry']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
+    readonly FIELD_WRAPPED_ATTRIBUTE: UnwrapRef<typeof import('@refactor-circus/atrium')['FIELD_WRAPPED_ATTRIBUTE']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly addAtriumIcons: UnwrapRef<typeof import('@refactor-circus/atrium')['addAtriumIcons']>
     readonly addAtriumMessages: UnwrapRef<typeof import('@refactor-circus/atrium')['addAtriumMessages']>
@@ -348,6 +352,7 @@ declare module 'vue' {
     readonly setAtriumBoot: UnwrapRef<typeof import('@refactor-circus/atrium')['setAtriumBoot']>
     readonly setAtriumLocale: UnwrapRef<typeof import('@refactor-circus/atrium')['setAtriumLocale']>
     readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
+    readonly settleFieldRow: UnwrapRef<typeof import('@refactor-circus/atrium')['settleFieldRow']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
@@ -408,6 +413,7 @@ declare module 'vue' {
     readonly useToast: UnwrapRef<typeof import('../../node_modules/.pnpm/@nuxt+ui@4.1.0_@babel+parser@7.29.15_@vue+test-utils@2.6.0_@vue+compiler-dom@3.5.46_@vu_6901b4e99297c9c2742f8be62bd8b396/node_modules/@nuxt/ui/dist/runtime/composables/useToast.js')['useToast']>
     readonly watch: UnwrapRef<typeof import('vue')['watch']>
     readonly watchEffect: UnwrapRef<typeof import('vue')['watchEffect']>
+    readonly watchFieldRows: UnwrapRef<typeof import('@refactor-circus/atrium')['watchFieldRows']>
     readonly watchPostEffect: UnwrapRef<typeof import('vue')['watchPostEffect']>
     readonly watchSyncEffect: UnwrapRef<typeof import('vue')['watchSyncEffect']>
   }

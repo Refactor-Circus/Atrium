@@ -780,3 +780,12 @@
 - Rationale: The same two tokens in eight modules is a shared style, which the SDK owns; one definition follows any change to the form field's theme.
 - Date: 2026-11-24
 - Raised by: field-row alignment fix across the suite modules; choices made by the implementing agent without a user available
+
+## D-098: What happens to a label-less control's offset when its field row wraps?
+- Choice:
+  - **The app drops it.** A label-less control in a field row takes `mt-field-label` (D-097) to line up with the fields' controls. When the row wraps (a narrow screen, a long row) and such a control lands on a line with no labelled field, the offset was a stray 19.6px gap above it. CSS cannot tell which line a flex or grid item wrapped onto, so the SDK's `watchFieldRows(root)` (`ui/sdk/src/runtime/fieldRows.ts`), started by the app after mount, watches every parent of an `mt-field-label` (or `sm:mt-field-label`) element with a ResizeObserver and a MutationObserver, groups the row's rendered items into lines by their top less their own top margin, and marks the offset controls of a line with no other item `data-atrium-field-wrapped`. Atrium's stylesheet answers that with an unlayered `margin-top: 0`, which wins over the utility in Atrium's layer and in the modules' `atrium-modules` layer. Wrapping depends on widths only, so dropping the margin never changes the line.
+  - **Modules write nothing.** The eighty-odd `mt-field-label` controls across the suite modules are fixed without a module change or a re-pin; MODULES.md says so.
+  - **Tests.** `ui/sdk/test/field-row-wrap.test.ts` (stubbed boxes: a control beside a field keeps its offset, a wrapped line of controls loses it, a partly wrapped row, a responsive offset, and the offset coming back when the row widens).
+- Rationale: The user asked for the narrow-screen gap above a wrapped button to be fixed; one runtime rule fixes every module's rows, instead of a breakpoint on each control that would still leave the gap when a row wraps at a wider width.
+- Date: 2026-11-24
+- Raised by: user ("fix button quirk")

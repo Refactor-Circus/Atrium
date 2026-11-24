@@ -159,6 +159,9 @@ export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: {
   control's height so it is centred on them. `--spacing-field-label` and
   `--spacing-field` come from the SDK's theme (`theme.css`, imported by
   `module.css`); never define them, or any token, in a module's stylesheet.
+  When a row wraps, a label-less control that lands on a line with no
+  labelled field drops its offset by itself (D-098: Atrium's app watches the
+  rows); write nothing for it.
 - Components (D-093): besides Nuxt UI, the SDK gives every module
   `<AtriumPageHeader>` (`title`, `overline`, `description`, `links`, `back`
   for a back button, and the slots `title` (a status badge beside the
