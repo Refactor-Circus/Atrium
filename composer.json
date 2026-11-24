@@ -95,15 +95,15 @@
         "openapi:export": [
             "@php vendor/bin/testbench workbench:openapi openapi.json"
         ],
-        "test:nuxt": [
+        "test:ui": [
             "Composer\\Config::disableProcessTimeout",
-            "node nuxt/layer/test/fixtures-present.mjs",
-            "pnpm -C nuxt install --frozen-lockfile",
-            "pnpm -C nuxt generate:client --check",
-            "pnpm -C nuxt typecheck",
-            "pnpm -C nuxt build",
-            "pnpm -C nuxt test",
-            "pnpm -C nuxt test:consumer"
+            "node ui/sdk/test/fixtures-present.mjs",
+            "pnpm -C ui install --frozen-lockfile",
+            "pnpm -C ui generate:client --check",
+            "pnpm -C ui theme:check",
+            "pnpm -C ui typecheck",
+            "pnpm -C ui test",
+            "pnpm -C ui build"
         ],
         "clear": [
             "@php vendor/bin/testbench package:purge-skeleton --ansi"
@@ -155,5 +155,8 @@
             "type": "vcs",
             "url": "https://github.com/Refactor-Circus/Standards.git"
         }
-    ]
+    ],
+    "scripts-descriptions": {
+        "test:ui": "The front end's gate: frozen pnpm install, generated client and Nuxt UI theme up to date, typecheck, Vitest, and the prebuilt dist/ and module builds rebuilt (commit them)."
+    }
 }

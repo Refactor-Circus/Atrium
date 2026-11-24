@@ -1,9 +1,11 @@
-name: nuxt
+name: ui
 
-# The Nuxt layer gate (composer test:nuxt): the contract fixtures exist, a
-# frozen pnpm install, typecheck, the playground build, Vitest, and a build
-# of a fresh consumer app against a copy of nuxt/layer. It runs apart from
-# the PHP suite (tests.yml), which stays Node-free.
+# The front end's gate (composer test:ui): the contract fixtures exist, a
+# frozen pnpm install, the generated client and Nuxt UI theme up to date,
+# typecheck and Vitest of the SDK and every staged module, then the builds,
+# which must reproduce the committed ones byte for byte (dist/ and each
+# module's dist/atrium). It runs apart from the PHP suite (tests.yml), which
+# stays Node-free and checks the builds' source hashes instead.
 
 on:
   push:
@@ -20,10 +22,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  nuxt:
+  ui:
     runs-on: ubuntu-latest
 
-    name: Nuxt layer
+    name: Front end
 
     steps:
       - name: Checkout code
@@ -39,14 +41,17 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
-          package_json_file: nuxt/package.json
+          package_json_file: ui/package.json
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: nuxt/pnpm-lock.yaml
+          cache-dependency-path: ui/pnpm-lock.yaml
 
-      - name: Nuxt layer gate
-        run: composer test:nuxt
+      - name: Front-end gate
+        run: composer test:ui
+
+      - name: Committed builds match a fresh build
+        run: git diff --exit-code -- dist ui/modules/*/dist ui/workbench/dist ui/sdk/css ui/sdk/src/client
