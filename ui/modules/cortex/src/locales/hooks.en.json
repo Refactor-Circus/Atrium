@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "redirect_domains": {
+      "description": "The OAuth redirect domains this record's MCP clients may use.",
+      "empty": "No redirect domains yet.",
+      "domain": "Domain",
+      "add": "Add domain",
+      "remove": "Remove",
+      "load_failed": "The redirect domains could not be loaded."
+    }
+  }
+}

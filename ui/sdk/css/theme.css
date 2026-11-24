@@ -1,0 +1,36 @@
+/*
+ * Atrium's Tailwind theme tokens, shared by Atrium's stylesheet (which
+ * imports this file) and every module's (`module.css`), so a module's
+ * utilities compute to the same values the page's do.
+ *
+ * Atrium's design system, "command deck" (D-077): a compact, dark-first
+ * admin surface. Small type (13px UI text), tight spacing, hairline borders
+ * with a faint luminous edge, the theme's primary colour as the one accent
+ * (and its glow), monospace for identifiers, counts and times.
+ *
+ * Fonts: Geist and Geist Mono, bundled from @fontsource-variable (no
+ * request leaves for a font CDN). A host overrides them by setting
+ * `--font-sans` / `--font-mono` (and `--default-font-family`) on :root or
+ * on `:root[data-atrium-theme="…"]` in its own stylesheet.
+ */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* The compact scale: text-sm is the 13px UI size Nuxt UI's `sm` controls use. */
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+
+  /* Every Tailwind spacing step a tenth tighter (p-4 is 14.4px, not 16px). */
+  --spacing: 0.225rem;
+}

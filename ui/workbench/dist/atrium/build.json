@@ -1,0 +1,13 @@
+{
+  "key": "demo",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "package.json",
+    "vite.config.ts",
+    "../sdk/css",
+    "../sdk/vite"
+  ],
+  "hash": "8618ad9ea04d5c5995effc19e736c2f512000a8b544a8961ced873688a1d1074"
+}

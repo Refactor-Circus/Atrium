@@ -7,6 +7,8 @@ namespace RefactorCircus\Atrium;
 use Closure;
 use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
+use RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavGroup;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
@@ -28,7 +30,7 @@ class Atrium
 {
     /**
      * The JSON API's version, the release's major.minor. The shell sends it,
-     * and the Nuxt layer warns when its own version differs.
+     * and the front end warns when its SDK's version differs.
      */
     public const string API_VERSION = '2.0';
 
@@ -50,6 +52,48 @@ class Atrium
     public function screens(): ScreenExtensions
     {
         return $this->screens;
+    }
+
+    /**
+     * Load the front-end module in `$path` (a folder holding a composer.json
+     * that declares `extra.atrium.scripts`) as if its package were
+     * installed: a module the app builds itself, or a checkout beside it.
+     */
+    public function module(string $path): ModuleManifest
+    {
+        return app(ModuleRegistry::class)->module($path);
+    }
+
+    /**
+     * Load a script of the app's own on Atrium's page, after every module:
+     * a URL, or a Vite entry of the app (`resources/js/atrium.ts`). It may
+     * call `defineAtriumModule()` like any module.
+     */
+    public function script(string $source): static
+    {
+        app(ModuleRegistry::class)->script($source);
+
+        return $this;
+    }
+
+    /**
+     * Load a stylesheet of the app's own on Atrium's page: a URL or a Vite entry.
+     */
+    public function style(string $source): static
+    {
+        app(ModuleRegistry::class)->style($source);
+
+        return $this;
+    }
+
+    /**
+     * Every front-end module the page may load, by key.
+     *
+     * @return array<string, ModuleManifest>
+     */
+    public function modules(): array
+    {
+        return app(ModuleRegistry::class)->all();
     }
 
     /**

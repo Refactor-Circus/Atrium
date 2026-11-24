@@ -4,21 +4,20 @@ namespace Workbench\App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use RefactorCircus\Atrium\Domains\Access\Http\Middleware\Authorize;
 use RefactorCircus\Atrium\Facades\Atrium;
 use Workbench\App\Atrium\DemoData;
 use Workbench\App\Atrium\DemoPlugin;
 use Workbench\App\Atrium\DemoScreens;
 use Workbench\App\Atrium\DemoSuite;
-use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
 use Workbench\App\Models\User;
 use Workbench\App\OpenApi\AtriumOpenApi;
 use Workbench\App\OpenApi\ExportOpenApiCommand;
 
 /**
- * The workbench app is a host application of Atrium's JSON API: `composer
- * serve` serves it on :8000, and the Nuxt playground (`nuxt/playground`, on
- * :3000) renders it.
+ * The workbench app is a host application of Atrium: `composer serve` serves
+ * it on :8000, Atrium's page at /atrium (signed in as testbench.yaml's
+ * `workbench.user` through /_workbench), with every staged suite module and
+ * the workbench's own demo module loaded into it.
  *
  * It also holds the one Scramble configuration `workbench:openapi` exports
  * openapi.json with (`composer openapi:export`, AtriumOpenApi). Nothing in
@@ -27,30 +26,14 @@ use Workbench\App\OpenApi\ExportOpenApiCommand;
 class WorkbenchServiceProvider extends ServiceProvider
 {
     /**
-     * The origins the Nuxt playground's dev server runs on.
-     *
-     * @var list<string>
-     */
-    public const array PLAYGROUND_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
-    /**
      * Register services.
      */
     public function register(): void
     {
-        // The host chooses its auth: here, the workbench-only bearer token
-        // guard, before Authorize as every host guard must be. The playground
-        // reads the API across origins, so CORS allows its dev server and the
-        // `Authorization` header; with token auth no cookies cross, so
-        // credentials stay off. A host using cookie (Sanctum SPA) auth sets
-        // `supports_credentials` and the CSRF flow instead.
+        // The host chooses its auth: here Atrium's default, the session the
+        // page was served in (web + auth, then Authorize), for the page and
+        // the API alike.
         config([
-            'atrium.routes.middleware' => ['api', AuthenticateWorkbenchToken::class, Authorize::class],
-            'cors.paths' => ['atrium/api/*'],
-            'cors.allowed_origins' => self::PLAYGROUND_ORIGINS,
-            'cors.allowed_methods' => ['*'],
-            'cors.allowed_headers' => ['*'],
-            'cors.supports_credentials' => false,
             ...AtriumOpenApi::config(),
         ]);
 
@@ -78,11 +61,15 @@ class WorkbenchServiceProvider extends ServiceProvider
 
         DemoScreens::register(Atrium::screens());
 
+        // The workbench's own front-end module (ui/workbench), loaded the way
+        // an app loads one it builds itself.
+        Atrium::module(self::ui('workbench'));
+
         if (DemoSuite::enabled($this->app)) {
             DemoSuite::boot();
         }
 
-        // The workbench dashboard is open to anyone the token guard signs in.
+        // The workbench dashboard is open to anyone signed in.
         // A real application defines a real gate.
         Gate::define('viewAtrium', fn ($user = null): bool => true);
 
@@ -95,5 +82,13 @@ class WorkbenchServiceProvider extends ServiceProvider
         // A stand-in for a feature-flag package: `audit-log` is off, so its
         // navigation item stays hidden.
         Atrium::resolveFeaturesUsing(fn (string $feature): bool => DemoData::FEATURES[$feature] ?? true);
+    }
+
+    /**
+     * A folder of the package's `ui/` workspace.
+     */
+    public static function ui(string $path): string
+    {
+        return dirname(__DIR__, 3).'/ui/'.$path;
     }
 }

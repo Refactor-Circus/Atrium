@@ -1,0 +1,34 @@
+{
+  "key": "atrium",
+  "shared_api": "1.0",
+  "root": "../ui",
+  "inputs": [
+    "app/src",
+    "app/package.json",
+    "app/vite.config.ts",
+    "sdk/src",
+    "sdk/css",
+    "sdk/locales",
+    "sdk/vite",
+    "sdk/package.json",
+    "pnpm-lock.yaml"
+  ],
+  "hash": "f00b00b2273b32c8df83e13e0da371d4393a82acb7214f5d50c76c6acb297c28",
+  "entry": {
+    "script": "atrium-BC6nl4fj.js",
+    "styles": [
+      "assets/atrium-CGlasWj2.css",
+      "assets/refactor-circus-atrium-ui-CuY96XEo.css"
+    ]
+  },
+  "imports": {
+    "vue": "shared/vue-C09dFR3P.js",
+    "vue-router": "shared/vue-router-qZzToSim.js",
+    "pinia": "shared/pinia-BGBzs3dJ.js",
+    "vue-i18n": "shared/vue-i18n-D5J2DIV9.js",
+    "@vueuse/core": "shared/vueuse-core-BpGTQ_TX.js",
+    "openapi-fetch": "shared/openapi-fetch-DrqmQER3.js",
+    "@refactor-circus/atrium": "shared/refactor-circus-atrium-Dy7KDpbW.js",
+    "@refactor-circus/atrium/ui": "shared/refactor-circus-atrium-ui-BIN1S8Wj.js"
+  }
+}

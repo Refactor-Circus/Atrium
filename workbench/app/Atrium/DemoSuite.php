@@ -9,13 +9,16 @@ use Illuminate\Support\Env;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Facades\Atrium;
+use Workbench\App\Providers\WorkbenchServiceProvider;
 
 /**
- * WORKBENCH ONLY. The suite integrations as the playground's design bench:
- * every package reported installed, its API pointed at the playground's
- * stand-in (`nuxt/playground/server/routes/_suite/`, which answers from each
- * vendored openapi.json), so every integration page renders populated while
- * none of the packages is installed here.
+ * WORKBENCH ONLY. The suite integrations as the design bench: every package
+ * reported installed, its API pointed at the workbench's stand-in
+ * (SuiteStandIn, `/_suite/{pkg}/…`, which answers from each staged module's
+ * vendored openapi.json), and each package's staged module
+ * (ui/modules/{pkg}) loaded with Atrium::module() as if the package were
+ * installed, so every module's pages render populated while none of the
+ * packages is installed here.
  *
  * Only the served workbench uses it (`composer serve`, never the console or
  * the test suite), and only while ATRIUM_WORKBENCH_SUITE is not "false".
@@ -27,8 +30,8 @@ final class DemoSuite implements InstalledPackages
     /** The packages the integrations stand for. */
     public const array PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'];
 
-    /** Where the playground's dev server answers for the packages. */
-    public const string STAND_IN = 'http://localhost:3000/_suite';
+    /** Where the stand-in answers for the packages, on the workbench's own host. */
+    public const string STAND_IN = '/_suite';
 
     public static function enabled(Application $app): bool
     {
@@ -51,6 +54,10 @@ final class DemoSuite implements InstalledPackages
 
     public static function boot(): void
     {
+        foreach (self::PACKAGES as $key) {
+            Atrium::module(WorkbenchServiceProvider::ui('modules/'.$key));
+        }
+
         Atrium::theme(
             Theme::make('signal')
                 ->label('Signal')

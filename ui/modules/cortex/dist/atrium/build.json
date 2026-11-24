@@ -1,0 +1,14 @@
+{
+  "key": "cortex",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "fd6b980f6e78d4eb6e9cecc23f725ab15b195ff8852c4d139a22aab2693735f0"
+}

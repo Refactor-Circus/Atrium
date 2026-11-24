@@ -9,6 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleDiscovery;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\ClearDiscoveredPluginsCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\DiscoverPluginsCommand;
 use RefactorCircus\Atrium\Domains\Plugins\Console\Commands\MakePluginCommand;
@@ -55,10 +56,12 @@ class PluginsServiceProvider extends ServiceProvider
             );
 
             // Composer runs package:discover after every install and update,
-            // so the cached plugin list is rebuilt along with Laravel's own.
+            // so the cached plugin and module lists are rebuilt along with
+            // Laravel's own.
             $this->app->make(Dispatcher::class)->listen(function (CommandFinished $event): void {
                 if ($event->command === 'package:discover' && $event->exitCode === 0) {
                     $this->app->make(ComposerPluginDiscovery::class)->build();
+                    $this->app->make(ModuleDiscovery::class)->build();
                 }
             });
         }

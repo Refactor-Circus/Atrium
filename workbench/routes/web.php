@@ -1,17 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
-use Workbench\App\Providers\WorkbenchServiceProvider;
+use Workbench\App\Atrium\SuiteStandIn;
 
-// Atrium renders no HTML: `composer serve` serves its JSON API, and the Nuxt
-// playground renders it. testbench.yaml starts at /atrium, which says where
-// each lives.
+// Atrium serves its page at /atrium (atrium.client_path). The workbench
+// signs testbench.yaml's `workbench.user` in through /_workbench, which
+// Atrium's `auth` middleware sends a guest to as the app's login route.
 Route::redirect('/', '/atrium');
 
-Route::get('atrium', fn (): array => [
-    'message' => 'Atrium is headless: run the Nuxt playground (pnpm -C nuxt dev) and open it.',
-    'playground' => WorkbenchServiceProvider::PLAYGROUND_ORIGINS[0],
-    'api' => url((string) config('atrium.routes.prefix')),
-    'token' => 'Authorization: Bearer '.AuthenticateWorkbenchToken::TOKEN.' (workbench only)',
-]);
+Route::get('login', fn () => redirect('/_workbench'))->name('login');
+
+// WORKBENCH ONLY: every suite package's API, answered from its vendored
+// openapi.json (DemoSuite points the integrations here).
+Route::any('_suite/{path}', SuiteStandIn::class)->where('path', '.*');

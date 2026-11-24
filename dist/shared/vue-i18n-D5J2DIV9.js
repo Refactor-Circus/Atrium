@@ -1,0 +1,1 @@
+export{t as DatetimeFormat,n as I18nD,r as I18nInjectionKey,i as I18nN,a as I18nT,o as NumberFormat,s as Translation,c as VERSION,l as createI18n,u as useI18n,d as vTDirective}from"../chunks/vue-i18n-Dd_KwCqc.js";

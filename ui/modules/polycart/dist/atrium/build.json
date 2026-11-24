@@ -1,0 +1,14 @@
+{
+  "key": "polycart",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "77bddd5db2eb28e09d551ff7c5f9e7c534aa4ecf1b2537b941b2b87b8c63d44f"
+}

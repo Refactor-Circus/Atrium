@@ -23,43 +23,21 @@ return [
     | API Routes
     |--------------------------------------------------------------------------
     |
-    | Atrium serves its dashboard as a JSON API, which the Nuxt layer in
-    | nuxt/layer renders. Every route, plugin routes included, is registered
+    | Atrium serves its dashboard as a JSON API, which its front end (the page
+    | below) renders. Every route, plugin routes included, is registered
     | under this prefix and middleware and named `atrium.*`.
     |
-    | enabled:     Set to false to register no Atrium route at all.
+    | enabled:     Set to false to register no API route at all.
     | prefix:      The URI prefix of every route. Default: `atrium/api`.
     | middleware:  The middleware of every route. Default:
-    |              ['api', Authorize::class].
+    |              ['web', 'auth', Authorize::class]: the session the page
+    |              was served in, so the front end needs no configuration.
     |
-    | Atrium ships no authentication. Before exposing these routes, add your
-    | application's guard to the middleware, before Authorize: `auth:sanctum`
-    | for Sanctum, `auth:api` for Passport, or a guard of your own. With no
-    | guard there is no signed-in user, and every route answers 401. Keep
-    | Authorize::class last: it checks the `viewAtrium` gate below against
-    | the user the guard signed in, so it must run after the guard.
-    |
-    | client_path: The base path the host serves the SPA from. Default: `/`.
-    |              It must match that base URL, or navigation and search
-    |              links break: a link on this app's host (`app.url`) under
-    |              `client_path` is sent relative to the SPA, any other link
-    |              as external.
-    |
-    | A SPA on another origin than this API needs the host's own setup:
-    |
-    | - Cookie auth (the Sanctum SPA flow): add the prefix to CORS `paths`
-    |   (config/cors.php, e.g. 'atrium/api/*'), set `supports_credentials` to
-    |   true, list the SPA's domain in Sanctum's stateful domains, and have
-    |   the SPA fetch /sanctum/csrf-cookie first, so CSRF protection passes.
-    | - Token auth: the SPA sends the token in the `Authorization` header
-    |   (`Authorization: Bearer ...`) through the layer's auth adapter. CORS
-    |   `paths` must still include the prefix; how the token is stored is up
-    |   to the host.
-    |
-    | Security: the `viewAtrium` gate lets any authenticated user through
-    | while it is undefined and the app runs in the `local` environment.
-    | Never run a shared dev or staging server with APP_ENV=local unless every
-    | user who can sign in may see the dashboard; define the gate instead.
+    | Keep Authorize::class last: it checks the `viewAtrium` gate below
+    | against the user the guard signed in, so it must run after the guard.
+    | Errors are always JSON: a guest gets 401, never a redirect to a login
+    | page. For a front end on another origin, or token auth, swap the
+    | session for your guard: ['api', 'auth:sanctum', Authorize::class].
     |
     */
 
@@ -69,22 +47,83 @@ return [
         'prefix' => 'atrium/api',
 
         'middleware' => [
-            'api',
+            'web',
+            'auth',
             Authorize::class,
         ],
     ],
 
-    'client_path' => '/',
+    /*
+    |--------------------------------------------------------------------------
+    | The Page
+    |--------------------------------------------------------------------------
+    |
+    | Atrium ships its front end prebuilt and serves it itself: one Blade page
+    | for every path under `client_path`, so a host needs no Node and no
+    | build step (D-079). Each installed package's front-end module, and the
+    | app's own scripts, load into that page (D-082).
+    |
+    | client_path:        Where the page is served, and the base of every
+    |                     path the front end routes to. Default: `/atrium`.
+    |                     Links on this app's host under it are sent
+    |                     relative to it; any other link as external.
+    | client.enabled:     Set to false to serve neither the page nor its
+    |                     assets (a host that serves its own front end).
+    | client.middleware:  The page's middleware: your session and guard, then
+    |                     Authorize. A guest is sent to your login page.
+    | assets.path:        Where the prebuilt files are served from, Atrium's
+    |                     and each module's: `/vendor/atrium/{owner}/{version}/…`,
+    |                     straight from the packages, cached for a year. No
+    |                     publish step; nothing is written to public/.
+    | scripts, styles:    The app's own scripts and stylesheets, loaded after
+    |                     every module's: URLs, or entries of the app's Vite
+    |                     build (`resources/js/atrium.ts`). Atrium::script()
+    |                     and Atrium::style() add more from a provider.
+    | icons.remote:       Fetch icons outside the bundled collections (Lucide)
+    |                     from the Iconify API. Off: no request leaves the page.
+    |
+    */
+
+    'client_path' => '/atrium',
+
+    'client' => [
+        'enabled' => true,
+
+        'middleware' => [
+            'web',
+            'auth',
+            Authorize::class,
+        ],
+    ],
+
+    'assets' => [
+        'path' => 'vendor/atrium',
+    ],
+
+    'scripts' => [
+        //
+    ],
+
+    'styles' => [
+        //
+    ],
+
+    'icons' => [
+        'remote' => false,
+    ],
 
     /*
     |--------------------------------------------------------------------------
     | Authorization Gate
     |--------------------------------------------------------------------------
     |
-    | The gate ability Authorize checks on every API route. Define it in a
-    | service provider with Gate::define(). When the gate is not defined,
-    | access is granted to any authenticated user in the `local` environment
-    | and denied everywhere else. See the security note above.
+    | The gate ability Authorize checks on the page and every API route.
+    | Define it in a service provider with Gate::define(). While it is not
+    | defined, a user model implementing
+    | RefactorCircus\Atrium\Domains\Access\Contracts\AtriumUser decides with
+    | canAccessAtrium(); any other user gets in only in the `local`
+    | environment. Never run a shared server with APP_ENV=local unless every
+    | user who can sign in may see the dashboard.
     |
     */
 
@@ -256,8 +295,8 @@ return [
     |                   feature resolver every feature is on, so the switcher
     |                   always shows. Null always shows it too; a feature name
     |                   of your own gates it.
-    | available:        Your own themes. Each key is a design token of the
-    |                   Nuxt layer's stylesheet without `--color-`; set the
+    | available:        Your own themes. Each key is a design token of
+    |                   Atrium's stylesheet without `--color-`; set the
     |                   `-dark` tokens too so dark mode stays readable.
     |                   `layout` is `sidebar` (the default) or `top`.
     |
@@ -291,7 +330,7 @@ return [
     | here becomes "--color-{key}". To offer a whole new look, add a theme
     | under `themes.available` instead.
     |
-    | The Nuxt layer's stylesheet (nuxt/layer) lists every available token.
+    | Atrium's stylesheet (ui/app/src/assets/atrium.css) lists every token.
     |
     */
 
@@ -307,17 +346,17 @@ return [
     |
     | Atrium hosts the front ends of the Refactor Circus suite packages:
     | Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and
-    | Showroom. Their
-    | pages, widgets, settings panels and search live in the Nuxt layer, which
-    | calls each package's own JSON API; Atrium's PHP sends their declarations
-    | only and never loads a package's classes.
+    | Showroom. Each package ships its own front-end module (its pages,
+    | widgets, settings panel and search), which calls its own JSON API;
+    | Atrium's PHP sends their declarations only and never loads a package's
+    | classes. A package's module loads only while its integration does.
     |
     | Detection: an integration registers when refactor-circus/{pkg} is
     | installed and its `enabled` is true (read as a boolean, so "false" from
     | an env file turns it off). Set `enabled` to false to hide a package from
     | Atrium while keeping it installed.
     |
-    | API base: where the layer calls the package's API. A non-empty
+    | API base: where the module calls the package's API. A non-empty
     | `api_base` wins (a path such as `/cortex/api`, or an absolute URL for a
     | package served from another host). Otherwise it is `/` plus the
     | package's own {pkg}.routes.prefix, while {pkg}.routes.enabled is true.
@@ -334,7 +373,7 @@ return [
     | Guardian: its `guardian.two-factor` and `guardian.session` middleware can
     | go on Atrium's route group (`atrium.middleware`) and on the packages' API
     | groups. A user who still owes a second factor then gets Guardian's 403,
-    | and the layer sends them to its two-factor challenge page
+    | and Guardian's module sends them to its two-factor challenge page
     | (/guardian/two-factor/challenge) or setup page (/guardian/two-factor/setup).
     | guardian.scope_types: the morph type Guardian stores for each scope
     |              (`organization`, `team`). A null value resolves to

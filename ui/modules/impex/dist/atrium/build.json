@@ -1,0 +1,14 @@
+{
+  "key": "impex",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "5a07cef5191bea50f702832fd6c7e3843e6ccf91f9be20c4ce914d2bef1cf19d"
+}

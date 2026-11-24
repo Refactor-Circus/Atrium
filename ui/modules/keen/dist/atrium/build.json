@@ -1,0 +1,14 @@
+{
+  "key": "keen",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "e702bc96deaf54886b55e2815e91b34e26872e2f5d676aa2844129f74aae0249"
+}

@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "keen": {
+      "history": "History",
+      "view_all": "View all",
+      "load_failed": "The history could not be loaded."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "key": "pennantplus",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "cf014e2a462799e588e0595c19af8f9209324da1fc9413e5e50cf6e4a311f3d6"
+}

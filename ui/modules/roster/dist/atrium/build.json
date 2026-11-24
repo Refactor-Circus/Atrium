@@ -1,0 +1,14 @@
+{
+  "key": "roster",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "1788063a5a8ff09ccde50a10a436119b596cc9e3c81bd858bc60d2eb43a4caad"
+}

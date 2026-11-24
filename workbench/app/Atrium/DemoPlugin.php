@@ -12,6 +12,7 @@ use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
+use RefactorCircus\Atrium\Support\ClientPath;
 use Workbench\App\Models\User;
 
 /**
@@ -41,20 +42,20 @@ class DemoPlugin extends Plugin
     {
         return [
             NavItem::make('Overview')
-                ->url('/')
+                ->path('/')
                 ->icon('i-lucide-house')
                 ->group('Workspace')
                 ->sort(10),
 
             NavItem::make('Orders')
-                ->url('/demo/orders')
+                ->path('/demo/orders')
                 ->icon('i-lucide-shopping-cart')
                 ->group('Workspace')
                 ->sort(20)
                 ->badge(fn (): int => DemoData::orders()->where('status', 'pending')->count()),
 
             NavItem::make('Team')
-                ->url('/demo/users')
+                ->path('/demo/users')
                 ->icon('i-lucide-users')
                 ->group('Workspace')
                 ->sort(30)
@@ -65,12 +66,12 @@ class DemoPlugin extends Plugin
                 ->group('Insights')
                 ->sort(40)
                 ->children(array_map(
-                    fn (string $key): NavItem => NavItem::make(DemoData::reports()[$key]['title'])->url('/demo/reports/'.$key),
+                    fn (string $key): NavItem => NavItem::make(DemoData::reports()[$key]['title'])->path('/demo/reports/'.$key),
                     array_keys(DemoData::reports()),
                 )),
 
             NavItem::make('Billing')
-                ->url('/demo/billing')
+                ->path('/demo/billing')
                 ->icon('i-lucide-credit-card')
                 ->group('Administration')
                 ->sort(50)
@@ -80,7 +81,7 @@ class DemoPlugin extends Plugin
             // The workbench's feature resolver turns `audit-log` off, so this
             // item is registered but never sent.
             NavItem::make('Audit log')
-                ->url('/demo/audit-log')
+                ->path('/demo/audit-log')
                 ->icon('i-lucide-clipboard-list')
                 ->group('Administration')
                 ->sort(60)
@@ -229,7 +230,7 @@ class DemoPlugin extends Plugin
                     ->orderBy('name')
                     ->limit(5)
                     ->get()
-                    ->map(fn (User $user): SearchResult => SearchResult::make($user->name, '/demo/users')
+                    ->map(fn (User $user): SearchResult => SearchResult::make($user->name, ClientPath::url('/demo/users'))
                         ->subtitle($user->email)
                         ->icon('i-lucide-user')
                         ->group('Team'))
@@ -240,7 +241,7 @@ class DemoPlugin extends Plugin
                 ->description('Customer orders by number or customer name.')
                 ->using(fn (string $query): array => DemoData::orders()
                     ->filter(fn (array $order): bool => str_contains(strtolower($order['number'].' '.$order['customer']), strtolower($query)))
-                    ->map(fn (array $order): SearchResult => SearchResult::make($order['number'].' · '.$order['customer'], '/demo/orders#'.$order['number'])
+                    ->map(fn (array $order): SearchResult => SearchResult::make($order['number'].' · '.$order['customer'], ClientPath::url('/demo/orders#'.$order['number']))
                         ->subtitle('$'.number_format($order['total'], 2).' · '.DemoData::orderStatus($order['status'])['label'])
                         ->icon('i-lucide-receipt')
                         ->group('Orders'))

@@ -1,0 +1,14 @@
+{
+  "key": "guardian",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "ac5f5fe6820fb4e91587c971587f51f23d355d60ea39d35b016d1b961a1855d4"
+}

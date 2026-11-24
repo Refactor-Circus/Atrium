@@ -1,0 +1,101 @@
+{
+  "name": "@refactor-circus/atrium",
+  "version": "2.0.0",
+  "description": "Atrium's front-end SDK: the runtime every Atrium module shares (registry, composables, Atrium* components), its types, and the Vite preset modules build with.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css",
+    "*.vue"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./ui": {
+      "types": "./src/ui.ts",
+      "default": "./src/ui.ts"
+    },
+    "./testing": {
+      "types": "./src/testing/index.ts",
+      "default": "./src/testing/index.ts"
+    },
+    "./vite": {
+      "types": "./vite/index.d.mts",
+      "default": "./vite/index.mjs"
+    },
+    "./shared": {
+      "types": "./vite/shared.d.mts",
+      "default": "./vite/shared.mjs"
+    },
+    "./module.css": {
+      "style": "./css/module.css",
+      "default": "./css/module.css"
+    },
+    "./theme.css": {
+      "style": "./css/theme.css",
+      "default": "./css/theme.css"
+    },
+    "./locales/*": "./locales/*",
+    "./package.json": "./package.json",
+    "./fixtures/*": "./test/fixtures/*"
+  },
+  "files": [
+    "src",
+    "vite",
+    "css",
+    "locales",
+    "test/fixtures"
+  ],
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@nuxt/ui": "4.1.0",
+    "@unhead/vue": "2.1.18",
+    "@vueuse/core": "13.9.0",
+    "openapi-fetch": "0.17.0",
+    "pinia": "3.0.4",
+    "vite": "8.3.8",
+    "vue": "3.5.46",
+    "vue-i18n": "11.4.23",
+    "vue-router": "5.5.1"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "1.2.158",
+    "@iconify/vue": "5.0.5",
+    "@tailwindcss/vite": "4.3.5",
+    "@vitejs/plugin-vue": "6.0.11",
+    "ofetch": "1.5.1",
+    "sortablejs": "1.15.7",
+    "tailwindcss": "4.3.5",
+    "unplugin-auto-import": "20.3.0",
+    "unplugin-vue-components": "30.0.0"
+  },
+  "devDependencies": {
+    "@nuxt/ui": "4.1.0",
+    "@types/node": "24.19.2",
+    "@types/sortablejs": "1.15.9",
+    "@unhead/vue": "2.1.18",
+    "@vue/test-utils": "2.6.0",
+    "@vueuse/core": "13.9.0",
+    "happy-dom": "21.0.4",
+    "openapi-fetch": "0.17.0",
+    "openapi-typescript": "7.13.0",
+    "pinia": "3.0.4",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.1",
+    "vue": "3.5.46",
+    "vue-i18n": "11.4.23",
+    "vue-router": "5.5.1",
+    "vue-tsc": "3.3.14"
+  }
+}

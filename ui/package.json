@@ -1,0 +1,22 @@
+{
+  "name": "atrium-ui-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter atrium-app build && pnpm --parallel --filter \"./modules/*\" --filter atrium-workbench build",
+    "build:check": "node scripts/build-hash.mjs --check",
+    "typecheck": "pnpm -r --workspace-concurrency=4 typecheck",
+    "test": "pnpm -r --workspace-concurrency=2 test",
+    "dev": "node scripts/dev.mjs",
+    "sync:clients": "node scripts/sync-clients.mjs",
+    "generate:client": "node scripts/generate-client.mjs"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vue-router": "5"
+      }
+    }
+  },
+  "packageManager": "pnpm@10.18.0"
+}

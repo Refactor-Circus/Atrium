@@ -1,0 +1,14 @@
+{
+  "key": "showroom",
+  "shared_api": "1.0",
+  "root": "../..",
+  "inputs": [
+    "src",
+    "client",
+    "package.json",
+    "vite.config.ts",
+    "../../sdk/css",
+    "../../sdk/vite"
+  ],
+  "hash": "57066d2efbbf5cfe653c729c9fd5409cf5c6146cd818e31e316da2114a5d582d"
+}
