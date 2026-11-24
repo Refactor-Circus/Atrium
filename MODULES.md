@@ -257,7 +257,10 @@ needs no such entry.
 `mockPackageApi(key, routes)` / `mountIntegration()` / `resetPackageApis()` (a
 package's API), `mockNavigateTo(fn)`, `registerEndpoint(path, handler)`,
 `setAtriumBoot()`, `runInAtrium()`, `useRouter()`, `useTestModule(definition)`
-and `missingI18nKeys('polycart')`. `test/setup.ts` is:
+and `missingI18nKeys('polycart')`. `settle()` waits for the test router's
+pending navigations (a lazily imported page's import included) and unanswered
+`registerEndpoint()` requests, then five ticks, and throws naming what is still
+pending after four seconds; assert the route straight after it. `test/setup.ts` is:
 
 ```ts
 import { useTestModule } from '@refactor-circus/atrium/testing'

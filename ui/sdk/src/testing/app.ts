@@ -9,6 +9,7 @@ import UApp from '@nuxt/ui/components/App.vue'
 import { setAtriumApp } from '../runtime/context'
 import { atriumI18n } from '../runtime/i18n'
 import { installAtriumIcons } from '../runtime/icons'
+import { pendingWork, SETTLE_TIMEOUT_MS, trackPending } from './pending'
 
 /*
  * One Atrium app per test file (Vitest isolates files, so every SDK
@@ -40,11 +41,26 @@ export function atriumTestApp(): TestApp {
     routes: [{ path: '/:path(.*)*', name: 'atrium-test-any', component: Empty }]
   })
 
+  trackNavigations(router)
   installAtriumIcons()
 
   app = { pinia, router, plugins: [pinia, router, atriumI18n(), createHead(), ui] }
 
   return app
+}
+
+/**
+ * Every `push()` / `replace()` (RouterLink, `navigateTo()` and a test's own
+ * calls go through them) is tracked until it settles, so `settle()` can wait
+ * for a lazily imported route component to load.
+ */
+function trackNavigations(router: Router): void {
+  const push = router.push.bind(router)
+  const replace = router.replace.bind(router)
+  const describe = (to: RouteLocationRaw) => typeof to === 'string' ? to : JSON.stringify(to)
+
+  router.push = to => trackPending(push(to), `navigation to ${describe(to)}`)
+  router.replace = to => trackPending(replace(to), `navigation to ${describe(to)}`)
 }
 
 /** The test app's router (`useRouter()` from Nuxt's test utils, outside a component). */
@@ -148,9 +164,46 @@ export async function withSetup<T>(setup: () => T): Promise<T> {
   return result as T
 }
 
-/** Lets pending promises and Vue's scheduler settle. */
+const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0))
+
+/**
+ * Lets pending work settle: waits until the test router has no navigation
+ * in flight (including a lazily imported route component still loading) and
+ * no `registerEndpoint()` request is unanswered, then lets promises and Vue's
+ * scheduler run for five ticks, and repeats while that started more work.
+ * Throws, naming what is still pending, after four seconds.
+ */
 export async function settle(): Promise<void> {
-  for (let i = 0; i < 5; i++) {
-    await new Promise(resolve => setTimeout(resolve, 0))
+  const timeout = SETTLE_TIMEOUT_MS.value
+  const deadline = Date.now() + timeout
+
+  for (;;) {
+    let work = pendingWork()
+
+    while (work.promises.length > 0) {
+      const remaining = deadline - Date.now()
+      let timer: ReturnType<typeof setTimeout> | undefined
+
+      const timedOut = remaining <= 0 || await Promise.race([
+        Promise.allSettled(work.promises).then(() => false),
+        new Promise<boolean>(resolve => { timer = setTimeout(() => resolve(true), remaining) })
+      ])
+
+      clearTimeout(timer)
+
+      if (timedOut) {
+        throw new Error(`settle() timed out after ${timeout} ms; still pending: ${work.labels.join(', ')}`)
+      }
+
+      work = pendingWork()
+    }
+
+    for (let i = 0; i < 5; i++) {
+      await tick()
+    }
+
+    if (pendingWork().promises.length === 0) {
+      return
+    }
   }
 }

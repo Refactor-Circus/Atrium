@@ -267,6 +267,7 @@ The pull request template carries these as release items.
 - On a phone the navigation could not be opened.
 - The front end's sidebar groups each navigation section as its own collapsible section (open only while the current page is inside it, with a separator between sections and the sections' icons with their pages in a popover when the sidebar is collapsed) instead of one long list with every group open. Themes now drive Nuxt UI's backgrounds, text, borders and status colours, not only the primary colour and radius, and the sidebar sits on the surface colour against the page's canvas.
 - The front end bundles every Lucide icon, so icons render with no icon server and no host config.
+- `settle()` from `@refactor-circus/atrium/testing` waits for the test router's pending `push()` / `replace()` (including a lazily imported route component's import) and for unanswered `registerEndpoint()` requests before its five ticks, instead of only the ticks, so a test asserting the route right after it no longer flakes on a cold transform cache or a loaded machine. It throws, naming what is still pending, after four seconds (D-094).
 - Search sources run in child processes returned no results on Laravel 13.40 and later, whose `invoke-serialized-closure` command frames its result in a signed envelope. `atrium:search-source` now unwraps it, and still reads the bare JSON earlier versions write.
 
 ## [v0.1.0](https://github.com/Refactor-Circus/Atrium/commits/v0.1.0) - 2026-10-30

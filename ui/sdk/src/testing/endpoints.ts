@@ -14,6 +14,8 @@ export interface AtriumTestEvent {
   web: { request: Request }
 }
 
+import { trackPending } from './pending'
+
 type Handler = (event: AtriumTestEvent) => unknown
 
 const endpoints = new Map<string, Handler>()
@@ -30,7 +32,7 @@ export function registerEndpoint(path: string, handler: Handler | { handler: Han
 
   const real = globalThis.fetch
 
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const request = input instanceof Request && init === undefined ? input : new Request(input, init)
     const url = new URL(request.url, 'http://localhost')
     const handle = endpoints.get(url.pathname)
@@ -39,6 +41,11 @@ export function registerEndpoint(path: string, handler: Handler | { handler: Han
       return real(input, init)
     }
 
+    // Tracked until answered, so settle() waits for slow handlers.
+    return trackPending(answer(request, url, handle), `${request.method} ${url.pathname}`)
+  }) as typeof fetch
+
+  async function answer(request: Request, url: URL, handle: Handler): Promise<Response> {
     const text = await request.clone().text()
     let body: unknown = text === '' ? undefined : text
 
@@ -48,7 +55,7 @@ export function registerEndpoint(path: string, handler: Handler | { handler: Han
       // Not JSON: the handler gets the text.
     }
 
-    const answer = await handle({
+    const reply = await handle({
       method: request.method,
       path: url.pathname,
       query: Object.fromEntries(url.searchParams.entries()),
@@ -57,8 +64,8 @@ export function registerEndpoint(path: string, handler: Handler | { handler: Han
       web: { request }
     })
 
-    return answer instanceof Response
-      ? answer
-      : new Response(answer === undefined ? null : JSON.stringify(answer), { status: answer === undefined ? 204 : 200, headers: { 'content-type': 'application/json' } })
-  }) as typeof fetch
+    return reply instanceof Response
+      ? reply
+      : new Response(reply === undefined ? null : JSON.stringify(reply), { status: reply === undefined ? 204 : 200, headers: { 'content-type': 'application/json' } })
+  }
 }
