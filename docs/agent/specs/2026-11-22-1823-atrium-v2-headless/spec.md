@@ -1014,3 +1014,44 @@ Guardian's `openapi.json` does not exist yet. Every route below is named as Guar
 - **Passkeys on split hosts.** WebAuthn binds to `rp_id`. A SPA whose host does not match Guardian's `rp_id` cannot register passkeys, and the README says so.
 - **The response handler navigates on every matching 403.** A host whose own API answers `two_factor_challenge_required` for another reason would be redirected too. The codes are Guardian's own.
 - **Breaking for hosts** that extended `roster.roles`, `roster.role` or `roster.permissions`. These are listed in the CHANGELOG.
+
+## Addendum 2026-11-24: Blade-served app and module-owned front ends
+
+The user's decision (2026-11-24): "lets give atrium a blade file for serving the app. all modules keep their client generation. also move the vue files for each module back into their respective modules. modules need to register their js. js should be injected into the blade file. modules are responsible for their own frontend and js clients from now on". Decisions D-079 to D-087 record the choices; `MODULES.md` is the module contract and the phase 2 guide. This addendum supersedes the Nuxt layer parts of the spec (AC 1 to 21 on the layer's distribution, D-001, D-015, D-017): Atrium no longer ships a Nuxt layer, and hosts no longer build a front end.
+
+Phase 1 (this addendum) is Atrium's core and the contract, with the eight integrations staged as modules in `ui/modules/{pkg}`. Phase 2 moves each staged module into its package (group 46).
+
+### Acceptance criteria
+
+102. Atrium serves one Blade view, `atrium::app`, at `atrium.client_path` (default `/atrium`) and every path under it, as a fallback route named `atrium.app` behind `atrium.client.middleware` (default `['web', 'auth', Authorize::class]`); the API and asset prefixes are never answered by it. A guest is sent to the host's login, a user the gate refuses gets 403. `atrium.client.enabled = false` registers neither the page nor the asset route. Only `Domains\Frontend` renders a view (ArchTest).
+103. The page carries the colour mode before paint, a CSRF meta tag, the import map, Atrium's and every module's stylesheets, the boot JSON (`version`, `api_base`, `client_path`, `locale`, `csrf_token`, `user`, `theme`, `integrations` with each `api_base` and `active`, `known_integrations`, `modules`, `icons`), one module script per module and Atrium's entry last, with the CSP nonce on every script.
+104. The front end is Vue 3 + Vite (Nuxt UI 4 in Vue mode, vue-router 5, Pinia, vue-i18n, VueUse), built to `dist/` and committed; it keeps the D-077/D-078 design, the shell, the dashboard, settings, screens, error and unavailable states, and every data-testid. No host runs Node.
+105. The prebuilt files are served from the packages by `GET /{atrium.assets.path}/{owner}/{version}/{path}` (default `vendor/atrium`): front-end extensions only, inside the build's folders only, no dotfiles, with their content types, `nosniff`, and a year's immutable caching for the current version (`no-cache` for an older one). No publish step.
+106. The import map maps exactly the shared modules (`vue`, `vue-router`, `pinia`, `vue-i18n`, `@vueuse/core`, `openapi-fetch`, `@refactor-circus/atrium`, `@refactor-circus/atrium/ui`) to the chunks Atrium's app itself uses, one instance each. The list is versioned (`ATRIUM_SHARED_API`, `1.0`); a module built for another major is not loaded.
+107. A module declares itself with `defineAtriumModule({ key, integration?, routes, widgets, extensions, settingsPanels, liveResolvers, searchSources, responseHandlers, screens, messages, setup })` or `window.Atrium.register()`. Atrium's entry installs every declared module whose integration is active, adding its routes before the first navigation, then mounts; a module that throws is skipped.
+108. A package declares its module in `composer.json` (`extra.atrium.scripts`, `styles`, optional `key`), with no dependency on Atrium. Atrium discovers it from `installed.json`, cached in `bootstrap/cache/atrium-modules.php` by `atrium:discover` (and `package:discover`), cleared by `atrium:clear-discovered`. Paths that could leave the package are dropped.
+109. `Atrium::module($path)` loads a module folder as if installed; `Atrium::script()` / `Atrium::style()` and `atrium.scripts` / `atrium.styles` add the app's own files (URLs or Vite entries), loaded after every module. A suite integration's module loads only while its integration is registered and active; `atrium.disabled` drops a module.
+110. Session auth works same-origin with no host config: the API's default middleware is `['web', 'auth', Authorize::class]`, the SDK sends the session cookie, `X-XSRF-TOKEN` and `X-CSRF-TOKEN` to its own origin only, and every API error is JSON (a guest's 401 included). On a 401 with no auth adapter the page reloads; an auth adapter still replaces the signing.
+111. While `viewAtrium` is undefined, a user model implementing `AtriumUser` decides with `canAccessAtrium()`; any other user gets in only in `local`, with one log notice per process elsewhere.
+112. `@refactor-circus/atrium/vite`'s `atriumModule({ key })` builds a module (ES library, shared specifiers external, the same auto-imports and component resolution as Atrium, one stylesheet, `build.json`) and configures its Vitest suite against Atrium's Nuxt UI theme. A module's stylesheet holds only the utilities it uses that Atrium's does not define, against Atrium's theme, in the `atrium-modules` layer.
+113. Modules keep their own client generation; `atriumClientOptions(key)`, `useAtriumIntegration(key, create)` and the `AtriumIntegrationPaths` augmentation sign and type their clients.
+114. Every committed build (`dist/`, each staged module's and the workbench's `dist/atrium/`) records the hash of its sources in `build.json`; the PHP suite recomputes it (no Node), and the `ui` CI job rebuilds and fails on any difference.
+115. The eight integrations are staged as modules in `ui/modules/{pkg}`, each built with the preset and loaded by the workbench through `Atrium::module()`; each type-checks, passes its own Vitest suite and builds. Atrium's own build contains no integration code. The PHP integration declarations stay in Atrium.
+116. `composer serve` serves the page with every staged module and the workbench's own module, signed in through `/_workbench`, the suite APIs answered by the workbench's PHP stand-in; the playground is gone. Screenshots of the served page match the D-078 design (`final2`).
+117. `composer test:ui` (was `test:nuxt`) runs the fixtures check, a frozen install, the generated client and Nuxt UI theme checks, typecheck, Vitest and the builds. The README, CHANGELOG, CLAUDE.md, Boost skill, standards and `MODULES.md` describe the page, the module contract, the shared modules, the preset and the app's scripts.
+
+### Design notes
+
+- `ui/` is a pnpm workspace: `sdk` (`@refactor-circus/atrium`, consumed by modules as a dev dependency from git with `&path:ui/sdk`, provided at run time by the import map), `app` (Atrium's entry; its build has one entry per shared specifier with exports preserved, so the facades and the app share chunks), `modules/*`, `workbench`, `scripts`.
+- Nuxt's conveniences the code relied on are SDK exports (`useAsyncData`, `navigateTo`, `useHead`, `useColorMode`, `useAtriumI18n`, `runInAtrium`, `useAtriumBoot`, `<AtriumLink>`); the test helpers are `@refactor-circus/atrium/testing`.
+- The four types named like components were renamed `*Data` (`AtriumScreenData`, …).
+
+### Out of scope
+
+- Moving each staged module into its package (phase 2, group 46), and moving the PHP integration declarations into the packages (a possible follow-up, D-087).
+- A Vite dev server with HMR for the page (D-087: `pnpm -C ui dev` rebuilds on change).
+
+### Risks
+
+- A module's base utility against an Atrium-defined variant on the same element can lose the cascade (D-084); the module CSS layer documents it.
+- A host that kept v1's published `public/vendor/atrium` shadows the asset route; the upgrade guide says to delete it.

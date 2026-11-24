@@ -389,3 +389,90 @@ criteria: 100, 101
 - [x] 37.2 Write the README's Guardian part of "Suite integrations", and the CHANGELOG v2.0.0 entries. The CHANGELOG collects Guardian's `// Not ported (D-032)` items and the removed Roster screens and nav items.
 - [x] 37.3 Update the Boost skill, `CLAUDE.md` and the local standard `atrium/integrations` (response handlers, shell-less pages, roles in Guardian). Add Guardian to the PR template's D-020 release item.
 - [x] 37.4 Run composer test, composer test:nuxt and vendor/bin/pest; all green
+
+## Group 38: Vite + Vue front end (SDK and app)
+depends on: 37
+files: ui/sdk/**, ui/app/**, ui/package.json, ui/pnpm-workspace.yaml, ui/pnpm-lock.yaml, ui/tsconfig.base.json, dist/**
+criteria: 104, 106
+
+- [x] 38.1 Move the layer into `ui/sdk` (registry, composables, store, types, utils, `Atrium*` components, locales, contract fixtures) and `ui/app` (entry, router, layouts, core pages, stylesheet); replace Nuxt's conveniences with SDK exports; explicit imports in the SDK.
+- [x] 38.2 Build Atrium's app with one entry per shared specifier (exports preserved) and `build.json` carrying the entry and the import map's files; commit `dist/`.
+- [x] 38.3 Port the core Vitest suite to `@refactor-circus/atrium/testing` (happy-dom); `pnpm -C ui test` and `typecheck` green.
+
+## Group 39: The Blade page and its routes
+depends on: 38
+files: src/Domains/Frontend/**, resources/views/app.blade.php, config/atrium.php, tests/Feature/Frontend/PageTest.php, tests/Feature/Frontend/ClientDisabledTest.php, tests/ArchTest.php, tests/Feature/RemovalTest.php
+criteria: 102, 103
+
+- [x] 39.1 Write tests: the page at and under `client_path`; the API's paths kept out; guest redirect and 403; the boot data; the import map and entry; `client.enabled`.
+- [x] 39.2 Write the Frontend domain (`AppPage`, `ShowAppRequest`, the fallback route) and the view.
+
+## Group 40: Serving the prebuilt files
+depends on: 39
+files: src/Domains/Frontend/Services/FrontendAssets.php, src/Domains/Frontend/Http/Requests/ShowAssetRequest.php, tests/Feature/Frontend/AssetTest.php
+criteria: 105
+
+- [x] 40.1 Write tests: types and caching, older versions, no session, module files and chunks, and every refusal (outside the folders, dotfiles, `..`, encoded `..`, other extensions, unknown owners).
+- [x] 40.2 Write the asset route and locator.
+
+## Group 41: Module discovery and registration
+depends on: 39
+files: src/Domains/Frontend/Services/ModuleDiscovery.php, src/Domains/Frontend/Services/ModuleRegistry.php, src/Domains/Frontend/Data/ModuleManifest.php, src/Atrium.php, src/Facades/Atrium.php, src/Domains/Plugins/**, tests/Feature/Frontend/ModuleDiscoveryTest.php, tests/Fixtures/Frontend/**
+criteria: 107, 108, 109
+
+- [x] 41.1 Write tests: discovery from `installed.json`, the cache and its commands, unsafe paths dropped; `Atrium::module()`, `script()`, `style()`, config scripts; integration gating, `atrium.disabled`, the shared API major.
+- [x] 41.2 Write discovery, the registry and the facade methods; extend `atrium:discover` and `atrium:clear-discovered`; write `defineAtriumModule()` and `installAtriumModules()` in the SDK.
+
+## Group 42: Session auth by default and the gate's default
+depends on: 39
+files: config/atrium.php, src/Domains/Access/**, ui/sdk/src/runtime/http.ts, tests/Feature/Api/AuthApiTest.php, tests/Feature/GateFallbackTest.php, tests/TestCase.php
+criteria: 110, 111
+
+- [x] 42.1 Write tests: 401 JSON on every route with the default middleware; the AtriumUser fallback, `local`, and a defined gate winning.
+- [x] 42.2 Default the API to `['web', 'auth', Authorize::class]`; sign same-origin requests with the XSRF and CSRF tokens; reload on 401; write `AtriumUser`.
+
+## Group 43: The module preset and styles
+depends on: 38
+files: ui/sdk/vite/**, ui/sdk/css/**, ui/scripts/nuxt-ui-theme.mjs
+criteria: 112, 113
+
+- [x] 43.1 Write `atriumModule()` (build and test config), `nuxtUi()`, the shared list, the auto-imports and component resolvers, `module.css`, `theme.css`, the generated Nuxt UI theme and Atrium's class list.
+- [x] 43.2 Write `atriumClientOptions()`, the factory form of `useAtriumIntegration()` and the `AtriumIntegrationPaths` augmentation.
+
+## Group 44: Build freshness and CI
+depends on: 38, 43
+files: tests/Feature/Frontend/BuildFreshnessTest.php, composer.json, .github/workflows/ui.yml, .gitattributes, .github/pull_request_template.md
+criteria: 114, 117
+
+- [x] 44.1 Write `BuildFreshnessTest` (the source hash recomputed in PHP), `composer test:ui`, the `ui` CI job (rebuild and diff), the export-ignore rules (the SDK and `dist/` ship).
+
+## Group 45: Staged modules and the workbench
+depends on: 41, 43
+files: ui/modules/**, ui/workbench/**, workbench/**, tests/Feature/Integrations/VendoredClientsTest.php, tests/Feature/Api/ContractFixturesTest.php
+criteria: 115, 116
+
+- [x] 45.1 Stage each integration in `ui/modules/{pkg}` (entry, routes, locales, client, tests, hooks moved to their provider module, stand-in composer.json); each type-checks, passes Vitest and builds.
+- [x] 45.2 The workbench: session sign-in, the PHP suite stand-in, the staged modules and the demo module through `Atrium::module()`; remove the playground and the token guard.
+- [x] 45.3 Screenshot the served page against `final2` (desktop and mobile, dark, light and the signal theme).
+
+## Group 46: Phase 2: each module moves into its package
+depends on: 45
+files: ui/modules/{pkg}/**, workbench/app/Atrium/DemoSuite.php, ui/scripts/sync-clients.mjs, tests/Feature/Integrations/VendoredClientsTest.php
+criteria: 115
+
+- [ ] 46.1 Cortex ships its module (MODULES.md, phase 2); remove `ui/modules/cortex`.
+- [ ] 46.2 Guardian ships its module; remove `ui/modules/guardian`.
+- [ ] 46.3 Impex ships its module; remove `ui/modules/impex`.
+- [ ] 46.4 Keen ships its module; remove `ui/modules/keen`.
+- [ ] 46.5 PennantPlus ships its module; remove `ui/modules/pennantplus`.
+- [ ] 46.6 Polycart ships its module; remove `ui/modules/polycart`.
+- [ ] 46.7 Roster ships its module; remove `ui/modules/roster`.
+- [ ] 46.8 Showroom ships its module; remove `ui/modules/showroom`.
+
+## Group 47: Docs for the page and the module contract
+depends on: 39, 41, 43, 45
+files: README.md, CHANGELOG.md, AGENTS.md, MODULES.md, resources/boost/**, docs/agent/standards/atrium/**, docs/agent/specs/2026-11-22-1823-atrium-v2-headless/{decisions,spec,tasks,build}.md, tests/Feature/DocsTest.php, tests/Feature/ChangelogUpgradeTest.php
+criteria: 117
+
+- [x] 47.1 Record D-079 to D-087; this addendum; `MODULES.md`.
+- [x] 47.2 README (serving, the module contract, the shared modules, the preset, the app's scripts), CHANGELOG, CLAUDE.md, the Boost skill and the standards; DocsTest and ChangelogUpgradeTest check them.
