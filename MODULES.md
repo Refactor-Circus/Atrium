@@ -4,7 +4,11 @@ A package's (or an app's) front end in Atrium is a **module**: Vue code built
 with Atrium's Vite preset into one ES module and a stylesheet, committed to the
 package, declared in its `composer.json`, and loaded by Atrium's page next to
 Atrium's own prebuilt front end (decisions D-079 to D-088 in
-`docs/agent/specs/2026-11-22-1823-atrium-v2-headless/decisions.md`).
+`docs/agent/specs/2026-11-22-1823-atrium-v2-headless/decisions.md`). What
+Atrium's PHP shows of the package (its nav items, widgets, settings panel,
+search sources, screens, feature flags and the tabs it adds to other
+packages' screens) is the module's **integration manifest**, a JSON file
+shipped beside the build (§8, D-090): the package needs no Atrium PHP class.
 
 This file is the contract, then how to write a module. The eight suite
 packages (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and
@@ -59,12 +63,16 @@ export default defineAtriumModule({
         "atrium": {
             "key": "polycart",
             "scripts": ["dist/atrium/atrium.js"],
-            "styles": ["dist/atrium/atrium.css"]
+            "styles": ["dist/atrium/atrium.css"],
+            "integration": "dist/atrium/integration.json"
         }
     }
 }
 ```
 
+- `integration` is the shipped integration manifest (§8); it defaults to
+  `dist/atrium/integration.json` when that file exists. Its `key` must be the
+  module's.
 - No Composer dependency on Atrium. Paths are relative to the package; Atrium
   serves every file in the folders they name (chunks beside the script), from
   `/vendor/atrium/{key}/{version}/…`.
@@ -109,7 +117,11 @@ import { atriumModule } from '@refactor-circus/atrium/vite'
 export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: { setupFiles: ['test/setup.ts'] } })
 ```
 
-- `vite build` writes `atrium.js`, `chunks/`, `atrium.css` and `build.json`.
+- `vite build` writes `atrium.js`, `chunks/`, `atrium.css`, `build.json` and,
+  from `src/integration.json` (or `integration.json`, or the `integration`
+  option), `integration.json`: the preset checks the manifest as Atrium does
+  and fails the build on the first problem, with its JSON pointer. The source
+  is in the build hash (`inputs` covers `src`, or the preset adds it).
 - `vitest run` gets the test config from the same call: Nuxt UI compiled with
   Atrium's theme, the same auto-imports, happy-dom.
 - Auto-imports: Vue, Vue Router, Pinia, `useI18n`, every SDK export
@@ -220,8 +232,121 @@ import Polycart from '../src/atrium'
 useTestModule(Polycart)
 ```
 
-Atrium's integration fixtures (the shell payload of its PHP declarations) are
-`@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
+`expectIntegrationManifest(path?, key?)` reads the manifest (by default
+`src/integration.json`) and checks it as Atrium does, throwing with the JSON
+pointer of the first problem; `validateIntegrationManifest(json)` returns
+`{ valid, errors: [{ pointer, message }] }`:
+
+```ts
+// test/integration.test.ts
+import { expectIntegrationManifest } from '@refactor-circus/atrium/testing'
+
+it('declares a valid integration', () => {
+  const manifest = expectIntegrationManifest('src/integration.json', 'polycart')
+
+  expect(manifest.screens?.map(screen => screen.key)).toEqual(['polycart.carts', 'polycart.cart', 'polycart.types'])
+})
+```
+
+Atrium's integration fixtures (the shell payload of the suite's manifests)
+are `@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
+
+### 8. The integration manifest: `src/integration.json`
+
+The JSON Schema is `@refactor-circus/atrium/schema/integration.schema.json`
+(`ui/sdk/schema/integration.schema.json`); point `$schema` at it for your
+editor. Polycart's, shortened:
+
+```json
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "polycart",
+  "label": "Polycart",
+  "features": ["polycart.atrium"],
+  "navigation": [
+    { "label": "Carts", "path": "/polycart/carts", "icon": "i-lucide-shopping-cart", "group": "Polycart", "sort": 30 },
+    { "label": "Cart types", "path": "/polycart/types", "icon": "i-lucide-layers", "group": "Polycart", "sort": 31 }
+  ],
+  "widgets": [
+    { "key": "polycart.carts-by-type", "label": "Carts by type", "description": "…", "icon": "i-lucide-chart-column", "size": { "width": 6, "height": 2 } }
+  ],
+  "search_sources": [{ "key": "polycart", "label": "Carts", "icon": "i-lucide-shopping-cart" }],
+  "screens": [
+    { "key": "polycart.carts", "kind": "list", "path": "/polycart/carts" },
+    { "key": "polycart.cart", "kind": "detail", "path": "/polycart/carts/:cart" }
+  ]
+}
+```
+
+| Field | What it is |
+| --- | --- |
+| `version` | `1` |
+| `key`, `label` | The package key (the module's) and its name in the shell |
+| `features` | Pennant flag names that must all be on (`{pkg}.atrium` by convention). Atrium defines each as on until the host defines it; without Pennant all are on. `atrium.integrations.{pkg}.features` replaces the list |
+| `navigation` | Items: `label`, `path` (under `/{pkg}/`, never a URL), `icon`, `group`, `sort`, `live` (`{key, options}`, the module's `liveResolvers` key), `children`, `when` (declared only while true) |
+| `widgets` | `key` (`{pkg}.…`), `label`, `description`, `icon`, `component` (default `key`), `size` and `min_size` (`{width, height}`), `lazy` |
+| `settings` | One panel: `key`, `label`, `description`, `icon`, `component`, `sort` |
+| `search_sources` | `key` (the module's `searchSources` key), `label`, `icon` |
+| `screens` | `key` (`{pkg}.…`), `kind` (`list` or `detail`), `path` (under `/{pkg}/`, `:param`s), `subject_type` (the record's morph alias, for hooks), `options` (static data the page reads) |
+| `hooks` | Tabs and sections this package adds to other packages' screens (below) |
+
+Labels are plain English: Atrium passes them through Laravel's `__()`, so a
+host translates `"Carts"` in `lang/de.json`. Icons are Iconify names.
+
+**Values read from config.** Where a value comes from config (screen
+`options`, a nav item's `sort`, `when` or `live.options`, hook `data`), write
+an expression; Atrium reads it when the integration registers:
+
+```json
+{ "$config": "atrium.integrations.showroom.transfers.flow_prefix", "type": "string", "default": "showroom:" }
+```
+
+`$config` reads only your own config (`{pkg}.*`) or your integration's
+(`atrium.integrations.{pkg}.*`); missing or null is `default`. `type` casts:
+`string`, `bool`, `int`, `positive-int` (`nullable`: an explicit null stays
+null), `enum` (`values`), `strings` (`single`, `unique`, `non_empty`),
+`string-map`, `path` (`/` plus the trimmed string), `map` (string keys to
+non-empty strings, a null value read from `fallback.{key}`; `entries:
+["key", "type"]` makes it a list of pairs). Guardian's manifest uses most of
+them.
+
+**Hooks.** A package that renders something on another package's screens
+declares it, as the package whose API the component calls:
+
+```json
+{
+  "config": "redirect_domains.screens",
+  "format": "map",
+  "default": { "roster.organization": "tab", "roster.user": "aside" },
+  "screens": { "kind": "detail", "subject": true },
+  "tabs": { "cortex.mcp": { "label": "MCP", "icon": "i-lucide-globe", "data": { "owner_type": { "$screen": "subject_type" } } } },
+  "sections": { "cortex.redirect-domains": { "label": "Redirect domains", "data": { "owner_type": { "$screen": "subject_type" } } } }
+}
+```
+
+- `default` places the hook; a host replaces it with
+  `atrium.integrations.{pkg}.{config}`. Targets are `*`, `{package}.*` or a
+  screen key.
+- `format`: `map` (target to `tab` or a slot, for one tab and/or one
+  section), `lists` (target to a list where a string is a tab key and
+  `{"slot": "key"}` a section; Guardian's), `targets` (`screens`, `slot`,
+  `exclude`, for one section; Keen's history) or `options` (target to
+  options for one tab, read with `{"$option": "scope", "type": "bool",
+  "default": true}`; Keen's activity).
+- `screens` keeps only matched screens of a `kind`, with a `subject_type`
+  (`subject`), or of other packages (`others`).
+- `data` may use `{"$screen": "subject_type" | "package" | "key"}` (with
+  `kinds` to leave it out elsewhere) and `{"$subject_scope": <a map
+  $config>, "self": "user"}` (the record's scope type; the tab is skipped,
+  with a warning, where it does not resolve). The component registered under
+  the tab or section key (the module's `extensions`) adds the record from
+  `?record=`.
+
+The eight suite manifests are in each package's `atrium/src/integration.json`
+(and Atrium's `tests/Fixtures/Manifests/`): Cortex and Impex for `map` hooks,
+Keen for `targets` and `options` and a `when` nav item, Guardian for `lists`,
+`$subject_scope` and config-derived options, Showroom for a `$config` option.
 
 ## Writing a module
 
@@ -274,25 +399,33 @@ For package `{Pkg}` (key `{pkg}`):
    generated client (`../client/src/schema`) in `src/env.d.ts`, or pass its
    factory (§6). A module never imports another package's client or module:
    call another package's API untyped, or keep a copy of the types you need.
-6. **`composer.json`.** Add the `extra.atrium` block (§2). `.gitattributes`
-   must not export-ignore `dist/` (it ships) and should export-ignore
-   `/atrium`.
-7. **Build and check.** In `atrium/`: `pnpm typecheck`, `pnpm test`,
-   `pnpm build`; commit `dist/atrium/` with its `build.json`. Add a CI job
-   that runs the three and fails on `git diff -- dist/atrium`.
-8. **Try it.** In a host: `composer require` the package (or a path
+6. **The integration manifest.** Write `src/integration.json` (§8): what
+   Atrium shows of the package, the hooks your module's extensions render
+   on other packages' screens, and `$config` for anything the host
+   configures. Add `test/integration.test.ts` with
+   `expectIntegrationManifest('src/integration.json', '{pkg}')` (§7) and
+   assert what matters (every screen key has a route in `src/atrium.ts`'s
+   `screens` map, every hook tab or section key is in `extensions`).
+7. **`composer.json`.** Add the `extra.atrium` block (§2), with
+   `"integration": "dist/atrium/integration.json"`. `.gitattributes` must not
+   export-ignore `dist/` (it ships) and should export-ignore `/atrium`.
+8. **Build and check.** In `atrium/`: `pnpm typecheck`, `pnpm test`,
+   `pnpm build` (which checks the manifest and writes
+   `dist/atrium/integration.json`); commit `dist/atrium/` with its
+   `build.json`. Add a CI job that runs the three and fails on
+   `git diff -- dist/atrium`.
+9. **Try it.** In a host: `composer require` the package (or a path
    repository), `php artisan atrium:discover`, open `/atrium`; the module's
    script is on the page once the integration is active. In Atrium's
    workbench: `ATRIUM_SUITE_PATH=/path/to/checkouts composer serve`, with the
    package checked out there as `{Pkg}`; the workbench loads every sibling's
-   built module from its `extra.atrium` and stands in for its API from its
-   `openapi.json`.
-9. **Record it.** A line in the package's CHANGELOG ("ships its Atrium
-   module").
+   built module and integration manifest from its `extra.atrium` and stands
+   in for its API from its `openapi.json`.
+10. **Record it.** A line in the package's CHANGELOG ("ships its Atrium
+   module and integration manifest").
 
-The PHP side of a suite integration (its nav items, widgets, screens and
-settings panel as data) stays in Atrium's `src/Integrations/{Pkg}`, and the
-shell payloads it produces are the fixtures
+Atrium has no PHP of any package (D-090): what it shows of yours is your
+manifest. The shell payloads the suite's manifests produce are the fixtures
 `@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
 
 ### Gotchas

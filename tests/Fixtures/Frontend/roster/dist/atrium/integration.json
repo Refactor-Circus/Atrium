@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "key": "roster",
+  "label": "Roster",
+  "features": [
+    "roster.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "Roster records",
+      "path": "/roster/records",
+      "icon": "i-lucide-box",
+      "group": "Roster",
+      "sort": 50,
+      "live": {
+        "key": "roster.active-records",
+        "options": {
+          "sort": 90
+        }
+      }
+    }
+  ],
+  "widgets": [
+    {
+      "key": "roster.stats",
+      "label": "Roster stats",
+      "icon": "i-lucide-chart-bar"
+    }
+  ],
+  "settings": {
+    "key": "roster",
+    "label": "Roster",
+    "icon": "i-lucide-settings"
+  },
+  "search_sources": [
+    {
+      "key": "roster",
+      "label": "Roster records",
+      "icon": "i-lucide-search"
+    }
+  ],
+  "screens": [
+    {
+      "key": "roster.records",
+      "kind": "list",
+      "path": "/roster/records"
+    },
+    {
+      "key": "roster.record",
+      "kind": "detail",
+      "path": "/roster/records/:record",
+      "subject_type": "roster.record"
+    }
+  ]
+}

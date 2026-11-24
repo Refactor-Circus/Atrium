@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AtriumScreen } from '@refactor-circus/atrium'
-import { mountSuspended } from '@refactor-circus/atrium/testing'
+import { expectIntegrationManifest, mountSuspended, validateIntegrationManifest } from '@refactor-circus/atrium/testing'
 import ConsumerPanel from '../src/components/ConsumerPanel.vue'
 
 /*
@@ -26,5 +26,12 @@ describe('the installed SDK', () => {
 
   it('never reaches the network', async () => {
     await expect(fetch('/consumer/api/anything')).rejects.toThrow('tests never reach the network')
+  })
+
+  it('checks the module\'s integration manifest as Atrium does (D-090)', () => {
+    const manifest = expectIntegrationManifest('src/integration.json', 'consumer')
+
+    expect(manifest.screens?.[0]?.key).toBe('consumer.panel')
+    expect(validateIntegrationManifest({ ...manifest, key: 'Other' }).errors[0]?.pointer).toBe('/key')
   })
 })

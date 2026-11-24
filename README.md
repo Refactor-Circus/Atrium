@@ -449,15 +449,34 @@ uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
 
 ## Suite integrations
 
-Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and each package's front-end module renders them and calls the package's own API from the browser, signed like every Atrium request. Each package ships its own module ([MODULES.md](MODULES.md)): its `atrium/` folder, built into a committed `dist/atrium/` and declared in its `composer.json` under `extra.atrium`, so installing the package is all it takes. The PHP declarations and the integration fixtures stay in Atrium.
+Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation are shown in Atrium: each package declares them as data in its integration manifest, and its front-end module renders them and calls the package's own API from the browser, signed like every Atrium request. Each package ships its own module and manifest ([MODULES.md](MODULES.md)): its `atrium/` folder, built into a committed `dist/atrium/` (with `dist/atrium/integration.json`) and declared in its `composer.json` under `extra.atrium`, so installing the package is all it takes.
 
-Atrium's PHP never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. Everything below is configured under `atrium.integrations` in `config/atrium.php`.
+Atrium has no PHP of any package and never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. `config/atrium.php` lists no package: everything below is an override under `atrium.integrations.{pkg}`, and the defaults come from each package's manifest.
+
+### Integration manifests
+
+A manifest (`integration.json`) holds a package's label, nav items, widgets, settings panel, search sources, screens (with their front-end paths), feature flag names and the tabs and sections it adds to other packages' screens. Atrium checks it against the schema the SDK publishes (`@refactor-circus/atrium/schema/integration.schema.json`, `ui/sdk/schema/` here) and throws `InvalidIntegrationException`, naming the file and the JSON pointer, when it does not fit. Values the host configures are read from config when the integration registers (only the package's own `{pkg}.*` and `atrium.integrations.{pkg}.*`). Labels are plain English passed through `__()`, so translate them in your `lang/{locale}.json`:
+
+```json
+{ "Carts": "Warenkörbe" }
+```
+
+Atrium finds a manifest in each installed package that ships one (`extra.atrium.integration`, default `dist/atrium/integration.json`, cached by `php artisan atrium:discover`), in a module folder you add with `Atrium::module($path)`, or registers your own, manifest-only integration:
+
+```php
+use RefactorCircus\Atrium\Facades\Atrium;
+
+Atrium::integration(base_path('atrium/integration.json'));
+// or an array of the same JSON
+```
+
+A later source wins for its key: `Atrium::integration()` over `Atrium::module()` over an installed package.
 
 ### Detection and `enabled`
 
 An integration registers at boot when both hold:
 
-- `refactor-circus/{pkg}` is installed (asked through Composer's `InstalledVersions`, behind the `InstalledPackages` contract), and
+- Atrium finds its manifest (above), and
 - `atrium.integrations.{pkg}.enabled` is true (the default). It is read as a boolean, so `"false"` from an env file turns it off.
 
 ```php
@@ -494,16 +513,15 @@ The page's boot data and the shell send each integration's `api_base`. A module'
 
 ### Feature flags (Pennant)
 
-An integration is active for a request only when every name in `atrium.integrations.{pkg}.features` is active. The default is one class per package, `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Feature`, which resolves to `true`.
+An integration is active for a request only when every name in its manifest's `features` is active (the suite's manifests name `{pkg}.atrium`), or in `atrium.integrations.{pkg}.features`, which replaces the list.
 
-- With [Laravel Pennant](https://laravel.com/docs/pennant) installed, each name resolves through `Feature::for($user)->active($name)`, so you can turn an integration off for everyone or per user:
+- With [Laravel Pennant](https://laravel.com/docs/pennant) installed, each name resolves through `Feature::for($user)->active($name)`, so you can turn an integration off for everyone or per user. Atrium defines a manifest's own names as on until you define them; a name only your config lists reads as off until you define it:
 
   ```php
   use Laravel\Pennant\Feature;
-  use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
 
-  Feature::for($user)->deactivate(PolycartFeature::class);   // one user
-  Feature::deactivateForEveryone(PolycartFeature::class);   // everyone
+  Feature::for($user)->deactivate('polycart.atrium');   // one user
+  Feature::deactivateForEveryone('polycart.atrium');   // everyone
   ```
 
 - Without Pennant every flag is on. An empty `features` list always shows the integration; list your own feature names to gate it on them.
@@ -512,7 +530,7 @@ An inactive integration is listed in the shell with `active: false`, and none of
 
 ### Cross-package hooks
 
-Some integrations add a tab or section to another's screens. Each hook registers only while both of its integrations are registered, and follows both their flags. The defaults keep v1's:
+Some integrations add a tab or section to another's screens, declared in the manifest of the package whose API the tab calls. Each hook registers only while both of its integrations are registered, and follows both their flags. Its default placement is in its manifest (they keep v1's); set the key to move it, as a whole (a map you set replaces the manifest's map):
 
 ```php
 'integrations' => [
@@ -557,7 +575,7 @@ Some integrations add a tab or section to another's screens. Each hook registers
 ],
 ```
 
-A target is a screen key (`roster.user`), `{package}.*` or `*`, and a slot must be a valid slot name. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped anywhere else. `keen.history.nav.groups` values name Atrium nav groups.
+A target is a screen key (`roster.user`), `{package}.*` or `*`, and a slot must be a valid slot name. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped anywhere else. `keen.history.nav.groups` values name Atrium nav groups. Guardian also reads `atrium.integrations.guardian.scope_types` (`['organization' => null, 'team' => null]`; a null value reads `guardian.adopt.scope_types.{key}`).
 
 ### The module routes
 
@@ -991,7 +1009,7 @@ The code is organised into domain modules under `src/Domains/{Domain}`, namespac
 | `Access` | `Services\Gatekeeper`, the `Concerns\Gated` trait, and the `Authorize`, `ForceJsonResponse` and `EnsureFeaturesAreEnabled` middleware (`Http\Middleware`) |
 | `Frontend` | The page and its files: `Services\AppPage` (the `atrium::app` view's data: the import map, stylesheets, boot data and scripts), `Services\ModuleDiscovery` (modules from `extra.atrium`, cached by `atrium:discover`), `Services\ModuleRegistry` (`Atrium::module()`, `Atrium::script()`, `Atrium::style()`), `Services\FrontendBuild`, `Services\FrontendAssets` (the `atrium.assets` route's allow-list), `Data\ModuleManifest` and `Http\Controllers\FrontendController`. The one place in `src/` that renders HTML |
 | `Dashboard` | `Models\DashboardModel` and `Models\DashboardWidgetModel`, their resources (`Resources\DashboardResource`, `Resources\DashboardWidgetResource`), policies, actions, events, requests and controllers, and `Services\DashboardManager` |
-| `Integrations` | The suite integration framework: the `Contracts\Integration` contract and its `Support\Integration` base, `Services\IntegrationRegistry`, the `Contracts\InstalledPackages` seam, `Services\IntegrationFeatures` (Pennant or all-on), `Data\ScreenDeclaration` and the `atrium.screens.show` endpoint. Each package's definitions (`{Pkg}Integration`, `{Pkg}Feature`) sit in the top-level `src/Integrations/{Pkg}/`, and the cross-package hooks in `src/Integrations/Hooks/` |
+| `Integrations` | The integration framework: `Services\IntegrationManifests` (reads and checks manifests: `Support\ManifestSchema`, `Support\ManifestValues`), `Services\IntegrationRegistry`, `Services\IntegrationHooks`, the `Contracts\InstalledPackages` seam (the installed packages' manifests), `Services\IntegrationFeatures` (Pennant or all-on), `Data\ScreenDeclaration` and the `atrium.screens.show` endpoint. No package's declarations: each ships its manifest |
 | `Navigation` | `Data\NavItem`, `Data\NavGroup`, `Services\NavigationRegistry` and the shell endpoint (`Http\Resources\ShellResource`) |
 | `Plugins` | The `Contracts\Plugin` contract, the `Support\Plugin` base class, `Services\PluginRegistry`, Composer discovery, plugin routes and the plugin commands |
 | `Screens` | `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, `Services\ScreenExtensions` (the registry behind `Atrium::screens()`), `Services\ScreenVisibility` and `Http\Resources\ResolvedScreenResource` |
@@ -1083,7 +1101,7 @@ To see a working dashboard locally:
 composer serve   # the page on http://127.0.0.1:8000/atrium
 ```
 
-The workbench signs you in through `/_workbench` as `admin@example.com` (Atrium's `auth` middleware sends a guest there as the login route), so the page and its API run on the session as a host's would. Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources, rendered by the workbench's module (`ui/workbench`). `workbench/app/Atrium/DemoSuite.php` reports every suite package installed and points the integrations at `workbench/app/Atrium/SuiteStandIn.php`, which answers each package's API at `/_suite/{pkg}`. Atrium depends on none of the packages, so by default the workbench shows Atrium's core, its own module and the integrations' fallback cards. To see the packages' modules, point `ATRIUM_SUITE_PATH` at a folder of sibling checkouts (`Cortex`, `Guardian`, … each with its built `dist/atrium/`): the workbench loads each one's module from its `composer.json` `extra.atrium`, as discovery would an installed package's, and the stand-in answers from each one's `openapi.json`:
+The workbench signs you in through `/_workbench` as `admin@example.com` (Atrium's `auth` middleware sends a guest there as the login route), so the page and its API run on the session as a host's would. Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources, rendered by the workbench's module (`ui/workbench`). `workbench/app/Atrium/DemoSuite.php` reports every suite package installed, with the suite's integration manifests from `tests/Fixtures/Manifests/{pkg}/integration.json` (a checkout's own `dist/atrium/integration.json` wins once it ships one), and points the integrations at `workbench/app/Atrium/SuiteStandIn.php`, which answers each package's API at `/_suite/{pkg}`. Atrium depends on none of the packages, so by default the workbench shows Atrium's core, its own module and the integrations' fallback cards. To see the packages' modules, point `ATRIUM_SUITE_PATH` at a folder of sibling checkouts (`Cortex`, `Guardian`, … each with its built `dist/atrium/`): the workbench loads each one's module from its `composer.json` `extra.atrium`, as discovery would an installed package's, and the stand-in answers from each one's `openapi.json`:
 
 ```bash
 ATRIUM_SUITE_PATH=/path/to/checkouts composer serve

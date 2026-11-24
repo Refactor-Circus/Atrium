@@ -3,14 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Lang;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
-use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
-use RefactorCircus\Atrium\Integrations\Keen\KeenIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -55,16 +52,12 @@ function keenIntegrationNavItem(string $label): ?NavItem
     return null;
 }
 
-it('is found by convention under the keen key', function (): void {
-    expect(IntegrationRegistry::classFor('keen'))->toBe(KeenIntegration::class);
-});
-
 it('registers while Keen is installed and enabled', function (): void {
     $integration = keenIntegrationRegistered();
 
     expect($integration)->not->toBeNull()
         ->and($integration?->label)->toBe('Keen')
-        ->and($integration?->features)->toBe([KeenFeature::class])
+        ->and($integration?->features)->toBe(['keen.atrium'])
         ->and(array_map(fn (NavItem $item): string => $item->label, $integration->navigation ?? []))->toBe(['Audit log', 'History'])
         ->and(array_keys($integration->screens ?? []))->toBe(['keen.entries', 'keen.entry', 'keen.history']);
 
@@ -248,18 +241,6 @@ it('sends only static declarations: no widget, settings panel or search source',
     expect($integration?->widgets)->toBe([])
         ->and($integration?->settings)->toBeNull()
         ->and($integration?->searchSources)->toBe([]);
-});
-
-it('has every label it uses in lang/en/integrations/keen.php', function (): void {
-    $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Keen/KeenIntegration.php');
-
-    preg_match_all("/'(atrium::integrations\/keen\.[a-z_.]+)'/", $source, $matches);
-
-    expect($matches[1])->not->toBeEmpty();
-
-    foreach ($matches[1] as $key) {
-        expect(Lang::has($key, 'en'))->toBeTrue("Missing translation [{$key}].");
-    }
 });
 
 it('writes its declarations to the layer fixture', function (): void {

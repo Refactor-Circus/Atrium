@@ -12,8 +12,6 @@ use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
-use RefactorCircus\Atrium\Integrations\Roster\RosterIntegration;
 use RefactorCircus\Atrium\Support\Iconify;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
@@ -48,31 +46,13 @@ function registeredRoster(): RegisteredIntegration
     return $roster;
 }
 
-/**
- * The labels the integration takes from `lang/en/integrations/roster.php`.
- *
- * @return list<string>
- */
-function rosterLabelKeys(): array
-{
-    $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Roster/RosterIntegration.php');
-
-    preg_match_all("/'atrium::integrations\\/roster\\.([a-z_]+)'/", $source, $matches);
-
-    return array_values(array_unique($matches[1]));
-}
-
 describe('registration', function (): void {
-    it('is the conventional class for the roster key', function (): void {
-        expect(IntegrationRegistry::classFor('roster'))->toBe(RosterIntegration::class);
-    });
-
     it('registers while Roster is installed, enabled and serving its API', function (): void {
         $roster = registeredRoster();
 
         expect($roster->label)->toBe('Roster')
             ->and($roster->apiBase)->toBe('/roster/api')
-            ->and($roster->features)->toBe([RosterFeature::class]);
+            ->and($roster->features)->toBe(['roster.atrium']);
     });
 
     it('reads the API base from roster.routes.prefix, and lets api_base win', function (): void {
@@ -269,36 +249,18 @@ describe('declarations', function (): void {
 });
 
 describe('labels', function (): void {
-    it('drops the roles and permissions labels (AC 99)', function (): void {
-        expect(trans()->hasForLocale('atrium::integrations/roster.roles', 'en'))->toBeFalse()
-            ->and(trans()->hasForLocale('atrium::integrations/roster.permissions', 'en'))->toBeFalse();
+    it('declares no roles or permissions labels (AC 99)', function (): void {
+        $labels = array_map(fn (NavItem $item): string => $item->label, registeredRoster()->navigation);
+
+        expect($labels)->not->toContain('Roles')->not->toContain('Permissions');
     });
 
-    it('takes every label from lang/en/integrations/roster.php', function (): void {
-        $keys = rosterLabelKeys();
-
-        expect($keys)->toContain('label', 'users', 'organizations', 'impersonations', 'transfers', 'widget_user_status', 'widget_organizations')
-            ->not->toContain('roles', 'permissions');
-
-        foreach ($keys as $key) {
-            expect(trans()->hasForLocale('atrium::integrations/roster.'.$key, 'en'))->toBeTrue("Missing label [atrium::integrations/roster.{$key}].");
-        }
-    });
-
-    it('translates its labels with the app locale', function (): void {
-        app('translator')->addLines(['integrations/roster.users' => 'Benutzer'], 'de', 'atrium');
+    it('translates its labels with the app locale, through the host\'s lang JSON (D-090)', function (): void {
+        app('translator')->addLines(['*.Users' => 'Benutzer'], 'de');
         app()->setLocale('de');
 
         $labels = array_map(fn (NavItem $item): string => $item->label, registeredRoster()->navigation);
 
         expect($labels[0])->toBe('Benutzer');
-    });
-});
-
-describe('no package code', function (): void {
-    it('names nothing of Roster\'s code, only its paths and keys', function (): void {
-        $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Roster/RosterIntegration.php');
-
-        expect(preg_match('/RefactorCircus\\\\{1,2}Roster\b/i', $source))->toBe(0);
     });
 });

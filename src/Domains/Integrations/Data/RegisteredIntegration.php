@@ -7,10 +7,11 @@ namespace RefactorCircus\Atrium\Domains\Integrations\Data;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
+use stdClass;
 
 /**
- * An integration as registered: its package key, label, API base and
- * feature flags, and everything it declared. Whether it is active is asked
+ * An integration as registered from its manifest (D-090): its package key,
+ * label, API base and feature flags, and everything it declared. Whether it is active is asked
  * per request, of `IntegrationFeatures`.
  */
 final class RegisteredIntegration
@@ -23,6 +24,8 @@ final class RegisteredIntegration
      * @param  list<WidgetDefinition>  $widgets
      * @param  list<SearchSourceDeclaration>  $searchSources
      * @param  array<string, ScreenDeclaration>  $screens  By screen key.
+     * @param  list<stdClass>  $hooks  Its manifest's `hooks`, run by IntegrationHooks.
+     * @param  list<string>  $defaultFeatures  Its manifest's `features`, which Atrium defines as on in Pennant until the host defines them.
      */
     public function __construct(
         public private(set) string $key,
@@ -34,6 +37,8 @@ final class RegisteredIntegration
         public private(set) ?SettingsPanel $settings,
         public private(set) array $searchSources,
         public private(set) array $screens,
+        public private(set) array $hooks = [],
+        public private(set) array $defaultFeatures = [],
     ) {}
 
     /**

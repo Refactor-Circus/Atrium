@@ -3,7 +3,7 @@
     "label": "Guardian",
     "api_base": "/guardian",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Guardian\\GuardianFeature"
+        "guardian.atrium"
     ],
     "navigation": [
         {

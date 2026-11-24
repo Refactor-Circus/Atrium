@@ -1,0 +1,158 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "cortex",
+  "label": "Cortex",
+  "features": [
+    "cortex.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "Virtual agents",
+      "path": "/cortex/virtual-agents",
+      "icon": "i-lucide-sparkles",
+      "group": "Cortex",
+      "sort": 10
+    },
+    {
+      "label": "Concrete agents",
+      "path": "/cortex/concrete-agents",
+      "icon": "i-lucide-cpu",
+      "group": "Cortex",
+      "sort": 20
+    },
+    {
+      "label": "Run agent",
+      "path": "/cortex/run",
+      "icon": "i-lucide-play",
+      "group": "Cortex",
+      "sort": 30
+    },
+    {
+      "label": "Tools",
+      "path": "/cortex/tools",
+      "icon": "i-lucide-wrench",
+      "group": "Cortex",
+      "sort": 40
+    },
+    {
+      "label": "Servers",
+      "path": "/cortex/servers",
+      "icon": "i-lucide-server",
+      "group": "Cortex",
+      "sort": 50
+    },
+    {
+      "label": "Redirect domains",
+      "path": "/cortex/redirect-domains",
+      "icon": "i-lucide-globe",
+      "group": "Cortex",
+      "sort": 60
+    }
+  ],
+  "settings": {
+    "key": "cortex",
+    "label": "Cortex",
+    "description": "Providers, tools, concrete agents and MCP servers available to your agents.",
+    "icon": "i-lucide-cpu"
+  },
+  "search_sources": [
+    {
+      "key": "cortex",
+      "label": "Cortex",
+      "icon": "i-lucide-sparkles"
+    }
+  ],
+  "screens": [
+    {
+      "key": "cortex.virtual-agents",
+      "kind": "list",
+      "path": "/cortex/virtual-agents"
+    },
+    {
+      "key": "cortex.virtual-agent-create",
+      "kind": "detail",
+      "path": "/cortex/virtual-agents/create"
+    },
+    {
+      "key": "cortex.virtual-agent",
+      "kind": "detail",
+      "path": "/cortex/virtual-agents/:slug"
+    },
+    {
+      "key": "cortex.concrete-agents",
+      "kind": "list",
+      "path": "/cortex/concrete-agents"
+    },
+    {
+      "key": "cortex.concrete-agent",
+      "kind": "detail",
+      "path": "/cortex/concrete-agents/:agent"
+    },
+    {
+      "key": "cortex.tools",
+      "kind": "list",
+      "path": "/cortex/tools"
+    },
+    {
+      "key": "cortex.tool-description",
+      "kind": "detail",
+      "path": "/cortex/tools/:tool/description"
+    },
+    {
+      "key": "cortex.servers",
+      "kind": "list",
+      "path": "/cortex/servers"
+    },
+    {
+      "key": "cortex.server-instructions",
+      "kind": "detail",
+      "path": "/cortex/servers/:server/instructions"
+    },
+    {
+      "key": "cortex.redirect-domains",
+      "kind": "list",
+      "path": "/cortex/redirect-domains"
+    },
+    {
+      "key": "cortex.run",
+      "kind": "detail",
+      "path": "/cortex/run"
+    }
+  ],
+  "hooks": [
+    {
+      "config": "redirect_domains.screens",
+      "format": "map",
+      "default": {
+        "roster.organization": "tab",
+        "roster.user": "aside"
+      },
+      "screens": {
+        "kind": "detail",
+        "subject": true
+      },
+      "tabs": {
+        "cortex.mcp": {
+          "label": "MCP",
+          "icon": "i-lucide-globe",
+          "data": {
+            "owner_type": {
+              "$screen": "subject_type"
+            }
+          }
+        }
+      },
+      "sections": {
+        "cortex.redirect-domains": {
+          "label": "Redirect domains",
+          "data": {
+            "owner_type": {
+              "$screen": "subject_type"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

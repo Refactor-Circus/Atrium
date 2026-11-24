@@ -3,7 +3,7 @@
     "label": "Cortex",
     "api_base": "/cortex/api",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Cortex\\CortexFeature"
+        "cortex.atrium"
     ],
     "navigation": [
         {

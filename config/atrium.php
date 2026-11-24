@@ -7,14 +7,6 @@ use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardPolicy;
 use RefactorCircus\Atrium\Domains\Dashboard\Policies\DashboardWidgetPolicy;
 use RefactorCircus\Atrium\Domains\Themes\Features\ThemeSwitcherFeature;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
-use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
-use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
-use RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusFeature;
-use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
-use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
-use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
 
 return [
 
@@ -349,27 +341,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Suite Integrations
+    | Integrations
     |--------------------------------------------------------------------------
     |
-    | Atrium hosts the front ends of the Refactor Circus suite packages:
-    | Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and
-    | Showroom. Each package ships its own front-end module (its pages,
-    | widgets, settings panel and search), which calls its own JSON API;
-    | Atrium's PHP sends their declarations only and never loads a package's
-    | classes. A package's module loads only while its integration does.
+    | Atrium hosts the front ends of packages that ship an Atrium module and
+    | an integration manifest (D-090): the Refactor Circus suite (Cortex,
+    | Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom) and any
+    | other. A package declares its nav items, widgets, settings panel,
+    | search sources, screens, feature flags and hooks in
+    | `dist/atrium/integration.json` (composer.json `extra.atrium.integration`),
+    | found by `php artisan atrium:discover`; an app adds one with
+    | Atrium::module() or Atrium::integration(). Atrium's PHP never loads a
+    | package's classes. Nothing needs to be listed here: each key below
+    | overrides what the package's manifest says, by package key.
     |
-    | Detection: an integration registers when refactor-circus/{pkg} is
-    | installed and its `enabled` is true (read as a boolean, so "false" from
-    | an env file turns it off). Set `enabled` to false to hide a package from
-    | Atrium while keeping it installed.
+    | enabled: an integration registers while this is true (default true, read
+    | as a boolean, so "false" from an env file turns it off). Set it to false
+    | to hide a package from Atrium while keeping it installed.
     |
-    | API base: where the module calls the package's API. A non-empty
-    | `api_base` wins (a path such as `/cortex/api`, or an absolute URL for a
-    | package served from another host). Otherwise it is `/` plus the
-    | package's own {pkg}.routes.prefix, while {pkg}.routes.enabled is true.
-    | When neither applies the integration does not register, and Atrium logs
-    | a warning once per process naming both keys.
+    | api_base: where the module calls the package's API. A non-empty value
+    | wins (a path such as `/cortex/api`, or an absolute URL for a package
+    | served from another host). Otherwise it is `/` plus the package's own
+    | {pkg}.routes.prefix, while {pkg}.routes.enabled is true. When neither
+    | applies the integration does not register, and Atrium logs a warning
+    | once per process naming both keys.
     |
     | Security: the package APIs answer with their own auth. Guardian, Polycart
     | and Roster ship with their API off (guardian.routes.enabled,
@@ -378,127 +373,61 @@ return [
     | application's authentication middleware (e.g. auth:sanctum) in that
     | package's `routes.middleware`.
     |
+    | features: feature flags that must all be on for the integration to show
+    | to a user: its navigation, widgets, settings panel, search sources and
+    | screens. By default the manifest's (`{pkg}.atrium` for the suite). With
+    | Laravel Pennant installed each resolves through
+    | Feature::for($user)->active($name), so you can turn an integration off
+    | globally or per user; Atrium defines a name you have not defined as on.
+    | Without Pennant every flag is on. An empty list always shows the
+    | integration. These are separate from the plugin features gated through
+    | Atrium::resolveFeaturesUsing().
+    |
+    | Anything else under a package's key is read by its manifest: the
+    | placements of its hooks on other packages' screens and the config its
+    | screens read, each with the manifest's default until you set it. The
+    | suite's (see each package's README):
+    |
+    | cortex.redirect_domains.screens: the screens that get Cortex's redirect
+    |              domains, as a `tab` or in a slot. Default
+    |              ['roster.organization' => 'tab', 'roster.user' => 'aside'].
+    | impex.run_link.screens: the screens whose rows link to their Impex run,
+    |              by row slot. Default ['showroom.transfers' => 'row.actions'].
+    | keen.history: the Keen history section on every screen matched by
+    |              `screens` (['*']) and not by `exclude` (['keen.*',
+    |              'atrium.*']), in `slot` ('after'); the activity tab for each
+    |              `tabs` entry (['roster.organization' => ['scope' => true]]);
+    |              and the History nav item (`nav.enabled`, `nav.sort` 90,
+    |              `nav.exclude`, `nav.groups`).
+    | showroom.transfers.flow_prefix: the Impex flows Showroom's transfers
+    |              screen lists, by name prefix ('showroom:').
+    | guardian.screens: Guardian's tabs and sections on Roster's screens. A
+    |              plain value is a tab; a `slot => key` entry is a section.
+    | guardian.scope_types: the morph type Guardian stores for each scope
+    |              (['organization' => null, 'team' => null]). A null value
+    |              resolves to guardian.adopt.scope_types.{key}; a value that
+    |              does not resolve to a non-empty string is dropped, and the
+    |              organization access tab is skipped while `organization`
+    |              does not resolve.
+    |
     | Guardian: its `guardian.two-factor` and `guardian.session` middleware can
     | go on Atrium's route group (`atrium.middleware`) and on the packages' API
     | groups. A user who still owes a second factor then gets Guardian's 403,
     | and Guardian's module sends them to its two-factor challenge page
     | (/guardian/two-factor/challenge) or setup page (/guardian/two-factor/setup).
-    | guardian.scope_types: the morph type Guardian stores for each scope
-    |              (`organization`, `team`). A null value resolves to
-    |              guardian.adopt.scope_types.{key}; a value that does not
-    |              resolve to a non-empty string is dropped, and the
-    |              organization access tab is skipped while `organization`
-    |              does not resolve.
     |
-    | features: feature flags that must all be on for the integration to show
-    | to a user: its navigation, widgets, settings panel, search sources and
-    | screens. With Laravel Pennant installed each resolves through
-    | Feature::for($user)->active($name), so you can turn an integration off
-    | globally or per user; each default {Pkg}Feature class is on until you
-    | do. Without Pennant every flag is on. An empty list always shows the
-    | integration. These are separate from the plugin features gated through
-    | Atrium::resolveFeaturesUsing().
-    |
-    | Cross-package hooks, each registered only while both integrations are:
-    |
-    | cortex.redirect_domains.screens: the Roster screens that get Cortex's
-    |              redirect domains, as a `tab` or in a slot (`aside`).
-    | impex.run_link.screens: the Showroom screens whose rows link to their
-    |              Impex run, by row slot.
-    | keen.history: the Keen history section on every screen matched by
-    |              `screens` and not by `exclude`, in `slot`; the activity
-    |              tab for each `tabs` entry (`scope` filters by the record as
-    |              a scope); and the History nav item, sorted by `nav.sort`,
-    |              leaving out `nav.exclude` and grouping packages under the
-    |              Atrium nav groups `nav.groups` names.
-    | showroom.transfers.flow_prefix: the Impex flows Showroom's transfers
-    |              screen lists, by name prefix.
-    | guardian.screens: Guardian's tabs and sections on Roster's screens. A
-    |              plain value is a tab; a `slot => key` entry is a section.
-    |
-    | A target is a screen key (`roster.user`), `{package}.*` or `*`. An
+    | A hook target is a screen key (`roster.user`), `{package}.*` or `*`. An
     | invalid one throws in local and testing, and is reported and skipped
     | anywhere else.
     |
     */
 
     'integrations' => [
-        'cortex' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [CortexFeature::class],
-            'redirect_domains' => [
-                'screens' => ['roster.organization' => 'tab', 'roster.user' => 'aside'],
-            ],
-        ],
-
-        'guardian' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [GuardianFeature::class],
-            'scope_types' => [
-                'organization' => null,
-                'team' => null,
-            ],
-            'screens' => [
-                'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim'],
-                'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities'],
-            ],
-        ],
-
-        'impex' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [ImpexFeature::class],
-            'run_link' => [
-                'screens' => ['showroom.transfers' => 'row.actions'],
-            ],
-        ],
-
-        'keen' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [KeenFeature::class],
-            'history' => [
-                'screens' => ['*'],
-                'slot' => 'after',
-                'exclude' => ['keen.*', 'atrium.*'],
-                'tabs' => ['roster.organization' => ['scope' => true]],
-                'nav' => [
-                    'enabled' => true,
-                    'sort' => 90,
-                    'exclude' => [],
-                    'groups' => ['showroom' => 'showroom', 'pennantplus' => 'pennantplus'],
-                ],
-            ],
-        ],
-
-        'pennantplus' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [PennantPlusFeature::class],
-        ],
-
-        'polycart' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [PolycartFeature::class],
-        ],
-
-        'roster' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [RosterFeature::class],
-        ],
-
-        'showroom' => [
-            'enabled' => true,
-            'api_base' => null,
-            'features' => [ShowroomFeature::class],
-            'transfers' => [
-                'flow_prefix' => 'showroom:',
-            ],
-        ],
+        // 'polycart' => [
+        //     'enabled' => true,
+        //     'api_base' => null,
+        //     'features' => ['polycart.atrium'],
+        // ],
     ],
 
 ];

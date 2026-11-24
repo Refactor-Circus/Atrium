@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
@@ -17,8 +16,6 @@ use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
-use RefactorCircus\Atrium\Integrations\Showroom\ShowroomIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -58,17 +55,12 @@ function showroomIntegration(): RegisteredIntegration
     return $integration;
 }
 
-it('is found by convention under the showroom key', function (): void {
-    expect(IntegrationRegistry::classFor('showroom'))->toBe(ShowroomIntegration::class)
-        ->and(new ShowroomIntegration)->toBeInstanceOf(Integration::class);
-});
-
 it('registers while Showroom is installed, enabled and serves its API', function (): void {
     $integration = showroomIntegration();
 
     expect(array_keys(app(IntegrationRegistry::class)->all()))->toBe(['showroom'])
         ->and($integration->label)->toBe('Showroom')
-        ->and($integration->features)->toBe([ShowroomFeature::class]);
+        ->and($integration->features)->toBe(['showroom.atrium']);
 });
 
 it('registers nothing while Showroom is not installed', function (): void {
@@ -279,25 +271,6 @@ it('serves each declared screen from atrium.screens.show', function (): void {
     expect(app(IntegrationRegistry::class)->forScreen('showroom.product')?->key)->toBe('showroom')
         ->and(app(IntegrationRegistry::class)->forScreen('showroom.transfers')?->key)->toBe('showroom')
         ->and(app(IntegrationRegistry::class)->forScreen('showroom.history'))->toBeNull();
-});
-
-it('uses only label keys its lang file has', function (): void {
-    $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Showroom/ShowroomIntegration.php');
-
-    preg_match_all("/'(atrium::integrations\\/showroom\\.[a-z0-9_.-]+)'/", $source, $matches);
-
-    $keys = array_values(array_unique($matches[1]));
-    $missing = array_values(array_filter($keys, fn (string $key): bool => ! Lang::has($key, 'en', false)));
-
-    expect($keys)->not->toBeEmpty()
-        ->and($missing)->toBe([]);
-});
-
-it('names no Showroom class, even as a string', function (): void {
-    $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Showroom/ShowroomIntegration.php');
-
-    expect($source)->not->toContain('RefactorCircus\\Showroom')
-        ->and($source)->not->toContain('RefactorCircus\\\\Showroom');
 });
 
 it('writes its declarations to the layer fixture', function (): void {

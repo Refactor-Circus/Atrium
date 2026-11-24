@@ -3,7 +3,7 @@
     "label": "Keen",
     "api_base": "/keen/api",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Keen\\KeenFeature"
+        "keen.atrium"
     ],
     "navigation": [
         {

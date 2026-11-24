@@ -1055,3 +1055,32 @@ Phase 1 (this addendum) is Atrium's core and the contract, with the eight integr
 
 - A module's base utility against an Atrium-defined variant on the same element can lose the cascade (D-084); the module CSS layer documents it.
 - A host that kept v1's published `public/vendor/atrium` shadows the asset route; the upgrade guide says to delete it.
+
+## Addendum 2026-11-24: integration manifests
+
+The user's decision (2026-11-24): "move the php declarations" out of Atrium into the packages, which require only Keystone and never use Atrium's PHP (memory "no cross-package knowledge"). D-090 records the choices. Phase A (this addendum) is Atrium's side: the manifest format, its schema and validators, the loader, the SDK helpers, the eight manifests and the removal of `src/Integrations`. Phase B (group 49) adds each manifest to its package.
+
+### Acceptance criteria
+
+118. A package declares its integration in `integration.json` (source `atrium/src/integration.json`; shipped `dist/atrium/integration.json`, named by `extra.atrium.integration`, default `dist/atrium/integration.json`): `version`, `key`, `label`, `features`, `navigation`, `widgets`, `settings`, `search_sources`, `screens` and `hooks`, as `ui/sdk/schema/integration.schema.json` describes. Labels are plain strings, translated with `__()`.
+119. Atrium reads the manifests of installed packages (through `InstalledPackages`, over `atrium:discover`'s cache), of `Atrium::module()` folders and of `Atrium::integration()`, checks each against the schema and the manifest rules, and throws `InvalidIntegrationException` naming the manifest and the JSON pointer of the first problem. Registration, the API base, `atrium.integrations.{pkg}.*` overrides and per-user activation are unchanged.
+120. `$config`, `$screen`, `$option` and `$subject_scope` expressions are read at registration; `$config` reads only `{pkg}.*` and `atrium.integrations.{pkg}.*`.
+121. Each cross-package hook is declared by the package whose API it calls; its placements are its manifest default or the host's `atrium.integrations.{pkg}.{config}`, in the old config shapes.
+122. Feature flags are names; Pennant resolves them (Atrium defines a manifest's own names as on until the host defines them), all on without Pennant.
+123. The SDK exports the schema (`@refactor-circus/atrium/schema/integration.schema.json`) and `validateIntegrationManifest()` / `expectIntegrationManifest()` (`@refactor-circus/atrium/testing`), refusing the shared cases at the same pointers as PHP; `atriumModule()` checks the manifest, copies it to `{outDir}/integration.json` and hashes it; the consumer check builds and tests a module with a manifest.
+124. The eight suite manifests produce the payloads the PHP declarations produced (D-090 lists the differences); Atrium keeps no `src/Integrations`, feature class or `lang/en/integrations/*.php`, and its config lists no package.
+
+### Design notes
+
+- `ManifestSchema` (PHP) and `vite/manifest.mjs` (SDK) each implement the subset of JSON Schema the schema uses; the shared cases keep them in step.
+- Atrium's tests and the workbench read `tests/Fixtures/Manifests/{pkg}/integration.json` until (and beside) the packages' own.
+
+### Out of scope
+
+- Each package shipping its manifest (phase B, group 49).
+- Ordering hook tabs across packages (they follow integration key order).
+
+### Risks
+
+- A host that set one key of a map Atrium used to default in `config/atrium.php` (`atrium.integrations.guardian.scope_types.organization` alone) now replaces the manifest's whole map; the upgrade guide says to set the map.
+

@@ -1,0 +1,160 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "impex",
+  "label": "Impex",
+  "features": [
+    "impex.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "Runs",
+      "path": "/impex/runs",
+      "icon": "i-lucide-circle-play",
+      "group": "Impex",
+      "sort": 10,
+      "live": {
+        "key": "impex.active-runs"
+      }
+    },
+    {
+      "label": "Messages",
+      "path": "/impex/messages",
+      "icon": "i-lucide-inbox",
+      "group": "Impex",
+      "sort": 20
+    },
+    {
+      "label": "Flows",
+      "path": "/impex/flows",
+      "icon": "i-lucide-list-ordered",
+      "group": "Impex",
+      "sort": 30
+    },
+    {
+      "label": "Channels",
+      "path": "/impex/channels",
+      "icon": "i-lucide-radio-tower",
+      "group": "Impex",
+      "sort": 40
+    },
+    {
+      "label": "Subscriptions",
+      "path": "/impex/subscriptions",
+      "icon": "i-lucide-rss",
+      "group": "Impex",
+      "sort": 50
+    }
+  ],
+  "widgets": [
+    {
+      "key": "impex.run-status",
+      "label": "Run status",
+      "description": "How many runs sit in each state right now.",
+      "icon": "i-lucide-activity",
+      "size": {
+        "width": 6,
+        "height": 2
+      }
+    },
+    {
+      "key": "impex.recent-failures",
+      "label": "Recent failures",
+      "description": "Runs that failed most recently.",
+      "icon": "i-lucide-circle-x",
+      "size": {
+        "width": 6,
+        "height": 2
+      }
+    },
+    {
+      "key": "impex.message-volume",
+      "label": "Message volume",
+      "description": "Messages recorded over the last day.",
+      "icon": "i-lucide-arrow-left-right",
+      "size": {
+        "width": 3,
+        "height": 1
+      }
+    }
+  ],
+  "settings": {
+    "key": "impex",
+    "label": "Impex",
+    "description": "Retention, limits and artifact storage for the workflow engine.",
+    "icon": "i-lucide-arrow-left-right"
+  },
+  "search_sources": [
+    {
+      "key": "impex",
+      "label": "Impex runs",
+      "icon": "i-lucide-circle-play"
+    }
+  ],
+  "screens": [
+    {
+      "key": "impex.runs",
+      "kind": "list",
+      "path": "/impex/runs"
+    },
+    {
+      "key": "impex.run",
+      "kind": "detail",
+      "path": "/impex/runs/:run"
+    },
+    {
+      "key": "impex.flows",
+      "kind": "list",
+      "path": "/impex/flows"
+    },
+    {
+      "key": "impex.messages",
+      "kind": "list",
+      "path": "/impex/messages"
+    },
+    {
+      "key": "impex.message",
+      "kind": "detail",
+      "path": "/impex/messages/:message"
+    },
+    {
+      "key": "impex.channels",
+      "kind": "list",
+      "path": "/impex/channels"
+    },
+    {
+      "key": "impex.channel-create",
+      "kind": "detail",
+      "path": "/impex/channels/create"
+    },
+    {
+      "key": "impex.channel",
+      "kind": "detail",
+      "path": "/impex/channels/:name"
+    },
+    {
+      "key": "impex.subscriptions",
+      "kind": "list",
+      "path": "/impex/subscriptions"
+    },
+    {
+      "key": "impex.subscription",
+      "kind": "detail",
+      "path": "/impex/subscriptions/:subscription"
+    }
+  ],
+  "hooks": [
+    {
+      "config": "run_link.screens",
+      "format": "map",
+      "default": {
+        "showroom.transfers": "row.actions"
+      },
+      "sections": {
+        "impex.run-link": {
+          "label": "Run"
+        }
+      }
+    }
+  ]
+}

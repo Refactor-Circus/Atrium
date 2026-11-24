@@ -7,18 +7,25 @@ namespace RefactorCircus\Atrium\Tests\Fixtures\Integrations;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 
 /**
- * Reports exactly the given Composer packages installed, in place of
- * `Composer\InstalledVersions`, which reflects the real vendor directory.
+ * Reports exactly the given packages installed, each with its suite manifest
+ * (or the fixture manifest `IntegrationFixture::fake()` swapped in), in place
+ * of the packages Composer installed in the real vendor directory.
  */
 final class FakeInstalledPackages implements InstalledPackages
 {
     /**
-     * @param  list<string>  $installed  Composer package names, such as `refactor-circus/cortex`.
+     * @param  list<string>  $keys  Package keys, such as `cortex`.
      */
-    public function __construct(private readonly array $installed = []) {}
+    public function __construct(private readonly array $keys = []) {}
 
-    public function isInstalled(string $package): bool
+    public function integrations(): array
     {
-        return in_array($package, $this->installed, true);
+        $integrations = [];
+
+        foreach ($this->keys as $key) {
+            $integrations[$key] = IntegrationFixture::manifestFor($key);
+        }
+
+        return $integrations;
     }
 }

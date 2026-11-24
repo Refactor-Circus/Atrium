@@ -3,7 +3,7 @@
     "label": "PennantPlus",
     "api_base": "/pennantplus",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\PennantPlus\\PennantPlusFeature"
+        "pennantplus.atrium"
     ],
     "navigation": [
         {

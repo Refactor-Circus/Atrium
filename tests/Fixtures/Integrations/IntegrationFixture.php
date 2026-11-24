@@ -5,25 +5,28 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Tests\Fixtures\Integrations;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Assert;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\SearchSourceDeclaration;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationHooks;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Settings\Http\Resources\SettingsPanelResource;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Http\Resources\WidgetDefinitionResource;
-use ReflectionProperty;
 
 /**
- * Test helpers for suite integrations (AC 39, 49).
+ * Test helpers for integrations (AC 39, 49; D-090).
  *
  * Registration runs at boot against the real Composer install, where no
  * suite package is installed. A test reports packages installed with
- * `installed()`, serves their API with `serveApi()`, optionally swaps in the
- * fixture integration with `fake()`, and re-runs registration with
- * `register()`.
+ * `installed()`, which hands Atrium the suite's manifests from
+ * `tests/Fixtures/Manifests/{pkg}/integration.json` (generated from the PHP
+ * declarations Atrium kept until D-090, and the packages' own manifests
+ * since), serves their API with `serveApi()`, optionally swaps in a small
+ * fixture manifest with `fake()`, and re-runs registration with `register()`.
  *
  * Each package's integration test then writes what its integration declares
  * - nav items, widgets, settings panel, search sources and screens with their
@@ -37,14 +40,31 @@ final class IntegrationFixture
     public const string DIRECTORY = __DIR__.'/../../../ui/sdk/test/fixtures/integrations';
 
     /**
-     * Report exactly these packages installed, by key (`cortex`).
+     * The suite's manifests, one folder per package key.
+     */
+    public const string MANIFESTS = __DIR__.'/../Manifests';
+
+    /**
+     * Where `fake()` keeps its manifests' paths for the current test (config,
+     * so each test starts without).
+     */
+    private const string FAKES = 'atrium-testing.fakes';
+
+    /**
+     * Report exactly these packages installed, by key (`cortex`): each with
+     * its suite manifest, or the fixture manifest `fake()` swapped in.
      */
     public static function installed(string ...$keys): void
     {
-        app()->instance(InstalledPackages::class, new FakeInstalledPackages(array_values(array_map(
-            IntegrationRegistry::packageFor(...),
-            $keys,
-        ))));
+        app()->instance(InstalledPackages::class, new FakeInstalledPackages(array_values($keys)));
+    }
+
+    /**
+     * The path of a suite package's manifest.
+     */
+    public static function manifest(string $key): string
+    {
+        return self::MANIFESTS.'/'.$key.'/integration.json';
     }
 
     /**
@@ -60,23 +80,84 @@ final class IntegrationFixture
     }
 
     /**
-     * Resolve the fixture integration in place of each package's own.
+     * Use the fixture manifest in place of each package's own, from the next
+     * `installed()`: one nav item with a live key, one widget, a settings
+     * panel, a search source and a list and a detail screen.
      */
     public static function fake(string ...$keys): void
     {
         foreach ($keys as $key) {
-            app()->bind(IntegrationRegistry::classFor($key), fn (): FixtureIntegration => new FixtureIntegration($key));
+            self::fakeManifest($key, self::fixtureManifest($key));
         }
     }
 
     /**
-     * Installed, served and faked, then registered: the usual setup.
+     * Use this manifest (JSON as an array, or raw JSON text) for the key from
+     * the next `installed()`, and return its path.
+     *
+     * @param  array<string, mixed>|string  $manifest
+     */
+    public static function fakeManifest(string $key, array|string $manifest): string
+    {
+        $path = sys_get_temp_dir().'/atrium-fixture-manifests/'.getmypid().'/'.$key.'-'.md5(is_string($manifest) ? $manifest : serialize($manifest)).'.json';
+        File::ensureDirectoryExists(dirname($path));
+        file_put_contents($path, is_string($manifest) ? $manifest : json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+
+        config()->set(self::FAKES.'.'.$key, $path);
+
+        return $path;
+    }
+
+    /**
+     * The manifest an installed key reads: its fake, or its suite manifest.
+     */
+    public static function manifestFor(string $key): string
+    {
+        $fake = config(self::FAKES.'.'.$key);
+
+        return is_string($fake) ? $fake : self::manifest($key);
+    }
+
+    /**
+     * The fixture manifest of a key.
+     *
+     * @return array<string, mixed>
+     */
+    public static function fixtureManifest(string $key): array
+    {
+        $label = Str::headline($key);
+
+        return [
+            'version' => 1,
+            'key' => $key,
+            'label' => $label,
+            'features' => [$key.'.atrium'],
+            'navigation' => [[
+                'label' => $label.' records',
+                'path' => '/'.$key.'/records',
+                'icon' => 'i-lucide-box',
+                'group' => $label,
+                'sort' => 50,
+                'live' => ['key' => $key.'.active-records', 'options' => ['sort' => 90]],
+            ]],
+            'widgets' => [['key' => $key.'.stats', 'label' => $label.' stats', 'icon' => 'i-lucide-chart-bar']],
+            'settings' => ['key' => $key, 'label' => $label, 'icon' => 'i-lucide-settings'],
+            'search_sources' => [['key' => $key, 'label' => $label.' records', 'icon' => 'i-lucide-search']],
+            'screens' => [
+                ['key' => $key.'.records', 'kind' => 'list', 'path' => '/'.$key.'/records'],
+                ['key' => $key.'.record', 'kind' => 'detail', 'path' => '/'.$key.'/records/:record', 'subject_type' => $key.'.record'],
+            ],
+        ];
+    }
+
+    /**
+     * Faked, installed and served, then registered: the usual setup.
      */
     public static function registerFakes(string ...$keys): IntegrationRegistry
     {
+        self::fake(...$keys);
         self::installed(...$keys);
         self::serveApi(...$keys);
-        self::fake(...$keys);
 
         return self::register();
     }
@@ -93,12 +174,24 @@ final class IntegrationFixture
     }
 
     /**
+     * Run registration again, then the hooks, as boot does.
+     */
+    public static function registerWithHooks(): IntegrationRegistry
+    {
+        $registry = self::register();
+        app(IntegrationHooks::class)->register();
+
+        return $registry;
+    }
+
+    /**
      * Forget which packages this process has warned about, so a test sees its
      * own warning.
      */
     public static function forgetWarnings(): void
     {
-        new ReflectionProperty(IntegrationRegistry::class, 'warned')->setValue(null, []);
+        IntegrationRegistry::forgetWarnings();
+        IntegrationHooks::forgetWarnings();
     }
 
     /**

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
 use RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest;
 use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleRegistry;
+use RefactorCircus\Atrium\Domains\Integrations\Data\IntegrationManifest;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavGroup;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
@@ -58,10 +60,26 @@ class Atrium
      * Load the front-end module in `$path` (a folder holding a composer.json
      * that declares `extra.atrium.scripts`) as if its package were
      * installed: a module the app builds itself, or a checkout beside it.
+     * Its integration manifest (`extra.atrium.integration`, default
+     * `dist/atrium/integration.json`) registers with it.
      */
     public function module(string $path): ModuleManifest
     {
         return app(ModuleRegistry::class)->module($path);
+    }
+
+    /**
+     * Register an integration from a manifest (D-090): the path of an
+     * `integration.json`, or its JSON as an array. For an app's own
+     * integration, or one without a module; it wins over a package's
+     * manifest with the same key. Call it from a provider's `register()` or
+     * `boot()`: the integrations register once every provider has booted.
+     *
+     * @param  string|array<string, mixed>  $manifest
+     */
+    public function integration(string|array $manifest): IntegrationManifest
+    {
+        return app(IntegrationRegistry::class)->manifest($manifest);
     }
 
     /**

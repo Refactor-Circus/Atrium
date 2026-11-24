@@ -3,14 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
 use RefactorCircus\Atrium\Domains\Integrations\Exceptions\InvalidIntegrationException;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationHooks;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
-use RefactorCircus\Atrium\Domains\Integrations\Support\Integration as BaseIntegration;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianScopeTypes;
-use RefactorCircus\Atrium\Integrations\Hooks\GuardianScreens;
-use RefactorCircus\Atrium\Integrations\Hooks\Hooks;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -27,8 +23,7 @@ const CLIENT_PATH_PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplu
 
 beforeEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScreens::forgetWarnings();
-    GuardianScopeTypes::forget();
+    IntegrationHooks::forgetWarnings();
     Gate::define('viewAtrium', fn ($user = null): bool => true);
 
     config()->set('app.url', 'https://app.test');
@@ -39,8 +34,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScreens::forgetWarnings();
-    GuardianScopeTypes::forget();
+    IntegrationHooks::forgetWarnings();
 });
 
 /**
@@ -52,7 +46,7 @@ function clientPathEverything(): IntegrationRegistry
     IntegrationFixture::installed(...CLIENT_PATH_PACKAGES);
     IntegrationFixture::serveApi(...CLIENT_PATH_PACKAGES);
     $registry = IntegrationFixture::register();
-    app(Hooks::class)->register();
+    app(IntegrationHooks::class)->register();
 
     return $registry;
 }
@@ -172,40 +166,22 @@ it('sends the impex.run-link hook with no URL: the layer links to /impex/runs/:i
     ])->and(json_encode($screen))->not->toContain('/admin')->not->toContain('"external":true');
 });
 
-it('refuses an integration nav item declared with url()', function (): void {
+it('refuses an integration nav item with a url: a manifest declares only paths (D-075, D-090)', function (): void {
+    $manifest = IntegrationFixture::fixtureManifest('cortex');
+    $manifest['navigation'] = [['label' => 'Host page', 'url' => '/cortex/records']];
+    IntegrationFixture::fakeManifest('cortex', $manifest);
     IntegrationFixture::installed('cortex');
     IntegrationFixture::serveApi('cortex');
-    app()->bind(IntegrationRegistry::classFor('cortex'), fn (): Integration => new class extends BaseIntegration
-    {
-        public function label(): string
-        {
-            return 'Cortex';
-        }
-
-        public function navigation(): array
-        {
-            return [NavItem::make('Host page')->url('/cortex/records')];
-        }
-    });
 
     IntegrationFixture::register();
-})->throws(InvalidIntegrationException::class, 'declared with path(), never url() or route()');
+})->throws(InvalidIntegrationException::class, 'is invalid at [/navigation/0/url]: is not a known property');
 
 it('refuses an integration nav child outside its package', function (): void {
+    $manifest = IntegrationFixture::fixtureManifest('cortex');
+    $manifest['navigation'] = [['label' => 'Parent', 'path' => '/cortex/records', 'children' => [['label' => 'Child', 'path' => '/showroom/products']]]];
+    IntegrationFixture::fakeManifest('cortex', $manifest);
     IntegrationFixture::installed('cortex');
     IntegrationFixture::serveApi('cortex');
-    app()->bind(IntegrationRegistry::classFor('cortex'), fn (): Integration => new class extends BaseIntegration
-    {
-        public function label(): string
-        {
-            return 'Cortex';
-        }
-
-        public function navigation(): array
-        {
-            return [NavItem::make('Parent')->path('/cortex/records')->children([NavItem::make('Child')->path('/showroom/products')])];
-        }
-    });
 
     IntegrationFixture::register();
-})->throws(InvalidIntegrationException::class, 'nav item [Child]');
+})->throws(InvalidIntegrationException::class, 'is invalid at [/navigation/0/children/0/path]: [/showroom/products] must start with [/cortex/]');

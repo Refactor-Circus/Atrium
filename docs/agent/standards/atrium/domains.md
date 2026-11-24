@@ -1,5 +1,5 @@
 ---
-description: "Atrium's domains (Access, Dashboard, Frontend, Integrations, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code and per-package src/Integrations/{Pkg}, domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
+description: "Atrium's domains (Access, Dashboard, Frontend, Integrations, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code (no per-package code: integrations are the packages' manifests, D-090), domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
 tags: [atrium, domains, service-providers, routes, resources, api, morph-aliases]
 kind: convention
 ---
@@ -20,7 +20,7 @@ Complements [[domain-modules]], [[routes]] and [[resources]]: Atrium's code sits
 
 ## Top level
 
-- `src/Integrations/{Pkg}/` (`{Pkg}Integration`, `{Pkg}Feature`) and `src/Integrations/Hooks/` sit at the top level, outside the domains, because the registry finds them by convention from the `atrium.integrations` keys and each package's definitions stay in one folder (a recorded departure from [[domain-modules]]). They hold declarations only and import nothing from a suite package.
+- There is no `src/Integrations/`: each package declares its integration in its own JSON manifest (`integration.json`, D-090), which the `Integrations` domain reads. Never add a package's declarations, feature class or labels to Atrium.
 - Package-wide code: `Atrium` (with `API_VERSION`), `AtriumServiceProvider`, `Facades\Atrium`, `Http\Requests\Request`, `Console\Commands\InstallCommand` (`atrium:install`), `Exceptions\AtriumException` (the abstract base of every Atrium exception, on Keystone's `PackageException`), `Exceptions\UnserializableDataException`, and `Support\` (`ClientPath`, `Iconify`, `JsonData`, `Tables`, `ScreenAccess`, `ServiceProvider`). `JsonData` and `UnserializableDataException` are top level because Widgets, Screens and Settings all use them.
 - A domain's own exceptions sit in its `Exceptions/` (`Search\Exceptions\SearchSourceFailedException`), and its own console commands in its `Console/` (`Search\Console\InvokeSearchSourceCommand`, the hidden `atrium:search-source`), registered by its provider.
 - Value objects in a domain's `Data/` include `NavItem`, `WidgetDefinition`, `SettingsPanel`, `SearchResult` and `Theme`. Their `icon()` setters take Iconify names only, and their `component` defaults to their key.

@@ -93,7 +93,7 @@ it('boots the front end from JSON: the API, the client path, the user, the CSRF 
     ])
         ->and($boot['user'])->toMatchArray(['name' => 'Ann', 'email' => 'ann@example.com'])
         ->and($boot['csrf_token'])->toBeString()->not->toBe('')
-        ->and($boot['known_integrations'])->toBe(array_keys((array) config('atrium.integrations')))
+        ->and($boot['known_integrations'])->toBe([])
         ->and((string) $html)->toContain('<meta name="csrf-token" content="'.$boot['csrf_token'].'">');
 });
 
@@ -126,10 +126,14 @@ it('loads a module registered with Atrium::module(), its script before Atrium\'s
         ]]);
 });
 
-it('loads a suite integration\'s module only while that integration is registered and active', function (): void {
+it('loads an integration\'s module only while that integration is registered and active', function (): void {
+    // The fixture module ships dist/atrium/integration.json (D-090).
     Atrium::module(PAGE_FIXTURES.'/roster');
 
-    expect(bootData((string) $this->actingAs(pageUser())->get('/')->getContent())['modules'])->toBe([]);
+    $before = bootData((string) $this->actingAs(pageUser())->get('/')->getContent());
+
+    expect($before['modules'])->toBe([])
+        ->and($before['known_integrations'])->toBe(['roster']);
 
     IntegrationFixture::registerFakes('roster');
 

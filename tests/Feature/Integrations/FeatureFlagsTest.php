@@ -10,8 +10,6 @@ use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationFeatures;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
-use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -63,7 +61,7 @@ function featureFlagsCortexSurfaces(object $test): array
 it('turns an integration off for a user whose flag is deactivated', function (): void {
     featureFlagsWithPennant();
 
-    Feature::for($this->user)->deactivate(CortexFeature::class);
+    Feature::for($this->user)->deactivate('cortex.atrium');
 
     expect(featureFlagsCortexSurfaces($this))->toBe([
         'integration' => [
@@ -71,7 +69,7 @@ it('turns an integration off for a user whose flag is deactivated', function ():
             'label' => 'Cortex',
             'active' => false,
             'api_base' => '/cortex/api',
-            'features' => [CortexFeature::class => false],
+            'features' => ['cortex.atrium' => false],
         ],
         'navigation' => false,
         'settings' => false,
@@ -84,7 +82,7 @@ it('turns an integration off for a user whose flag is deactivated', function ():
 it('leaves the other integrations on when one is flagged off', function (): void {
     featureFlagsWithPennant();
 
-    Feature::for($this->user)->deactivate(CortexFeature::class);
+    Feature::for($this->user)->deactivate('cortex.atrium');
 
     $shell = $this->actingAs($this->user)->getJson(route('atrium.shell'))->assertOk()->json('data');
 
@@ -97,7 +95,7 @@ it('leaves the other integrations on when one is flagged off', function (): void
 it('keeps an integration on for a user whose flag is active', function (): void {
     featureFlagsWithPennant();
 
-    Feature::for($this->user)->activate(CortexFeature::class);
+    Feature::for($this->user)->activate('cortex.atrium');
 
     expect(featureFlagsCortexSurfaces($this))->toBe([
         'integration' => [
@@ -105,7 +103,7 @@ it('keeps an integration on for a user whose flag is active', function (): void 
             'label' => 'Cortex',
             'active' => true,
             'api_base' => '/cortex/api',
-            'features' => [CortexFeature::class => true],
+            'features' => ['cortex.atrium' => true],
         ],
         'navigation' => true,
         'settings' => true,
@@ -115,31 +113,40 @@ it('keeps an integration on for a user whose flag is active', function (): void 
     ]);
 });
 
-it('resolves the default feature classes on under Pennant', function (): void {
+it('defines the manifests\' feature names on under Pennant, until the host defines them', function (): void {
     featureFlagsWithPennant();
 
-    expect(Feature::for($this->user)->active(CortexFeature::class))->toBeTrue()
-        ->and(Feature::for($this->user)->active(RosterFeature::class))->toBeTrue()
-        ->and(featureFlagsCortexSurfaces($this)['integration']['active'])->toBeTrue();
+    expect(Feature::defined())->not->toContain('cortex.atrium')
+        ->and(featureFlagsCortexSurfaces($this)['integration']['active'])->toBeTrue()
+        ->and(Feature::for($this->user)->active('cortex.atrium'))->toBeTrue()
+        ->and(Feature::for($this->user)->active('roster.atrium'))->toBeTrue();
+});
+
+it('keeps a feature the host defined', function (): void {
+    featureFlagsWithPennant();
+
+    Feature::define('cortex.atrium', fn (): bool => false);
+
+    expect(featureFlagsCortexSurfaces($this)['integration']['active'])->toBeFalse();
 });
 
 it('needs every listed feature to be on', function (): void {
     featureFlagsWithPennant();
 
-    config()->set('atrium.integrations.keen.features', [CortexFeature::class, 'cortex-beta']);
+    config()->set('atrium.integrations.keen.features', ['cortex.atrium', 'cortex-beta']);
     IntegrationFixture::registerFakes('keen');
 
     $integration = collect($this->actingAs($this->user)->getJson(route('atrium.shell'))->json('data.integrations'))->firstWhere('key', 'keen');
 
     // An undefined Pennant feature reads as off.
     expect($integration['active'])->toBeFalse()
-        ->and($integration['features'])->toBe([CortexFeature::class => true, 'cortex-beta' => false]);
+        ->and($integration['features'])->toBe(['cortex.atrium' => true, 'cortex-beta' => false]);
 });
 
 it('turns every flag on while Pennant is unavailable', function (): void {
     featureFlagsWithPennant();
 
-    Feature::for($this->user)->deactivate(CortexFeature::class);
+    Feature::for($this->user)->deactivate('cortex.atrium');
     app(IntegrationFeatures::class)->detectPennantUsing(fn (): bool => false);
 
     expect(featureFlagsCortexSurfaces($this))->toMatchArray([
@@ -148,7 +155,7 @@ it('turns every flag on while Pennant is unavailable', function (): void {
             'label' => 'Cortex',
             'active' => true,
             'api_base' => '/cortex/api',
-            'features' => [CortexFeature::class => true],
+            'features' => ['cortex.atrium' => true],
         ],
         'navigation' => true,
         'screen' => 200,
@@ -194,8 +201,8 @@ it('asks Pennant about the signed-in user', function (): void {
     featureFlagsWithPennant();
 
     $other = User::forceCreate(['name' => 'Bob', 'email' => 'bob@example.com', 'password' => bcrypt('secret')]);
-    Feature::for($other)->deactivate(CortexFeature::class);
+    Feature::for($other)->deactivate('cortex.atrium');
 
     expect(featureFlagsCortexSurfaces($this)['integration']['active'])->toBeTrue()
-        ->and(app(IntegrationRegistry::class)->get('cortex')?->features)->toBe([CortexFeature::class]);
+        ->and(app(IntegrationRegistry::class)->get('cortex')?->features)->toBe(['cortex.atrium']);
 });

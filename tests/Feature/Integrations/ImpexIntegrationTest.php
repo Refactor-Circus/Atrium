@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
@@ -15,8 +14,6 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
-use RefactorCircus\Atrium\Integrations\Impex\ImpexIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
@@ -55,17 +52,12 @@ function impexIntegration(): RegisteredIntegration
     return $integration;
 }
 
-it('is found by convention under the impex key', function (): void {
-    expect(IntegrationRegistry::classFor('impex'))->toBe(ImpexIntegration::class)
-        ->and(new ImpexIntegration)->toBeInstanceOf(Integration::class);
-});
-
 it('registers while Impex is installed, enabled and serves its API', function (): void {
     $integration = impexIntegration();
 
     expect(array_keys(app(IntegrationRegistry::class)->all()))->toBe(['impex'])
         ->and($integration->label)->toBe('Impex')
-        ->and($integration->features)->toBe([ImpexFeature::class]);
+        ->and($integration->features)->toBe(['impex.atrium']);
 });
 
 it('registers nothing while Impex is not installed', function (): void {
@@ -209,18 +201,6 @@ it('serves each declared screen from atrium.screens.show', function (): void {
     expect(app(IntegrationRegistry::class)->forScreen('impex.run')?->key)->toBe('impex')
         ->and(app(IntegrationRegistry::class)->forScreen('impex.channel-create')?->key)->toBe('impex')
         ->and(app(IntegrationRegistry::class)->forScreen('impex.history'))->toBeNull();
-});
-
-it('uses only label keys its lang file has', function (): void {
-    $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Impex/ImpexIntegration.php');
-
-    preg_match_all("/'(atrium::integrations\\/impex\\.[a-z0-9_.-]+)'/", $source, $matches);
-
-    $keys = array_values(array_unique($matches[1]));
-    $missing = array_values(array_filter($keys, fn (string $key): bool => ! Lang::has($key, 'en', false)));
-
-    expect($keys)->not->toBeEmpty()
-        ->and($missing)->toBe([]);
 });
 
 it('writes its declarations to the layer fixture', function (): void {

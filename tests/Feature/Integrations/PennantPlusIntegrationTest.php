@@ -8,7 +8,6 @@ use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
-use RefactorCircus\Atrium\Integrations\PennantPlus\PennantPlusIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
@@ -44,8 +43,7 @@ describe('gating', function (): void {
 
         expect($integration)->not->toBeNull()
             ->and($integration?->label)->toBe('PennantPlus')
-            ->and($integration?->features)->toBe(config('atrium.integrations.pennantplus.features'))
-            ->and(IntegrationRegistry::classFor('pennantplus'))->toBe(PennantPlusIntegration::class);
+            ->and($integration?->features)->toBe(['pennantplus.atrium']);
     });
 
     it('registers nothing while PennantPlus is not installed', function (): void {
@@ -157,31 +155,6 @@ describe('declarations', function (): void {
         ], $screens)))->toBe([
             ['pennantplus.features', 'list', '/pennantplus/features', null],
         ]);
-    });
-
-    it('takes every label from lang/en/integrations/pennantplus.php', function (): void {
-        registerPennantPlus();
-
-        foreach (['label', 'group', 'features'] as $key) {
-            expect(trans()->has('atrium::integrations/pennantplus.'.$key, 'en', false))->toBeTrue($key);
-        }
-
-        $declarations = IntegrationFixture::declarations('pennantplus');
-        $labels = [
-            $declarations['label'],
-            ...array_column($declarations['navigation'], 'label'),
-            ...array_column($declarations['navigation'], 'group'),
-        ];
-
-        foreach ($labels as $label) {
-            expect($label)->toBeString()->not->toStartWith('atrium::');
-        }
-    });
-
-    it('names no PennantPlus class, as an import or a string', function (): void {
-        $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/PennantPlus/PennantPlusIntegration.php');
-
-        expect(preg_match('/RefactorCircus\\\\{1,2}PennantPlus\b/i', $source))->toBe(0);
     });
 
     it('writes its declarations to the layer fixture', function (): void {

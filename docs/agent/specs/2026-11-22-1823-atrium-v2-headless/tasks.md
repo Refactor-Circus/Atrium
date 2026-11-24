@@ -477,3 +477,22 @@ criteria: 117
 
 - [x] 47.1 Record D-079 to D-087; this addendum; `MODULES.md`.
 - [x] 47.2 README (serving, the module contract, the shared modules, the preset, the app's scripts), CHANGELOG, CLAUDE.md, the Boost skill and the standards; DocsTest and ChangelogUpgradeTest check them.
+
+## Group 48: Integration manifests (phase A, Atrium)
+depends on: 46
+files: ui/sdk/schema/**, ui/sdk/vite/**, ui/sdk/src/testing/**, ui/sdk/test/**, ui/scripts/**, src/Domains/Integrations/**, src/Domains/Frontend/**, src/Atrium.php, src/Facades/Atrium.php, config/atrium.php, lang/**, tests/**, workbench/**, docs, MODULES.md
+criteria: 118, 119, 120, 121, 122, 123, 124
+
+- [x] 48.1 The schema, the PHP loader and validator (`ManifestSchema`, `IntegrationManifests`, `ManifestValues`), `IntegrationHooks`, the `InstalledPackages` seam over discovery, `Atrium::integration()`; D-090.
+- [x] 48.2 Generate the eight manifests from the PHP declarations; compare every registry, shell and screen payload under four config scenarios and eight partial installs.
+- [x] 48.3 The SDK: `vite/manifest.mjs`, the preset's copy and hash, `validateIntegrationManifest()` / `expectIntegrationManifest()`, the shared cases, the consumer check.
+- [x] 48.4 Delete `src/Integrations/*`, `lang/en/integrations/*.php` and the config's package defaults; tests on fixture manifests; the workbench's `DemoSuite`.
+- [x] 48.5 Docs: MODULES.md, CLAUDE.md/AGENTS.md, README, CHANGELOG, the Boost skill, the standards; DocsTest.
+
+## Group 49: Integration manifests (phase B, the packages)
+depends on: 48
+files: each package's atrium/src/integration.json, composer.json, atrium/test/**, CHANGELOG.md
+criteria: 118, 123
+
+- [ ] 49.1 Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom each add `atrium/src/integration.json` (from Atrium's `tests/Fixtures/Manifests/{pkg}`), `extra.atrium.integration`, a Vitest `expectIntegrationManifest()` test, rebuild and commit `dist/atrium/`.
+

@@ -13,7 +13,6 @@ use RefactorCircus\Atrium\Domains\Search\Services\SearchRegistry;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Integrations\Polycart\PolycartIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
@@ -94,8 +93,7 @@ describe('gating', function (): void {
         expect($integration)->not->toBeNull()
             ->and($integration?->label)->toBe('Polycart')
             ->and($integration?->apiBase)->toBe('/polycart')
-            ->and($integration?->features)->toBe(config('atrium.integrations.polycart.features'))
-            ->and(IntegrationRegistry::classFor('polycart'))->toBe(PolycartIntegration::class);
+            ->and($integration?->features)->toBe(['polycart.atrium']);
 
         Log::shouldNotHaveReceived('warning');
     });
@@ -225,34 +223,6 @@ describe('declarations', function (): void {
             ['polycart.cart', 'detail', '/polycart/carts/:cart', null],
             ['polycart.types', 'list', '/polycart/types', null],
         ]);
-    });
-
-    it('takes every label from lang/en/integrations/polycart.php', function (): void {
-        registerPolycart();
-
-        foreach (['label', 'group', 'carts', 'types', 'search', 'widget_carts_by_type', 'widget_carts_by_type_description', 'widget_recent_carts', 'widget_recent_carts_description'] as $key) {
-            expect(trans()->has('atrium::integrations/polycart.'.$key, 'en', false))->toBeTrue($key);
-        }
-
-        $declarations = IntegrationFixture::declarations('polycart');
-        $labels = [
-            $declarations['label'],
-            ...array_column($declarations['navigation'], 'label'),
-            ...array_column($declarations['navigation'], 'group'),
-            ...array_column($declarations['widgets'], 'label'),
-            ...array_column($declarations['widgets'], 'description'),
-            ...array_column($declarations['search_sources'], 'label'),
-        ];
-
-        foreach ($labels as $label) {
-            expect($label)->toBeString()->not->toStartWith('atrium::')->not->toStartWith('integrations/');
-        }
-    });
-
-    it('names no Polycart class, as an import or a string', function (): void {
-        $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Polycart/PolycartIntegration.php');
-
-        expect(preg_match('/RefactorCircus\\\\{1,2}Polycart\b/i', $source))->toBe(0);
     });
 
     it('writes its declarations to the layer fixture', function (): void {

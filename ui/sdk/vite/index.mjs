@@ -21,10 +21,12 @@ import vue from '@vitejs/plugin-vue'
 import tailwind from '@tailwindcss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
+import { copyIntegrationManifest } from './manifest.mjs'
 import { ATRIUM_SHARED, ATRIUM_SHARED_API, ATRIUM_SHARED_MODULES } from './shared.mjs'
 import { atriumUiConfig } from './ui-config.mjs'
 
 export { ATRIUM_SHARED, ATRIUM_SHARED_API, ATRIUM_SHARED_MODULES, atriumUiConfig }
+export { copyIntegrationManifest, findIntegrationManifest, readIntegrationManifest, validateIntegrationManifest } from './manifest.mjs'
 
 /** The SDK's own folder (`ui/sdk` in Atrium's repository). */
 export const ATRIUM_SDK_ROOT = fileURLToPath(new URL('..', import.meta.url))
@@ -180,9 +182,11 @@ export function stylesheetClasses(css) {
 /**
  * Writes `build.json` beside the build: the module key, the shared API it
  * was built for, and the hash of its sources with what to recompute it from
- * (plus whatever `extend(outDir)` returns).
+ * (plus whatever `extend(outDir)` returns). The integration manifest is
+ * copied first (`copyIntegrationManifest()`) and its source added to the
+ * hashed inputs when they do not already cover it.
  */
-export function atriumBuildInfo({ key, root, inputs, outDir, extend = () => ({}) }) {
+export function atriumBuildInfo({ key, root, inputs, outDir, integration, extend = () => ({}) }) {
   return {
     name: 'atrium:build-info',
     apply: 'build',
@@ -192,6 +196,12 @@ export function atriumBuildInfo({ key, root, inputs, outDir, extend = () => ({})
       handler() {
         const out = resolve(root, outDir)
         mkdirSync(out, { recursive: true })
+
+        const manifest = copyIntegrationManifest({ root, outDir, integration })
+
+        if (manifest !== null && !inputs.some(input => manifest === input.replace(/\/+$/, '') || manifest.startsWith(`${input.replace(/\/+$/, '')}/`))) {
+          inputs = [...inputs, manifest]
+        }
 
         // Before hashing: `extend` may write a source (Atrium's class list).
         const extra = extend(out)
@@ -217,6 +227,9 @@ export function atriumBuildInfo({ key, root, inputs, outDir, extend = () => ({})
  *
  * key:      the module's key, its integration's (or plugin's) key
  * entry:    the entry that calls defineAtriumModule(), `src/atrium.ts`
+ * integration: the integration manifest, `src/integration.json` (or
+ *           `integration.json`) when there is one; checked, copied to
+ *           `{outDir}/integration.json` and hashed (D-090)
  * outDir:   where the build goes, `dist/atrium` (what composer.json's
  *           `extra.atrium.scripts`/`styles` point at, relative to the package)
  * inputs:   what the build hash covers, relative to the config's folder
@@ -230,6 +243,7 @@ export function atriumModule(options) {
     outDir = 'dist/atrium',
     inputs = ['src', 'client', 'package.json', 'vite.config.ts'],
     root = process.cwd(),
+    integration,
     test = {},
     vite = {}
   } = options
@@ -249,7 +263,7 @@ export function atriumModule(options) {
       AutoImport({ imports: atriumAutoImports(), dts: 'auto-imports.d.ts', vueTemplate: true }),
       Components({ dirs: [], resolvers: [atriumComponentResolver()], dts: 'components.d.ts' }),
       tailwind(),
-      atriumBuildInfo({ key, root, inputs, outDir })
+      atriumBuildInfo({ key, root, inputs, outDir, integration })
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify('production'),

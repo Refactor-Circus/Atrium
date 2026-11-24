@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static \RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions screens()
  * @method static \RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest module(string $path)
+ * @method static \RefactorCircus\Atrium\Domains\Integrations\Data\IntegrationManifest integration(string|array<string, mixed> $manifest)
  * @method static \RefactorCircus\Atrium\Atrium script(string $source)
  * @method static \RefactorCircus\Atrium\Atrium style(string $source)
  * @method static array<string, \RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest> modules()

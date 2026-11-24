@@ -16,15 +16,19 @@ use RefactorCircus\Atrium\Facades\Atrium;
  * (SuiteStandIn, `/_suite/{pkg}/…`), so the integrations' nav, widgets and
  * screens are listed while none of the packages is installed here.
  *
- * The packages ship their own Atrium modules (MODULES.md), and Atrium depends
- * on none of them. When ATRIUM_SUITE_PATH names a folder of sibling package
- * checkouts (`Cortex`, `Guardian`, … each with its built `dist/atrium/`), each
- * checkout's module is loaded with Atrium::module(), which reads the
- * checkout's composer.json `extra.atrium` exactly as discovery reads an
- * installed package's, and the stand-in answers from the checkout's
- * `openapi.json`: every module's pages render populated. Without it, the
- * workbench shows Atrium's core, its own module (ui/workbench) and the
- * integrations' fallback cards.
+ * The packages ship their own Atrium modules and integration manifests
+ * (MODULES.md, D-090), and Atrium depends on none of them. When
+ * ATRIUM_SUITE_PATH names a folder of sibling package checkouts (`Cortex`,
+ * `Guardian`, … each with its built `dist/atrium/`), each checkout's module
+ * is loaded with Atrium::module(), which reads the checkout's composer.json
+ * `extra.atrium` exactly as discovery reads an installed package's, its
+ * manifest (`dist/atrium/integration.json`) with it, and the stand-in answers
+ * from the checkout's `openapi.json`: every module's pages render populated.
+ * A package with no checkout (or a checkout that ships no manifest yet) is
+ * declared by Atrium's test fixture manifest
+ * (`tests/Fixtures/Manifests/{pkg}/integration.json`), as an installed
+ * package would be: without ATRIUM_SUITE_PATH the workbench shows Atrium's
+ * core, its own module (ui/workbench) and the integrations' fallback cards.
  *
  * Only the served workbench uses it (`composer serve`, never the console or
  * the test suite), and only while ATRIUM_WORKBENCH_SUITE is not "false".
@@ -44,6 +48,9 @@ final class DemoSuite implements InstalledPackages
         'roster' => 'Roster',
         'showroom' => 'Showroom',
     ];
+
+    /** The suite's manifests as Atrium's tests read them, for a package with no checkout. */
+    public const string FIXTURES = __DIR__.'/../../../tests/Fixtures/Manifests';
 
     /** Where the stand-in answers for the packages, on the workbench's own host. */
     public const string STAND_IN = '/_suite';
@@ -132,8 +139,18 @@ final class DemoSuite implements InstalledPackages
         return is_array($composer) && isset($composer['extra']['atrium']['scripts']) ? $checkout : null;
     }
 
-    public function isInstalled(string $package): bool
+    /**
+     * Every package's fixture manifest, as if installed; a checkout's own
+     * manifest, loaded with its module, replaces it.
+     */
+    public function integrations(): array
     {
-        return in_array($package, array_map(fn (string $key): string => "refactor-circus/{$key}", array_keys(self::PACKAGES)), true);
+        $integrations = [];
+
+        foreach (array_keys(self::PACKAGES) as $key) {
+            $integrations[$key] = self::FIXTURES.'/'.$key.'/integration.json';
+        }
+
+        return $integrations;
     }
 }

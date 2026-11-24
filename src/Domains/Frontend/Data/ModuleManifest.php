@@ -11,6 +11,9 @@ namespace RefactorCircus\Atrium\Domains\Frontend\Data;
  *
  * A package module's `scripts` and `styles` are paths relative to its
  * `root`, served by Atrium from there; the app's are URLs the host serves.
+ * `integration` is the absolute path of its integration manifest (D-090),
+ * `extra.atrium.integration` (default `dist/atrium/integration.json`, when
+ * that file exists).
  */
 final class ModuleManifest
 {
@@ -23,7 +26,13 @@ final class ModuleManifest
         public private(set) ?string $root,
         public private(set) array $scripts,
         public private(set) array $styles,
+        public private(set) ?string $integration = null,
     ) {}
+
+    /**
+     * The default `extra.atrium.integration`.
+     */
+    public const string INTEGRATION = 'dist/atrium/integration.json';
 
     /**
      * Whether its files are URLs the host serves (`Atrium::script()`), not
@@ -54,7 +63,14 @@ final class ModuleManifest
             $key = substr($packageName, (int) strrpos($packageName, '/') + (str_contains($packageName, '/') ? 1 : 0));
         }
 
-        return new self(strtolower($key), rtrim($root, '/\\'), $scripts, self::paths($atrium['styles'] ?? []));
+        $root = rtrim($root, '/\\');
+        $integration = self::paths($atrium['integration'] ?? [])[0] ?? null;
+
+        if ($integration === null && ! isset($atrium['integration']) && is_file($root.'/'.self::INTEGRATION)) {
+            $integration = self::INTEGRATION;
+        }
+
+        return new self(strtolower($key), $root, $scripts, self::paths($atrium['styles'] ?? []), $integration === null ? null : $root.'/'.$integration);
     }
 
     /**

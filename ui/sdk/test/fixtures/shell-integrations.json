@@ -359,7 +359,7 @@
                 "active": true,
                 "api_base": "/cortex/api",
                 "features": {
-                    "RefactorCircus\\Atrium\\Integrations\\Cortex\\CortexFeature": true
+                    "cortex.atrium": true
                 }
             },
             {
@@ -368,7 +368,7 @@
                 "active": false,
                 "api_base": "/polycart/api",
                 "features": {
-                    "RefactorCircus\\Atrium\\Integrations\\Polycart\\PolycartFeature": false
+                    "polycart.atrium": false
                 }
             }
         ]

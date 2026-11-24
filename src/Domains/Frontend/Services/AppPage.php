@@ -69,7 +69,7 @@ final class AppPage
     {
         $user = $request->user();
         $prefix = $this->config->get('atrium.routes.prefix', 'atrium/api');
-        $known = $this->config->get('atrium.integrations', []);
+        $known = $this->integrations->known();
         $integrations = [];
 
         foreach ($this->integrations->all() as $key => $integration) {
@@ -92,10 +92,10 @@ final class AppPage
             ],
             'theme' => $this->defaultTheme(),
             'integrations' => (object) $integrations,
-            'known_integrations' => is_array($known) ? array_values(array_filter(array_keys($known), is_string(...))) : [],
+            'known_integrations' => $known,
             'modules' => array_map(fn (ModuleManifest $module, array $url): array => [
                 'key' => $module->key,
-                'integration' => is_array($known) && array_key_exists($module->key, $known) ? $module->key : null,
+                'integration' => in_array($module->key, $known, true) ? $module->key : null,
                 'scripts' => $url['scripts'],
                 'styles' => $url['styles'],
             ], $modules, $urls),

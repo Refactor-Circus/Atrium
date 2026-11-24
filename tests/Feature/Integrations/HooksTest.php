@@ -4,22 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Laravel\Pennant\Feature;
 use Laravel\Pennant\PennantServiceProvider;
 use RefactorCircus\Atrium\Domains\Integrations\IntegrationsServiceProvider;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationHooks;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianScopeTypes;
-use RefactorCircus\Atrium\Integrations\Hooks\GuardianScreens;
-use RefactorCircus\Atrium\Integrations\Hooks\Hooks;
-use RefactorCircus\Atrium\Integrations\Keen\KeenFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -35,8 +29,7 @@ use Workbench\App\Models\User;
 
 beforeEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScreens::forgetWarnings();
-    GuardianScopeTypes::forget();
+    IntegrationHooks::forgetWarnings();
     Gate::define('viewAtrium', fn ($user = null): bool => true);
 
     $this->user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
@@ -44,8 +37,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScreens::forgetWarnings();
-    GuardianScopeTypes::forget();
+    IntegrationHooks::forgetWarnings();
 });
 
 /**
@@ -58,7 +50,7 @@ function hooksRegistered(string ...$packages): void
     IntegrationFixture::serveApi(...$packages);
     IntegrationFixture::register();
 
-    app(Hooks::class)->register();
+    app(IntegrationHooks::class)->register();
 }
 
 /**
@@ -347,7 +339,7 @@ describe('hook targets and slots (AC 68)', function (): void {
     it('registers each extension once when registration runs again', function (): void {
         hooksEverything();
         IntegrationFixture::register();
-        app(Hooks::class)->register();
+        app(IntegrationHooks::class)->register();
 
         expect(app(ScreenExtensions::class)->tabs('roster.organization'))->toHaveCount(2)
             ->and(app(ScreenExtensions::class)->sections('roster.user', 'after'))->toHaveCount(1);
@@ -439,8 +431,8 @@ describe('atrium.screens.show with every hook on (AC 68)', function (): void {
     it('hides a hook whose integration is flagged off for the user', function (): void {
         app()->register(PennantServiceProvider::class);
         config()->set('pennant.default', 'array');
-        Feature::for($this->user)->deactivate(CortexFeature::class);
-        Feature::for($this->user)->deactivate(KeenFeature::class);
+        Feature::for($this->user)->deactivate('cortex.atrium');
+        Feature::for($this->user)->deactivate('keen.atrium');
 
         $screen = hooksScreen($this, 'roster.user', ['record' => '7']);
 
@@ -551,7 +543,7 @@ describe('Guardian on Roster\'s screens (AC 97)', function (): void {
         IntegrationFixture::installed('guardian', 'roster');
         IntegrationFixture::serveApi('roster');
         IntegrationFixture::register();
-        app(Hooks::class)->register();
+        app(IntegrationHooks::class)->register();
 
         expect(hooksTabs('roster.organization'))->toBe([]);
     });
@@ -570,15 +562,15 @@ describe('Guardian on Roster\'s screens (AC 97)', function (): void {
         Log::spy();
 
         hooksRegistered('guardian', 'roster');
-        app(Hooks::class)->register();
+        app(IntegrationHooks::class)->register();
 
         expect(hooksTabs('roster.organization'))->toBe(['guardian.sso' => ['scim_path' => '/scim/v2'], 'guardian.scim' => ['scim_path' => '/scim/v2']])
             ->and(hooksTabs('roster.user'))->toHaveKey('guardian.access');
 
         // A new registry run in the same process does not warn again.
         app()->forgetInstance(ScreenExtensions::class);
-        app()->forgetInstance(Hooks::class);
-        app(Hooks::class)->register();
+        app()->forgetInstance(IntegrationHooks::class);
+        app(IntegrationHooks::class)->register();
 
         Log::shouldHaveReceived('warning')->withArgs(fn (string $message): bool => str_contains($message, 'atrium.integrations.guardian.scope_types')
             && str_contains($message, '[organization]')
@@ -636,7 +628,7 @@ describe('Guardian on Roster\'s screens (AC 97)', function (): void {
         config()->set('pennant.default', 'array');
         hooksGuardianScopes();
         hooksRegistered('guardian', 'roster');
-        Feature::for($this->user)->deactivate(GuardianFeature::class);
+        Feature::for($this->user)->deactivate('guardian.atrium');
 
         $screen = hooksScreen($this, 'roster.user', ['record' => '7']);
 
@@ -651,16 +643,16 @@ describe('atrium.screens.show with Cortex, Keen and Guardian on (AC 97)', functi
         hooksRegistered('cortex', 'guardian', 'impex', 'keen', 'roster', 'showroom');
     });
 
-    it('sends roster.organization with every tab', function (): void {
+    it('sends roster.organization with every tab, the hooks in their integrations\' key order (D-090)', function (): void {
         $screen = hooksScreen($this, 'roster.organization', ['record' => 'acme']);
 
         expect($screen['tabs'])->toBe([
             ['key' => 'overview', 'label' => 'Overview', 'icon' => 'i-lucide-layout-grid', 'built_in' => true, 'component' => null],
             ['key' => 'cortex.mcp', 'label' => 'MCP', 'icon' => 'i-lucide-globe', 'built_in' => false, 'component' => 'cortex.mcp'],
-            ['key' => 'keen.activity', 'label' => 'Activity', 'icon' => 'i-lucide-clipboard-list', 'built_in' => false, 'component' => 'keen.activity'],
             ['key' => 'guardian.access', 'label' => 'Access', 'icon' => 'i-lucide-key-round', 'built_in' => false, 'component' => 'guardian.access'],
             ['key' => 'guardian.sso', 'label' => 'SSO', 'icon' => 'i-lucide-log-in', 'built_in' => false, 'component' => 'guardian.sso'],
             ['key' => 'guardian.scim', 'label' => 'SCIM', 'icon' => 'i-lucide-server', 'built_in' => false, 'component' => 'guardian.scim'],
+            ['key' => 'keen.activity', 'label' => 'Activity', 'icon' => 'i-lucide-clipboard-list', 'built_in' => false, 'component' => 'keen.activity'],
         ])
             ->and($screen['sections'])->toBe([
                 'header.actions' => [],
@@ -723,19 +715,13 @@ it('registers the hooks at boot, after the integrations', function (): void {
     expect(hooksTabs('roster.organization'))->toBe(['cortex.mcp' => ['owner_type' => 'roster.organization']]);
 });
 
-it('has every label it uses in lang/en/integrations/hooks.php', function (): void {
-    $keys = [];
+it('labels each hook from its manifest, through the host\'s lang JSON (D-090)', function (): void {
+    app('translator')->addLines(['*.Redirect domains' => 'Weiterleitungsdomains'], 'de');
+    app()->setLocale('de');
 
-    foreach (glob(__DIR__.'/../../../src/Integrations/Hooks/*.php') ?: [] as $file) {
-        preg_match_all("/'(atrium::integrations\/hooks\.[a-z_.]+)'/", (string) file_get_contents($file), $matches);
-        $keys = [...$keys, ...$matches[1]];
-    }
+    hooksEverything();
 
-    expect($keys)->not->toBeEmpty();
-
-    foreach ($keys as $key) {
-        expect(Lang::has($key, 'en'))->toBeTrue("Missing translation [{$key}].");
-    }
+    expect(app(ScreenExtensions::class)->sections('roster.user', 'aside')[0]->label)->toBe('Weiterleitungsdomains');
 });
 
 it('keeps the hook extension classes to Atrium\'s own definitions', function (): void {

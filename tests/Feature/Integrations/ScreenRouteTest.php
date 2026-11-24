@@ -11,7 +11,6 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 use RefactorCircus\Atrium\Facades\Atrium;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -163,7 +162,7 @@ it('answers 404 for a screen no active integration declares', function (string $
 it('answers 404 for a screen of an integration that is flagged off', function (): void {
     app()->register(PennantServiceProvider::class);
     config()->set('pennant.default', 'array');
-    Feature::for($this->user)->deactivate(CortexFeature::class);
+    Feature::for($this->user)->deactivate('cortex.atrium');
 
     $this->actingAs($this->user)->getJson(route('atrium.screens.show', 'cortex.records'))->assertNotFound();
 });

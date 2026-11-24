@@ -13,8 +13,6 @@ use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
-use RefactorCircus\Atrium\Integrations\Roster\RosterFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -146,14 +144,14 @@ it('lists each registered integration in key order, with its flags (AC 42)', fun
                 'label' => 'Cortex',
                 'active' => true,
                 'api_base' => '/cortex/api',
-                'features' => [CortexFeature::class => true],
+                'features' => ['cortex.atrium' => true],
             ],
             [
                 'key' => 'roster',
                 'label' => 'Roster',
                 'active' => true,
                 'api_base' => 'https://people.example.com/api',
-                'features' => [RosterFeature::class => true],
+                'features' => ['roster.atrium' => true],
             ],
         ]);
 });

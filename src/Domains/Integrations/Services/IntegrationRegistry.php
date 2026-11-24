@@ -8,43 +8,52 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleRegistry;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
-use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
+use RefactorCircus\Atrium\Domains\Integrations\Data\IntegrationManifest;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
+use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
+use RefactorCircus\Atrium\Domains\Integrations\Data\SearchSourceDeclaration;
 use RefactorCircus\Atrium\Domains\Integrations\Exceptions\InvalidIntegrationException;
+use RefactorCircus\Atrium\Domains\Integrations\Support\ManifestValues;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
+use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
+use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
+use stdClass;
 
 /**
- * The suite integrations this application has, registered once at boot.
+ * The integrations this application has, registered once at boot from their
+ * manifests (D-090). Atrium knows no package: each declares itself in an
+ * `integration.json`, found
  *
- * For each key of `atrium.integrations`, the integration registers when:
+ * - in each installed package that ships one (`extra.atrium.integration`,
+ *   default `dist/atrium/integration.json`), through the InstalledPackages
+ *   seam over `atrium:discover`'s cache, while `atrium.discover` is on;
+ * - in each module folder added with `Atrium::module()`;
+ * - or registered by the app with `Atrium::integration()`, which wins over
+ *   the others for the same key, as `Atrium::module()` wins over discovery.
  *
- * - `atrium.integrations.{pkg}.enabled` is true (boolean-coerced, default true),
- * - `refactor-circus/{pkg}` is installed, through the InstalledPackages seam,
- * - its class exists, found by convention:
- *   `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Integration`, and
+ * Each manifest is checked when it is read (IntegrationManifests), and its
+ * integration registers when:
+ *
+ * - `atrium.integrations.{pkg}.enabled` is true (boolean-coerced, default true), and
  * - it has an API base: a non-empty `atrium.integrations.{pkg}.api_base`, or
  *   else `/` plus the trimmed `{pkg}.routes.prefix` while `{pkg}.routes.enabled`
  *   is true. Without one it does not register, and a warning names both
  *   keys, once per process.
  *
- * Its nav items, widgets and settings panel go into their registries, each
- * gated per request by IntegrationFeatures; its search sources and screens
- * stay here, for the shell and `atrium.screens.show`.
+ * Its labels go through Laravel's `__()`, its expressions are read, its
+ * feature flags are `atrium.integrations.{pkg}.features` or else the
+ * manifest's. Its nav items, widgets and settings panel go into their
+ * registries, each gated per request by IntegrationFeatures; its search
+ * sources, screens and hooks stay here, for the shell, `atrium.screens.show`
+ * and IntegrationHooks.
  */
 final class IntegrationRegistry
 {
-    /**
-     * Each package's studly name, where `Str::studly()` would get it wrong.
-     */
-    private const array STUDLY = [
-        'pennantplus' => 'PennantPlus',
-    ];
-
     /**
      * The packages this process has warned have no API base.
      *
@@ -57,69 +66,135 @@ final class IntegrationRegistry
      */
     private array $integrations = [];
 
+    /**
+     * Manifests the app registered with `Atrium::integration()`, by key.
+     *
+     * @var array<string, IntegrationManifest>
+     */
+    private array $manifests = [];
+
+    /**
+     * The manifests the last registration found, by key.
+     *
+     * @var array<string, IntegrationManifest>|null
+     */
+    private ?array $found = null;
+
     public function __construct(
         private readonly Container $app,
         private readonly Repository $config,
         private readonly IntegrationFeatures $features,
+        private readonly IntegrationManifests $reader,
     ) {}
 
     /**
-     * The integration class Atrium looks for under a package key.
+     * Register an integration from a manifest: the path of an
+     * `integration.json`, or its JSON as an array. For an app's own
+     * integration, or one with no module of its own.
+     *
+     * @param  string|array<string, mixed>  $manifest
+     *
+     * @throws InvalidIntegrationException for an invalid manifest
      */
-    public static function classFor(string $key): string
+    public function manifest(string|array $manifest): IntegrationManifest
     {
-        $studly = self::STUDLY[$key] ?? Str::studly($key);
+        $read = is_string($manifest)
+            ? $this->reader->read($manifest)
+            : $this->reader->make($manifest, 'Atrium::integration()');
 
-        return 'RefactorCircus\\Atrium\\Integrations\\'.$studly.'\\'.$studly.'Integration';
+        $this->found = null;
+
+        return $this->manifests[$read->key] = $read;
     }
 
     /**
-     * The default feature class of a package key.
+     * Look for manifests again on the next `known()`: a module was added.
      */
-    public static function featureFor(string $key): string
+    public function forgetManifests(): void
     {
-        $studly = self::STUDLY[$key] ?? Str::studly($key);
-
-        return 'RefactorCircus\\Atrium\\Integrations\\'.$studly.'\\'.$studly.'Feature';
+        $this->found = null;
     }
 
     /**
-     * The Composer package of a package key.
+     * Every manifest Atrium found, by key, in key order: installed packages,
+     * then `Atrium::module()` folders, then `Atrium::integration()`, each
+     * replacing the one before it for the same key.
+     *
+     * @return array<string, IntegrationManifest>
+     *
+     * @throws InvalidIntegrationException for an invalid manifest
      */
-    public static function packageFor(string $key): string
+    public function manifests(): array
     {
-        return 'refactor-circus/'.$key;
+        $manifests = [];
+
+        if ($this->config->get('atrium.discover', true) === true) {
+            foreach ($this->app->make(InstalledPackages::class)->integrations() as $key => $path) {
+                $manifests[$key] = $path;
+            }
+        }
+
+        foreach ($this->app->make(ModuleRegistry::class)->added() as $module) {
+            if ($module->integration !== null) {
+                $manifests[$module->key] = $module->integration;
+            }
+        }
+
+        $read = [];
+
+        foreach ($manifests as $key => $path) {
+            $read[$key] = $this->reader->read($path, $key);
+        }
+
+        $read = [...$read, ...$this->manifests];
+        ksort($read);
+
+        return $read;
     }
 
     /**
-     * Register every configured integration that is enabled, installed and
-     * reachable. One already registered is kept as it is, so running this
+     * The key of every integration Atrium found a manifest for, registered or
+     * not: their modules load only while the integration is registered and
+     * active, and the front end treats their `/{pkg}/` paths as theirs.
+     *
+     * @return list<string>
+     */
+    public function known(): array
+    {
+        $keys = array_keys($this->integrations);
+
+        try {
+            $keys = [...$keys, ...array_keys($this->found ??= $this->manifests())];
+        } catch (InvalidIntegrationException) {
+            // Registration has already thrown for it.
+        }
+
+        $keys = array_values(array_unique($keys));
+        sort($keys);
+
+        return $keys;
+    }
+
+    /**
+     * Register every integration whose manifest Atrium finds, that is enabled
+     * and reachable. One already registered is kept as it is, so running this
      * again only adds what has become available.
+     *
+     * @throws InvalidIntegrationException for an invalid manifest
      */
     public function register(): void
     {
-        $configured = $this->config->get('atrium.integrations', []);
+        $this->found = $this->manifests();
 
-        if (! is_array($configured)) {
-            return;
-        }
-
-        $packages = $this->app->make(InstalledPackages::class);
-
-        foreach ($configured as $key => $settings) {
-            if (! is_string($key) || isset($this->integrations[$key])) {
+        foreach ($this->found as $key => $manifest) {
+            if (isset($this->integrations[$key])) {
                 continue;
             }
 
+            $settings = $this->config->get('atrium.integrations.'.$key, []);
             $settings = is_array($settings) ? $settings : [];
 
-            if (! filter_var($settings['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN) || ! $packages->isInstalled(self::packageFor($key))) {
-                continue;
-            }
-
-            $class = self::classFor($key);
-
-            if (! $this->app->bound($class) && ! class_exists($class)) {
+            if (! filter_var($settings['enabled'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
                 continue;
             }
 
@@ -131,7 +206,7 @@ final class IntegrationRegistry
                 continue;
             }
 
-            $this->add($key, $this->resolve($key, $class), $apiBase, $this->featureNames($key, $settings));
+            $this->add($manifest, $apiBase, $settings);
         }
 
         ksort($this->integrations);
@@ -164,33 +239,52 @@ final class IntegrationRegistry
     }
 
     /**
-     * @param  list<string>  $features
+     * Forget which packages this process has warned about, so a test sees its
+     * own warning.
      */
-    private function add(string $key, Integration $integration, string $apiBase, array $features): void
+    public static function forgetWarnings(): void
     {
+        self::$warned = [];
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $settings
+     */
+    private function add(IntegrationManifest $manifest, string $apiBase, array $settings): void
+    {
+        $json = $manifest->json;
+        $key = $manifest->key;
+        $values = new ManifestValues($this->config, $key);
+
         $screens = [];
 
-        foreach ($integration->screens() as $screen) {
-            if (! str_starts_with($screen->key, $key.'.') || ! str_starts_with($screen->path, '/'.$key.'/')) {
-                throw InvalidIntegrationException::screenOutsidePackage($key, $screen);
+        foreach ($json->screens ?? [] as $screen) {
+            $declaration = ScreenDeclaration::make($screen->key, $screen->kind, $screen->path);
+
+            if (isset($screen->subject_type)) {
+                $declaration->subjectType($screen->subject_type);
             }
 
-            $screens[$screen->key] = $screen;
-        }
+            if (isset($screen->options)) {
+                $options = $values->read($screen->options);
+                $declaration->options(is_array($options) ? $options : []);
+            }
 
-        $navigation = $integration->navigation();
-        $this->assertSpaPaths($key, $navigation);
+            $screens[$screen->key] = $declaration;
+        }
 
         $registered = new RegisteredIntegration(
             $key,
-            $integration->label(),
+            self::trans($json->label),
             $apiBase,
-            $features,
-            $navigation,
-            $integration->widgets(),
-            $integration->settings(),
-            $integration->searchSources(),
+            $this->featureNames($json, $settings),
+            $this->navigation($json->navigation ?? [], $values),
+            array_values(array_map(self::widget(...), $json->widgets ?? [])),
+            isset($json->settings) ? self::settings($json->settings) : null,
+            array_values(array_map(self::searchSource(...), $json->search_sources ?? [])),
             $screens,
+            array_values($json->hooks ?? []),
+            array_values($json->features ?? []),
         );
 
         $active = fn (Request $request): bool => $this->features->active($registered, $request);
@@ -215,40 +309,119 @@ final class IntegrationRegistry
     }
 
     /**
-     * Every nav item an integration declares, children too, links to one of
-     * its package's SPA pages with `path()`, or nowhere (a `live()` parent):
-     * a `url()` would be read as a host URL and go external outside
-     * `atrium.client_path` (D-075).
-     *
-     * @param  array<int, NavItem>  $items
-     *
-     * @throws InvalidIntegrationException for an item linking anywhere but an SPA path under `/{key}/`
+     * @param  list<stdClass>  $items
+     * @return list<NavItem>
      */
-    private function assertSpaPaths(string $key, array $items): void
+    private function navigation(array $items, ManifestValues $values): array
     {
-        foreach ($items as $item) {
-            $outside = $item->path !== null && ! str_starts_with($item->path, '/'.$key.'/');
+        $navigation = [];
 
-            if ($outside || $item->url !== null || $item->route !== null) {
-                throw InvalidIntegrationException::navigationOutsidePackage($key, $item);
+        foreach ($items as $item) {
+            if (isset($item->when) && $values->read($item->when) !== true) {
+                continue;
             }
 
-            $this->assertSpaPaths($key, $item->children);
+            $nav = NavItem::make(self::trans($item->label));
+
+            if (isset($item->path)) {
+                $nav->path($item->path);
+            }
+
+            if (isset($item->icon)) {
+                $nav->icon($item->icon);
+            }
+
+            if (isset($item->group)) {
+                $nav->group(self::trans($item->group));
+            }
+
+            if (isset($item->sort)) {
+                $sort = $values->read($item->sort);
+                $nav->sort(is_int($sort) ? $sort : 100);
+            }
+
+            if (isset($item->live)) {
+                $options = isset($item->live->options) ? $values->read($item->live->options) : [];
+                $nav->live($item->live->key, is_array($options) ? $options : []);
+            }
+
+            if (isset($item->children)) {
+                $nav->children($this->navigation($item->children, $values));
+            }
+
+            $navigation[] = $nav;
         }
+
+        return $navigation;
     }
 
-    /**
-     * @throws InvalidIntegrationException for a class that is no integration
-     */
-    private function resolve(string $key, string $class): Integration
+    private static function widget(stdClass $widget): WidgetDefinition
     {
-        $integration = $this->app->make($class);
+        $definition = WidgetDefinition::make($widget->key)->label(self::trans($widget->label));
 
-        if (! $integration instanceof Integration) {
-            throw InvalidIntegrationException::notAnIntegration($key, $class);
+        if (isset($widget->description)) {
+            $definition->description(self::trans($widget->description));
         }
 
-        return $integration;
+        if (isset($widget->icon)) {
+            $definition->icon($widget->icon);
+        }
+
+        if (isset($widget->component)) {
+            $definition->component($widget->component);
+        }
+
+        if (isset($widget->size)) {
+            $definition->defaultSize($widget->size->width, $widget->size->height);
+        }
+
+        if (isset($widget->min_size)) {
+            $definition->minSize($widget->min_size->width, $widget->min_size->height);
+        }
+
+        if (isset($widget->lazy)) {
+            $definition->lazy($widget->lazy);
+        }
+
+        return $definition;
+    }
+
+    private static function settings(stdClass $settings): SettingsPanel
+    {
+        $panel = SettingsPanel::make($settings->key)->label(self::trans($settings->label));
+
+        if (isset($settings->description)) {
+            $panel->description(self::trans($settings->description));
+        }
+
+        if (isset($settings->icon)) {
+            $panel->icon($settings->icon);
+        }
+
+        if (isset($settings->component)) {
+            $panel->component($settings->component);
+        }
+
+        if (isset($settings->sort)) {
+            $panel->sort($settings->sort);
+        }
+
+        return $panel;
+    }
+
+    private static function searchSource(stdClass $source): SearchSourceDeclaration
+    {
+        $declaration = SearchSourceDeclaration::make($source->key);
+
+        if (isset($source->label)) {
+            $declaration->label(self::trans($source->label));
+        }
+
+        if (isset($source->icon)) {
+            $declaration->icon($source->icon);
+        }
+
+        return $declaration;
     }
 
     /**
@@ -275,17 +448,27 @@ final class IntegrationRegistry
     }
 
     /**
-     * The feature names that must be on, the package's default feature class
-     * when the key is absent.
+     * The feature names that must be on: the host's
+     * `atrium.integrations.{pkg}.features`, or else the manifest's.
      *
      * @param  array<array-key, mixed>  $settings
      * @return list<string>
      */
-    private function featureNames(string $key, array $settings): array
+    private function featureNames(stdClass $json, array $settings): array
     {
-        $features = $settings['features'] ?? [self::featureFor($key)];
+        $features = $settings['features'] ?? ($json->features ?? []);
 
         return array_values(array_filter(is_array($features) ? $features : [], is_string(...)));
+    }
+
+    /**
+     * A manifest label, through the host's translations (lang JSON).
+     */
+    private static function trans(string $label): string
+    {
+        $line = __($label);
+
+        return is_string($line) ? $line : $label;
     }
 
     private function warnUnreachable(string $key): void

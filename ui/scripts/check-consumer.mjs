@@ -13,9 +13,11 @@
 // sources must find every type they import, through its own dependencies.
 //
 // The module (`scripts/consumer/`) is built (the SDK stays external: none of
-// its code may be in the output), type-checked with vue-tsc (which reads the
-// SDK's `.vue` and `.ts` sources) and tested with Vitest; a test fails on an
-// unresolved component, and the run fails on a test that reaches the network.
+// its code may be in the output; its `src/integration.json` is checked and
+// copied to `dist/atrium/integration.json`, D-090), type-checked with
+// vue-tsc (which reads the SDK's `.vue` and `.ts` sources) and tested with
+// Vitest; a test fails on an unresolved component, and the run fails on a
+// test that reaches the network.
 
 import { execFileSync } from 'node:child_process'
 import { cpSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
@@ -79,6 +81,14 @@ try {
 
   if (!built.includes('@refactor-circus/atrium') || built.includes('atrium-no-access')) {
     throw new Error('[consumer] the build bundled the SDK instead of importing it from the page')
+  }
+
+  // The preset checks src/integration.json and copies it beside the build (D-090).
+  const integration = JSON.parse(readFileSync(join(module, 'dist/atrium/integration.json'), 'utf8'))
+  const info = JSON.parse(readFileSync(join(module, 'dist/atrium/build.json'), 'utf8'))
+
+  if (integration.key !== 'consumer' || !info.inputs.includes('src')) {
+    throw new Error('[consumer] the build did not ship the module\'s integration manifest, or does not hash it')
   }
 
   step('pnpm', ['exec', 'vue-tsc', '--noEmit', '-p', 'tsconfig.json'], module)

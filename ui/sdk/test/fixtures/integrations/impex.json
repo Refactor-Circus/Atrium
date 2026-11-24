@@ -3,7 +3,7 @@
     "label": "Impex",
     "api_base": "/impex",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Impex\\ImpexFeature"
+        "impex.atrium"
     ],
     "navigation": [
         {

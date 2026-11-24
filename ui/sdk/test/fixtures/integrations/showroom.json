@@ -3,7 +3,7 @@
     "label": "Showroom",
     "api_base": "/showroom",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Showroom\\ShowroomFeature"
+        "showroom.atrium"
     ],
     "navigation": [
         {

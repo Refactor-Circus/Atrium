@@ -3,7 +3,7 @@
     "label": "Polycart",
     "api_base": "/polycart",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Polycart\\PolycartFeature"
+        "polycart.atrium"
     ],
     "navigation": [
         {

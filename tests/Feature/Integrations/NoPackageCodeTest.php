@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /*
- * No package code (AC 45): Atrium's PHP never loads a suite package's
- * classes, models or actions. Its integrations are data, and the layer
- * calls each package's API. The ArchTest checks the imports; this test
+ * No package code (AC 45, D-090): Atrium's PHP never loads a suite package's
+ * classes, models or actions. Its integrations are the packages' own
+ * manifests (data), and each package's module calls its API. The ArchTest checks the imports; this test
  * also catches names written as strings, and the Composer requirements.
  */
 
@@ -15,7 +15,7 @@ declare(strict_types=1);
 const NO_PACKAGE_CODE_NAMESPACES = ['Cortex', 'Guardian', 'Impex', 'Keen', 'PennantPlus', 'Polycart', 'Roster', 'Showroom'];
 
 /**
- * Every PHP file under `src/`.
+ * Every PHP file under `src/` and `config/`.
  *
  * @return list<string>
  */
@@ -23,9 +23,11 @@ function noPackageCodeSourceFiles(): array
 {
     $files = [];
 
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../../src', FilesystemIterator::SKIP_DOTS)) as $file) {
-        if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
-            $files[] = $file->getPathname();
+    foreach (['src', 'config'] as $directory) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../../'.$directory, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+                $files[] = $file->getPathname();
+            }
         }
     }
 

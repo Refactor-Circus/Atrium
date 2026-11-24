@@ -1,0 +1,779 @@
+{
+    "cortex.virtual-agents": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex"
+                }
+            }
+        }
+    },
+    "cortex.virtual-agent-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "cortex.virtual-agent": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "cortex.concrete-agents": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex"
+                }
+            }
+        }
+    },
+    "cortex.concrete-agent": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "cortex.tools": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex"
+                }
+            }
+        }
+    },
+    "cortex.tool-description": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "cortex.servers": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex"
+                }
+            }
+        }
+    },
+    "cortex.server-instructions": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "cortex.redirect-domains": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex"
+                }
+            }
+        }
+    },
+    "cortex.run": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "cortex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.security": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.two-factor-challenge": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.two-factor-setup": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.roles": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.role": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.permissions": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.role-assignments": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.user": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.security-events": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.security-event": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.lockouts": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.ip-rules": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.two-factor-policies": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian"
+                }
+            }
+        }
+    },
+    "guardian.password-policy": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "guardian.sso-connection": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "guardian",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "impex.runs": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex"
+                }
+            }
+        }
+    },
+    "impex.run": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "impex.flows": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex"
+                }
+            }
+        }
+    },
+    "impex.messages": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex"
+                }
+            }
+        }
+    },
+    "impex.message": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "impex.channels": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex"
+                }
+            }
+        }
+    },
+    "impex.channel-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "impex.channel": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "impex.subscriptions": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex"
+                }
+            }
+        }
+    },
+    "impex.subscription": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "impex",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "pennantplus.features": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "pennantplus"
+                }
+            }
+        }
+    },
+    "polycart.carts": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "polycart"
+                }
+            }
+        }
+    },
+    "polycart.cart": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "polycart",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "polycart.types": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "polycart"
+                }
+            }
+        }
+    },
+    "roster.users": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster"
+                }
+            }
+        }
+    },
+    "roster.user-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "roster.user": {
+        "tabs": {
+            "guardian.access": {
+                "scope_type": null
+            },
+            "guardian.user-security": []
+        },
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": "roster.user"
+                }
+            },
+            "aside": {
+                "cortex.redirect-domains": {
+                    "owner_type": "roster.user"
+                },
+                "guardian.sso-identities": []
+            }
+        }
+    },
+    "roster.organizations": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster"
+                }
+            }
+        }
+    },
+    "roster.organization-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "roster.organization": {
+        "tabs": {
+            "cortex.mcp": {
+                "owner_type": "roster.organization"
+            },
+            "guardian.access": {
+                "scope_type": "roster_organization"
+            },
+            "guardian.sso": {
+                "scim_path": "/scim/v2"
+            },
+            "guardian.scim": {
+                "scim_path": "/scim/v2"
+            },
+            "keen.activity": {
+                "source": "roster",
+                "subject_type": "roster.organization",
+                "scope": true
+            }
+        },
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": "roster.organization"
+                }
+            }
+        }
+    },
+    "roster.team": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "roster.impersonations": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster"
+                }
+            }
+        }
+    },
+    "roster.transfers": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster"
+                }
+            }
+        }
+    },
+    "roster.transfer": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "roster.invitation": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "roster",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.products": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.product-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.product": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": "showroom_product"
+                }
+            }
+        }
+    },
+    "showroom.product-models": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.product-model": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": "showroom_product_model"
+                }
+            }
+        }
+    },
+    "showroom.families": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.family": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.family-variant": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.attributes": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.attribute-create": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.attribute": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.attribute-groups": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.attribute-group": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.association-types": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.categories": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.category": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.channels": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.channel": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.owners": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.owner": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": "showroom_owner"
+                }
+            }
+        }
+    },
+    "showroom.owner-types": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.owner-type": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.flags": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.flag": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.assets": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            }
+        }
+    },
+    "showroom.asset": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom",
+                    "subject_type": null
+                }
+            }
+        }
+    },
+    "showroom.transfers": {
+        "sections": {
+            "after": {
+                "keen.history": {
+                    "source": "showroom"
+                }
+            },
+            "row.actions": {
+                "impex.run-link": []
+            }
+        }
+    }
+}

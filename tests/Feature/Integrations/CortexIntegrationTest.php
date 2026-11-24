@@ -8,7 +8,6 @@ use RefactorCircus\Atrium\Domains\Integrations\Data\SearchSourceDeclaration;
 use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Settings\Http\Resources\SettingsPanelResource;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexIntegration;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
@@ -42,8 +41,7 @@ describe('gating', function (): void {
         $integration = registerCortex()->get('cortex');
 
         expect($integration)->not->toBeNull()
-            ->and($integration?->label)->toBe('Cortex')
-            ->and(IntegrationRegistry::classFor('cortex'))->toBe(CortexIntegration::class);
+            ->and($integration?->label)->toBe('Cortex');
     });
 
     it('registers nothing while Cortex is not installed', function (): void {
@@ -161,30 +159,6 @@ describe('declarations', function (): void {
             ['cortex.redirect-domains', 'list', '/cortex/redirect-domains', null],
             ['cortex.run', 'detail', '/cortex/run', null],
         ]);
-    });
-
-    it('takes every label from lang/en/integrations/cortex.php', function (): void {
-        registerCortex();
-
-        $keys = ['label', 'virtual_agents', 'concrete_agents', 'run_agent', 'tools', 'servers', 'redirect_domains', 'settings_label', 'settings_description', 'search_label'];
-
-        foreach ($keys as $key) {
-            expect(trans()->has('atrium::integrations/cortex.'.$key, 'en', false))->toBeTrue($key);
-        }
-
-        $declarations = IntegrationFixture::declarations('cortex');
-        $labels = [
-            $declarations['label'],
-            ...array_column($declarations['navigation'], 'label'),
-            ...array_column($declarations['navigation'], 'group'),
-            $declarations['settings']['label'] ?? null,
-            $declarations['settings']['description'] ?? null,
-            ...array_column($declarations['search_sources'], 'label'),
-        ];
-
-        foreach ($labels as $label) {
-            expect($label)->toBeString()->not->toStartWith('atrium::');
-        }
     });
 
     it('writes its declarations to the layer fixture', function (): void {

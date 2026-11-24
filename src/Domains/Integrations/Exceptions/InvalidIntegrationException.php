@@ -4,48 +4,29 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Integrations\Exceptions;
 
-use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
-use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
-use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Exceptions\AtriumException;
 
 /**
- * An integration class that breaks the integration contract. It is Atrium's
- * own bug, found at boot, so it is a 500.
+ * An integration manifest that breaks the manifest's schema or rules (D-090),
+ * found when the integrations register at boot. It names the manifest and the
+ * JSON pointer of the problem; it is a bug of the package (or app) that ships
+ * the manifest, so it is a 500.
  */
 final class InvalidIntegrationException extends AtriumException
 {
     protected int $status = 500;
 
-    public static function notAnIntegration(string $key, string $class): self
+    /**
+     * @param  string  $source  The manifest's path, or what registered it.
+     * @param  string  $pointer  The JSON pointer of the problem, `''` for the whole manifest.
+     */
+    public static function invalidManifest(string $source, string $pointer, string $message): self
     {
         return new self(sprintf(
-            'The [%s] integration class [%s] must implement [%s].',
-            $key,
-            $class,
-            Integration::class,
-        ));
-    }
-
-    public static function screenOutsidePackage(string $key, ScreenDeclaration $screen): self
-    {
-        return new self(sprintf(
-            'The [%s] integration declares the screen [%s] at [%s]; its key must start with [%s.] and its path with [/%s/].',
-            $key,
-            $screen->key,
-            $screen->path,
-            $key,
-            $key,
-        ));
-    }
-
-    public static function navigationOutsidePackage(string $key, NavItem $item): self
-    {
-        return new self(sprintf(
-            'The [%s] integration declares the nav item [%s] linking outside its SPA paths under [/%s/]; integration links are pages of the SPA, declared with path(), never url() or route().',
-            $key,
-            $item->label,
-            $key,
+            'The Atrium integration manifest [%s] is invalid at [%s]: %s. See ui/sdk/schema/integration.schema.json and MODULES.md.',
+            $source,
+            $pointer === '' ? '/' : $pointer,
+            $message,
         ));
     }
 }

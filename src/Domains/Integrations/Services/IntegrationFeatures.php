@@ -17,8 +17,12 @@ use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
  *
  * With Laravel Pennant available, each feature resolves through
  * `Feature::for($request->user())->active($name)`, so a host turns an
- * integration off globally or per user with Pennant. Without Pennant every
- * flag is on. Atrium never requires Pennant: this is the one class that
+ * integration off globally or per user with Pennant. The names come from the
+ * integration's manifest (`features`, D-090) or the host's config. A name the
+ * manifest declares that the host has not defined (and that is no feature
+ * class) is defined as on, the first time it is asked, as the integrations'
+ * default feature classes were; any other undefined name reads as off.
+ * Without Pennant every flag is on. Atrium never requires Pennant: this is the one class that
  * names it, behind the availability check.
  *
  * This is separate from the plugin feature gate (`Gatekeeper`), which keeps
@@ -28,6 +32,13 @@ final class IntegrationFeatures
 {
     /** @var (Closure(): bool)|null */
     private ?Closure $availability = null;
+
+    /**
+     * The names this instance has made sure Pennant knows.
+     *
+     * @var array<string, true>
+     */
+    private array $defined = [];
 
     public function __construct(private readonly Container $app) {}
 
@@ -66,6 +77,10 @@ final class IntegrationFeatures
         $pennant = $this->pennantAvailable();
         $states = [];
 
+        if ($pennant) {
+            $this->defineDefaults(array_values(array_intersect($integration->features, $integration->defaultFeatures)));
+        }
+
         foreach ($integration->features as $feature) {
             $states[$feature] = ! $pennant || Feature::for($request->user())->active($feature);
         }
@@ -76,5 +91,34 @@ final class IntegrationFeatures
     public function active(RegisteredIntegration $integration, Request $request): bool
     {
         return ! in_array(false, $this->states($integration, $request), true);
+    }
+
+    /**
+     * Define each name Pennant does not know yet as on, so an integration
+     * shows until the host defines its flag otherwise.
+     *
+     * @param  list<string>  $features
+     */
+    private function defineDefaults(array $features): void
+    {
+        $known = null;
+
+        foreach ($features as $feature) {
+            if (isset($this->defined[$feature])) {
+                continue;
+            }
+
+            $this->defined[$feature] = true;
+
+            if (class_exists($feature)) {
+                continue;
+            }
+
+            $known ??= Feature::defined();
+
+            if (! in_array($feature, $known, true)) {
+                Feature::define($feature, fn (): bool => true);
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@ export * from './shell'
 export * from './packages'
 export * from './i18n'
 export * from './endpoints'
+export * from './manifest'
 export { setAtriumBoot } from '../runtime/boot'
 export { runInAtrium }
 

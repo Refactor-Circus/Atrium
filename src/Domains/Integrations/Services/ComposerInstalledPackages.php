@@ -4,16 +4,27 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Integrations\Services;
 
-use Composer\InstalledVersions;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleDiscovery;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 
 /**
- * The installed packages as Composer recorded them for the vendor directory.
+ * The integration manifests of the packages Composer installed, from the
+ * modules `atrium:discover` found (and cached) in `vendor/composer/installed.json`.
  */
 final class ComposerInstalledPackages implements InstalledPackages
 {
-    public function isInstalled(string $package): bool
+    public function __construct(private readonly ModuleDiscovery $discovery) {}
+
+    public function integrations(): array
     {
-        return InstalledVersions::isInstalled($package);
+        $integrations = [];
+
+        foreach ($this->discovery->discover() as $module) {
+            if ($module->integration !== null) {
+                $integrations[$module->key] = $module->integration;
+            }
+        }
+
+        return $integrations;
     }
 }

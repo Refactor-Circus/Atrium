@@ -15,6 +15,8 @@ export interface AtriumModuleOptions {
   outDir?: string
   /** What the build hash covers, relative to the config's folder */
   inputs?: string[]
+  /** The integration manifest, relative to the config's folder: `src/integration.json` (or `integration.json`) when there is one; checked, copied to `{outDir}/integration.json` and hashed (D-090) */
+  integration?: string
   root?: string
   /** Vitest overrides */
   test?: AtriumTestOptions
@@ -40,4 +42,6 @@ export declare function atriumAutoImports(options?: { ui?: boolean, dirs?: strin
 export declare function atriumComponentResolver(options?: { ui?: boolean, direct?: boolean }): (name: string) => { name: string, from: string } | undefined
 export declare function hashInputs(root: string, inputs: string[]): string
 export declare function stylesheetClasses(css: string): string[]
-export declare function atriumBuildInfo(options: { key: string, root: string, inputs: string[], outDir: string, extend?: (outDir: string) => Record<string, unknown> }): Plugin
+export declare function atriumBuildInfo(options: { key: string, root: string, inputs: string[], outDir: string, integration?: string, extend?: (outDir: string) => Record<string, unknown> }): Plugin
+export { copyIntegrationManifest, findIntegrationManifest, readIntegrationManifest, validateIntegrationManifest } from './manifest.mjs'
+export type { IntegrationManifestError, IntegrationManifestResult } from './manifest.mjs'

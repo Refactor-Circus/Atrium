@@ -37,6 +37,7 @@
       "style": "./css/theme.css",
       "default": "./css/theme.css"
     },
+    "./schema/*": "./schema/*",
     "./locales/*": "./locales/*",
     "./package.json": "./package.json",
     "./fixtures/*": "./test/fixtures/*"
@@ -45,6 +46,7 @@
     "src",
     "vite",
     "css",
+    "schema",
     "locales",
     "test/fixtures"
   ],

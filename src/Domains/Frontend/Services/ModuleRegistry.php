@@ -20,8 +20,9 @@ use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
  * stylesheets (`Atrium::script()`, `Atrium::style()`, `atrium.scripts`,
  * `atrium.styles`).
  *
- * Per request it keeps a suite integration's module only while that
- * integration is registered and active for the user, drops a module listed
+ * Per request it keeps an integration's module (one whose key has an
+ * integration manifest, D-090) only while that integration is registered and
+ * active for the user, drops a module listed
  * in `atrium.disabled`, and one built for another major of the shared API.
  */
 final class ModuleRegistry
@@ -76,6 +77,7 @@ final class ModuleRegistry
         }
 
         $this->assertKey($manifest->key);
+        $this->integrations->forgetManifests();
 
         return $this->added[$manifest->key] = $manifest;
     }
@@ -100,6 +102,16 @@ final class ModuleRegistry
         $this->styles[] = $source;
 
         return $this;
+    }
+
+    /**
+     * The module folders added with `Atrium::module()`, by key.
+     *
+     * @return array<string, ModuleManifest>
+     */
+    public function added(): array
+    {
+        return $this->added;
     }
 
     /**
@@ -140,14 +152,14 @@ final class ModuleRegistry
     public function forRequest(Request $request, ?string $sharedApi): array
     {
         $disabled = $this->config->get('atrium.disabled', []);
-        $known = $this->config->get('atrium.integrations', []);
+        $known = $this->integrations->known();
 
         return array_values(array_filter($this->all(), function (ModuleManifest $module) use ($request, $sharedApi, $disabled, $known): bool {
             if (is_array($disabled) && in_array($module->key, $disabled, true)) {
                 return false;
             }
 
-            if (is_array($known) && array_key_exists($module->key, $known)) {
+            if (in_array($module->key, $known, true)) {
                 $integration = $this->integrations->get($module->key);
 
                 if ($integration === null || ! $this->features->active($integration, $request)) {

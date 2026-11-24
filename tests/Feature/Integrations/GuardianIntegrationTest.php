@@ -13,9 +13,6 @@ use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianFeature;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianIntegration;
-use RefactorCircus\Atrium\Integrations\Guardian\GuardianScopeTypes;
 use RefactorCircus\Atrium\Support\Iconify;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
@@ -30,12 +27,10 @@ use Workbench\App\Models\User;
 
 beforeEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScopeTypes::forget();
 });
 
 afterEach(function (): void {
     IntegrationFixture::forgetWarnings();
-    GuardianScopeTypes::forget();
 });
 
 /**
@@ -77,17 +72,12 @@ function guardianApiWarning(): Closure
 }
 
 describe('gating', function (): void {
-    it('is the conventional class and feature for the guardian key', function (): void {
-        expect(IntegrationRegistry::classFor('guardian'))->toBe(GuardianIntegration::class)
-            ->and(IntegrationRegistry::featureFor('guardian'))->toBe(GuardianFeature::class);
-    });
-
     it('registers while Guardian is installed, enabled and serving its API, at /guardian', function (): void {
         $guardian = registeredGuardian();
 
         expect($guardian->label)->toBe('Guardian')
             ->and($guardian->apiBase)->toBe('/guardian')
-            ->and($guardian->features)->toBe([GuardianFeature::class]);
+            ->and($guardian->features)->toBe(['guardian.atrium']);
     });
 
     it('reads the API base from guardian.routes.prefix, trimmed, and lets api_base win', function (): void {
@@ -182,18 +172,18 @@ describe('feature flags', function (): void {
         $this->user = User::forceCreate(['name' => 'Ada', 'email' => 'ada@example.com', 'password' => bcrypt('secret')]);
     });
 
-    it('is on for a user while GuardianFeature resolves on', function (): void {
+    it('is on for a user while guardian.atrium resolves on', function (): void {
         expect(guardianActiveFor($this->user))->toBeTrue();
     });
 
-    it('is off for a user whose GuardianFeature is deactivated', function (): void {
-        Feature::for($this->user)->deactivate(GuardianFeature::class);
+    it('is off for a user whose guardian.atrium is deactivated', function (): void {
+        Feature::for($this->user)->deactivate('guardian.atrium');
 
         expect(guardianActiveFor($this->user))->toBeFalse();
     });
 
     it('is on for every user while Pennant is unavailable', function (): void {
-        Feature::for($this->user)->deactivate(GuardianFeature::class);
+        Feature::for($this->user)->deactivate('guardian.atrium');
         app(IntegrationFeatures::class)->detectPennantUsing(fn (): bool => false);
 
         expect(guardianActiveFor($this->user))->toBeTrue();
@@ -343,31 +333,31 @@ describe('declarations', function (): void {
     });
 });
 
-describe('scope types (D-048)', function (): void {
+describe('scope types (D-048), from the manifest\'s $config map', function (): void {
     it('resolves a null value through guardian.adopt.scope_types.{key}', function (): void {
         config()->set('guardian.adopt.scope_types', ['organization' => 'App\\Models\\Organization', 'team' => 'team']);
 
-        expect(GuardianScopeTypes::all())->toBe(['organization' => 'App\\Models\\Organization', 'team' => 'team'])
-            ->and(GuardianScopeTypes::get('organization'))->toBe('App\\Models\\Organization')
-            ->and(GuardianScopeTypes::options())->toBe([
-                ['key' => 'organization', 'type' => 'App\\Models\\Organization'],
-                ['key' => 'team', 'type' => 'team'],
-            ]);
+        expect(guardianScreens()['guardian.roles']->options['scope_types'])->toBe([
+            ['key' => 'organization', 'type' => 'App\\Models\\Organization'],
+            ['key' => 'team', 'type' => 'team'],
+        ]);
     });
 
     it('lets an explicit value win over Guardian\'s', function (): void {
         config()->set('guardian.adopt.scope_types', ['organization' => 'App\\Models\\Organization', 'team' => 'team']);
-        config()->set('atrium.integrations.guardian.scope_types.organization', 'organization');
+        config()->set('atrium.integrations.guardian.scope_types', ['organization' => 'organization', 'team' => null]);
 
-        expect(GuardianScopeTypes::all())->toBe(['organization' => 'organization', 'team' => 'team']);
+        expect(guardianScreens()['guardian.roles']->options['scope_types'])->toBe([
+            ['key' => 'organization', 'type' => 'organization'],
+            ['key' => 'team', 'type' => 'team'],
+        ]);
     });
 
     it('drops a value that does not resolve to a non-empty string', function (mixed $value): void {
         config()->set('guardian.adopt.scope_types', ['team' => 'team']);
         config()->set('atrium.integrations.guardian.scope_types', ['organization' => $value, 'team' => null]);
 
-        expect(GuardianScopeTypes::all())->toBe(['team' => 'team'])
-            ->and(GuardianScopeTypes::get('organization'))->toBeNull();
+        expect(guardianScreens()['guardian.roles']->options['scope_types'])->toBe([['key' => 'team', 'type' => 'team']]);
     })->with([
         'null, with nothing in Guardian' => [null],
         'empty' => [''],
@@ -378,41 +368,6 @@ describe('scope types (D-048)', function (): void {
     it('resolves nothing without Guardian\'s config or a list', function (): void {
         config()->set('atrium.integrations.guardian.scope_types', 'organization');
 
-        expect(GuardianScopeTypes::all())->toBe([])
-            ->and(GuardianScopeTypes::options())->toBe([]);
-    });
-
-    it('resolves once per process', function (): void {
-        config()->set('guardian.adopt.scope_types', ['organization' => 'first']);
-
-        expect(GuardianScopeTypes::get('organization'))->toBe('first');
-
-        config()->set('guardian.adopt.scope_types', ['organization' => 'second']);
-
-        expect(GuardianScopeTypes::get('organization'))->toBe('first');
-
-        GuardianScopeTypes::forget();
-
-        expect(GuardianScopeTypes::get('organization'))->toBe('second');
-    });
-});
-
-describe('labels and package code', function (): void {
-    it('takes every label from lang/en/integrations/guardian.php', function (): void {
-        $source = (string) file_get_contents(__DIR__.'/../../../src/Integrations/Guardian/GuardianIntegration.php');
-
-        preg_match_all("/\\['([a-z_]+)', '\\/guardian\\//", $source, $matches);
-
-        expect($matches[1])->toHaveCount(9);
-
-        foreach (['label', 'group', ...$matches[1]] as $key) {
-            expect(trans()->hasForLocale('atrium::integrations/guardian.'.$key, 'en'))->toBeTrue("Missing label [atrium::integrations/guardian.{$key}].");
-        }
-    });
-
-    it('names nothing of Guardian\'s code, only its config, paths and keys', function (): void {
-        foreach (glob(__DIR__.'/../../../src/Integrations/Guardian/*.php') ?: [] as $file) {
-            expect(preg_match('/RefactorCircus\\\\{1,2}Guardian\b/i', (string) file_get_contents($file)))->toBe(0, $file);
-        }
+        expect(guardianScreens()['guardian.roles']->options['scope_types'])->toBe([]);
     });
 });

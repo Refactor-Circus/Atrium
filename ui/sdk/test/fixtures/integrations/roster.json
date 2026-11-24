@@ -3,7 +3,7 @@
     "label": "Roster",
     "api_base": "/roster/api",
     "features": [
-        "RefactorCircus\\Atrium\\Integrations\\Roster\\RosterFeature"
+        "roster.atrium"
     ],
     "navigation": [
         {

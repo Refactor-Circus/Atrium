@@ -180,10 +180,10 @@ it('names every replaced suite package key with its replacement', function (stri
     ['pennantplus.atrium.resolve_features', 'Atrium::resolveFeaturesUsing()'],
 ]);
 
-it('names every replaced support feature with its replacement', function (string $package): void {
+it('names every replaced support feature with its replacement, the feature name its manifest declares (D-090)', function (string $package): void {
     expect(changelogUpgradeSection())
         ->toContain('`'.$package.'SupportFeature`')
-        ->toContain('`RefactorCircus\\Atrium\\Integrations\\'.$package.'\\'.$package.'Feature`');
+        ->toContain('`'.strtolower($package).'.atrium`');
 })->with(['Cortex', 'Impex', 'Polycart', 'Roster', 'Showroom']);
 
 it('names the parity changes', function (): void {

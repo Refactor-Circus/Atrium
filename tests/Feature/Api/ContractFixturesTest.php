@@ -15,8 +15,6 @@ use Laravel\Pennant\PennantServiceProvider;
 use PHPUnit\Framework\AssertionFailedError;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use RefactorCircus\Atrium\Integrations\Cortex\CortexFeature;
-use RefactorCircus\Atrium\Integrations\Polycart\PolycartFeature;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use RefactorCircus\Atrium\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -107,7 +105,7 @@ class ContractFixturesTest extends TestCase
 
         IntegrationFixture::registerFakes('cortex', 'polycart');
 
-        Feature::for($this->admin)->deactivate(PolycartFeature::class);
+        Feature::for($this->admin)->deactivate('polycart.atrium');
 
         $this->assertResponseMatchesFixture('shell-integrations', $this->actingAs($this->admin)->getJson(route('atrium.shell')));
     }
@@ -254,7 +252,7 @@ class ContractFixturesTest extends TestCase
                 'key' => 'cortex',
                 'label' => 'Cortex',
                 'api_base' => '/cortex/api',
-                'features' => [CortexFeature::class],
+                'features' => ['cortex.atrium'],
                 'navigation' => [[
                     'label' => 'Cortex records',
                     'icon' => 'i-lucide-box',

@@ -248,8 +248,9 @@ it('has an upgrade note for the history removal pointing to Keen', function (): 
 it('documents detecting and enabling an integration', function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))->not->toBe('')
         ->toContain('Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom')
-        ->toContain('refactor-circus/{pkg}')
-        ->toContain('installed')
+        ->toContain('integration.json')
+        ->toContain('extra.atrium.integration')
+        ->toContain('atrium:discover')
         ->toContain('`atrium.integrations.{pkg}.enabled`')
         ->toContain('"false"')
         // Atrium's PHP never loads a package's classes.
@@ -272,7 +273,8 @@ it('documents the Pennant flags and turning an integration off per user', functi
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))
         ->toContain('Pennant')
         ->toContain('`atrium.integrations.{pkg}.features`')
-        ->toContain('{Pkg}Feature')
+        ->toContain('`{pkg}.atrium`')
+        ->not->toContain('{Pkg}Feature')
         ->toContain('Feature::for($user)->deactivate(')
         ->toContain('active: false')
         ->toContain('Without Pennant');
@@ -339,6 +341,31 @@ it('turns MODULES.md into the guide to writing a module, with the eight packages
     foreach (['Cortex', 'Guardian', 'Impex', 'Keen', 'PennantPlus', 'Polycart', 'Roster', 'Showroom'] as $package) {
         expect(docsSection(docsPath('MODULES.md'), 'Writing a module'))->toContain('| '.$package.' |');
     }
+});
+
+it('documents the integration manifest: the contract, the writing step and the schema (D-090)', function (): void {
+    $modules = (string) file_get_contents(docsPath('MODULES.md'));
+
+    expect(docsSection(docsPath('MODULES.md'), 'The contract'))->not->toBe('')
+        ->toContain('### 8. The integration manifest')
+        ->toContain('@refactor-circus/atrium/schema/integration.schema.json')
+        ->toContain('$config')
+        ->toContain('$screen')
+        ->toContain('$subject_scope')
+        ->toContain('`map`')
+        ->toContain('`lists`')
+        ->toContain('`targets`')
+        ->toContain('`options`')
+        ->and(docsSection(docsPath('MODULES.md'), 'Writing a module'))
+        ->toContain('src/integration.json')
+        ->toContain('expectIntegrationManifest(')
+        ->toContain('"integration": "dist/atrium/integration.json"')
+        ->and($modules)->not->toContain('src/Integrations/{Pkg}')
+        ->and(docsSection(docsPath('README.md'), 'Suite integrations'))
+        ->toContain('### Integration manifests')
+        ->toContain('Atrium::integration(')
+        ->toContain('InvalidIntegrationException')
+        ->toContain('lang/{locale}.json');
 });
 
 it('documents the workbench loading the sibling checkouts\' modules', function (): void {
@@ -421,12 +448,14 @@ it('lists the screen route in the API table', function (): void {
 });
 
 it('describes the integrations in the agent docs', function (string $path, array $phrases): void {
-    expect((string) file_get_contents($path))->toContain(...$phrases);
+    expect((string) file_get_contents($path))->toContain(...$phrases)
+        ->not->toContain('src/Integrations/{Pkg}')
+        ->not->toContain('{Pkg}Feature');
 })->with([
-    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'src/Integrations/{Pkg}', 'atrium/integrations', 'useAtriumIntegration(', 'D-089', 'MODULES.md']],
+    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'integration.json', 'D-090', 'ui/sdk/schema/integration.schema.json', 'expectIntegrationManifest()', 'atrium/integrations', 'useAtriumIntegration(', 'D-089', 'MODULES.md']],
     'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['D-089', 'MODULES.md', 'useAtriumIntegration(', '[[integrations]]']],
-    'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['`Integrations`', 'src/Integrations/{Pkg}', 'atrium.screens.show']],
-    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.integrations.{pkg}.enabled', 'polycart.routes.enabled', 'roster.routes.enabled', 'Pennant', 'useAtriumIntegration(']],
+    'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['`Integrations`', 'D-090', 'atrium.screens.show']],
+    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.integrations.{pkg}.enabled', 'integration.json', 'Atrium::integration(', 'polycart.atrium', 'polycart.routes.enabled', 'roster.routes.enabled', 'Pennant', 'useAtriumIntegration(']],
 ]);
 
 it('has the local integrations standard', function (): void {
@@ -438,7 +467,10 @@ it('has the local integrations standard', function (): void {
         ->toContain('kind: architectural')
         // Layout.
         ->toContain('src/Domains/Integrations')
-        ->toContain('src/Integrations/{Pkg}')
+        ->toContain('atrium/src/integration.json')
+        ->toContain('D-090')
+        ->toContain('ui/sdk/schema/integration.schema.json')
+        ->toContain('cases.json')
         ->toContain('atrium/')
         ->toContain('D-089')
         ->toContain('src/routes.ts')
@@ -450,7 +482,8 @@ it('has the local integrations standard', function (): void {
         // Gating and hooks.
         ->toContain('InstalledPackages')
         ->toContain('Pennant')
-        ->toContain('src/Integrations/Hooks')
+        ->toContain('IntegrationHooks')
+        ->toContain('$config')
         // No vendored clients (D-089 supersedes D-020).
         ->not->toContain('sync:clients')
         ->toContain('D-020')

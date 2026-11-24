@@ -1,0 +1,25 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "pennantplus",
+  "label": "PennantPlus",
+  "features": [
+    "pennantplus.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "Feature flags",
+      "path": "/pennantplus/features",
+      "icon": "i-lucide-flag",
+      "group": "System",
+      "sort": 90
+    }
+  ],
+  "screens": [
+    {
+      "key": "pennantplus.features",
+      "kind": "list",
+      "path": "/pennantplus/features"
+    }
+  ]
+}
