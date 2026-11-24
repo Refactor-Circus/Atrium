@@ -97,11 +97,22 @@ export const atriumUiConfig = {
   switch: compact,
   fileUpload: compact,
   pinInput: compact,
+  // The label sits alone on its row, so fields side by side (a filter bar,
+  // a form row) keep their labels and controls in line whatever their hints;
+  // the hint, which Nuxt UI puts beside the label (and which ran into it in
+  // a narrow field), drops below the control, after any help or error
+  // (D-095). The wrapper and label row are `contents`, so the root's column
+  // can order the hint last without changing the DOM (the label still names
+  // the field before the hint for a screen reader).
   formField: {
     slots: {
-      root: 'text-xs',
+      root: 'flex flex-col text-xs',
+      wrapper: 'contents',
+      labelWrapper: 'contents',
       label: 'font-medium text-toned text-xs',
+      description: 'mt-0.5 text-muted',
       container: 'mt-1 relative',
+      hint: 'order-last mt-1 text-muted text-pretty',
       help: 'mt-1 text-muted',
       error: 'mt-1 text-error'
     }

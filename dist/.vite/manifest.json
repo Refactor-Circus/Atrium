@@ -49,98 +49,98 @@
     "src": "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js",
     "isDynamicEntry": true
   },
-  "_AtriumDashboardPage-DtMLep77.js": {
-    "file": "chunks/AtriumDashboardPage-DtMLep77.js",
+  "_AtriumDashboardPage-Du3axU3j.js": {
+    "file": "chunks/AtriumDashboardPage-Du3axU3j.js",
     "name": "AtriumDashboardPage",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_AtriumUnregistered-CCRZg5B0.js",
-      "_Select-cDy5AtUC.js",
-      "_Skeleton-CNP6izQn.js",
-      "_useAtriumIcon-CA_BO3cL.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_Select-CyX1CoCb.js",
+      "_Skeleton-DKti8ILn.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_preload-helper-DclECHGd.js"
     ],
     "dynamicImports": [
       "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js"
     ]
   },
-  "_AtriumScreen-XQwmi0J2.js": {
-    "file": "chunks/AtriumScreen-XQwmi0J2.js",
+  "_AtriumScreen-B3jnMUtP.js": {
+    "file": "chunks/AtriumScreen-B3jnMUtP.js",
     "name": "AtriumScreen",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_useAtriumIcon-CA_BO3cL.js",
-      "_AtriumUnregistered-CCRZg5B0.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_AtriumUnregistered-D_huC_NF.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_Tabs-C5BumaSP.js",
-      "_Skeleton-CNP6izQn.js"
+      "_Tabs-CqfRXhK5.js",
+      "_Skeleton-DKti8ILn.js"
     ]
   },
-  "_AtriumSettingsPanel-DzFs_hoV.js": {
-    "file": "chunks/AtriumSettingsPanel-DzFs_hoV.js",
+  "_AtriumSettingsPanel-BpmQAqgi.js": {
+    "file": "chunks/AtriumSettingsPanel-BpmQAqgi.js",
     "name": "AtriumSettingsPanel",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_AtriumUnregistered-CCRZg5B0.js",
-      "_AtriumScreen-XQwmi0J2.js",
-      "_useAtriumIcon-CA_BO3cL.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_AtriumScreen-B3jnMUtP.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
       "_vue-i18n-Dd_KwCqc.js"
     ]
   },
-  "_AtriumUnregistered-CCRZg5B0.js": {
-    "file": "chunks/AtriumUnregistered-CCRZg5B0.js",
+  "_AtriumUnregistered-D_huC_NF.js": {
+    "file": "chunks/AtriumUnregistered-D_huC_NF.js",
     "name": "AtriumUnregistered",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_Badge-BBkpSwHM.js",
-      "_Skeleton-CNP6izQn.js"
+      "_Badge-DBxp4YA6.js",
+      "_Skeleton-DKti8ILn.js"
     ]
   },
-  "_AtriumVersionBanner-CUs3geqs.js": {
-    "file": "chunks/AtriumVersionBanner-CUs3geqs.js",
+  "_AtriumVersionBanner-mG2o9OgF.js": {
+    "file": "chunks/AtriumVersionBanner-mG2o9OgF.js",
     "name": "AtriumVersionBanner",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_ColorModeButton-BjJw-0tV.js",
-      "_useAtriumIcon-CA_BO3cL.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
       "_vue-i18n-Dd_KwCqc.js",
       "_pinia-C4-tzdo8.js",
-      "_Badge-BBkpSwHM.js"
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_Badge-BBkpSwHM.js": {
-    "file": "chunks/Badge-BBkpSwHM.js",
+  "_Badge-DBxp4YA6.js": {
+    "file": "chunks/Badge-DBxp4YA6.js",
     "name": "Badge",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js"
     ]
   },
-  "_ColorModeButton-BjJw-0tV.js": {
-    "file": "chunks/ColorModeButton-BjJw-0tV.js",
+  "_ColorModeButton-yq2RxK5W.js": {
+    "file": "chunks/ColorModeButton-yq2RxK5W.js",
     "name": "ColorModeButton",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_Badge-BBkpSwHM.js"
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_DashboardPanel-CQuCqwz9.js": {
-    "file": "chunks/DashboardPanel-CQuCqwz9.js",
+  "_DashboardPanel-DbdaB3o7.js": {
+    "file": "chunks/DashboardPanel-DbdaB3o7.js",
     "name": "DashboardPanel",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
@@ -148,77 +148,77 @@
       "_devtools-RytpElE1-Cb4cD7Ml.js"
     ]
   },
-  "_DashboardSidebar-CtuFwJFV.js": {
-    "file": "chunks/DashboardSidebar-CtuFwJFV.js",
+  "_DashboardSidebar-CvViEL0E.js": {
+    "file": "chunks/DashboardSidebar-CvViEL0E.js",
     "name": "DashboardSidebar",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_ColorModeButton-BjJw-0tV.js",
-      "_Badge-BBkpSwHM.js"
+      "_DropdownMenu-DdLCmTh8.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_DropdownMenu-BjP5m4sA.js": {
-    "file": "chunks/DropdownMenu-BjP5m4sA.js",
+  "_DropdownMenu-DdLCmTh8.js": {
+    "file": "chunks/DropdownMenu-DdLCmTh8.js",
     "name": "DropdownMenu",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js",
-      "_Badge-BBkpSwHM.js"
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_PageGrid-DwDu1o-2.js": {
-    "file": "chunks/PageGrid-DwDu1o-2.js",
+  "_PageGrid-CCjYyhrj.js": {
+    "file": "chunks/PageGrid-CCjYyhrj.js",
     "name": "PageGrid",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js"
     ]
   },
-  "_PageHeader-yg4HOzU2.js": {
-    "file": "chunks/PageHeader-yg4HOzU2.js",
+  "_PageHeader-_fc-AG76.js": {
+    "file": "chunks/PageHeader-_fc-AG76.js",
     "name": "PageHeader",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardPanel-CQuCqwz9.js"
+      "_DashboardPanel-DbdaB3o7.js"
     ]
   },
-  "_Select-cDy5AtUC.js": {
-    "file": "chunks/Select-cDy5AtUC.js",
+  "_Select-CyX1CoCb.js": {
+    "file": "chunks/Select-CyX1CoCb.js",
     "name": "Select",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_Badge-BBkpSwHM.js"
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_Skeleton-CNP6izQn.js": {
-    "file": "chunks/Skeleton-CNP6izQn.js",
+  "_Skeleton-DKti8ILn.js": {
+    "file": "chunks/Skeleton-DKti8ILn.js",
     "name": "Skeleton",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
-      "_Badge-BBkpSwHM.js"
+      "_Badge-DBxp4YA6.js"
     ]
   },
-  "_Tabs-C5BumaSP.js": {
-    "file": "chunks/Tabs-C5BumaSP.js",
+  "_Tabs-CqfRXhK5.js": {
+    "file": "chunks/Tabs-CqfRXhK5.js",
     "name": "Tabs",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardPanel-CQuCqwz9.js",
-      "_Badge-BBkpSwHM.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_Badge-DBxp4YA6.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js"
     ]
@@ -268,11 +268,11 @@
       "_runtime-core.esm-bundler-DdPnhzZn.js"
     ]
   },
-  "_useAtriumIcon-CA_BO3cL.js": {
-    "file": "chunks/useAtriumIcon-CA_BO3cL.js",
+  "_useAtriumIcon-BhNVwKJ0.js": {
+    "file": "chunks/useAtriumIcon-BhNVwKJ0.js",
     "name": "useAtriumIcon",
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js"
     ]
   },
@@ -292,20 +292,20 @@
     ]
   },
   "src/main.ts": {
-    "file": "atrium-prMNh1kp.js",
+    "file": "atrium-JHcd_3r1.js",
     "name": "atrium",
     "src": "src/main.ts",
     "isEntry": true,
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
-      "_AtriumVersionBanner-CUs3geqs.js",
-      "_useAtriumIcon-CA_BO3cL.js",
+      "_AtriumVersionBanner-mG2o9OgF.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
       "_pinia-C4-tzdo8.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_vue-router-DVn0e99d.js",
-      "_DashboardSidebar-CtuFwJFV.js",
+      "_DashboardSidebar-CvViEL0E.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js",
       "_preload-helper-DclECHGd.js"
@@ -335,114 +335,114 @@
     ]
   },
   "src/pages/DashboardIndexPage.vue": {
-    "file": "chunks/DashboardIndexPage-rKSiuIZG.js",
+    "file": "chunks/DashboardIndexPage-DVqSYpQF.js",
     "name": "DashboardIndexPage",
     "src": "src/pages/DashboardIndexPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AtriumDashboardPage-DtMLep77.js",
+      "_AtriumDashboardPage-Du3axU3j.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "__plugin-vue_export-helper-BDNMzG2s.js"
     ]
   },
   "src/pages/DashboardPage.vue": {
-    "file": "chunks/DashboardPage-BUrS6gsc.js",
+    "file": "chunks/DashboardPage-Brn-YLL8.js",
     "name": "DashboardPage",
     "src": "src/pages/DashboardPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AtriumDashboardPage-DtMLep77.js",
+      "_AtriumDashboardPage-Du3axU3j.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js"
     ]
   },
   "src/pages/NotFoundPage.vue": {
-    "file": "chunks/NotFoundPage-C7QA6Z08.js",
+    "file": "chunks/NotFoundPage-CBD-y0Q6.js",
     "name": "NotFoundPage",
     "src": "src/pages/NotFoundPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js"
     ]
   },
   "src/pages/SettingsIndexPage.vue": {
-    "file": "chunks/SettingsIndexPage-CRhWfrdq.js",
+    "file": "chunks/SettingsIndexPage-CBqLS8H2.js",
     "name": "SettingsIndexPage",
     "src": "src/pages/SettingsIndexPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
-      "_AtriumScreen-XQwmi0J2.js",
-      "_PageGrid-DwDu1o-2.js",
-      "_Skeleton-CNP6izQn.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_AtriumScreen-B3jnMUtP.js",
+      "_PageGrid-CCjYyhrj.js",
+      "_Skeleton-DKti8ILn.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_useAtriumIcon-CA_BO3cL.js"
+      "_useAtriumIcon-BhNVwKJ0.js"
     ]
   },
   "src/pages/SettingsPanelPage.vue": {
-    "file": "chunks/SettingsPanelPage-DstC2jX2.js",
+    "file": "chunks/SettingsPanelPage-CM-OYRDA.js",
     "name": "SettingsPanelPage",
     "src": "src/pages/SettingsPanelPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardPanel-CQuCqwz9.js",
-      "_AtriumSettingsPanel-DzFs_hoV.js",
-      "_Skeleton-CNP6izQn.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_AtriumSettingsPanel-BpmQAqgi.js",
+      "_Skeleton-DKti8ILn.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_AtriumScreen-XQwmi0J2.js"
+      "_AtriumScreen-B3jnMUtP.js"
     ]
   },
   "src/shared/atrium-ui.ts": {
-    "file": "shared/refactor-circus-atrium-ui-Baik5Vuv.js",
+    "file": "shared/refactor-circus-atrium-ui-B22JM-v0.js",
     "name": "shared/refactor-circus-atrium-ui",
     "src": "src/shared/atrium-ui.ts",
     "isEntry": true,
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DropdownMenu-BjP5m4sA.js",
-      "_Badge-BBkpSwHM.js",
-      "_DashboardPanel-CQuCqwz9.js",
-      "_ColorModeButton-BjJw-0tV.js",
-      "_Tabs-C5BumaSP.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_Tabs-CqfRXhK5.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_Select-cDy5AtUC.js",
-      "_DashboardSidebar-CtuFwJFV.js",
+      "_Select-CyX1CoCb.js",
+      "_DashboardSidebar-CvViEL0E.js",
       "_core--pP3C62o.js",
-      "_Skeleton-CNP6izQn.js",
-      "_PageHeader-yg4HOzU2.js",
+      "_Skeleton-DKti8ILn.js",
+      "_PageHeader-_fc-AG76.js",
       "__plugin-vue_export-helper-BDNMzG2s.js",
-      "_PageGrid-DwDu1o-2.js"
+      "_PageGrid-CCjYyhrj.js"
     ],
     "css": [
       "assets/refactor-circus-atrium-ui-CzL5_8D6.css"
     ]
   },
   "src/shared/atrium.ts": {
-    "file": "shared/refactor-circus-atrium-DXWaBV7R.js",
+    "file": "shared/refactor-circus-atrium-C-iDWaah.js",
     "name": "shared/refactor-circus-atrium",
     "src": "src/shared/atrium.ts",
     "isEntry": true,
     "imports": [
       "_dist-BiG2Jq2W.js",
-      "_useAtriumIcon-CA_BO3cL.js",
-      "_AtriumVersionBanner-CUs3geqs.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_AtriumVersionBanner-mG2o9OgF.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_AtriumUnregistered-CCRZg5B0.js",
-      "_AtriumDashboardPage-DtMLep77.js",
-      "_DashboardPanel-CQuCqwz9.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_AtriumDashboardPage-Du3axU3j.js",
+      "_DashboardPanel-DbdaB3o7.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_AtriumScreen-XQwmi0J2.js",
-      "_PageHeader-yg4HOzU2.js",
-      "_Select-cDy5AtUC.js",
-      "_Badge-BBkpSwHM.js",
-      "_AtriumSettingsPanel-DzFs_hoV.js"
+      "_AtriumScreen-B3jnMUtP.js",
+      "_PageHeader-_fc-AG76.js",
+      "_Select-CyX1CoCb.js",
+      "_Badge-DBxp4YA6.js",
+      "_AtriumSettingsPanel-BpmQAqgi.js"
     ]
   },
   "src/shared/openapi-fetch.ts": {

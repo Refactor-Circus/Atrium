@@ -2,6 +2,7 @@
 import UBadge from '@nuxt/ui/components/Badge.vue'
 import UDashboardSearch from '@nuxt/ui/components/DashboardSearch.vue'
 import UDashboardSearchButton from '@nuxt/ui/components/DashboardSearchButton.vue'
+import { useDashboard } from '@nuxt/ui/utils/dashboard'
 import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { useAtriumSearch } from '../composables/useAtriumSearch'
@@ -25,10 +26,16 @@ const debounced = refDebounced(term, 250)
 const { groups: results, loading, search } = useAtriumSearch(() => { open.value = false })
 const { groups } = useAtriumPalette(term, results, () => { open.value = false })
 
-// Inside a <UDashboardGroup> the button also toggles the palette through the
-// dashboard's context; setting it here keeps it working anywhere else.
+// Inside a <UDashboardGroup> (the shell) the button already toggles the
+// palette through the dashboard's context, an async runtime hook: opening it
+// here as well made that toggle shut it again straight away (D-095). Only
+// outside a group, where the button's own toggle does nothing, open it here.
+const dashboard = useDashboard(null)
+
 function show() {
-  open.value = true
+  if (!dashboard) {
+    open.value = true
+  }
 }
 
 watch(debounced, q => search(q))
