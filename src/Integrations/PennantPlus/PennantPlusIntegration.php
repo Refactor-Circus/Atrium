@@ -12,7 +12,7 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 /**
  * What Atrium shows of PennantPlus (refactor-circus/pennantplus), as data
  * only: v1's one nav item and its one screen, `pennantplus.features`, the
- * list of stored feature flag values. The layer's page
+ * list of stored feature flag values. The module's page
  * (`/pennantplus/features`) calls PennantPlus's own API for everything it
  * shows and changes; the API's 403 stands in for v1's "manages feature
  * flags" check (`pennantplus.ability`).

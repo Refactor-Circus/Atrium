@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * The server-side labels of the PennantPlus integration (AC 53), ported from
  * PennantPlus v1's `pennantplus::pennantplus` lines. The page's own strings
- * live in the layer: `nuxt/layer/i18n/locales/integrations/pennantplus.en.json`.
+ * live in its module: `ui/modules/pennantplus/src/locales/pennantplus.en.json`.
  */
 
 return [

@@ -8,7 +8,7 @@ use InvalidArgumentException;
 
 /**
  * Icons are Iconify names, `i-{collection}-{name}` (`i-lucide-home`), which
- * the Nuxt layer renders. Definitions check theirs when they are set, so a
+ * the front end renders. Definitions check theirs when they are set, so a
  * bad icon fails where it is written rather than as a blank in the browser.
  */
 final class Iconify

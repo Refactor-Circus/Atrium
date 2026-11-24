@@ -14,7 +14,7 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 
 /**
  * What Atrium shows of Showroom, the product catalog, ported from Showroom's
- * v1 `ShowroomPlugin`. Everything here is data: the layer's Showroom pages,
+ * v1 `ShowroomPlugin`. Everything here is data: the module's Showroom pages,
  * widgets, panel and search source call Showroom's own API (`showroom.*`) for
  * what they display.
  *

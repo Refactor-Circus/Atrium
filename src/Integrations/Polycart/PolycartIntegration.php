@@ -15,8 +15,8 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
  * What Atrium shows of Polycart (refactor-circus/polycart), as data only,
  * ported from v1's `PolycartPlugin`: the carts and cart types nav items, the
  * `polycart.carts-by-type` and `polycart.recent-carts` widgets (both fed by
- * Polycart's `stats.show` in the layer, so each sends `data: {}`), the
- * `polycart` search source, and its three screens. The layer's pages,
+ * Polycart's `stats.show` in the module, so each sends `data: {}`), the
+ * `polycart` search source, and its three screens. The module's pages,
  * widgets and search source call Polycart's own API for everything they show
  * and change; its policies answer 403 where v1 hid a control.
  *

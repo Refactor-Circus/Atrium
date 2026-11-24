@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 /*
  * The Impex integration's server-side labels: its nav items, widgets,
- * settings panel and search source. The layer's own Impex strings live in
- * `nuxt/layer/i18n/locales/integrations/impex.en.json`.
+ * settings panel and search source. The module's own Impex strings live in
+ * `ui/modules/impex/src/locales/impex.en.json`.
  */
 
 return [

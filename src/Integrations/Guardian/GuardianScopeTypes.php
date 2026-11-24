@@ -12,7 +12,7 @@ namespace RefactorCircus\Atrium\Integrations\Guardian;
  * `team`) names a scope; its value is the morph type Guardian stores for it.
  * A null value reads `guardian.adopt.scope_types.{key}`, the type Guardian
  * already maps Roster's scopes to. A value that does not resolve to a
- * non-empty string is dropped, so the layer offers no scope it cannot name.
+ * non-empty string is dropped, so the front end offers no scope it cannot name.
  *
  * Shared by the screens' `scope_types` option and the `guardian.access` hook.
  */
@@ -42,7 +42,7 @@ final class GuardianScopeTypes
     }
 
     /**
-     * The resolved types as the layer reads them: a list of
+     * The resolved types as the front end reads them: a list of
      * `{key, type}`, so an empty one is still a JSON list.
      *
      * @return list<array{key: string, type: string}>

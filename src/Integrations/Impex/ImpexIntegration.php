@@ -14,13 +14,13 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 
 /**
  * What Atrium shows of Impex, the workflow engine and integration ledger,
- * ported from Impex's v1 `ImpexPlugin`. Everything here is data: the layer's
+ * ported from Impex's v1 `ImpexPlugin`. Everything here is data: the module's
  * Impex pages, widgets, panel, search source and live resolver call Impex's
  * own API (`impex.*`) for what they display.
  *
  * Departures from v1 (D-031, D-032): nav items no longer hide by permission
  * (a screen shows its no-access state on Impex's 403), Atrium computes no
- * Runs badge (the layer's `impex.active-runs` resolver reads
+ * Runs badge (the module's `impex.active-runs` resolver reads
  * `impex.stats.show`), and operator mode is gone with
  * `impex.atrium.show_all`. As in v1, the screens declare no audit subject:
  * Impex's models have no morph alias of their own to name.

@@ -20,7 +20,7 @@ class SettingsPanel
 
     /**
      * The key the client renders the panel with: the component registered
-     * for it in the layer's `$atrium.settingsPanel()`. The panel key by default.
+     * for it in the front end's `defineAtriumModule({ settingsPanels }) ()`. The panel key by default.
      */
     public private(set) string $component;
 

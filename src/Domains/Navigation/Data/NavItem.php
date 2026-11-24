@@ -23,7 +23,7 @@ class NavItem
 
     /**
      * The SPA path this item links to (`/showroom/products`), when it was
-     * declared with `path()`: a page of the layer, below `atrium.client_path`.
+     * declared with `path()`: a page of the front end, below `atrium.client_path`.
      */
     public private(set) ?string $path = null;
 
@@ -47,7 +47,7 @@ class NavItem
     public private(set) array $children = [];
 
     /**
-     * The layer resolver that computes this item's badge or children from a
+     * The front end resolver that computes this item's badge or children from a
      * package API, and the static options it is handed.
      *
      * @var array{key: string, options: array<array-key, mixed>}|null
@@ -153,7 +153,7 @@ class NavItem
     }
 
     /**
-     * Let the layer compute the badge or children with the resolver it
+     * Let the front end compute the badge or children with the resolver it
      * registered under the key (`$atrium.live(key, ...)`), handing it the
      * options. Atrium sends the key and options as they are, so they must
      * be static, JSON-serializable data.

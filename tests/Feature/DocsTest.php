@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 /*
- * The documentation promises of Atrium 2 (AC 23 and 25): the README covers
- * installing, host-chosen auth and using the Nuxt layer; the README and the
- * Boost skill explain screen extensions as JSON plus client components; the
- * agent docs describe the API + layer model; none of them still teaches the
- * removed Blade UI or the history screen that moved to Keen. The suite
- * integrations (AC 76) follow further down.
+ * The documentation promises of Atrium 2 (AC 23 and 25, D-079 to D-087): the
+ * README covers installing, host-chosen auth (the session by default) and
+ * the front end Atrium serves with its modules; the README and the Boost
+ * skill explain screen extensions as JSON plus components a module
+ * registers; the agent docs describe the API + page + modules model; none of
+ * them still teaches the removed Blade UI, the replaced Nuxt layer or the
+ * history screen that moved to Keen. The suite integrations (AC 76) follow
+ * further down.
  */
 
 /**
@@ -36,13 +38,18 @@ it('documents installing Atrium', function (): void {
         ->toContain('php artisan atrium:install')
         ->toContain('php artisan migrate')
         ->toContain('viewAtrium')
+        ->toContain('AtriumUser')
+        ->toContain('/atrium')
         ->toContain('atrium/api');
 });
 
 it('documents host-chosen auth', function (): void {
     expect(docsSection(docsPath('README.md'), 'Authentication'))->not->toBe('')
-        // Atrium ships none: the host's guard goes before Authorize.
-        ->toContain('atrium.routes.middleware')
+        // Atrium ships none: the page and its API share the session by
+        // default, and the host's guard goes before Authorize.
+        ->toContain("'web', 'auth', Authorize::class")
+        ->toContain('X-XSRF-TOKEN')
+        ->toContain('401')
         ->toContain('auth:sanctum')
         ->toContain('auth:api')
         ->toContain('Authorize::class')
@@ -55,11 +62,9 @@ it('documents host-chosen auth', function (): void {
         // Token auth sends the Authorization header; the host stores the token.
         ->toContain('`Authorization` header')
         ->toContain('Bearer')
-        ->toContain('token storage belongs to the host')
-        // The workbench guard is a stand-in.
-        ->toContain('AuthenticateWorkbenchToken')
-        ->toContain('never copy it into production')
-        // The 401 hook.
+        ->toContain('Atrium never reads or writes it')
+        // The auth adapter and its 401 hook.
+        ->toContain('useAtrium().auth(')
         ->toContain('onUnauthorized');
 });
 
@@ -70,25 +75,31 @@ it('warns about the local gate fallback', function (): void {
         ->toContain('staging');
 });
 
-it('documents using the Nuxt layer', function (): void {
-    expect(docsSection(docsPath('README.md'), 'The Nuxt layer'))->not->toBe('')
-        // Git extends (D-001), private repos, SHA pinning, protected tags.
-        ->toContain("extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0']")
-        ->toContain('GIGET_AUTH')
-        ->toContain('commit SHA')
-        ->toContain('mutable')
-        ->toContain('NUXT_PUBLIC_ATRIUM_API_BASE')
+it('documents the front end and its modules', function (): void {
+    expect(docsSection(docsPath('README.md'), 'The front end'))->not->toBe('')
+        // The page and its files (D-079, D-081).
+        ->toContain('atrium::app')
         ->toContain('client_path')
-        // The registry.
-        ->toContain('$atrium.widget(')
-        ->toContain('$atrium.extension(')
-        ->toContain('$atrium.settingsPanel(')
-        ->toContain('auth(')
+        ->toContain('/vendor/atrium/{owner}/{version}/{path}')
+        ->toContain('atrium.client.enabled')
+        // The module contract (D-082 to D-084).
+        ->toContain('defineAtriumModule(')
+        ->toContain('extra.atrium')
+        ->toContain('atrium:discover')
+        ->toContain('Atrium::module(')
+        ->toContain('Atrium::script(')
+        ->toContain('Atrium::style(')
+        ->toContain('atrium.scripts')
+        ->toContain('MODULES.md')
+        // The shared modules and the SDK.
+        ->toContain('ATRIUM_SHARED_API')
+        ->toContain('@refactor-circus/atrium/ui')
+        ->toContain('github:refactor-circus/atrium#v2.0.0&path:ui/sdk')
+        ->toContain('atriumModule(')
         // Icons (D-010) and locales (D-003, D-011).
-        ->toContain('@iconify-json/')
-        ->toContain('serverBundle')
-        ->toContain('fallbackToApi')
         ->toContain('i-lucide-')
+        ->toContain('addAtriumIcons(')
+        ->toContain('atrium.icons.remote')
         ->toContain('locale')
         // Version skew (D-004).
         ->toContain('api_version');
@@ -129,9 +140,10 @@ it('documents every part of the registry', function (string $path): void {
         ->toContain('$screen->key')
         // What renders around an open registered tab.
         ->toContain('header.actions')
-        // Rendered on the client: the component key and the JSON payload.
+        // Rendered on the client: the component key, the module that
+        // registers it, and the JSON payload.
         ->toContain('->component(')
-        ->toContain('$atrium.extension(')
+        ->toContain('defineAtriumModule(')
         ->toContain('ResolvedScreenResource')
         // Duplicates per environment and across targets.
         ->toContain('production')
@@ -161,13 +173,32 @@ it('teaches nothing of the removed Blade UI', function (string $path): void {
     'domains standard' => docsPath('docs/agent/standards/atrium/domains.md'),
 ]);
 
-it('describes the API and layer model in the agent docs', function (string $path, array $phrases): void {
+it('teaches nothing of the replaced Nuxt layer', function (string $path): void {
+    expect((string) file_get_contents($path))
+        ->not->toContain('nuxt/layer')
+        ->not->toContain('nuxt/playground')
+        ->not->toContain('defineNuxtPlugin')
+        ->not->toContain('definePageMeta')
+        ->not->toContain('runtimeConfig')
+        ->not->toContain('pnpm -C nuxt')
+        ->not->toContain('composer test:nuxt')
+        ->not->toContain('$atrium.')
+        ->not->toContain('AuthenticateWorkbenchToken');
+})->with([
+    'README' => docsPath('README.md'),
+    'Boost skill' => docsPath('resources/boost/skills/atrium-development/SKILL.md'),
+    'CLAUDE.md' => docsPath('CLAUDE.md'),
+    'components standard' => docsPath('docs/agent/standards/atrium/components.md'),
+    'integrations standard' => docsPath('docs/agent/standards/atrium/integrations.md'),
+]);
+
+it('describes the API, page and modules model in the agent docs', function (string $path, array $phrases): void {
     expect((string) file_get_contents($path))->toContain(...$phrases);
 })->with([
-    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['nuxt/layer', 'composer test:nuxt', '$atrium.widget(', 'Iconify', 'JsonData']],
-    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['nuxt/layer', '$atrium.widget(', '$atrium.extension(', '$atrium.settingsPanel(', 'component', 'Nuxt UI', 'Iconify']],
+    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['ui/sdk', 'composer test:ui', 'atrium::app', 'defineAtriumModule(', 'extra.atrium', 'Iconify', 'JsonData']],
+    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['ui/sdk', 'defineAtriumModule(', 'widgets', 'extensions', 'settingsPanels', 'component', 'Nuxt UI', 'Iconify']],
     'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['loadApiRoutesFrom()', 'atrium.routes.prefix', 'atrium.plugins.{key}.', 'Resources/', 'Http/Resources/']],
-    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.routes.middleware', 'github:refactor-circus/atrium/nuxt/layer', '$atrium.widget(', 'client_path', 'i-lucide-']],
+    'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.routes.middleware', 'defineAtriumModule(', 'extra.atrium', 'client_path', 'i-lucide-']],
 ]);
 
 it('mentions no history screen or audit component', function (string $path): void {
@@ -209,7 +240,7 @@ it('has an upgrade note for the history removal pointing to Keen', function (): 
 
 /*
  * The suite integrations (AC 76): the README's "Suite integrations" section
- * covers detection, the API base, Pennant flags, the hook keys, the Nuxt
+ * covers detection, the API base, Pennant flags, the hook keys, the module
  * routes, the vendored clients, Atrium's own OpenAPI and client, and the
  * parity departures; the agent docs and the local standard describe them.
  */
@@ -234,7 +265,7 @@ it('documents the API base and turning on the Polycart and Roster APIs behind au
         ->toContain('`roster.routes.enabled`')
         ->toContain('auth:sanctum')
         ->toContain('warning')
-        ->toContain('runtimeConfig.public.atrium.integrations');
+        ->toContain('atriumClientOptions(');
 });
 
 it('documents the Pennant flags and turning an integration off per user', function (): void {
@@ -263,7 +294,7 @@ it('documents each hook key with its default', function (string $phrase): void {
     "'showroom:'",
 ]);
 
-it('documents the Nuxt routes of every integration', function (string $pkg): void {
+it('documents the module routes of every integration', function (string $pkg): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))->toContain('`/'.$pkg.'/');
 })->with(['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
 
@@ -272,12 +303,14 @@ it('documents the screen route, the unavailable page and page overrides', functi
         ->toContain('`atrium.screens.show`')
         ->toContain('AtriumIntegrationUnavailable')
         ->toContain('/roster/invitations/:token')
+        ->toContain('public: true')
         ->toContain('same path');
 });
 
 it('documents the vendored clients and sync:clients', function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))
-        ->toContain('pnpm -C nuxt sync:clients')
+        ->toContain('pnpm -C ui sync:clients')
+        ->toContain('ui/modules/{pkg}/client/')
         ->toContain('ATRIUM_SUITE_PATH')
         ->toContain('openapi.sha256')
         ->toContain('schema.d.ts')
@@ -289,7 +322,7 @@ it("documents Atrium's own OpenAPI document and client", function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))
         ->toContain('openapi.json')
         ->toContain('composer openapi:export')
-        ->toContain('pnpm -C nuxt generate:client')
+        ->toContain('pnpm -C ui generate:client')
         ->toContain('useAtriumClient()')
         ->toContain('OpenApiTest');
 });
@@ -307,9 +340,9 @@ it('documents the parity departures', function (): void {
  * The Guardian integration (AC 100): turning on Guardian's API behind auth,
  * `scope_types`, the two-factor and session middleware with the challenge
  * and setup pages, the deadline header through CORS, token drivers and the
- * 501 state, passkeys, the hook keys with their defaults, and
- * `$atrium.responseHandler()`; the agent docs, the local standard and the
- * pull request template follow.
+ * 501 state, passkeys, the hook keys with their defaults, and the modules'
+ * `responseHandlers`; the agent docs, the local standard and the pull
+ * request template follow.
  */
 
 it('documents the Guardian integration', function (string $phrase): void {
@@ -332,7 +365,7 @@ it('documents the Guardian integration', function (string $phrase): void {
     '`atrium.integrations.guardian.screens`',
     "'roster.organization' => ['guardian.access', 'guardian.sso', 'guardian.scim']",
     "'roster.user' => ['guardian.access', 'guardian.user-security', 'aside' => 'guardian.sso-identities']",
-    '$atrium.responseHandler(',
+    'responseHandlers',
     '`guardian.scim.prefix`',
 ]);
 
@@ -344,12 +377,12 @@ it('describes Guardian in the agent docs and the integrations standard', functio
     'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['guardian.routes.enabled', 'atrium.integrations.guardian.screens', 'responseHandler(']],
 ]);
 
-it('has Guardian in the pull request template\'s D-020 release item', function (): void {
+it('has Guardian in the pull request template\'s D-020 release items', function (): void {
     $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
 
-    preg_match('/^- \[ \] [^\n]*D-020[^\n]*(?:\n(?!- \[ \]|#)[^\n]*)*/m', $template, $item);
+    preg_match('/^### [^\n]*D-020[^\n]*\n(.*?)(?=^#)/ms', $template, $section);
 
-    expect($item[0] ?? '')->toContain('Guardian');
+    expect($section[1] ?? '')->toContain('Guardian');
 });
 
 it('lists the screen route in the API table', function (): void {
@@ -362,7 +395,7 @@ it('describes the integrations in the agent docs', function (string $path, array
     expect((string) file_get_contents($path))->toContain(...$phrases);
 })->with([
     'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'src/Integrations/{Pkg}', 'atrium/integrations', 'useAtriumIntegration(', 'sync:clients']],
-    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['app/integrations/{pkg}', 'useAtriumIntegration(', '[[integrations]]']],
+    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['ui/modules/{pkg}', 'useAtriumIntegration(', '[[integrations]]']],
     'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['`Integrations`', 'src/Integrations/{Pkg}', 'atrium.screens.show']],
     'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.integrations.{pkg}.enabled', 'polycart.routes.enabled', 'roster.routes.enabled', 'Pennant', 'useAtriumIntegration(']],
 ]);
@@ -377,8 +410,9 @@ it('has the local integrations standard', function (): void {
         // Layout.
         ->toContain('src/Domains/Integrations')
         ->toContain('src/Integrations/{Pkg}')
-        ->toContain('app/integrations/{pkg}')
-        ->toContain('app/pages/{pkg}')
+        ->toContain('ui/modules/{pkg}')
+        ->toContain('src/routes.ts')
+        ->toContain('src/atrium.ts')
         // Data-only PHP, Vue through clients.
         ->toContain('static')
         ->toContain('RefactorCircus\\Cortex')
@@ -409,11 +443,12 @@ it('has the integration release items in the pull request template', function ()
     $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
 
     expect($template)
-        // D-020: the vendored clients become pnpm git dependencies.
-        ->toContain('@refactor-circus/{pkg}-client')
-        ->toContain('github:refactor-circus/{pkg}#v2.0.0&path:/client')
+        // D-020: the staged modules' vendored clients go once each package
+        // ships its own module with its own client.
+        ->toContain('ui/modules/{pkg}/client/')
+        ->toContain('MODULES.md')
         ->toContain('sync:clients')
-        ->toContain('create{Pkg}Client')
+        ->toContain('VendoredClientsTest')
         // Polycart's `/client` export-ignore.
         ->toContain('Polycart')
         ->toContain('/client')

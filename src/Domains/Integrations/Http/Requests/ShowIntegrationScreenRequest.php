@@ -19,12 +19,12 @@ use RefactorCircus\Atrium\Http\Requests\Request;
 /**
  * A screen a suite integration declares (`atrium.screens.show`): its
  * declaration, the `record` it was asked for, and the tabs and sections
- * other packages registered for it, as the layer's screen renders them.
+ * other packages registered for it, as the front end's screen renders them.
  *
- * The layer page loads the record from the package's own API, so no model
+ * The front end page loads the record from the package's own API, so no model
  * is loaded here: `record` is echoed as a string, and extension resolvers
  * receive no record. A list screen's `row.actions` is sent as a plain slot,
- * whose sections the layer renders on each row.
+ * whose sections the front end renders on each row.
  *
  * A screen no registered integration declares, or one whose integration is
  * flagged off for this user, answers 404. The request reads registries only,

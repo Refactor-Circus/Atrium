@@ -14,7 +14,7 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
 /**
  * One global search result. Its URL goes out only as `link`, the
  * `{path, external}` ClientPath makes of it, or null for a URL ClientPath
- * refuses (`javascript:`, `//host` and the like), so the layer never follows
+ * refuses (`javascript:`, `//host` and the like), so the front end never follows
  * a URL ClientPath has not checked.
  *
  * @mixin SearchResult

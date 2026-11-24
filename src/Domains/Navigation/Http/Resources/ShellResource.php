@@ -16,12 +16,12 @@ use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
 
 /**
- * Everything the layer's chrome needs, in one request on boot: the app, the
+ * Everything the front end's chrome needs, in one request on boot: the app, the
  * signed-in user, the locale and API version, the navigation this user may
  * see, the themes, the settings panel summaries and the search box's minimum
  * query length.
  *
- * Which navigation item is active is the layer's to work out from its own
+ * Which navigation item is active is the front end's to work out from its own
  * route, so it is not sent. Every link goes out as `{path, external}`: an
  * item's SPA path (`NavItem::path()`) as it is, any other URL as ClientPath
  * makes it, or null for a URL ClientPath refuses. An item the
@@ -29,7 +29,7 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
  *
  * `integrations` lists every registered suite integration, in key order,
  * with whether it is active for this user and each of its feature flags;
- * `search.sources` the search sources of the active ones, which the layer
+ * `search.sources` the search sources of the active ones, which the front end
  * runs beside `atrium.search`, each capped at `search.per_source` results.
  *
  * @phpstan-type IntegrationState array{

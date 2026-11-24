@@ -15,7 +15,7 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
  * the two-factor challenge and setup, roles, permissions and their
  * assignments (moved from Roster, AC 99), one user's security, the security
  * administration and SSO connections. There are no widgets, settings panel
- * or search sources (D-057). The layer's pages call Guardian's own API for
+ * or search sources (D-057). The module's pages call Guardian's own API for
  * everything they show and change; Guardian answers 403 where a viewer may
  * not.
  *
@@ -68,7 +68,7 @@ final class GuardianIntegration extends Integration
     }
 
     /**
-     * The screens of AC 82, at their `/guardian/` layer paths (D-022).
+     * The screens of AC 82, at their `/guardian/` front-end paths (D-022).
      */
     public function screens(): array
     {

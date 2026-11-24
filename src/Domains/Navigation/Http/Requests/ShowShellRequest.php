@@ -18,7 +18,7 @@ use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
 use RefactorCircus\Atrium\Http\Requests\Request;
 
 /**
- * The shell the layer boots with. It reads registries only, so it has no
+ * The shell the front end boots with. It reads registries only, so it has no
  * model to authorize: the route group's `viewAtrium` gate decides, and the
  * navigation and panels are filtered for this user.
  */

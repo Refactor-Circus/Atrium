@@ -10,7 +10,7 @@
 
 A plug-and-play dashboard for Laravel that other packages can extend.
 
-Atrium is headless. The Composer package serves the dashboard as a JSON API: the shell (navigation, themes, settings panels, search), the user's dashboards and their widgets, and the screens packages extend. A Nuxt 4 layer in this repository, `nuxt/layer`, renders that API as a single-page app. Packages register a plugin on the PHP side and a Vue component per key on the Nuxt side, and their navigation, pages, settings, widgets and search results appear. The host application chooses how users sign in.
+Atrium serves the dashboard as a JSON API (the shell: navigation, themes, settings panels, search; the user's dashboards and their widgets; the screens packages extend) and renders it with a front end it ships **prebuilt**: one Blade page at `/atrium` loads it, so your application needs no Node and no build step, as with Horizon or Telescope. Packages register a plugin on the PHP side and ship a front-end **module** (their pages, widgets, tabs, settings panels and search, built against Atrium's SDK) that the page loads beside Atrium's own. The host application chooses how users sign in.
 
 Upgrading from v1? Atrium 2 removes the Blade dashboard entirely: see the v2.0.0 upgrade guide in [CHANGELOG.md](CHANGELOG.md).
 
@@ -22,9 +22,9 @@ php artisan atrium:install
 php artisan migrate
 ```
 
-`atrium:install` publishes `config/atrium.php`. The API is then served under `atrium/api` (`atrium.routes.prefix`), with every route named `atrium.*`.
+Open `/atrium` (`atrium.client_path`). `atrium:install` publishes `config/atrium.php`. The page sits behind your `web` session and `auth` guard; its API is served under `atrium/api` (`atrium.routes.prefix`), with every route named `atrium.*`. Nothing to publish, build or serve besides: the page loads its files from the package (see [The front end](#the-front-end)).
 
-Atrium refuses everyone outside the `local` environment until you define its gate. Add this to a service provider:
+Atrium refuses everyone outside the `local` environment until you say who may open it. Define its gate in a service provider:
 
 ```php
 use Illuminate\Support\Facades\Gate;
@@ -32,128 +32,145 @@ use Illuminate\Support\Facades\Gate;
 Gate::define('viewAtrium', fn ($user) => $user->is_admin);
 ```
 
-Atrium ships no authentication: add your application's guard before the API answers anyone (see [Authentication](#authentication)), then point the Nuxt layer at it (see [The Nuxt layer](#the-nuxt-layer)).
+or let your user model decide by implementing `RefactorCircus\Atrium\Domains\Access\Contracts\AtriumUser` (`canAccessAtrium(): bool`), which Atrium asks while no gate is defined (D-086).
 
 ## Authentication
 
-Atrium ships no authentication, OAuth server or login UI. Your application's guard signs the user in, and Atrium's `Authorize` middleware then checks the `viewAtrium` gate against that user. Add the guard to `atrium.routes.middleware`, before `Authorize::class`, which must stay last:
+Atrium ships no authentication, OAuth server or login UI. Your application's guard signs the user in, and Atrium's `Authorize` middleware then checks the `viewAtrium` gate against that user. By default the page and its API both use the session the page was served in, so there is nothing to configure:
 
 ```php
-// config/atrium.php
+// config/atrium.php (the defaults)
 'routes' => [
-    'enabled' => true,
     'prefix' => 'atrium/api',
-    'middleware' => ['api', 'auth:sanctum', Authorize::class], // or 'auth:api' for Passport
+    'middleware' => ['web', 'auth', Authorize::class],
+],
+
+'client' => [
+    'middleware' => ['web', 'auth', Authorize::class],
 ],
 ```
 
-Without a guard there is no signed-in user, and every route answers 401 JSON. A signed-in user the gate refuses gets 403. On a 401 the layer calls your auth adapter's `onUnauthorized()`, where you refresh a token or send the user to sign in.
+A guest opening the page is sent to your login route by `auth`; a signed-in user the gate refuses gets 403. The front end sends the session cookie, `X-XSRF-TOKEN` (from Laravel's `XSRF-TOKEN` cookie) and the page's `X-CSRF-TOKEN` on every request to its own origin, so CSRF protection passes. Keep `Authorize::class` last: it must run after the guard.
 
-Every route answers JSON whatever the `Accept` header, so a guest never gets a redirect to a login page.
+Every API route answers JSON whatever the `Accept` header: a guest gets `401 {"message":"Unauthenticated."}`, never a redirect. When the API answers 401 (the session expired), the front end reloads the page, and your `auth` middleware sends the user to sign in.
 
-### Cookie auth (Sanctum's SPA flow)
+The suite packages' APIs keep their own middleware: to serve one to the page, put `web` and your guard in that package's `routes.middleware` (for example `roster.routes.middleware`).
 
-When the SPA is served from another origin than the API, cookie auth needs the host's CORS and CSRF setup:
+### Another client of the API (Sanctum or Passport tokens)
 
-- In `config/cors.php`, add the API's prefix to `paths` (`'atrium/api/*'`, beside `'sanctum/csrf-cookie'`) and set `supports_credentials` to `true`.
-- List the SPA's domain in Sanctum's stateful domains (`SANCTUM_STATEFUL_DOMAINS`), make the `api` group stateful (`$middleware->statefulApi()` in `bootstrap/app.php`), and use `auth:sanctum` as the guard.
-- Have the SPA call `/sanctum/csrf-cookie` before its first write, so CSRF protection passes, and send the `X-XSRF-TOKEN` header from the `XSRF-TOKEN` cookie on writes.
-- Tell the layer to send cookies:
+A front end on another origin, or a script, swaps the session for its guard (`auth:sanctum` for Sanctum, `auth:api` for Passport):
 
-```ts
-useAtrium().auth({
-  credentials: 'include',
-  headers: () => ({ 'X-XSRF-TOKEN': decodeURIComponent(useCookie('XSRF-TOKEN').value ?? '') }),
-  onUnauthorized: () => navigateTo('/login', { external: true }),
-})
+```php
+'routes' => ['middleware' => ['api', 'auth:sanctum', Authorize::class]],
 ```
 
-### Token auth
-
-With a token guard (Passport's `auth:api`, Sanctum personal access tokens, or your own), the SPA sends the token in the `Authorization` header (`Authorization: Bearer ...`) from the auth adapter. CORS `paths` must still include the prefix.
+Across origins this needs the host's own setup: add the prefix to CORS `paths` (`config/cors.php`, `'atrium/api/*'`); for cookie auth set `supports_credentials`, list the client's domain in Sanctum's stateful domains and fetch `/sanctum/csrf-cookie` first; for token auth send the `Authorization` header. A module (or the app's own script) can replace how Atrium's front end signs requests with an auth adapter:
 
 ```ts
 useAtrium().auth({
   headers: () => ({ Authorization: `Bearer ${yourTokenStore.token}` }),
+  credentials: 'include',
   onUnauthorized: () => yourTokenStore.refresh(),
 })
 ```
 
-How the token is obtained, stored and refreshed is up to you: token storage belongs to the host, and Atrium never reads or writes it.
-
-### The workbench token guard
-
-The workbench (`composer serve`) signs the playground in with `Workbench\App\Http\Middleware\AuthenticateWorkbenchToken`, which accepts one fixed, public token in the `local` environment. It is a stand-in so the playground can run: never copy it into production, or into any application. It is not part of the package and not in the distributed archive.
+How a token is obtained, stored and refreshed is up to you: Atrium never reads or writes it.
 
 ### The `local` gate fallback
 
-While the `viewAtrium` gate is undefined, `Authorize` lets **any authenticated user** through when the application runs in the `local` environment, and nobody anywhere else. Never run a shared dev or staging server with `APP_ENV=local` unless everyone who can sign in there may see the dashboard: define the gate instead.
+While the `viewAtrium` gate is undefined and the user model does not implement `AtriumUser`, `Authorize` lets **any authenticated user** through when the application runs in the `local` environment, and nobody anywhere else (with one log notice saying how to let them in). Never run a shared dev or staging server with `APP_ENV=local` unless everyone who can sign in there may see the dashboard: define the gate instead.
 
-## The Nuxt layer
+## The front end
 
-`nuxt/layer` (`@refactor-circus/atrium-nuxt`) is a Nuxt 4 layer built with Nuxt UI 4, Pinia, VueUse and `@nuxtjs/i18n`, rendered client-side only (`ssr: false`). It provides the shell layout, navigation, ⌘K search and theme switching; the dashboard page with its grid editor and dashboard switcher; the settings pages; and screens with their tabs and sections.
+Atrium's front end is Vue 3 with Nuxt UI 4, Vue Router, Pinia, vue-i18n and VueUse, built with Vite and committed to the package's `dist/`. It provides the shell (the section rail, ⌘K, theme switching), the dashboard page with its grid editor and dashboard switcher, the settings pages, and screens with their tabs and sections. Its sources live in `ui/` (D-079).
 
-### Extending the layer
+### Serving
 
-The layer is distributed by git, not by a registry. Your Nuxt app extends it from the release tag of the Composer package it talks to:
+One Blade view, `atrium::app`, answers every path under `atrium.client_path` (default `/atrium`); the front end routes from there (`/atrium/roster/users/5`). It renders the import map of the shared modules, Atrium's and every module's stylesheets, the boot data (the API's URL, `client_path`, the signed-in user, the locale, the CSRF token, the active integrations and the modules loaded) and one `<script type="module">` per module before Atrium's own. A CSP nonce set with `Vite::useCspNonce()` goes on every script.
 
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  extends: ['github:refactor-circus/atrium/nuxt/layer#v2.0.0'],
+The files come straight from the packages through one route, `/vendor/atrium/{owner}/{version}/{path}` (`atrium.assets.path`), each URL carrying its build's hash and cached for a year: no `vendor:publish`, nothing in `public/`, nothing stale after `composer update`, the same on Octane and Vapor (D-081). Put a CDN in front of the route if you like. Only front-end files (scripts, stylesheets, fonts, images) inside a build's folder are ever served.
 
-  runtimeConfig: {
-    public: {
-      // Atrium's API; override with NUXT_PUBLIC_ATRIUM_API_BASE.
-      atrium: { apiBase: 'https://app.example.com/atrium/api' },
-    },
-  },
-})
-```
-
-Nuxt fetches the layer with giget. For a private fork, set `GIGET_AUTH` to a GitHub token with read access before `nuxi dev` or `nuxi build`.
-
-For production, pin the layer to a commit SHA rather than a tag: a `v*` tag is mutable, a SHA is not. Use the commit the `v2.0.0` tag points at:
-
-```ts
-extends: ['github:refactor-circus/atrium/nuxt/layer#<commit SHA of v2.0.0>'],
-```
-
-The release process protects `v*` tags, but a pinned SHA keeps your build reproducible regardless.
-
-Keep the layer and the Composer package on the same release. The shell sends `api_version` (`Atrium::API_VERSION`, the release's major.minor), and the layer shows a dismissible warning, and logs one, when it differs from its own version.
+Set `atrium.client.enabled` to `false` to serve neither the page nor its files (a host with a front end of its own, which then talks to the JSON API).
 
 ### `client_path`
 
-`atrium.client_path` (default `/`) is the base path the host serves the SPA from, and it must match it. Navigation items and search results are sent as `link: {path, external}`: a URL on your application's host (`app.url`) under `client_path` becomes a path inside the SPA, and any other http(s) URL is external (opened with `rel="noopener noreferrer"`). Serving the SPA from `/admin`? Set `'client_path' => '/admin'`. A link that is neither an http(s) URL nor a relative path is sent as `link: null`.
+`atrium.client_path` (default `/atrium`) is where the page is served and the base of every path the front end routes to. Navigation items and search results are sent as `link: {path, external}`: a URL on your application's host (`app.url`) under `client_path` becomes a path inside the front end, and any other http(s) URL is external (opened in a new tab with `rel="noopener noreferrer"`). A link that is neither an http(s) URL nor a relative path is sent as `link: null`.
 
-A nav item that links to a page of the SPA declares it with `path()` (`NavItem::make('Invoices')->path('/billing/invoices')`): the path is sent as `{path: '/billing/invoices', external: false}` whatever `client_path` is, and the layer's router puts it under the SPA's base URL. `url()` is a URL the host serves: a relative `url('/billing/invoices')` with `client_path` `/admin` is outside the SPA and sent as external. The suite integrations' nav items all use `path()`.
+A nav item that links to a page of the front end declares it with `path()` (`NavItem::make('Invoices')->path('/billing/invoices')`): the path is sent as `{path: '/billing/invoices', external: false}` whatever `client_path` is. `url()` is a URL the host serves: a relative `url('/billing/invoices')` with `client_path` `/atrium` is outside the front end and sent as external. The suite integrations' nav items all use `path()`.
 
-### Registering components
+Keep the package's front end and its API on one release: they ship together. The shell sends `api_version` (`Atrium::API_VERSION`, the release's major.minor), and the front end shows a dismissible warning when its SDK's version differs.
 
-Everything a package shows is a Vue component the app registers under the key its PHP side declares: the widget, screen extension or settings panel key, unless the PHP definition names another with `->component('...')`. Register them, and your auth adapter, in a Nuxt plugin:
+### Modules
+
+Everything a package shows is a Vue component its **module** registers under the key its PHP side declares: the widget, screen extension or settings panel key, unless the PHP definition names another with `->component('...')`. A module is the package's own front end, built with Atrium's preset into `dist/atrium/atrium.js` and `atrium.css`, committed, and declared in the package's `composer.json`, with no Composer dependency on Atrium (D-082):
+
+```json
+"extra": {
+    "atrium": {
+        "scripts": ["dist/atrium/atrium.js"],
+        "styles": ["dist/atrium/atrium.css"]
+    }
+}
+```
+
+Atrium discovers it like a plugin (cached by `php artisan atrium:discover`, which `package:discover` runs), serves its files, and loads it on the page while its integration is active for the user (a suite integration's module) and its key is not in `atrium.disabled`. The module's entry declares what it registers:
 
 ```ts
-// plugins/atrium.ts
-import RevenueWidget from '~/components/RevenueWidget.vue'
-import InvoicesTab from '~/components/InvoicesTab.vue'
-import BillingSettings from '~/components/BillingSettings.vue'
+import { defineAtriumModule } from '@refactor-circus/atrium'
+import RevenueWidget from './components/RevenueWidget.vue'
+import InvoicesTab from './components/InvoicesTab.vue'
+import BillingSettings from './components/BillingSettings.vue'
 
-export default defineNuxtPlugin(() => {
-  useAtrium()
-    .widget('billing.revenue', RevenueWidget)
-    .extension('acme.invoices', InvoicesTab)
-    .settingsPanel('billing', BillingSettings)
-
-  useAtrium().auth({ headers: () => ({ Authorization: `Bearer ${token()}` }) })
+export default defineAtriumModule({
+  key: 'billing',
+  routes: [{ path: '/billing/invoices', name: 'billing-invoices', component: () => import('./pages/Invoices.vue') }],
+  widgets: { 'billing.revenue': RevenueWidget },
+  extensions: { 'acme.invoices': InvoicesTab },
+  settingsPanels: { billing: BillingSettings },
+  searchSources: { billing: q => searchInvoices(q) },
+  liveResolvers: { 'billing.overdue': async () => ({ badge: await overdueCount() }) },
+  messages: { en: { billing: { title: 'Billing' } } },
+  setup({ app, router, atrium }) {},
 })
 ```
 
-In templates and components the registry is `$atrium`: `$atrium.auth(adapter)`, `$atrium.widget(key, component)`, `$atrium.extension(key, component)` and `$atrium.settingsPanel(key, component)`.
-
 A widget component receives `data` (what its PHP resolver returned) and `settings` props; an extension receives `data` and `record`; a settings panel receives `data`. A key with no component registered renders a fallback card naming the key, never an error.
 
-The layer's public surface is the `$atrium` registry, the `useAtrium*` composables (`useAtriumApi`, `useAtriumDashboard`, `useAtriumTheme`, `useAtriumIcon`, `useAtriumSearch`, `useAtriumSettingsPanel`), the `Atrium*` components and the `ScreenData` and `Shell` types. `useAtriumApi()` is `$fetch` bound to the API with your auth adapter applied, for a package's own pages:
+[MODULES.md](MODULES.md) is the full contract: the entry, `extra.atrium`, the shared modules, the preset, typed clients, tests, and how a staged suite module moves into its package.
+
+### Your application's own scripts
+
+An application adds its own module or scripts to the page from a service provider, loaded after every package's:
+
+```php
+use RefactorCircus\Atrium\Facades\Atrium;
+
+Atrium::module(base_path('atrium'));          // a folder with a composer.json declaring extra.atrium
+Atrium::script('resources/js/atrium.ts');     // an entry of the app's own Vite build (Vite::asset())
+Atrium::script('https://cdn.example.com/x.js');
+Atrium::style('resources/css/dashboard.css');
+```
+
+or with `atrium.scripts` and `atrium.styles` in the config. Such a script calls `defineAtriumModule()` like any module (or `window.Atrium.register({ … })` from a classic script).
+
+### The shared modules and the SDK
+
+The page's import map gives every module Atrium's own copy of `vue`, `vue-router`, `pinia`, `vue-i18n`, `@vueuse/core`, `openapi-fetch`, `@refactor-circus/atrium` (the SDK: the registry, the `useAtrium*` composables, the `Atrium*` components, the module contract and the types) and `@refactor-circus/atrium/ui` (Nuxt UI's components and composables, styled by Atrium's theme). The list is a versioned API (`ATRIUM_SHARED_API`, `1.0`): removing a specifier or a library's new major is a new major, and a module built for another major is not loaded.
+
+The SDK is `ui/sdk` in this repository. A module installs it as a development dependency from the release it targets, and builds with its Vite preset:
+
+```json
+"devDependencies": { "@refactor-circus/atrium": "github:refactor-circus/atrium#v2.0.0&path:ui/sdk" }
+```
+
+```ts
+// vite.config.ts
+import { atriumModule } from '@refactor-circus/atrium/vite'
+
+export default atriumModule({ key: 'billing' })
+```
+
+`useAtriumApi()` is an ofetch client of Atrium's API signed like every Atrium client, for a module's own pages (`useAtriumClient()` is its typed twin):
 
 ```ts
 const { data } = await useAtriumApi()<{ data: Invoice[] }>('/plugins/billing/invoices')
@@ -161,27 +178,11 @@ const { data } = await useAtriumApi()<{ data: Invoice[] }>('/plugins/billing/inv
 
 ### Icons
 
-Icons are [Iconify](https://iconify.design) names such as `i-lucide-home`, on the PHP side (`->icon('i-lucide-home')`, checked when the definition is built) and in components. The layer bundles every `lucide` icon into the client (`icon.clientBundle`) and serves the collection from the app's server too (`icon.serverBundle`), with the remote Iconify API off, so it works offline, under a strict CSP and as a static SPA (`nuxt generate`, served by Laravel) with no config. An unknown icon renders a fallback, not an error.
-
-Add another pack by installing it and listing it:
-
-```bash
-pnpm add @iconify-json/heroicons
-```
-
-```ts
-// nuxt.config.ts
-icon: {
-  serverBundle: { collections: ['lucide', 'heroicons'] },
-  // fallbackToApi: true, // opt in to fetching unknown icons from the Iconify API
-},
-```
-
-A static SPA has no server to answer `/api/_nuxt_icon`, so list another pack's icons in `icon.clientBundle.icons` (`['heroicons:home', ...]`) instead.
+Icons are [Iconify](https://iconify.design) names such as `i-lucide-home`, on the PHP side (`->icon('i-lucide-home')`, checked when the definition is built) and in components. The front end bundles every `lucide` icon and never calls the remote Iconify API, so it works offline and under a strict CSP. An unknown icon renders a fallback, not an error. A module adds another pack with `addAtriumIcons()` (`import heroicons from '@iconify-json/heroicons/icons.json'`), or set `atrium.icons.remote` to `true` to let unknown icons load from the Iconify API.
 
 ### Locales
 
-The layer's own strings come from locale files; v2.0.0 ships `en`. The shell sends the application's `locale` (`app()->getLocale()`), and the layer switches to it when it has messages for it. Add or override locales with your app's own `i18n.locales`. Server-side labels (navigation, widgets, panels, tabs) stay translated by Laravel.
+Atrium's own strings ship in `en`; each module brings its own (`messages`). The shell sends the application's `locale` (`app()->getLocale()`), and the front end switches to it when it has messages for it; a module adds a locale with `messages: { fr: … }`. Server-side labels (navigation, widgets, panels, tabs) stay translated by Laravel.
 
 ## Writing a plugin
 
@@ -205,7 +206,7 @@ class BillingPlugin extends Plugin
     {
         return [
             NavItem::make('Invoices')
-                ->path('/billing/invoices')       // a page of the SPA
+                ->path('/billing/invoices')       // a page of the front end
                 ->icon('i-lucide-receipt')
                 ->group('Billing')
                 ->badge(fn () => Invoice::unpaid()->count()),
@@ -233,7 +234,7 @@ class BillingPlugin extends Plugin
 }
 ```
 
-On the Nuxt side, register a component for `billing.revenue` and add the `/billing/invoices` page to your app or your package's own layer. A navigation link to a page nobody provides shows the layer's "page not found" panel.
+On the front end, your package's module (see [Modules](#modules)) registers a component for `billing.revenue` under `widgets` and adds the `/billing/invoices` page to `routes`; an application does the same in its own module. A navigation link to a page nobody provides shows the front end's "page not found" panel.
 
 ### Shared plugin helpers
 
@@ -268,13 +269,13 @@ Discovered plugins are cached in `bootstrap/cache/atrium-plugins.php`, as Larave
 
 Every resolver's output (widgets, tabs, sections and settings panels) is checked by `RefactorCircus\Atrium\Support\JsonData` before it is sent. Scalars, arrays, `JsonSerializable`, `Arrayable` (models and collections, through `toArray()`, so `$hidden` applies), backed enums and dates are accepted. A closure, an `Htmlable` or any other object throws `UnserializableDataException`, as do cyclic structures and nesting beyond the depth limit. Prefer returning JSON resources, so you choose exactly which fields leave the server.
 
-When a resolver throws or returns something unserializable outside the `local` and `testing` environments, only that widget, tab, section or panel fails: it is sent with `data: null` and `error: {message}`, the exception is reported, and the layer renders an error card in its place. In `local` and `testing` the exception propagates (500), so you see it.
+When a resolver throws or returns something unserializable outside the `local` and `testing` environments, only that widget, tab, section or panel fails: it is sent with `data: null` and `error: {message}`, the exception is reported, and the front end renders an error card in its place. In `local` and `testing` the exception propagates (500), so you see it.
 
 ## Screen extensions
 
 Any package can add tabs and sections to any screen that declares itself, without the screen knowing the package exists. A screen declares only generic facts: its key (`{package}.{screen}`), its record, its kind, its built-in tabs and its slots. Atrium declares its own settings pages: `atrium.settings` (a list screen whose rows are the settings panels) and `atrium.settings-panel`.
 
-Extensions are rendered on the client: each tab or section is sent as `{key, label, component, data}`, and the layer renders the Vue component registered under its `component` with `$atrium.extension()`.
+Extensions are rendered on the client: each tab or section is sent as `{key, label, component, data}`, and the front end renders the Vue component a module registered under its `component`, in the `extensions` map of `defineAtriumModule()`.
 
 ### Registering tabs and sections
 
@@ -319,12 +320,16 @@ public function boot(): void
 ```
 
 ```ts
-// The Nuxt side: one component per key.
-useAtrium()
-  .extension('acme.invoices', InvoicesTab)
-  .extension('acme.balance-card', BalanceCard)
-  .extension('acme.row-balance', RowBalance)
-  .extension('acme.notes', Notes)
+// The module's entry: one component per key.
+export default defineAtriumModule({
+  key: 'acme',
+  extensions: {
+    'acme.invoices': InvoicesTab,
+    'acme.balance-card': BalanceCard,
+    'acme.row-balance': RowBalance,
+    'acme.notes': Notes,
+  },
+})
 ```
 
 - **Targets.** An exact screen key (`crm.customer`), every screen of one package (`{package}.*`, such as `crm.*`), or every screen (`*`). A `*` tab joins every declared screen; a `*` section joins every screen declaring its slot. A section on a slot the screen does not declare is never sent and its closures never run, and a registration for a screen no installed package declares is kept and never sent, with no error.
@@ -351,7 +356,7 @@ Wildcard and row-slot closures run on every matching screen or row, so keep them
 
 ### Opening tabs
 
-A tab opens through `?tab={key}`. An absent or unknown key opens the host's default tab with a 200. A registered tab the viewer cannot see answers 403. That 403-versus-200 difference reveals which tab keys exist, which is accepted: never put anything secret in a key. Only the open tab's data is resolved; the layer asks for another tab's with `?tab=`.
+A tab opens through `?tab={key}`. An absent or unknown key opens the host's default tab with a 200. A registered tab the viewer cannot see answers 403. That 403-versus-200 difference reveals which tab keys exist, which is accepted: never put anything secret in a key. Only the open tab's data is resolved; the front end asks for another tab's with `?tab=`.
 
 The tab bar shows only when two or more tabs are visible. A screen with no built-in tabs gets one, `overview`, holding the page. Registered tabs follow the built-in ones (exact registrations first, then wildcard ones, each in registration order) and are never the default. Built-in labels come from the host; Atrium translates nothing.
 
@@ -361,7 +366,7 @@ A host that leaves out a built-in tab the viewer may not open still reserves its
 
 The tab's panel replaces the host's page content. `header.actions` is always sent; `before`, `after`, `aside` and row slots are sent only while a built-in tab is open.
 
-A tab or section whose resolver fails follows the rule in [Data sent to the client](#data-sent-to-the-client): outside `local` and `testing` it is sent with `data: null` and an `error`, the rest of the screen answers 200, and the layer shows an error card.
+A tab or section whose resolver fails follows the rule in [Data sent to the client](#data-sent-to-the-client): outside `local` and `testing` it is sent with `data: null` and an `error`, the rest of the screen answers 200, and the front end shows an error card.
 
 A section renders inside the host's page, but it writes through your own routes and your own authorization: forms in it post to your plugin's routes, and your requests authorize them. The host only decided who may open the screen.
 
@@ -402,7 +407,7 @@ public function persist(): JsonResponse
 }
 ```
 
-The screen payload is `{key, kind, open_tab, tabs, sections, rows}`. Render it in your page with the layer's `<AtriumScreen :screen="screen" :record="invoice">`, which draws the tabs and every slot's sections and puts your own content for a built-in tab in its default slot; `<AtriumSections :screen="screen" name="row.actions">` renders one slot on its own. On a list screen, pass the rows to `ResolvedScreenResource::make($resolved)->withRows($rows)`, and each row's row-slot sections are sent under `rows`, by row key.
+The screen payload is `{key, kind, open_tab, tabs, sections, rows}`. Render it in your module's page with the SDK's `<AtriumScreen :screen="screen" :record="invoice">`, which draws the tabs and every slot's sections and puts your own content for a built-in tab in its default slot; `<AtriumSections :screen="screen" name="row.actions">` renders one slot on its own. On a list screen, pass the rows to `ResolvedScreenResource::make($resolved)->withRows($rows)`, and each row's row-slot sections are sent under `rows`, by row key.
 
 ### Packages know nothing of each other
 
@@ -444,7 +449,7 @@ uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
 
 ## Suite integrations
 
-Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and the Nuxt layer renders them and calls each package's own API from the browser, with your one auth adapter.
+Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and each package's front-end module renders them and calls the package's own API from the browser, signed like every Atrium request. Until each package ships its module (phase 2, [MODULES.md](MODULES.md)), the eight modules are staged in this repository under `ui/modules/{pkg}` and built into their own `dist/atrium/`; the PHP declarations and the integration fixtures stay in Atrium.
 
 Atrium's PHP never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. Everything below is configured under `atrium.integrations` in `config/atrium.php`.
 
@@ -466,7 +471,7 @@ Set `enabled` to `false` to keep a package installed (its API and MCP server sti
 
 ### The API base
 
-The layer calls each package where its API is served:
+The front end calls each package where its API is served:
 
 - a non-empty `atrium.integrations.{pkg}.api_base` wins: a path such as `/cortex/api`, or an absolute URL for a package served from another host;
 - otherwise `/` plus the package's own `{pkg}.routes.prefix`, while `{pkg}.routes.enabled` is true.
@@ -485,7 +490,7 @@ Guardian, Polycart and Roster ship with their API off (`guardian.routes.enabled`
 
 The package APIs answer with their own authorization, so a user Atrium lets in still sees only what each package's policies allow. Cookie auth across origins needs the package prefixes in your CORS `paths` as well.
 
-On the Nuxt side, the shell sends each integration's `api_base`. A path is resolved against the origin of `runtimeConfig.public.atrium.apiBase` when that is absolute, and against the page's origin otherwise. A host serving a package elsewhere overrides it per key with `runtimeConfig.public.atrium.integrations.{key}.apiBase`.
+The page's boot data and the shell send each integration's `api_base`. A module's client gets it from `atriumClientOptions(key)` (`{ baseUrl, fetch }`, used by `useAtriumIntegration()`): an absolute URL is used as it is, and a path is resolved against the origin of Atrium's own API base when that is absolute, and against the page's origin otherwise. A host serving a package elsewhere sets `atrium.integrations.{pkg}.api_base`; there is no front-end setting to override.
 
 ### Feature flags (Pennant)
 
@@ -554,9 +559,9 @@ Some integrations add a tab or section to another's screens. Each hook registers
 
 A target is a screen key (`roster.user`), `{package}.*` or `*`, and a slot must be a valid slot name. An invalid one throws `InvalidArgumentException` in `local` and `testing`, and is reported and skipped anywhere else. `keen.history.nav.groups` values name Atrium nav groups.
 
-### The Nuxt routes
+### The module routes
 
-Each integration's pages live in the layer under its key, so their paths start with `/{pkg}/` and mirror the v1 URLs without the `atrium` prefix:
+Each integration's module declares its pages in `routes` (the staged modules' `ui/modules/{pkg}/src/routes.ts`, pages in `src/pages`), under its key, so their paths start with `/{pkg}/` and mirror the v1 URLs without the `atrium` prefix. Route names follow the file layout the pages had (`/impex/runs/:run` is `impex-runs-run`), and the screen declarations and links use them:
 
 | Integration | Pages |
 | --- | --- |
@@ -570,36 +575,36 @@ Each integration's pages live in the layer under its key, so their paths start w
 | Showroom | `/showroom/products`, `/showroom/product-models`, `/showroom/families`, `/showroom/attributes`, `/showroom/categories`, `/showroom/channels`, `/showroom/owners`, `/showroom/flags`, `/showroom/assets`, `/showroom/transfers` and the rest of its 27 screens |
 
 - Every screen keeps its v1 key, so host extensions registered on `roster.organization` or `showroom.product` still attach. A page fetches its tabs and sections from `atrium.screens.show` (`GET screens/{screen}?record=&tab=`), which serves the screen's extensions without Atrium loading the record.
-- On a `/{pkg}/` path whose integration is not active in the shell, the layer renders `<AtriumIntegrationUnavailable>` (not installed, disabled or flagged off) and calls nothing.
-- `/roster/invitations/:token` is a public page: it loads no shell, and a 401 there never calls `onUnauthorized()` until the visitor accepts or declines.
-- Override any page by defining the same path in your own app.
+- On a `/{pkg}/` path whose integration is not active in the shell, the front end renders `<AtriumIntegrationUnavailable>` (not installed, disabled or flagged off) and calls nothing.
+- `/roster/invitations/:token` is a public page (`meta: { atrium: { public: true } }` on its route): it loads no shell, and a 401 there never reloads the page or calls `onUnauthorized()` until the visitor accepts or declines.
+- Override any page from your application's own module by registering a route with the same name and the same path: `router.addRoute()` replaces a route of that name, and the application's scripts install after every package's.
 
 ### Vendored clients and `sync:clients`
 
-Until the packages' v2 tags exist, the layer vendors each package's generated types (D-020). `nuxt/layer/app/integrations/{pkg}/client/` holds:
+Until each package ships its own module with its own generated client (D-020, D-083), every staged module vendors its package's generated types. `ui/modules/{pkg}/client/` holds:
 
 - `openapi.json`, copied from the package;
 - `schema.d.ts`, the package's generated `client/src/schema.d.ts`, verbatim;
 - `openapi.sha256`, the SHA-256 of `openapi.json`.
 
-`useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` client typed by that `schema.d.ts` and signed by your auth adapter. Refresh the copies after a package's API changes with:
+`useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` client typed by that `schema.d.ts` (each module declares its `paths` once on `AtriumIntegrationPaths`, in `src/env.d.ts`) and signed like every Atrium request. A module with a client factory of its own passes it instead: `useAtriumIntegration('roster', createRosterClient)`, or `createRosterClient(atriumClientOptions('roster')!)`. Refresh the copies after a package's API changes with:
 
 ```bash
-ATRIUM_SUITE_PATH=/path/to/checkouts pnpm -C nuxt sync:clients
+ATRIUM_SUITE_PATH=/path/to/checkouts pnpm -C ui sync:clients
 ```
 
-`ATRIUM_SUITE_PATH` defaults to the repository's parent directory, holding one checkout per package (`Cortex`, `Impex`, ...). `tests/Feature/Integrations/VendoredClientsTest.php` (no Node) checks each stamp, and compares the copies with a sibling checkout when there is one. At release the vendored folders become pnpm git dependencies; the CHANGELOG records the step.
+`ATRIUM_SUITE_PATH` defaults to the repository's parent directory, holding one checkout per package (`Cortex`, `Impex`, ...). `tests/Feature/Integrations/VendoredClientsTest.php` (no Node) checks each stamp, and compares the copies with a sibling checkout when there is one. When a module moves into its package, it uses the package's own `client/` and its vendored folder goes; the CHANGELOG records the step.
 
 ### Atrium's own OpenAPI document and client
 
-Atrium's API has its own `openapi.json` at the repository root (OpenAPI 3.1, one operation per `atrium.*` route, `operationId` the route name), and the layer's `nuxt/layer/app/client/schema.d.ts` is generated from it:
+Atrium's API has its own `openapi.json` at the repository root (OpenAPI 3.1, one operation per `atrium.*` route, `operationId` the route name), and the SDK's `ui/sdk/src/client/schema.d.ts` is generated from it:
 
 ```bash
-composer openapi:export        # rewrite openapi.json from the routes and resources
-pnpm -C nuxt generate:client   # regenerate nuxt/layer/app/client/schema.d.ts
+composer openapi:export      # rewrite openapi.json from the routes and resources
+pnpm -C ui generate:client   # regenerate ui/sdk/src/client/schema.d.ts
 ```
 
-`tests/Feature/OpenApiTest.php` fails when either file is stale, naming both commands. `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API with the same auth adapter; `useAtriumApi()` keeps working.
+`tests/Feature/OpenApiTest.php` fails when either file is stale, naming both commands. `useAtriumClient()` returns an `openapi-fetch` client for Atrium's API, signed like every Atrium request; `useAtriumApi()` keeps working.
 
 ### Guardian
 
@@ -618,9 +623,9 @@ pnpm -C nuxt generate:client   # regenerate nuxt/layer/app/client/schema.d.ts
 ],
 ```
 
-A `null` value resolves to `guardian.adopt.scope_types.{key}`; a value that does not resolve to a non-empty string is dropped, and the layer offers no scope it cannot name. While `organization` does not resolve, the `guardian.access` tab is left off `roster.organization`, and Atrium logs one warning naming `atrium.integrations.guardian.scope_types`.
+A `null` value resolves to `guardian.adopt.scope_types.{key}`; a value that does not resolve to a non-empty string is dropped, and the front end offers no scope it cannot name. While `organization` does not resolve, the `guardian.access` tab is left off `roster.organization`, and Atrium logs one warning naming `atrium.integrations.guardian.scope_types`.
 
-**Two-factor and sessions.** Guardian's `guardian.two-factor` and `guardian.session` middleware can go on Atrium's route group (`atrium.routes.middleware`, before `Authorize`) and on each package's API group. A user who still owes a second factor then gets Guardian's 403, whose JSON `code` is `two_factor_challenge_required` or `two_factor_enrollment_required`, and the layer sends them to `/guardian/two-factor/challenge` or `/guardian/two-factor/setup` with a guarded `redirect` back. Both pages are shell-less (`definePageMeta({ atrium: { public: true } })` with the public layout): they load no shell and reach Guardian through a client of their own (`runtimeConfig.public.atrium.integrations.guardian.apiBase`, a loaded shell's `api_base`, or `/guardian`). A response carrying `Guardian-Two-Factor-Deadline` shows an app-wide notice with the enrolment deadline. On split hosts, expose that header through CORS so the browser can read it:
+**Two-factor and sessions.** Guardian's `guardian.two-factor` and `guardian.session` middleware can go on Atrium's route group (`atrium.routes.middleware`, before `Authorize`) and on each package's API group. A user who still owes a second factor then gets Guardian's 403, whose JSON `code` is `two_factor_challenge_required` or `two_factor_enrollment_required`, and Guardian's module sends them to `/guardian/two-factor/challenge` or `/guardian/two-factor/setup` with a guarded `redirect` back. Both pages are shell-less (their routes carry `meta: { atrium: { public: true } }`, rendered in the public layout): they load no shell and reach Guardian through a client of their own (the page's boot data, a loaded shell's `api_base`, or `/guardian`). A response carrying `Guardian-Two-Factor-Deadline` shows an app-wide notice with the enrolment deadline. On split hosts, expose that header through CORS so the browser can read it:
 
 ```php
 // config/cors.php
@@ -629,19 +634,22 @@ A `null` value resolves to `guardian.adopt.scope_types.{key}`; a value that does
 
 **API tokens.** The security page issues and revokes personal API tokens through Guardian's token driver, `guardian.tokens.driver` (`sanctum`, `passport` or your own `TokenDriver`). With no driver the token routes answer 501, and the page shows "API tokens are not enabled" with no form; `guardian.user` hides its tokens block. A token's plain value shows once and is never stored.
 
-**Passkeys** need `web-auth/webauthn-lib` installed in the host (without it Guardian's passkey routes answer 501 and the layer hides the passkey controls), HTTPS, and a `guardian.two_factor.passkeys.rp_id` that matches the SPA's host: WebAuthn binds a passkey to that relying party, so a SPA on another host cannot register or use one.
+**Passkeys** need `web-auth/webauthn-lib` installed in the host (without it Guardian's passkey routes answer 501 and the front end hides the passkey controls), HTTPS, and a `guardian.two_factor.passkeys.rp_id` that matches the page's host: WebAuthn binds a passkey to that relying party, so a front end on another host cannot register or use one.
 
 **Hooks on Roster's screens.** `atrium.integrations.guardian.screens` places Guardian's tabs and sections, as Guardian v1's `guardian.atrium.screens` did (a plain value is a tab, a `slot => key` entry a section); the defaults are in the hooks block above. `guardian.access` lists and assigns roles in the organization's scope, or the user's own; `guardian.user-security` shows a user's sessions, tokens, events and the two-factor reset; `guardian.sso` and `guardian.scim` manage an organization's SSO connections and SCIM tokens, whose base URL uses `guardian.scim.prefix`; and `guardian.sso-identities` lists a user's linked identities. Each is placed only while Guardian and Roster are both registered and active.
 
-**Response handlers.** Guardian's redirect is one use of `$atrium.responseHandler(key, (response, request) => void)`, which any plugin or integration can register: every integration client, `useAtriumClient()` and `useAtriumApi()` pass each response to every handler, in registration order, before the caller sees it. A handler gets its own copy of the response, and one that throws is logged and skipped.
+**Response handlers.** Guardian's redirect is one response handler, registered in its module's `responseHandlers` (`guardian.two-factor`). Any module can register one, keyed `(response, request) => void`, or call `useAtrium().responseHandler(key, handler)` from its `setup()`: every integration client, `useAtriumClient()` and `useAtriumApi()` pass each response to every handler, in registration order, before the caller sees it. A handler gets its own copy of the response, and one that throws is logged and skipped. `useAtrium().notify(key, notice)` shows an app-wide notice, as Guardian's deadline does.
 
 ```ts
-export default defineNuxtPlugin(() => {
-  useAtrium().responseHandler('my-app.maintenance', (response) => {
-    if (response.status === 503) {
-      navigateTo('/maintenance')
-    }
-  })
+export default defineAtriumModule({
+  key: 'my-app',
+  responseHandlers: {
+    'my-app.maintenance': (response) => {
+      if (response.status === 503) {
+        navigateTo('/maintenance')
+      }
+    },
+  },
 })
 ```
 
@@ -651,7 +659,7 @@ The integrations port v1's screens, with three departures, each listed in the CH
 
 - **No permission-filtered navigation (D-031).** Integration nav items show to everyone the `viewAtrium` gate admits while the integration is active. A screen shows a no-access state on the package's 403, a widget a no-access card, and a search source is dropped. Use the feature flags above to hide a whole integration from someone.
 - **Operator mode is gone (D-032).** `impex.atrium.show_all` and `polycart.atrium.show_all` have no v2 API, so every list shows what the package API returns for the signed-in user.
-- **Actions without a v2 route are left out (D-032).** Each is named in a `// Not ported (D-032)` comment in the layer and in the CHANGELOG.
+- **Actions without a v2 route are left out (D-032).** Each is named in a `// Not ported (D-032)` comment in the module (`ui/modules/{pkg}/src/atrium.ts`, or the area's index page for Roster and Showroom) and in the CHANGELOG.
 
 The Feature flags screen of [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus) is the PennantPlus integration's `/pennantplus/features` page.
 
@@ -659,17 +667,17 @@ The Feature flags screen of [refactor-circus/pennantplus](https://github.com/Ref
 
 Returning a `WidgetDefinition` makes a widget *available* in the widget picker. It does not put it on anyone's dashboard. Only a user adding it does that.
 
-Users keep as many dashboards as they like. Each dashboard belongs to one user, and a dashboard can be marked shared so everyone sees it. Reading never creates one: a user with no dashboard gets `{"data": null}` from `GET dashboard`, and the layer creates their first with `POST dashboards`.
+Users keep as many dashboards as they like. Each dashboard belongs to one user, and a dashboard can be marked shared so everyone sees it. Reading never creates one: a user with no dashboard gets `{"data": null}` from `GET dashboard`, and the front end creates their first with `POST dashboards`.
 
-Each placement has a `uuid`. A widget that is slow to resolve can be marked `->lazy()`: the dashboard is sent without its `data`, and the layer fetches it afterwards from `atrium.dashboards.widgets.show` (`GET dashboards/{dashboard:slug}/widgets/{widget:uuid}`), behind the same gate and policies. A lazy widget's failure affects only its own response.
+Each placement has a `uuid`. A widget that is slow to resolve can be marked `->lazy()`: the dashboard is sent without its `data`, and the front end fetches it afterwards from `atrium.dashboards.widgets.show` (`GET dashboards/{dashboard:slug}/widgets/{widget:uuid}`), behind the same gate and policies. A lazy widget's failure affects only its own response.
 
-When a plugin is uninstalled, its placements are kept and sent with `component: null` (an orphan), and the layer says the widget is unavailable. A layout save never deletes an orphan, so a plugin that is disabled for a while gets its widgets back.
+When a plugin is uninstalled, its placements are kept and sent with `component: null` (an orphan), and the front end says the widget is unavailable. A layout save never deletes an orphan, so a plugin that is disabled for a while gets its widgets back.
 
-A layout save (`PUT dashboards/{dashboard:slug}/layout`) sends the full layout: placements are identified by `uuid`, a placement without one is new, and a placement left out is deleted. Every dashboard has a `version` that each layout or dashboard update increments; both requests send the `version` they were made from, and a stale one gets 409 and changes nothing, so the layer reloads the dashboard and tells the user.
+A layout save (`PUT dashboards/{dashboard:slug}/layout`) sends the full layout: placements are identified by `uuid`, a placement without one is new, and a placement left out is deleted. Every dashboard has a `version` that each layout or dashboard update increments; both requests send the `version` they were made from, and a stale one gets 409 and changes nothing, so the front end reloads the dashboard and tells the user.
 
 ## Theming
 
-Atrium ships six themes, sent in the shell with their design tokens. People pick one from the switcher; the choice is kept in their browser, and the layer applies the theme's tokens as CSS custom properties on `:root`.
+Atrium ships six themes, sent in the shell with their design tokens. People pick one from the switcher; the choice is kept in their browser, and the front end applies the theme's tokens as CSS custom properties on `:root`.
 
 | Theme | Look |
 |---|---|
@@ -680,20 +688,20 @@ Atrium ships six themes, sent in the shell with their design tokens. People pick
 | **Midnight** | Violet on deep indigo, the roundest corners |
 | **Ledger** | Monochrome, near-square corners |
 
-The layer applies a theme's tokens to Nuxt UI: `surface` is the background of panels, menus, fields and the navigation rail (`--ui-bg`), `surface-alt` the muted and elevated backgrounds, `canvas` the deck behind the panels, `on-surface` and `on-surface-strong` the text, `outline` and `outline-strong` the borders, and `primary`, `secondary`, `info`, `success`, `warning` and `danger` Nuxt UI's colours of the same names (`danger` is `error`). Dark mode reads the `-dark` tokens. A token a theme leaves out keeps the layer's default. The layer sets each token on `:root` both as sent (`--color-primary`, for your own CSS) and as `--atrium-token-primary`, which its stylesheet reads.
+The front end applies a theme's tokens to Nuxt UI: `surface` is the background of panels, menus, fields and the navigation rail (`--ui-bg`), `surface-alt` the muted and elevated backgrounds, `canvas` the deck behind the panels, `on-surface` and `on-surface-strong` the text, `outline` and `outline-strong` the borders, and `primary`, `secondary`, `info`, `success`, `warning` and `danger` Nuxt UI's colours of the same names (`danger` is `error`). Dark mode reads the `-dark` tokens. A token a theme leaves out keeps Atrium's default. The front end sets each token on `:root` both as sent (`--color-primary`, for your own CSS) and as `--atrium-token-primary`, which its stylesheet reads.
 
 The primary colour is the shell's one accent: the lit edge of the current section and page, focus rings, the glow of primary buttons. A brand theme (`primary`, the neutrals and a `radius`) is enough to make the shell the brand's.
 
-Each theme also carries a `layout` (`sidebar` or `top`) for a layer that lays the shell out by theme; the bundled layer uses its rail and section panel for every theme.
+Each theme also carries a `layout` (`sidebar` or `top`) for a front end that lays the shell out by theme; Atrium's own uses its rail and section panel for every theme.
 
 ### The look: command deck
 
-The bundled layer is a compact, dark-first flight-deck interface (D-077, D-078): 13px UI text, 28px controls, 34px table rows, glass panels with corner brackets over a moving dot-matrix deck, a luminous navigation spine, statuses as glowing dots, monospaced figures for IDs, counts and times, and a status strip with each integration's live state, the API's latency and a UTC clock. Light mode ("lab white") keeps the same structure on paper panels with ink hairlines. Motion is short and stops when the user asks for reduced motion.
+Atrium's front end is a compact, dark-first flight-deck interface (D-077, D-078): 13px UI text, 28px controls, 34px table rows, glass panels with corner brackets over a moving dot-matrix deck, a luminous navigation spine, statuses as glowing dots, monospaced figures for IDs, counts and times, and a status strip with each integration's live state, the API's latency and a UTC clock. Light mode ("lab white") keeps the same structure on paper panels with ink hairlines. Motion is short and stops when the user asks for reduced motion.
 
 - **Shell.** A slim rail of sections (one per navigation group, labelled on hover and focus) beside a panel listing the chosen section's pages; the top bar shows where you are, ⌘K, the API's live status and version, the theme switcher and colour mode. The panel collapses to the rail alone, whose sections then open their pages in a flyout (remembered per browser). Below `lg` the navigation opens as a drawer from the top bar.
 - **⌘K is the way around.** The palette lists the pages you visited lately, every page in the navigation, the search results and the shell's actions (colour mode, each theme).
-- **Fonts.** Geist and Geist Mono, bundled from `@fontsource-variable` (no font CDN). Your stylesheet overrides them with `--font-sans`, `--font-mono` and `--default-font-family`, on `:root` or `:root[data-atrium-theme="…"]`.
-- **Nuxt UI defaults** come from the layer's `app.config.ts` (`ui`: control sizes, panel padding, badges, tables). Override any of them in your own `app.config.ts`.
+- **Fonts.** Geist and Geist Mono, bundled from `@fontsource-variable` (no font CDN). An application stylesheet (`Atrium::style()` or `atrium.styles`, loaded after Atrium's) overrides them with `--font-sans`, `--font-mono` and `--default-font-family`, on `:root` or `:root[data-atrium-theme="…"]`.
+- **Nuxt UI defaults** (control sizes, panel padding, badges, tables) come from Atrium's theme config, `ui/sdk/vite/ui-config.mjs`. Nuxt UI is compiled once, in Atrium's build, with that theme, and modules share it, so there is no `app.config.ts` to override: retune the look with theme tokens (a theme of your own, or `atrium.theme`) and CSS in an application stylesheet.
 - **Shared blocks** for packages and hosts: `<AtriumPageHeader>`, `<AtriumStat>` (with `delta` and a `series` sparkline), `<AtriumState>` (empty, error, locked), `<AtriumErrorCard>` and `<AtriumNoAccess>` (terminal readouts) and `<AtriumStatusBar>`; the classes `atrium-empty` for an empty list and `atrium-querybar` for a filter form (a command line with inline tokens); and pages' own `<h1>`, `<h2>`, tables, native selects and coloured badges pick up the deck's styles inside the shell.
 
 ```php
@@ -725,7 +733,7 @@ Atrium::theme(Theme::make('grove')->label('Grove')->swatch('#15803d')->icon('i-l
 ]));
 ```
 
-Set the `-dark` tokens as well as the light ones, so dark mode stays readable in your theme. Tokens a theme leaves out keep the layer's defaults (in `nuxt/layer/app/assets/css/atrium.css`).
+Set the `-dark` tokens as well as the light ones, so dark mode stays readable in your theme. Tokens a theme leaves out keep Atrium's defaults (in `ui/sdk/css/theme.css`, which Atrium's stylesheet, `ui/app/src/assets/atrium.css`, and every module's share).
 
 The switcher shows only when there is more than one theme and the feature named by `switcher_feature` is on, asked through Atrium's feature resolver. By default that is Atrium's `ThemeSwitcherFeature`, a Pennant feature that is on globally until you set its global value, and that every user follows until they are given their own. Once your feature resolver asks Pennant (`Atrium::resolveFeaturesUsing()`, see [Who sees what](#who-sees-what)), you turn it off globally or for particular users with Pennant, or from the PennantPlus integration's feature flags screen (`/pennantplus/features`). Atrium does not require Pennant: with no feature resolver registered every feature is on, so the switcher always shows. Set `switcher_feature` to `null` for the same, or to a feature name of your own. While the switcher is hidden, everyone sees the default theme.
 
@@ -742,7 +750,7 @@ The switcher shows only when there is more than one theme and the feature named 
 
 ## Navigation
 
-Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`. The layer's rail shows the loose pages together as Home first, then one entry per group; the section panel beside it lists the pages of the section holding the current page (or of the one chosen on the rail), and ⌘K lists every page.
+Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`. The front end's rail shows the loose pages together as Home first, then one entry per group; the section panel beside it lists the pages of the section holding the current page (or of the one chosen on the rail), and ⌘K lists every page.
 
 Items join a section with `NavItem::group('Billing')`. Describe the group to give its section an icon and a place in the list; otherwise it uses its first page's icon and sorts by its first page:
 
@@ -818,7 +826,7 @@ Register the resolver yourself (refactor-circus/pennantplus v2 no longer registe
 
 ## Search
 
-A plugin's `search()` returns a `SearchSource`, or a list of them, and the layer's ⌘K palette queries every source the user may see through `atrium.search` (`GET search?q=...`). Return one source per kind of thing the plugin finds: each gets its own `results.per_source`, and classification can choose between them.
+A plugin's `search()` returns a `SearchSource`, or a list of them, and the front end's ⌘K palette queries every source the user may see through `atrium.search` (`GET search?q=...`). Return one source per kind of thing the plugin finds: each gets its own `results.per_source`, and classification can choose between them.
 
 ```php
 use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
@@ -948,7 +956,7 @@ Access is checked in two layers:
 | `DELETE dashboards/{dashboard:slug}` | `DeleteDashboardRequest` | `delete` on the dashboard |
 | `PUT dashboards/{dashboard:slug}/layout` | `SaveDashboardLayoutRequest` | `update` on the dashboard, `delete` on each placement it removes, and `create` on `DashboardWidgetModel::class` when it places any |
 
-A dashboard response's `meta.abilities` says whether the user may `update` and `delete` it, asked through the same policies, so the layer shows only the controls that would succeed.
+A dashboard response's `meta.abilities` says whether the user may `update` and `delete` it, asked through the same policies, so the front end shows only the controls that would succeed.
 
 The bundled `DashboardPolicy` lets a dashboard's owner do anything, lets everyone view a shared dashboard, and refuses everything else, including guests. `DashboardWidgetPolicy` defers to the dashboard through the Gate: reading a placement needs `view` on its dashboard, changing one needs `update`. So a replacement dashboard policy governs its widgets too.
 
@@ -988,11 +996,12 @@ Actions expose `execute()` and keep `handle()` protected, so there is one entry 
 
 ## Package layout
 
-The code is organised into domain modules under `src/Domains/{Domain}`, namespace `RefactorCircus\Atrium\Domains\{Domain}`. Each has its own service provider, registered by `RefactorCircus\Atrium\Domains\DomainServiceProvider`, which `AtriumServiceProvider` registers in turn. Each domain loads its own `routes.php` into the one API group.
+The code is organised into domain modules under `src/Domains/{Domain}`, namespace `RefactorCircus\Atrium\Domains\{Domain}`. Each has its own service provider, registered by `RefactorCircus\Atrium\Domains\DomainServiceProvider`, which `AtriumServiceProvider` registers in turn. Each domain loads its own `routes.php` into the one API group; the `Frontend` domain registers the page and asset routes outside it.
 
 | Domain | What lives there |
 | --- | --- |
 | `Access` | `Services\Gatekeeper`, the `Concerns\Gated` trait, and the `Authorize`, `ForceJsonResponse` and `EnsureFeaturesAreEnabled` middleware (`Http\Middleware`) |
+| `Frontend` | The page and its files: `Services\AppPage` (the `atrium::app` view's data: the import map, stylesheets, boot data and scripts), `Services\ModuleDiscovery` (modules from `extra.atrium`, cached by `atrium:discover`), `Services\ModuleRegistry` (`Atrium::module()`, `Atrium::script()`, `Atrium::style()`), `Services\FrontendBuild`, `Services\FrontendAssets` (the `atrium.assets` route's allow-list), `Data\ModuleManifest` and `Http\Controllers\FrontendController`. The one place in `src/` that renders HTML |
 | `Dashboard` | `Models\DashboardModel` and `Models\DashboardWidgetModel`, their resources (`Resources\DashboardResource`, `Resources\DashboardWidgetResource`), policies, actions, events, requests and controllers, and `Services\DashboardManager` |
 | `Integrations` | The suite integration framework: the `Contracts\Integration` contract and its `Support\Integration` base, `Services\IntegrationRegistry`, the `Contracts\InstalledPackages` seam, `Services\IntegrationFeatures` (Pennant or all-on), `Data\ScreenDeclaration` and the `atrium.screens.show` endpoint. Each package's definitions (`{Pkg}Integration`, `{Pkg}Feature`) sit in the top-level `src/Integrations/{Pkg}/`, and the cross-package hooks in `src/Integrations/Hooks/` |
 | `Navigation` | `Data\NavItem`, `Data\NavGroup`, `Services\NavigationRegistry` and the shell endpoint (`Http\Resources\ShellResource`) |
@@ -1007,21 +1016,37 @@ Package-wide pieces stay at the top level: the `Atrium` class and facade, the `H
 
 The models keep the class names they had before the domain move (`RefactorCircus\Atrium\Models\Dashboard`, `RefactorCircus\Atrium\Models\DashboardWidget`) as their morph aliases, so any polymorphic column or audit record that stored those names still resolves, and new records store the same values.
 
+The front end lives in `ui/`, a pnpm workspace (Node and pnpm pinned in `.nvmrc` and `ui/package.json`, `ui/pnpm-lock.yaml` committed):
+
+| Folder | What lives there |
+| --- | --- |
+| `ui/sdk` | `@refactor-circus/atrium`, the SDK: the registry, the `useAtrium*` composables, the `Atrium*` components, the stores, the types (`src/types/atrium.ts`, aliases of the generated `src/client/schema.d.ts`), `defineAtriumModule()`, the Vite preset (`vite/`, with Nuxt UI's theme config in `vite/ui-config.mjs`), the theme tokens (`css/theme.css`), Atrium's strings (`locales/en.json`), the test helpers (`src/testing`) and the contract fixtures (`test/fixtures`) |
+| `ui/app` | Atrium's own entry, router, layouts and core pages, and its stylesheet (`src/assets/atrium.css`), built to the committed `dist/` |
+| `ui/modules/{pkg}` | The eight staged suite modules, each laid out as its package's `atrium/` folder will be, with its vendored `client/` and committed `dist/atrium/` |
+| `ui/workbench` | The workbench's own module: the demo plugin's widgets and extensions |
+| `ui/scripts` | `sync-clients.mjs`, `generate-client.mjs` and `nuxt-ui-theme.mjs` (Nuxt UI's theme for module styles) |
+
 ## Configuration
 
 | Key | Purpose |
 | --- | --- |
 | `routes.enabled` | Whether Atrium registers its API routes at all. |
 | `routes.prefix` | The URI prefix of every route. Defaults to `atrium/api`. |
-| `routes.middleware` | The middleware of every route, plugin routes included. Defaults to `['api', Authorize::class]`; add your guard before `Authorize`, which stays last. |
-| `client_path` | The base path the host serves the SPA from. Defaults to `/`. |
+| `routes.middleware` | The middleware of every API route, plugin routes included. Defaults to `['web', 'auth', Authorize::class]` (the page's session); swap the guard for `auth:sanctum` or `auth:api` for a client on another origin. `Authorize` stays last. |
+| `client_path` | Where the page is served and the base of every front-end path. Defaults to `/atrium`. |
+| `client.enabled` | Whether Atrium serves the page and its files. Turn it off for a front end of your own that talks to the API. |
+| `client.middleware` | The page's middleware. Defaults to `['web', 'auth', Authorize::class]`. |
+| `assets.path` | The prefix of the route the page's files are served from (`/vendor/atrium/{owner}/{version}/{path}`). Defaults to `vendor/atrium`. |
+| `scripts` | The application's own scripts, loaded after every module's: URLs, or entries of the app's Vite build. `Atrium::script()` adds more. |
+| `styles` | The application's own stylesheets, loaded after every module's. `Atrium::style()` adds more. |
+| `icons.remote` | Whether icons outside the bundled collections (Lucide) load from the Iconify API. Defaults to `false`: no request leaves the page. |
 | `gate` | The gate ability `Authorize` checks. |
 | `policies` | The policy class the Gate uses for `DashboardModel` and `DashboardWidgetModel`. |
 | `tables` | The table each model is stored in (`dashboards`, `dashboard_widgets`). Rename them **before** migrating: the migrations and models read the same keys, and a published config that lists only some keeps the defaults for the rest. |
 | `audit.enabled` | Whether Keen, when installed, records Atrium's own dashboard changes. |
-| `discover` | Whether to discover plugins from installed packages. |
+| `discover` | Whether to discover plugins and front-end modules from installed packages. |
 | `plugins` | Plugin classes registered manually. |
-| `disabled` | Plugin keys to hide. |
+| `disabled` | Plugin and module keys to hide. |
 | `themes` | `default`, `switcher_feature` and your own themes under `available`. |
 | `theme` | Token values for the built-in `atrium` theme. |
 | `search.concurrency` | The `Concurrency` driver search sources run with: `sync` (default), `process` or `fork`. Null uses the application's default. |
@@ -1040,36 +1065,45 @@ At boot, Atrium logs one warning per process if the v1 keys `path`, `domain`, `m
 | --- | --- |
 | `atrium:install` | Publish the config, and print the gate stub. |
 | `atrium:plugins` | List the plugins currently registered. |
-| `atrium:discover` | Cache the plugins installed packages declare (also run by `package:discover` and `optimize`). |
-| `atrium:clear-discovered` | Remove that cache (also run by `optimize:clear`). |
+| `atrium:discover` | Cache the plugins and front-end modules installed packages declare (also run by `package:discover` and `optimize`). |
+| `atrium:clear-discovered` | Remove both caches (also run by `optimize:clear`). |
 | `atrium:plugin` | Generate a new plugin class. |
 
 ## Testing
 
 ```bash
-composer test        # PHPStan, Pint, type coverage and Pest
-composer test:nuxt   # the layer: frozen pnpm install, typecheck, build, Vitest and a consumer build
+composer test      # PHPStan, Pint, type coverage and Pest
+composer test:ui   # the front end: frozen pnpm install, the generated-client and theme checks, typecheck, Vitest and every build
 ```
 
-`composer test` needs no Node. `composer test:nuxt` needs the Node and pnpm versions pinned in `.nvmrc` and `nuxt/package.json`.
+`composer test` needs no Node: `tests/Feature/Frontend/BuildFreshnessTest.php` recomputes the source hash of every committed build (`dist/` and each module's `dist/atrium/`, D-085) in PHP and fails when a build is stale. `composer test:ui` needs the Node and pnpm versions pinned in `.nvmrc` and `ui/package.json`, and rebuilds everything; CI then fails on any difference in the builds. The workspace's own scripts:
 
-The PHP suite writes the API's contract fixtures (`nuxt/layer/test/fixtures/*.json`) only on request, with `UPDATE_FIXTURES=1 vendor/bin/pest`; a plain run compares them and fails on a difference, and Vitest checks each fixture against the layer's TypeScript types.
+```bash
+pnpm -C ui install
+pnpm -C ui build             # Atrium's app into dist/, then every module and the workbench's
+pnpm -C ui test              # Vitest, every package of the workspace
+pnpm -C ui typecheck
+pnpm -C ui dev               # rebuild every build on change (vite build --watch); reload the page
+pnpm -C ui sync:clients      # refresh the staged modules' vendored clients
+pnpm -C ui generate:client   # regenerate ui/sdk/src/client/schema.d.ts from openapi.json
+pnpm -C ui theme:check       # Nuxt UI's theme for module styles is current
+```
+
+The PHP suite writes the API's contract fixtures (`ui/sdk/test/fixtures/*.json`) only on request, with `UPDATE_FIXTURES=1 vendor/bin/pest`; a plain run compares them and fails on a difference, and Vitest checks each fixture against the SDK's TypeScript types.
 
 To see a working dashboard locally:
 
 ```bash
-composer serve          # the API on http://127.0.0.1:8000
-pnpm -C nuxt install
-pnpm -C nuxt dev        # the playground on http://localhost:3000
+composer serve   # the page on http://127.0.0.1:8000/atrium
 ```
 
-Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources. The playground extends `../layer` and registers the demo components.
+The workbench signs you in through `/_workbench` as `admin@example.com` (Atrium's `auth` middleware sends a guest there as the login route), so the page and its API run on the session as a host's would. Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources, rendered by the workbench's module (`ui/workbench`). `workbench/app/Atrium/DemoSuite.php` loads every staged suite module with `Atrium::module()` and points the integrations at `workbench/app/Atrium/SuiteStandIn.php`, which answers each package's API at `/_suite/{pkg}` from its vendored `openapi.json`. Run `pnpm -C ui dev` beside it to rebuild on change.
 
 ## Credits
 
 - [Refactor Circus](https://github.com/Refactor-Circus)
 
-The layer is built on [Nuxt UI](https://ui.nuxt.com) (MIT).
+The front end is built on [Nuxt UI](https://ui.nuxt.com) (MIT), used through its Vite plugin in Vue mode.
 
 ## License
 

@@ -45,7 +45,7 @@ class SearchRegistry
     /**
      * The fewest characters a query needs, from `atrium.search.min_length`:
      * at least 1, which null or any other value means. The search request
-     * enforces it and the shell sends it to the layer's search box.
+     * enforces it and the shell sends it to the front end's search box.
      */
     public function minLength(): int
     {

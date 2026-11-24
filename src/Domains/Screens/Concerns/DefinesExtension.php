@@ -32,7 +32,7 @@ trait DefinesExtension
 
     /**
      * The key the client renders the extension with: the component registered
-     * for it in the layer's `$atrium.extension()`. The extension key by default.
+     * for it in the front end's `defineAtriumModule({ extensions }) ()`. The extension key by default.
      */
     public private(set) string $component;
 

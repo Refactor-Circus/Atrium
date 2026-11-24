@@ -14,7 +14,7 @@ use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 /**
  * What Atrium shows of Cortex (refactor-circus/cortex), as data only: the six
  * nav items, the `cortex` settings panel and search source and the eleven
- * screens of Cortex v1's Atrium plugin, under their v1 keys. The layer's
+ * screens of Cortex v1's Atrium plugin, under their v1 keys. The module's
  * pages (`/cortex/...`) call Cortex's own API for everything they show.
  *
  * The screens carry no subject type: Cortex declares no morph aliases, and

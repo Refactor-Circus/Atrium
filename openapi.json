@@ -1002,7 +1002,7 @@
                         "type": "string"
                     },
                     "path": {
-                        "description": "The layer route of a declared screen.",
+                        "description": "The front end route of a declared screen.",
                         "type": "string"
                     },
                     "subject_type": {

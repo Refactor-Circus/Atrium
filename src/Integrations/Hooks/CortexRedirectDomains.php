@@ -18,7 +18,7 @@ use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
  *
  * The screen's record owns the domains, so only a detail screen whose
  * declaration names its record's morph alias gets them. The data is that
- * alias, `{owner_type}`; the layer adds `owner_id` from the record key and
+ * alias, `{owner_type}`; the module adds `owner_id` from the record key and
  * calls Cortex's `redirect-domains` routes itself.
  */
 final class CortexRedirectDomains extends Hook

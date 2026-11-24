@@ -17,10 +17,10 @@ use RefactorCircus\Atrium\Support\JsonData;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
 
 /**
- * A resolved screen as the layer renders it: its tabs, the open one, and the
+ * A resolved screen as the front end renders it: its tabs, the open one, and the
  * visible sections of every slot it declares. Each registered extension is
- * `{key, label, component, data}`; the layer looks `component` up in its
- * `$atrium.extension()` registry. Built-in tabs have no component: the page
+ * `{key, label, component, data}`; the front end looks `component` up in its
+ * `defineAtriumModule({ extensions }) ()` registry. Built-in tabs have no component: the page
  * renders them itself.
  *
  * Only what renders is resolved, as on the v1 pages: the open registered
@@ -56,7 +56,7 @@ final class ResolvedScreenResource extends JsonResource
     private ?array $declaration = null;
 
     /**
-     * Send the screen as declared by a suite integration: the layer path it
+     * Send the screen as declared by a suite integration: the front end path it
      * renders at, the morph alias of its record, the record key it was asked
      * for, echoed without loading a model, and the static options its page
      * reads (D-042), always as an object.
@@ -107,7 +107,7 @@ final class ResolvedScreenResource extends JsonResource
         return [
             'key' => $schema->string()->required(),
             'kind' => $schema->string()->required(),
-            'path' => $schema->string()->description('The layer route of a declared screen.'),
+            'path' => $schema->string()->description('The front end route of a declared screen.'),
             'subject_type' => $schema->string()->nullable()->description('The morph alias of a declared screen\'s record.'),
             'record' => $schema->string()->nullable()->description('The record key a declared screen was asked for.'),
             'options' => $schema->object()->description('Static options a declared screen\'s page reads, such as showroom.transfers\' flow_prefix.'),

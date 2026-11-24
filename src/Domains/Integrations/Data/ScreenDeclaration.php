@@ -11,11 +11,11 @@ use RefactorCircus\Atrium\Support\JsonData;
 
 /**
  * A screen an integration declares: its key (`roster.user`, the v1 key), its
- * kind (`detail` or `list`), the layer page's path (`/roster/users/:user`),
+ * kind (`detail` or `list`), the front end page's path (`/roster/users/:user`),
  * on a detail screen the morph alias of its record (`subject_type`), and any
  * static options its page reads (`options`).
  *
- * The layer renders the screen; `atrium.screens.show` serves the tabs and
+ * The front end renders the screen; `atrium.screens.show` serves the tabs and
  * sections other packages register for it, with no model loaded.
  */
 final class ScreenDeclaration
@@ -33,7 +33,7 @@ final class ScreenDeclaration
     public private(set) string $kind;
 
     /**
-     * The layer page's path, with `:param` placeholders.
+     * The front end page's path, with `:param` placeholders.
      */
     public private(set) string $path;
 
@@ -43,7 +43,7 @@ final class ScreenDeclaration
     public private(set) ?string $subjectType = null;
 
     /**
-     * Static configuration the layer page needs (`showroom.transfers`'
+     * Static configuration the front end page needs (`showroom.transfers`'
      * `flow_prefix`), sent as it is with the screen (D-042).
      *
      * @var array<array-key, mixed>
@@ -92,7 +92,7 @@ final class ScreenDeclaration
     }
 
     /**
-     * Hand the layer page static options with the screen. Atrium sends them
+     * Hand the front end page static options with the screen. Atrium sends them
      * as they are, so they must be JSON-serializable data.
      *
      * @param  array<array-key, mixed>  $options

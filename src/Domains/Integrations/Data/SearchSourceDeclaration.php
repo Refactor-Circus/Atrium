@@ -9,7 +9,7 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Support\Iconify;
 
 /**
- * A search source the layer runs in the browser against a package's API,
+ * A search source the front end runs in the browser against a package's API,
  * registered there under the same key with `$atrium.searchSource()`. The
  * shell lists the sources of every active integration under
  * `search.sources`; Atrium's own search never calls them.

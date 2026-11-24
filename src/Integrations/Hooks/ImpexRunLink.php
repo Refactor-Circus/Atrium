@@ -10,8 +10,8 @@ use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 /**
  * Impex's run link on other packages' rows (AC 66): one `impex.run-link`
  * section per entry of `atrium.integrations.impex.run_link.screens` (screen
- * target => slot), by default in `showroom.transfers`' `row.actions`. The
- * layer renders it as a link to `/impex/runs/:id` for the row's run id, so
+ * target => slot), by default in `showroom.transfers`' `row.actions`. Impex's
+ * module renders it as a link to `/impex/runs/:id` for the row's run id, so
  * it sends no data.
  */
 final class ImpexRunLink extends Hook

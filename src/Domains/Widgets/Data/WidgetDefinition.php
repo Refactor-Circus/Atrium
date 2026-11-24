@@ -30,7 +30,7 @@ class WidgetDefinition
 
     /**
      * The key the client renders the widget with: the component registered
-     * for it in the layer's `$atrium.widget()`. The definition key by default.
+     * for it in the front end's `defineAtriumModule({ widgets }) ()`. The definition key by default.
      */
     public private(set) string $component;
 

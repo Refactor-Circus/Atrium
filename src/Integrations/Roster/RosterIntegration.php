@@ -18,7 +18,7 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
  * Guardian integration (AC 99, D-046).
  *
  * The nav items, widgets and search sources keep their v1 keys, labels and
- * order. Nothing here loads Roster's code: the layer's Vue components call
+ * order. Nothing here loads Roster's code: the module's Vue components call
  * Roster's API (`roster.stats.*`, `roster.search.*` and the screens' own
  * routes), and every user the `viewAtrium` gate admits sees the nav items
  * (D-031); Roster's API answers 403 where v1 hid a link.

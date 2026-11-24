@@ -12,11 +12,11 @@ use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 
 /**
  * Keen, the suite's audit log: every package's entries, one entry in full,
- * and each audited package's history, as the layer pages under `/keen/`.
+ * and each audited package's history, as the module's pages under `/keen/`.
  *
  * Its nav holds the audit log and, while
  * `atrium.integrations.keen.history.nav.enabled` is on, a History item whose
- * children the layer's `keen.history` live resolver lists from Keen's
+ * children the module's `keen.history` live resolver lists from Keen's
  * `keen.packages.index`, handed the `nav.exclude`, `nav.groups` and
  * `nav.sort` settings as its options. Keen has no widget, settings panel or
  * search source.

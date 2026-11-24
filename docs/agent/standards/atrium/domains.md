@@ -1,19 +1,20 @@
 ---
-description: "Atrium's domains (Access, Dashboard, Integrations, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code and per-package src/Integrations/{Pkg}, domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
+description: "Atrium's domains (Access, Dashboard, Frontend, Integrations, Navigation, Plugins, Screens, Search, Settings, Themes, Widgets), its top-level package-wide code and per-package src/Integrations/{Pkg}, domain providers on Atrium\\Support\\ServiceProvider loading each domain's routes.php into the one JSON API group with loadApiRoutesFrom(), resource placement, and the Dashboard morph aliases."
 tags: [atrium, domains, service-providers, routes, resources, api, morph-aliases]
 kind: convention
 ---
 
 # Atrium Domains
 
-Complements [[domain-modules]], [[routes]] and [[resources]]: Atrium's code sits in ten fixed domains whose providers load their routes into the one JSON API group.
+Complements [[domain-modules]], [[routes]] and [[resources]]: Atrium's code sits in eleven fixed domains whose providers load their routes into the one JSON API group (the `Frontend` domain's page and asset routes sit outside it).
 
 ## Domains
 
-- `Access`, `Dashboard`, `Integrations`, `Navigation`, `Plugins`, `Screens`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
+- `Access`, `Dashboard`, `Frontend`, `Integrations`, `Navigation`, `Plugins`, `Screens`, `Search`, `Settings`, `Themes`, `Widgets`, under `RefactorCircus\Atrium\Domains\{Domain}`.
 - A new domain is added to this list and its provider to `Domains\DomainServiceProvider::$providers`.
 - `Navigation` serves the shell (`atrium.shell`, `Http\Resources\ShellResource`): app, user, navigation (with each item's `live` key), themes, settings summaries, `search` (`min_length`, `per_source`, `sources`), `integrations`, `locale` and `api_version`.
 - `Integrations` is the suite integration framework: the `Integration` contract and base, `IntegrationRegistry`, the `InstalledPackages` seam, `IntegrationFeatures`, `ScreenDeclaration`, and the `atrium.screens.show` endpoint (`GET screens/{screen}`) with its own `routes.php`. It is the only domain that knows the seven suite package keys; see [[integrations]].
+- `Frontend` serves the front end (D-079 to D-082): the `atrium::app` page at every path under `atrium.client_path` (route `atrium.app`, behind `atrium.client.middleware`), the built files from `/{atrium.assets.path}/{owner}/{version}/{path}` (route `atrium.assets`, no middleware), module discovery from `extra.atrium` (`ModuleDiscovery`, cached by `atrium:discover`) and the app's own modules, scripts and styles (`ModuleRegistry`: `Atrium::module()`, `Atrium::script()`, `Atrium::style()`). It is the one domain that renders HTML, and `atrium.client.enabled = false` registers neither route.
 - `Screens` holds the screen extensions registry: `Data\Screen`, `Data\TabDefinition`, `Data\SectionDefinition` and `Data\ResolvedScreen`, the `Services\ScreenExtensions` singleton (`Atrium::screens()`), the `scoped()` `Services\ScreenVisibility` and `Http\Resources\ResolvedScreenResource`. It registers no routes; screens are sent by the endpoints that declare them (Settings declares `atrium.settings` and `atrium.settings-panel`).
 - Atrium has no History domain and no audit concept: the history screen, its components and its nav item belong to refactor-circus/keen.
 

@@ -12,8 +12,8 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 
 /**
  * What Atrium shows of one suite package, as data only: Atrium never loads
- * the package's classes, models or actions. Its Vue components in the Nuxt
- * layer call the package's own API for everything they display.
+ * the package's classes, models or actions. The Vue components of its
+ * front-end module call the package's own API for everything they display.
  *
  * Atrium finds the class by convention from the package's key in
  * `atrium.integrations`: `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Integration`.
@@ -52,7 +52,7 @@ interface Integration
     public function settings(): ?SettingsPanel;
 
     /**
-     * The search sources the layer runs against the package's API.
+     * The search sources the front end runs against the package's API.
      *
      * @return list<SearchSourceDeclaration>
      */

@@ -17,14 +17,14 @@ use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
  * - the `keen.history` section, in `slot`, on every integration screen
  *   matched by `screens` and not by `exclude`: a detail screen sends
  *   `{source, subject_type}` (its package and its record's morph alias), and
- *   the layer adds `subject_id` from the record; a list screen sends
+ *   the front end adds `subject_id` from the record; a list screen sends
  *   `{source}` only;
  * - the `keen.activity` tab on the detail screens of each `tabs` entry,
  *   sending `{source, subject_type, scope}`: with `scope` (the default) the
- *   layer filters by `scope_type`/`scope_id`, the record as a scope, and
+ *   front end filters by `scope_type`/`scope_id`, the record as a scope, and
  *   otherwise by subject.
  *
- * Both list `keen.entries.index` in the layer, which renders nothing for a
+ * Both list `keen.entries.index` in Keen's module, which renders nothing for a
  * package `keen.packages.index` does not list.
  */
 final class KeenHistory extends Hook

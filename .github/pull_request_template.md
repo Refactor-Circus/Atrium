@@ -62,5 +62,5 @@ The CHANGELOG upgrade guide is checked by Pest (`tests/Feature/ChangelogUpgradeT
 - [ ] Boost skill (`resources/boost/skills/atrium-development/SKILL.md`) matches the README. Owner: PR author.
 - [ ] `CLAUDE.md` (the architecture and frontend sections). Owner: PR author.
 - [ ] README "Suite integrations": detection and `enabled`, the API base and the Polycart and Roster APIs behind auth, Pennant flags, the hook keys, the modules' routes, the vendored clients, Atrium's `openapi.json` and client, the parity departures, and the Guardian part (its API behind auth, `scope_types`, the two-factor middleware and pages, the deadline header through CORS, token drivers, passkeys and the module's `responseHandlers`). Owner: PR author.
-- [ ] CHANGELOG "Suite integrations": every replaced package key, every `// Not ported (D-032)` item in the layer, the parity changes and the D-020 release step. Owner: PR author.
+- [ ] CHANGELOG "Suite integrations": every replaced package key, every `// Not ported (D-032)` item in the modules, the parity changes and the D-020 release step. Owner: PR author.
 - [ ] Local standards `atrium/components`, `atrium/domains` and `atrium/integrations` (`docs/agent/standards/atrium/`), and `docs/agent/standards.index.yml` regenerated from them (`vendor/bin/ringside sync`). Owner: PR author.

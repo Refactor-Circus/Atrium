@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 /*
  * The cross-package hooks' server-side labels (AC 53): their tabs and
- * sections. The components' own strings live in the layer, in
- * `nuxt/layer/i18n/locales/integrations/hooks.en.json`.
+ * sections. The components' own strings live in the module of the package
+ * whose API each calls, in `ui/modules/{pkg}/src/locales/hooks.en.json`.
  */
 
 return [
