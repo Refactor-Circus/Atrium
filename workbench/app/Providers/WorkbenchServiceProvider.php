@@ -9,6 +9,7 @@ use RefactorCircus\Atrium\Facades\Atrium;
 use Workbench\App\Atrium\DemoData;
 use Workbench\App\Atrium\DemoPlugin;
 use Workbench\App\Atrium\DemoScreens;
+use Workbench\App\Atrium\DemoSuite;
 use Workbench\App\Http\Middleware\AuthenticateWorkbenchToken;
 use Workbench\App\Models\User;
 use Workbench\App\OpenApi\AtriumOpenApi;
@@ -52,6 +53,12 @@ class WorkbenchServiceProvider extends ServiceProvider
             'cors.supports_credentials' => false,
             ...AtriumOpenApi::config(),
         ]);
+
+        // The served workbench stands in for every suite package (DemoSuite),
+        // so the playground renders each integration's pages populated.
+        if (DemoSuite::enabled($this->app)) {
+            DemoSuite::register($this->app);
+        }
     }
 
     /**
@@ -70,6 +77,10 @@ class WorkbenchServiceProvider extends ServiceProvider
         Atrium::plugin(DemoPlugin::class);
 
         DemoScreens::register(Atrium::screens());
+
+        if (DemoSuite::enabled($this->app)) {
+            DemoSuite::boot();
+        }
 
         // The workbench dashboard is open to anyone the token guard signs in.
         // A real application defines a real gate.

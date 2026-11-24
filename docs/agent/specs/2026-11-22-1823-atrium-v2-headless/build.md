@@ -1580,3 +1580,16 @@ Guardian docs, changelog and release checks (AC 100, 101).
 - `vendor/bin/ringside check` passed after `ringside sync`.
 - `composer test`: PHPStan 0 errors, Pint passed, type coverage 100%, Pest 1473 tests, all passed.
 - `composer test:nuxt` (pnpm shim, D-041): every step passed; Vitest 142 files, 1359 tests, no type errors, and the consumer build.
+
+## UI redesign: critique of the current layer
+
+Screenshots of the playground before the redesign (1440x900 and 390x844, light and dark, the default theme and a SECLOCK-like brand theme), with every suite integration populated through the workbench's design bench (`DemoSuite` and the playground's `/_suite` stand-in API, see D-077). What is a mess, and why:
+
+- **Navigation is mostly chrome.** Eleven sections are eleven accordion rows in a 216px sidebar, only the route's section open, each behind a separator. With ~50 pages, the sidebar spends ~600px of height on collapsed labels to show four links, and a section's pages are two clicks away. The collapsed sidebar was unreachable: nothing rendered its toggle.
+- **No navigation on a phone.** Below `lg` the sidebar is hidden and nothing opens it (UDashboardSidebar's toggle sits in UDashboardNavbar, which 48 of the ~75 pages do not render). On 390px the user is stuck on the page they landed on.
+- **Two page models.** 26 pages are a UDashboardPanel (a navbar, a padded scrolling body); the others render straight into the layout, flush against the sidebar with no padding and no scroll container of their own. Products and users sit at x=0 of the content, the right-hand button half off-screen.
+- **Primary colour invisible in the default theme.** The theme bridge read `var(--color-primary, …)`, but Nuxt UI defines `--color-primary` as `var(--ui-primary)`: a cycle whenever a theme does not send the token, so `--ui-primary` was invalid. "New product", "Filter" and every solid primary button rendered as white on white, and the status colours of badges fell back to neutral. Only themes that send every token (Harbor, Signal) showed colour.
+- **Loose type and density.** 14px body text, 40px table rows, 24px card padding, 20px page titles on some pages and 16px navbar titles on others; table headers indistinguishable from rows; native selects (40 of them) styled differently from UInput; dates and IDs in proportional figures that do not line up.
+- **⌘K finds records, not pages.** The palette only queried search sources; jumping to "Role assignments" meant opening Security in the accordion.
+- **No identity.** Stock Nuxt UI greys on Public Sans; light and dark are inversions of each other; nothing on screen reads as Atrium or as the host's brand beyond a button colour.
+- **States are afterthoughts.** An empty list is a grey sentence; a failure a red-bordered box; a 403 a grey box; all different sizes and paddings from page to page.
