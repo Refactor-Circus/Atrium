@@ -165,6 +165,25 @@ export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: {
   `ButtonProps`, ...) come type-only from `@refactor-circus/atrium/ui`, never
   from `@nuxt/ui`. `<UTable>` takes the deck's look from Atrium's theme
   (mono caps headings, 34px rows, a lit hovered row): add no classes for it.
+- D-094 refinements: `<AtriumSelect>`'s `items` are Nuxt UI's `SelectItem[]`
+  or groups of them (`SelectItem[][]`, the blank item leading the first
+  group), its model a `SelectValue` (bigint included), and `value-key` /
+  `label-key` apply to the blank item too. `<AtriumDetails>` finds an
+  item's slot only as an own property, so any key is safe (`constructor`,
+  `toString`: a record's arbitrary context keys); `linkTestid` puts a test
+  id on an `href` item's link (`testid` stays on its `<dd>`); each item is a
+  row element with `data-row` = its `key` plus any `rowAttrs`, so a list
+  keyed by `[data-row]` can adopt it. `<AtriumPageHeader>` takes `ui`,
+  `<UPageHeader>`'s slot classes, merged slot by slot with its own
+  (`:ui="{ root: 'border-none py-0' }"`, `:ui="{ title: 'max-w-xl' }"`
+  keeps the title's truncation).
+- Free text with suggestions: Nuxt UI 4.1's `<UInputMenu>` has no clean fit
+  (its model is always an item: `create-item` only adds the typed text when
+  the "Create" option is picked, and the search term is reset on blur or
+  kept apart from the value). Use `<UInput>` with a native `<datalist>`,
+  which the guard allows: `<UInput v-model="name" list="flag-names" />`
+  `<datalist id="flag-names"><option v-for="n in names" :key="n" :value="n" /></datalist>`
+  (`<UInput>` puts `list` on its native input).
 
 ### 5. The SDK at development time
 

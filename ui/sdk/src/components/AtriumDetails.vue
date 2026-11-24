@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ULink from '@nuxt/ui/runtime/vue/components/Link.vue'
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import type { AtriumDetailsItem } from '../types/components'
 
 /**
@@ -20,7 +20,13 @@ import type { AtriumDetailsItem } from '../types/components'
  * stack each label over its value in a grid (`wide` spans the row). An item
  * with a `key` can replace its value through the slot of that name (it gets
  * `{ item }`); `value` null or '' shows `empty`. Each value carries
- * `data-testid` `testid` (default `atrium-details-{key}`).
+ * `data-testid` `testid` (default `atrium-details-{key}`); an `href` item's
+ * link carries `linkTestid` (D-094). A slot is looked up as the slots'
+ * own property, so any key is safe (`constructor`, `toString`, ...).
+ *
+ * Each item is one row element (a `<div>` in the `<dl>`, laid out with
+ * `display: contents` in one column) with `data-row` its `key`, plus any
+ * `rowAttrs`, so a list keyed by `[data-row]` can adopt the component.
  */
 
 const props = withDefaults(defineProps<{
@@ -28,6 +34,8 @@ const props = withDefaults(defineProps<{
   columns?: 1 | 2 | 3
   empty?: string
 }>(), { columns: 1, empty: '—' })
+
+const slots = useSlots()
 
 const stacked = computed(() => props.columns > 1)
 
@@ -43,6 +51,15 @@ function text(item: AtriumDetailsItem): string | null {
   return value === null || value === undefined || value === '' ? null : String(value)
 }
 
+/**
+ * Whether the page gave the item's key a slot: an own property only, so a
+ * key such as `constructor` or `toString` (a record's arbitrary context
+ * keys) never resolves to one inherited from Object.prototype.
+ */
+function hasSlot(item: AtriumDetailsItem): boolean {
+  return typeof item.key === 'string' && Object.hasOwn(slots, item.key) && typeof slots[item.key] === 'function'
+}
+
 function testid(item: AtriumDetailsItem, index: number): string {
   return item.testid ?? `atrium-details-${item.key ?? index}`
 }
@@ -50,25 +67,20 @@ function testid(item: AtriumDetailsItem, index: number): string {
 
 <template>
   <dl class="grid text-sm" :class="grid" data-testid="atrium-details">
-    <template v-for="(item, index) in props.items" :key="item.key ?? index">
-      <div v-if="stacked" class="min-w-0" :class="item.wide ? 'sm:col-span-full' : null">
-        <dt class="atrium-label truncate" :data-key="item.key">{{ item.label }}</dt>
-        <dd class="mt-0.5 min-w-0 leading-5 break-words text-highlighted" :class="item.mono ? 'atrium-mono text-[0.8125rem]' : null" :data-testid="testid(item, index)">
-          <slot v-if="item.key && $slots[item.key]" :name="item.key" :item="item" />
-          <ULink v-else-if="item.href && text(item) !== null" :to="item.href" class="text-highlighted underline-offset-2 hover:text-primary hover:underline">{{ text(item) }}</ULink>
-          <template v-else-if="text(item) !== null">{{ text(item) }}</template>
-          <span v-else class="text-dimmed">{{ props.empty }}</span>
-        </dd>
-      </div>
-      <template v-else>
-        <dt class="atrium-label truncate leading-5" :data-key="item.key">{{ item.label }}</dt>
-        <dd class="min-w-0 leading-5 break-words text-highlighted" :class="item.mono ? 'atrium-mono text-[0.8125rem]' : null" :data-testid="testid(item, index)">
-          <slot v-if="item.key && $slots[item.key]" :name="item.key" :item="item" />
-          <ULink v-else-if="item.href && text(item) !== null" :to="item.href" class="text-highlighted underline-offset-2 hover:text-primary hover:underline">{{ text(item) }}</ULink>
-          <template v-else-if="text(item) !== null">{{ text(item) }}</template>
-          <span v-else class="text-dimmed">{{ props.empty }}</span>
-        </dd>
-      </template>
-    </template>
+    <div
+      v-for="(item, index) in props.items"
+      :key="item.key ?? index"
+      :data-row="item.key"
+      v-bind="item.rowAttrs ?? {}"
+      :class="stacked ? ['min-w-0', item.wide ? 'sm:col-span-full' : null] : 'contents'"
+    >
+      <dt class="atrium-label truncate" :class="stacked ? null : 'leading-5'" :data-key="item.key">{{ item.label }}</dt>
+      <dd class="min-w-0 leading-5 break-words text-highlighted" :class="[stacked ? 'mt-0.5' : null, item.mono ? 'atrium-mono text-[0.8125rem]' : null]" :data-testid="testid(item, index)">
+        <slot v-if="hasSlot(item)" :name="item.key!" :item="item" />
+        <ULink v-else-if="item.href && text(item) !== null" :to="item.href" class="text-highlighted underline-offset-2 hover:text-primary hover:underline" :data-testid="item.linkTestid ?? undefined">{{ text(item) }}</ULink>
+        <template v-else-if="text(item) !== null">{{ text(item) }}</template>
+        <span v-else class="text-dimmed">{{ props.empty }}</span>
+      </dd>
+    </div>
   </dl>
 </template>

@@ -53,4 +53,56 @@ describe('<AtriumDetails>', () => {
     expect(wrapper.findAll('dl > div')).toHaveLength(6)
     expect(wrapper.find('[data-testid="atrium-details-tags"]').element.parentElement!.className).toContain('sm:col-span-full')
   })
+
+  it('finds a slot only as the slots\' own property, so inherited names are plain keys (D-094)', async () => {
+    const context = [
+      { key: 'constructor', label: 'constructor', value: 'Object' },
+      { key: 'toString', label: 'toString', value: 'custom' },
+      { key: '__proto__', label: '__proto__', value: 'x' },
+      { key: 'hasOwnProperty', label: 'hasOwnProperty', value: null }
+    ]
+    const wrapper = await mountSuspended(AtriumDetails, {
+      props: { items: context },
+      slots: { toString: () => h('em', { 'data-testid': 'own' }, 'from the slot') }
+    })
+
+    expect(wrapper.find('[data-testid="atrium-details-constructor"]').text()).toBe('Object')
+    expect(wrapper.find('[data-testid="atrium-details-__proto__"]').text()).toBe('x')
+    expect(wrapper.find('[data-testid="atrium-details-hasOwnProperty"]').text()).toBe('—')
+    expect(wrapper.find('[data-testid="atrium-details-toString"] [data-testid="own"]').text()).toBe('from the slot')
+  })
+
+  it('puts linkTestid on an href item\'s link, the testid staying on its value', async () => {
+    const wrapper = await mountSuspended(AtriumDetails, {
+      props: { items: [{ key: 'parent', label: 'Parent', value: 'run-0', href: '/impex/runs/run-0', testid: 'parent', linkTestid: 'parent-link' }] }
+    })
+
+    const link = wrapper.find('[data-testid="parent-link"]')
+
+    expect(link.element.tagName).toBe('A')
+    expect(link.attributes('href')).toBe('/impex/runs/run-0')
+    expect(wrapper.find('[data-testid="parent"]').element.tagName).toBe('DD')
+  })
+
+  it('wraps each item in a row element marked data-row, with rowAttrs, in either layout', async () => {
+    const rows = [
+      { key: 'timezone', label: 'Timezone', value: 'UTC', rowAttrs: { 'data-source': 'env' } },
+      { label: 'Unkeyed', value: 1 }
+    ]
+
+    for (const columns of [1, 2] as const) {
+      const wrapper = await mountSuspended(AtriumDetails, { props: { items: rows, columns } })
+      const row = wrapper.find('[data-row="timezone"]')
+
+      expect(row.element.tagName).toBe('DIV')
+      expect(row.attributes('data-source')).toBe('env')
+      expect(row.find('dt').text()).toBe('Timezone')
+      expect(row.find('dd').text()).toBe('UTC')
+      expect(wrapper.findAll('dl > div')).toHaveLength(2)
+      expect(wrapper.findAll('dl > div')[1]!.attributes('data-row')).toBeUndefined()
+    }
+
+    const single = await mountSuspended(AtriumDetails, { props: { items: rows } })
+    expect(single.find('[data-row="timezone"]').classes()).toContain('contents')
+  })
 })

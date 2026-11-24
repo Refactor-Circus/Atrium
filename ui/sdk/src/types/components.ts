@@ -14,6 +14,10 @@ export interface AtriumDetailsItem {
   href?: string | null
   /** Spans every column (with `columns` 2 or 3). */
   wide?: boolean
-  /** The value's `data-testid`; default `atrium-details-{key}`. */
+  /** The value's `data-testid` (on its `<dd>`); default `atrium-details-{key}`. */
   testid?: string
+  /** The link's own `data-testid` when the item has an `href` (D-094). */
+  linkTestid?: string
+  /** Attributes for the item's row element, which carries `data-row` = `key` (D-094). */
+  rowAttrs?: Record<string, string | number | boolean | undefined>
 }

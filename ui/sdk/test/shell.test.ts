@@ -239,4 +239,17 @@ describe('the shared deck blocks', () => {
     expect(wrapper.find('[data-testid="meta"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Docs')
   })
+
+  it('merges a page header\'s `ui` into its own slot classes instead of replacing them (D-094)', async () => {
+    const plain = await mountSuspended(AtriumPageHeader, { props: { title: 'Products' } })
+    const merged = await mountSuspended(AtriumPageHeader, { props: { title: 'Products', ui: { root: 'border-none py-0', title: 'max-w-xl' } } })
+
+    expect(plain.find('h1').classes()).toContain('truncate')
+    expect(merged.find('h1').classes()).toEqual(expect.arrayContaining(['truncate', 'max-w-xl']))
+    expect(merged.classes()).toEqual(expect.arrayContaining(['border-none', 'py-0']))
+    expect(merged.classes()).not.toContain('border-b')
+
+    const composed = await mountSuspended(AtriumPageHeader, { props: { title: 'Run', back: '/runs', ui: { title: 'text-lg' } } })
+    expect(composed.find('h1').classes()).toEqual(expect.arrayContaining(['flex', 'flex-wrap', 'text-lg']))
+  })
 })

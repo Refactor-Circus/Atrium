@@ -292,7 +292,7 @@
     ]
   },
   "src/main.ts": {
-    "file": "atrium-DwPNn2C4.js",
+    "file": "atrium-prMNh1kp.js",
     "name": "atrium",
     "src": "src/main.ts",
     "isEntry": true,
@@ -318,7 +318,7 @@
       "src/pages/NotFoundPage.vue"
     ],
     "css": [
-      "assets/atrium-BLnu9unm.css"
+      "assets/atrium-DOhCtxZE.css"
     ],
     "assets": [
       "assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2",
@@ -424,7 +424,7 @@
     ]
   },
   "src/shared/atrium.ts": {
-    "file": "shared/refactor-circus-atrium-CnNUxclp.js",
+    "file": "shared/refactor-circus-atrium-DXWaBV7R.js",
     "name": "shared/refactor-circus-atrium",
     "src": "src/shared/atrium.ts",
     "isEntry": true,

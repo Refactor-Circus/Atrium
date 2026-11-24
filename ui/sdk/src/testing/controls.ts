@@ -213,7 +213,8 @@ export function selectItems(wrapper: VueWrapper, testid: string): AtriumSelectOp
   })
 
   if (kind === 'atrium' && props.blank !== null && props.blank !== undefined) {
-    return [{ value: props.blankValue === null ? null : '', label: props.blank }, ...items]
+    // <AtriumSelect> drops an item standing for "no selection": its blank item replaces it.
+    return [{ value: props.blankValue === null ? null : '', label: props.blank }, ...items.filter(item => item.value !== '' && item.value !== null && item.value !== undefined)]
   }
 
   return items

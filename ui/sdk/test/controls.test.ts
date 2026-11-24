@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { enableAutoUnmount } from '@vue/test-utils'
 import { defineComponent, h, ref, type Component } from 'vue'
 import { AtriumSelect } from '../src/index'
-import { UCheckbox, UInput, UInputNumber, USelect, USelectMenu, USwitch, UTable } from '../src/ui'
+import { UCheckbox, UInput, UInputNumber, USelect, USelectMenu, USwitch, UTable, type SelectItem } from '../src/ui'
 import {
   chooseOption,
   fieldValue,
@@ -205,6 +205,58 @@ describe('<AtriumSelect>', () => {
     await chooseOption(wrapper, 'any', 'b')
     expect(values).toEqual([null, 'b'])
     expect(selectValues(wrapper, 'plain')).toEqual(['a', 'b'])
+  })
+
+  it('takes Nuxt UI\'s SelectItem[] and grouped items, the blank item leading the first group (D-094)', async () => {
+    const values: unknown[] = []
+    const items: SelectItem[] = [{ label: 'Alpha', value: 'a', icon: 'i-lucide-a' }, { type: 'separator' }, { label: 'None', value: '' }, 7n, true]
+    const groups: SelectItem[][] = [[{ label: 'Team', value: 'team' }], [{ type: 'label', label: 'Orgs' }, { label: 'Acme', value: 'acme' }]]
+    const wrapper = await mountSuspended(defineComponent({
+      setup: () => () => h('div', [
+        h(AtriumSelect as unknown as Component, { items, 'blank': 'Any', 'modelValue': '', 'onUpdate:modelValue': (value: unknown) => values.push(value), 'data-testid': 'flat' }),
+        h(AtriumSelect as unknown as Component, { 'items': groups, 'blank': 'Global', 'modelValue': 'acme', 'data-testid': 'grouped' })
+      ])
+    }))
+
+    expect(selectValues(wrapper, 'flat')).toEqual(['', 'a', 7n, true])
+    const inner = (testid: string) => (findSelect(wrapper, testid).findComponent(USelect as unknown as Component).props() as { items: unknown[] }).items
+
+    expect(inner('flat')).toHaveLength(5)
+    expect(inner('grouped')).toEqual([[{ label: 'Global', value: '__atrium_blank__' }, { label: 'Team', value: 'team' }], groups[1]])
+    expect(selectValues(wrapper, 'grouped')).toEqual(['', 'team', 'acme'])
+    expect(selectValue(wrapper, 'grouped')).toBe('acme')
+
+    await chooseOption(wrapper, 'flat', 7n)
+    await chooseOption(wrapper, 'flat', '')
+    expect(values).toEqual([7n, ''])
+  })
+
+  it('builds its blank item with the select\'s value-key and label-key', async () => {
+    const values: unknown[] = []
+    const wrapper = await mountSuspended(defineComponent({
+      setup: () => () => h(AtriumSelect as unknown as Component, { 'items': [{ name: 'Team', id: 'team' }, { name: 'Unset', id: null }], 'valueKey': 'id', 'labelKey': 'name', 'blank': 'Global', 'modelValue': 'team', 'onUpdate:modelValue': (value: unknown) => values.push(value), 'data-testid': 'keyed' })
+    }))
+
+    expect(selectItems(wrapper, 'keyed')).toEqual([{ value: '', label: 'Global' }, { value: 'team', label: 'Team' }])
+    expect((findSelect(wrapper, 'keyed').findComponent(USelect as unknown as Component).props() as { items: unknown[] }).items)
+      .toEqual([{ name: 'Global', id: '__atrium_blank__' }, { name: 'Team', id: 'team' }])
+
+    await chooseOption(wrapper, 'keyed', '')
+    expect(values).toEqual([''])
+  })
+})
+
+describe('free text with suggestions (D-094)', () => {
+  it('puts <UInput>\'s `list` on its native input, for a <datalist> of suggestions', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      setup: () => () => h('div', [
+        h(UInput as unknown as Component, { 'modelValue': 'beta', 'list': 'flag-names', 'data-testid': 'flag' }),
+        h('datalist', { id: 'flag-names' }, [h('option', { value: 'alpha' }), h('option', { value: 'beta' })])
+      ])
+    }))
+
+    expect(findInput(wrapper, 'flag').attributes('list')).toBe('flag-names')
+    expect(findInput(wrapper, 'flag').element.value).toBe('beta')
   })
 })
 
