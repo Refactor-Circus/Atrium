@@ -197,7 +197,7 @@ void Promise.all([loadTypes(), load()])
         <UButton size="sm" variant="outline" icon="i-lucide-refresh-cw" :label="t('polycart.retry')" data-testid="polycart-retry" @click="load()" />
       </div>
 
-      <p v-else-if="carts.length === 0" class="rounded-md border border-dashed border-default p-6 text-center text-sm text-muted" data-testid="polycart-no-carts">
+      <p v-else-if="carts.length === 0" class="atrium-empty" data-testid="polycart-no-carts">
         {{ t('polycart.carts.no_carts') }}
       </p>
 

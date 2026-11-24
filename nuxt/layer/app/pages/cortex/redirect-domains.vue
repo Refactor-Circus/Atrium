@@ -54,7 +54,7 @@ async function remove(entry: CortexRedirectDomain): Promise<void> {
           </form>
         </UCard>
 
-        <p v-if="domains.length === 0" class="text-sm text-muted" data-testid="cortex-empty">{{ t('cortex.redirect_domains.empty') }}</p>
+        <p v-if="domains.length === 0" class="atrium-empty" data-testid="cortex-empty">{{ t('cortex.redirect_domains.empty') }}</p>
 
         <table v-else class="w-full text-sm" data-testid="cortex-redirect-domains">
           <thead class="text-left text-muted">

@@ -73,7 +73,7 @@ async function upload(): Promise<void> {
     </template>
 
     <div class="space-y-4">
-      <p v-if="props.assets.length === 0" class="text-sm text-muted" data-testid="showroom-assets-empty">{{ t('showroom.catalog.assets.none') }}</p>
+      <p v-if="props.assets.length === 0" class="atrium-empty" data-testid="showroom-assets-empty">{{ t('showroom.catalog.assets.none') }}</p>
       <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         <NuxtLink
           v-for="asset in props.assets"

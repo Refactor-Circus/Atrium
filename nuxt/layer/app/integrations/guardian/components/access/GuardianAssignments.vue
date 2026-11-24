@@ -152,7 +152,7 @@ function go(next: number): void {
     <GuardianState :ready="!pending && data !== null" :failed="failed" :status="status" :compact="!filters">
       <div class="space-y-4">
         <GuardianErrors :action="revoking" testid="guardian-revoke" />
-        <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="guardian-assignments-empty">{{ t('guardian.access.assignments.empty') }}</p>
+        <p v-if="rows.length === 0" class="atrium-empty" data-testid="guardian-assignments-empty">{{ t('guardian.access.assignments.empty') }}</p>
         <table v-else class="w-full text-left text-sm" data-testid="guardian-assignments-table">
           <thead class="text-muted">
             <tr>

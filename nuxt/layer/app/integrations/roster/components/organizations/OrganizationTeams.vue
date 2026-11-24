@@ -76,7 +76,7 @@ async function createTeam(): Promise<void> {
 
     <OrganizationState :ready="!teams.pending.value && teams.data.value !== null" :failed="teams.failed.value" :status="teams.status.value" compact>
       <div class="space-y-4">
-        <p v-if="list.length === 0" class="text-sm text-muted" data-testid="roster-teams-empty">{{ t('roster.organizations.teams.empty') }}</p>
+        <p v-if="list.length === 0" class="atrium-empty" data-testid="roster-teams-empty">{{ t('roster.organizations.teams.empty') }}</p>
         <table v-else class="w-full text-left text-sm" data-testid="roster-teams-table">
           <thead class="text-muted">
             <tr>

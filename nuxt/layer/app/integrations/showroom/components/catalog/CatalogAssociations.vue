@@ -127,7 +127,7 @@ async function add(): Promise<void> {
     </template>
 
     <div class="space-y-4">
-      <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="showroom-associations-empty">{{ t('showroom.catalog.associations.none') }}</p>
+      <p v-if="rows.length === 0" class="atrium-empty" data-testid="showroom-associations-empty">{{ t('showroom.catalog.associations.none') }}</p>
       <div v-for="[type, entries] in rows" :key="type" :data-association-type="type">
         <p class="mb-1 font-mono text-xs font-medium uppercase text-muted">{{ type }}</p>
         <ul class="flex flex-wrap gap-2">

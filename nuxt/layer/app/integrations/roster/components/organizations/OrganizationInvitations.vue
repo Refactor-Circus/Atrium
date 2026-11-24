@@ -100,7 +100,7 @@ async function revokeInvitation(invitation: RosterInvitation): Promise<void> {
 
     <OrganizationState :ready="!invitations.pending.value && invitations.data.value !== null" :failed="invitations.failed.value" :status="invitations.status.value" compact>
       <div class="space-y-4">
-        <p v-if="list.length === 0" class="text-sm text-muted" data-testid="roster-invitations-empty">{{ t('roster.organizations.invitations.empty') }}</p>
+        <p v-if="list.length === 0" class="atrium-empty" data-testid="roster-invitations-empty">{{ t('roster.organizations.invitations.empty') }}</p>
         <table v-else class="w-full text-left text-sm" data-testid="roster-invitations-table">
           <thead class="text-muted">
             <tr>

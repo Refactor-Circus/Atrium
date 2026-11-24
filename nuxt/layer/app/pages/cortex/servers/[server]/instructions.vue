@@ -102,7 +102,7 @@ async function restoreTools(): Promise<void> {
     :back="{ to: '/cortex/servers', label: t('cortex.servers.title') }"
   >
     <CortexLoad :ready="!pending && data !== null" :failed="failed" :status="status">
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
         <CortexVersions
           :api="versions"
           :live="live"

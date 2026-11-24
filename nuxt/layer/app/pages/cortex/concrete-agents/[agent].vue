@@ -95,7 +95,7 @@ async function restoreTools(): Promise<void> {
     </template>
 
     <CortexLoad :ready="!pending && agent !== null" :failed="failed" :status="status">
-      <div v-if="agent" class="flex flex-col gap-6">
+      <div v-if="agent" class="flex flex-col gap-3">
         <CortexVersions
           v-if="agent.overridable"
           :api="versions"

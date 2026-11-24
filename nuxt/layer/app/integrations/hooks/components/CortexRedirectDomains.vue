@@ -62,7 +62,7 @@ async function remove(entry: CortexRedirectDomain): Promise<void> {
 
       <CortexActionError :forbidden="action.forbidden.value" :message="action.message.value" />
 
-      <p v-if="domains.length === 0" class="text-sm text-muted" data-testid="hooks-redirect-domains-empty">
+      <p v-if="domains.length === 0" class="atrium-empty" data-testid="hooks-redirect-domains-empty">
         {{ t('hooks.redirect_domains.empty') }}
       </p>
       <ul v-else class="divide-y divide-default text-sm">

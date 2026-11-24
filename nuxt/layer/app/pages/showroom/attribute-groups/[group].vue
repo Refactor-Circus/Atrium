@@ -98,7 +98,7 @@ async function destroy(): Promise<void> {
             <template #header>
               <h2 class="font-semibold">{{ t('showroom.structure.groups.members') }}</h2>
             </template>
-            <p v-if="members.length === 0" class="text-sm text-muted" data-testid="showroom-group-attributes-empty">{{ t('showroom.structure.groups.no_members') }}</p>
+            <p v-if="members.length === 0" class="atrium-empty" data-testid="showroom-group-attributes-empty">{{ t('showroom.structure.groups.no_members') }}</p>
             <table v-else class="w-full text-left text-sm">
               <thead class="text-muted">
                 <tr>

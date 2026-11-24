@@ -206,7 +206,7 @@ function labelFor(asset: ShowroomAsset): string {
 
         <CatalogState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4">
-            <p v-if="assets.length === 0" class="text-sm text-muted" data-testid="showroom-assets-empty">{{ t('showroom.assets.empty') }}</p>
+            <p v-if="assets.length === 0" class="atrium-empty" data-testid="showroom-assets-empty">{{ t('showroom.assets.empty') }}</p>
             <div v-else-if="view === 'grid'" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" data-testid="showroom-assets-grid">
               <div
                 v-for="asset in assets"

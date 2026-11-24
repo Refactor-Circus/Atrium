@@ -84,7 +84,7 @@ async function create(): Promise<void> {
       <AtriumIntegrationScreen screen-key="guardian.roles">
         <GuardianState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4" data-testid="guardian-roles">
-            <p v-if="roles.length === 0" class="text-sm text-muted" data-testid="guardian-roles-empty">{{ t('guardian.access.roles.empty') }}</p>
+            <p v-if="roles.length === 0" class="atrium-empty" data-testid="guardian-roles-empty">{{ t('guardian.access.roles.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="guardian-roles-table">
               <thead class="text-muted">
                 <tr>

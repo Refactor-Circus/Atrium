@@ -163,7 +163,7 @@ async function purge(user: RosterUser): Promise<void> {
           <div class="space-y-4">
             <RosterActionError :action="action" />
 
-            <p v-if="users.length === 0" class="text-sm text-muted" data-testid="roster-users-empty">{{ t('roster.users.empty') }}</p>
+            <p v-if="users.length === 0" class="atrium-empty" data-testid="roster-users-empty">{{ t('roster.users.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="roster-users-table">
               <thead class="text-muted">
                 <tr>

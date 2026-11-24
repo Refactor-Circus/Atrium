@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-6" data-testid="guardian-two-factor-methods">
+  <div class="space-y-4" data-testid="guardian-two-factor-methods">
     <GuardianRecoveryCodes v-if="codes" :codes="codes" @done="codes = null" />
 
     <section v-if="!setup" class="space-y-2">

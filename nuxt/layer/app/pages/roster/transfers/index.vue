@@ -234,7 +234,7 @@ async function startExport(): Promise<void> {
             </UCard>
           </div>
 
-          <p v-if="transfers.length === 0" class="text-sm text-muted" data-testid="roster-transfers-empty">{{ t('roster.transfers.empty') }}</p>
+          <p v-if="transfers.length === 0" class="atrium-empty" data-testid="roster-transfers-empty">{{ t('roster.transfers.empty') }}</p>
           <table v-else class="w-full text-left text-sm" data-testid="roster-transfers-table">
             <thead class="text-muted">
               <tr>

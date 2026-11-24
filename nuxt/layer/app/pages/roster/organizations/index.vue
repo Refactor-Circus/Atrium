@@ -190,7 +190,7 @@ async function purge(organization: RosterOrganization): Promise<void> {
             <RosterActionError :action="action" />
             <UAlert v-if="notice" color="success" variant="subtle" :title="notice" data-testid="roster-organizations-notice" />
 
-            <p v-if="organizations.length === 0" class="text-sm text-muted" data-testid="roster-organizations-empty">{{ t('roster.organizations.empty') }}</p>
+            <p v-if="organizations.length === 0" class="atrium-empty" data-testid="roster-organizations-empty">{{ t('roster.organizations.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="roster-organizations-table">
               <thead class="text-muted">
                 <tr>

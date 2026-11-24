@@ -132,7 +132,7 @@ function go(next: number): void {
             <div class="space-y-4">
               <GuardianErrors :action="update" testid="guardian-policy-update" />
               <GuardianErrors :action="remove" testid="guardian-policy-delete" />
-              <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="guardian-policies-empty">{{ t('guardian.admin.policies.empty') }}</p>
+              <p v-if="rows.length === 0" class="atrium-empty" data-testid="guardian-policies-empty">{{ t('guardian.admin.policies.empty') }}</p>
               <table v-else class="w-full text-left text-sm" data-testid="guardian-policies-table">
                 <thead class="text-muted">
                   <tr>

@@ -31,7 +31,7 @@ function subjectPath(version: Version): string | null {
     <AtriumNoAccess v-if="forbidden" compact />
     <AtriumErrorCard v-else-if="status === 'error'" :message="t('atrium.widget.failed')" />
     <template v-else-if="versions">
-      <p v-if="versions.length === 0" class="text-sm text-muted" data-testid="showroom-recent-changes-empty">
+      <p v-if="versions.length === 0" class="atrium-empty" data-testid="showroom-recent-changes-empty">
         {{ t('showroom.widgets.no_changes') }}
       </p>
       <ul v-else class="flex flex-col divide-y divide-default">

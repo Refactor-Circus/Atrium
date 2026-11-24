@@ -20,7 +20,7 @@ const queue = computed(() => stats.value?.review_queue ?? null)
     <AtriumNoAccess v-if="forbidden" compact />
     <AtriumErrorCard v-else-if="status === 'error'" :message="t('atrium.widget.failed')" />
     <template v-else-if="queue">
-      <p v-if="queue.products.length === 0" class="text-sm text-muted" data-testid="showroom-review-queue-empty">
+      <p v-if="queue.products.length === 0" class="atrium-empty" data-testid="showroom-review-queue-empty">
         {{ t('showroom.widgets.nothing_in_review') }}
       </p>
       <template v-else>

@@ -54,7 +54,7 @@ async function stop(impersonation: RosterImpersonation): Promise<void> {
         <div class="space-y-4">
           <RosterActionError :action="action" />
 
-          <p v-if="impersonations.length === 0" class="text-sm text-muted" data-testid="roster-impersonations-empty">{{ t('roster.impersonations.empty') }}</p>
+          <p v-if="impersonations.length === 0" class="atrium-empty" data-testid="roster-impersonations-empty">{{ t('roster.impersonations.empty') }}</p>
           <table v-else class="w-full text-left text-sm" data-testid="roster-impersonations-table">
             <thead class="text-muted">
               <tr>

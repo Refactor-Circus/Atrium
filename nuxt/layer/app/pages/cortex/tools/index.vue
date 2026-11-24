@@ -53,7 +53,7 @@ function choose(option: string | null): void {
           <UInput v-model="search" class="ml-auto" icon="i-lucide-search" :placeholder="t('cortex.tools.search')" data-testid="cortex-tool-search" />
         </div>
 
-        <p v-if="tools.length === 0" class="text-sm text-muted" data-testid="cortex-empty">{{ t('cortex.tools.empty') }}</p>
+        <p v-if="tools.length === 0" class="atrium-empty" data-testid="cortex-empty">{{ t('cortex.tools.empty') }}</p>
 
         <table v-else class="w-full text-sm" data-testid="cortex-tools">
           <thead class="text-left text-muted">

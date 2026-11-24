@@ -124,7 +124,7 @@ function go(next: number): void {
     <GuardianState :ready="!pending && data !== null" :failed="failed" :status="status" compact>
       <div class="space-y-4">
         <GuardianErrors :action="revoking" testid="guardian-scim-revoke" />
-        <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="guardian-scim-empty">{{ t('guardian.sso.scim.empty') }}</p>
+        <p v-if="rows.length === 0" class="atrium-empty" data-testid="guardian-scim-empty">{{ t('guardian.sso.scim.empty') }}</p>
         <table v-else class="w-full text-left text-sm">
           <thead class="text-muted">
             <tr>

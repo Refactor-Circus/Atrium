@@ -57,7 +57,7 @@ function clear(): void {
         </form>
 
         <ImpexState :error="runs.error.value" :ready="!runs.pending.value || runs.rows.value.length > 0">
-          <p v-if="runs.rows.value.length === 0" class="text-sm text-muted" data-testid="impex-runs-empty">{{ t('impex.runs.empty') }}</p>
+          <p v-if="runs.rows.value.length === 0" class="atrium-empty" data-testid="impex-runs-empty">{{ t('impex.runs.empty') }}</p>
           <table v-else class="w-full text-left text-sm">
             <thead class="text-muted">
               <tr>

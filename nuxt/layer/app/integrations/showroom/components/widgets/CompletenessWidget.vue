@@ -20,7 +20,7 @@ const rows = computed(() => stats.value?.completeness ?? null)
     <AtriumNoAccess v-if="forbidden" compact />
     <AtriumErrorCard v-else-if="status === 'error'" :message="t('atrium.widget.failed')" />
     <template v-else-if="rows">
-      <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="showroom-completeness-empty">
+      <p v-if="rows.length === 0" class="atrium-empty" data-testid="showroom-completeness-empty">
         {{ t('showroom.widgets.no_completeness_yet') }}
       </p>
       <ul v-else class="flex flex-col gap-3">

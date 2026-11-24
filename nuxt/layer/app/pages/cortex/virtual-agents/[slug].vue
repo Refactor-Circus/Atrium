@@ -63,7 +63,7 @@ async function destroy(): Promise<void> {
     </template>
 
     <CortexLoad :ready="!pending && agent !== null" :failed="failed" :status="status">
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
         <CortexActionError :forbidden="action.forbidden.value" :message="action.message.value" />
         <CortexAgentForm :agent="agent" @saved="reload" />
         <CortexVersions

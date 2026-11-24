@@ -112,7 +112,7 @@ function localeLabel(entry: ShowroomLocale): string {
           </template>
           <CatalogState :ready="!localeLoad.pending.value && localeLoad.data.value !== null" :failed="localeLoad.failed.value" :status="localeLoad.status.value" compact>
             <div class="space-y-4">
-              <p v-if="locales.length === 0" class="text-sm text-muted" data-testid="showroom-locales-empty">{{ t('showroom.structure.channels.no_locales') }}</p>
+              <p v-if="locales.length === 0" class="atrium-empty" data-testid="showroom-locales-empty">{{ t('showroom.structure.channels.no_locales') }}</p>
               <ul v-else class="flex flex-wrap gap-3">
                 <li
                   v-for="entry in locales"
@@ -171,7 +171,7 @@ function localeLabel(entry: ShowroomLocale): string {
 
         <CatalogState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4">
-            <p v-if="channels.length === 0" class="text-sm text-muted" data-testid="showroom-channels-empty">{{ t('showroom.structure.channels.empty') }}</p>
+            <p v-if="channels.length === 0" class="atrium-empty" data-testid="showroom-channels-empty">{{ t('showroom.structure.channels.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="showroom-channels-table">
               <thead class="text-muted">
                 <tr>

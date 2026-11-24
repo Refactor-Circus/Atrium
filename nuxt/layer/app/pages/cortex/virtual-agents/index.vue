@@ -48,7 +48,7 @@ async function destroy(agent: CortexVirtualAgent): Promise<void> {
       <div class="flex flex-col gap-4">
         <CortexActionError :forbidden="action.forbidden.value" :message="action.message.value" />
 
-        <p v-if="agents.length === 0" class="text-sm text-muted" data-testid="cortex-empty">{{ t('cortex.virtual_agents.empty') }}</p>
+        <p v-if="agents.length === 0" class="atrium-empty" data-testid="cortex-empty">{{ t('cortex.virtual_agents.empty') }}</p>
 
         <table v-else class="w-full text-sm" data-testid="cortex-virtual-agents">
           <thead class="text-left text-muted">

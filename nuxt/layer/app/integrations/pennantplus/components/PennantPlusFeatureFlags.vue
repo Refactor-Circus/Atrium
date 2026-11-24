@@ -233,7 +233,7 @@ void load()
         </div>
       </form>
 
-      <p v-if="values.length === 0" class="rounded-md border border-dashed border-default p-6 text-center text-sm text-muted" data-testid="pennantplus-no-values">
+      <p v-if="values.length === 0" class="atrium-empty" data-testid="pennantplus-no-values">
         {{ t('pennantplus.features.no_values') }}
       </p>
 

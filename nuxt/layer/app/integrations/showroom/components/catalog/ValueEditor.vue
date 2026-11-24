@@ -82,7 +82,7 @@ function slotNote(attribute: ShowroomAttribute): string {
 </script>
 
 <template>
-  <p v-if="props.attributes.length === 0" class="text-sm text-muted" data-testid="showroom-values-empty">{{ t('showroom.catalog.values.none_settable') }}</p>
+  <p v-if="props.attributes.length === 0" class="atrium-empty" data-testid="showroom-values-empty">{{ t('showroom.catalog.values.none_settable') }}</p>
   <div v-else class="grid gap-4 sm:grid-cols-2" data-testid="showroom-values">
     <div v-for="attribute in props.attributes" :key="attribute.code" class="flex flex-col gap-1.5" :data-attribute="attribute.code">
       <label class="text-sm font-medium" :for="`showroom-value-${attribute.code}`">

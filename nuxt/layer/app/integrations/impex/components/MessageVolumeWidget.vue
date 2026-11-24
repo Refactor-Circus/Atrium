@@ -18,15 +18,13 @@ const messages = computed(() => stats.data.value?.messages ?? null)
   <AtriumNoAccess v-if="stats.forbidden.value" compact />
   <AtriumErrorCard v-else-if="stats.status.value === 'error'" :message="t('atrium.widget.failed')" />
   <USkeleton v-else-if="stats.status.value !== 'success'" class="h-10" />
-  <div v-else-if="messages" class="grid grid-cols-2 gap-3 text-sm" data-testid="impex-message-volume">
-    <div>
-      <p class="text-muted">{{ t('impex.widgets.inbound') }}</p>
-      <p class="text-xl font-semibold tabular-nums" data-testid="impex-message-volume-inbound">{{ messages.inbound }}</p>
-    </div>
-    <div>
-      <p class="text-muted">{{ t('impex.widgets.outbound') }}</p>
-      <p class="text-xl font-semibold tabular-nums" data-testid="impex-message-volume-outbound">{{ messages.outbound }}</p>
-    </div>
+  <div v-else-if="messages" class="grid grid-cols-2 gap-2 text-sm" data-testid="impex-message-volume">
+    <AtriumStat :label="t('impex.widgets.inbound')" icon="i-lucide-arrow-down-left" tone="primary">
+      <template #value><span data-testid="impex-message-volume-inbound">{{ messages.inbound }}</span></template>
+    </AtriumStat>
+    <AtriumStat :label="t('impex.widgets.outbound')" icon="i-lucide-arrow-up-right">
+      <template #value><span data-testid="impex-message-volume-outbound">{{ messages.outbound }}</span></template>
+    </AtriumStat>
     <p class="col-span-2 text-xs text-muted">{{ t('impex.widgets.window', { hours: messages.window_hours }) }}</p>
   </div>
 </template>

@@ -19,7 +19,7 @@ const agents = computed(() => data.value ?? [])
 <template>
   <CortexPage :title="t('cortex.concrete_agents.title')" screen-key="cortex.concrete-agents" :description="t('cortex.concrete_agents.description')">
     <CortexLoad :ready="!pending" :failed="failed" :status="status">
-      <p v-if="agents.length === 0" class="text-sm text-muted" data-testid="cortex-empty">{{ t('cortex.concrete_agents.empty') }}</p>
+      <p v-if="agents.length === 0" class="atrium-empty" data-testid="cortex-empty">{{ t('cortex.concrete_agents.empty') }}</p>
 
       <table v-else class="w-full text-sm" data-testid="cortex-concrete-agents">
         <thead class="text-left text-muted">

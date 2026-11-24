@@ -106,7 +106,7 @@ async function remove(member: RosterMember): Promise<void> {
 
     <OrganizationState :ready="!members.pending.value && members.data.value !== null" :failed="members.failed.value" :status="members.status.value" compact>
       <div class="space-y-4">
-        <p v-if="list.length === 0" class="text-sm text-muted" data-testid="roster-members-empty">{{ t('roster.organizations.members.empty') }}</p>
+        <p v-if="list.length === 0" class="atrium-empty" data-testid="roster-members-empty">{{ t('roster.organizations.members.empty') }}</p>
         <table v-else class="w-full text-left text-sm" data-testid="roster-members-table">
           <thead class="text-muted">
             <tr>

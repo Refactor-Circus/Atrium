@@ -19,7 +19,7 @@ const servers = computed(() => data.value ?? [])
 <template>
   <CortexPage :title="t('cortex.servers.title')" screen-key="cortex.servers">
     <CortexLoad :ready="!pending" :failed="failed" :status="status">
-      <p v-if="servers.length === 0" class="text-sm text-muted" data-testid="cortex-empty">{{ t('cortex.servers.empty') }}</p>
+      <p v-if="servers.length === 0" class="atrium-empty" data-testid="cortex-empty">{{ t('cortex.servers.empty') }}</p>
 
       <table v-else class="w-full text-sm" data-testid="cortex-servers">
         <thead class="text-left text-muted">

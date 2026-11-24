@@ -184,7 +184,7 @@ async function destroy(): Promise<void> {
                   <h2 class="font-semibold">{{ t('showroom.assets.links') }}</h2>
                 </template>
                 <div class="space-y-4">
-                  <p v-if="links.length === 0" class="text-sm text-muted" data-testid="showroom-asset-links-empty">{{ t('showroom.assets.no_links') }}</p>
+                  <p v-if="links.length === 0" class="atrium-empty" data-testid="showroom-asset-links-empty">{{ t('showroom.assets.no_links') }}</p>
                   <table v-else class="w-full text-left text-sm">
                     <thead class="text-muted">
                       <tr>

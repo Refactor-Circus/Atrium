@@ -93,7 +93,7 @@ async function create(): Promise<void> {
 
         <CatalogState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4">
-            <p v-if="flags.length === 0" class="text-sm text-muted" data-testid="showroom-flags-empty">{{ t('showroom.structure.flags.empty') }}</p>
+            <p v-if="flags.length === 0" class="atrium-empty" data-testid="showroom-flags-empty">{{ t('showroom.structure.flags.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="showroom-flags-table">
               <thead class="text-muted">
                 <tr>

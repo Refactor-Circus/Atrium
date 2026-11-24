@@ -98,7 +98,7 @@ async function destroy(code: string): Promise<void> {
 
         <CatalogState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4">
-            <p v-if="types.length === 0" class="text-sm text-muted" data-testid="showroom-association-types-empty">{{ t('showroom.structure.association_types.empty') }}</p>
+            <p v-if="types.length === 0" class="atrium-empty" data-testid="showroom-association-types-empty">{{ t('showroom.structure.association_types.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="showroom-association-types-table">
               <thead class="text-muted">
                 <tr>

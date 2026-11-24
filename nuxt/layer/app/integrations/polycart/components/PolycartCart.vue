@@ -304,7 +304,7 @@ void Promise.all([client ? loadTypes(client) : null, load()])
 
     <USkeleton v-else-if="!loaded" class="h-48" />
 
-    <div v-else-if="missing" class="flex flex-col items-start gap-3 rounded-md border border-dashed border-default p-6 text-sm" data-testid="polycart-not-found">
+    <div v-else-if="missing" class="atrium-empty items-start text-start" data-testid="polycart-not-found">
       <p>{{ t('polycart.cart.not_found') }}</p>
       <UButton size="sm" variant="outline" icon="i-lucide-arrow-left" to="/polycart/carts" :label="t('polycart.cart.all_carts')" />
     </div>
@@ -397,7 +397,7 @@ void Promise.all([client ? loadTypes(client) : null, load()])
           <template #header>
             <p class="font-medium">{{ t('polycart.cart.lifecycle') }}</p>
           </template>
-          <div class="flex flex-wrap items-end gap-6">
+          <div class="flex flex-wrap items-end gap-4">
             <form v-if="nextStatuses.length > 0" class="flex items-end gap-2" data-testid="polycart-transition-form" @submit.prevent="transition">
               <UFormField :label="t('polycart.cart.move_to')" :error="action.error('status')">
                 <select v-model="transitionTo" class="w-48 rounded-md border border-default bg-default px-2.5 py-1.5 text-sm" data-testid="polycart-transition-status">

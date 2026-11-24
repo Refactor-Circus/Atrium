@@ -146,7 +146,7 @@ async function destroy(): Promise<void> {
               <h2 class="font-semibold">{{ t('showroom.structure.categories.branch') }}</h2>
             </template>
             <div class="space-y-4">
-              <p v-if="tree.length === 0" class="text-sm text-muted" data-testid="showroom-branch-empty">{{ t('showroom.structure.categories.no_branch') }}</p>
+              <p v-if="tree.length === 0" class="atrium-empty" data-testid="showroom-branch-empty">{{ t('showroom.structure.categories.no_branch') }}</p>
               <CategoryBranch v-else :nodes="tree" />
 
               <CatalogActionError :action="childAction" />

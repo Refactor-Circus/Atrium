@@ -120,7 +120,7 @@ function parentsOf(type: ShowroomOwnerType): string {
 
         <CatalogState :ready="!pending && data !== null" :failed="failed" :status="status">
           <div class="space-y-4">
-            <p v-if="types.length === 0" class="text-sm text-muted" data-testid="showroom-owner-types-empty">{{ t('showroom.owner_types.empty') }}</p>
+            <p v-if="types.length === 0" class="atrium-empty" data-testid="showroom-owner-types-empty">{{ t('showroom.owner_types.empty') }}</p>
             <table v-else class="w-full text-left text-sm" data-testid="showroom-owner-types-table">
               <thead class="text-muted">
                 <tr>

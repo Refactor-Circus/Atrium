@@ -60,7 +60,7 @@ function go(next: number): void {
   <div class="space-y-4" data-testid="guardian-sso-connections">
     <GuardianState :ready="!pending && data !== null" :failed="failed" :status="status" compact>
       <div class="space-y-4">
-        <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="guardian-sso-connections-empty">{{ t('guardian.sso.connections.empty') }}</p>
+        <p v-if="rows.length === 0" class="atrium-empty" data-testid="guardian-sso-connections-empty">{{ t('guardian.sso.connections.empty') }}</p>
         <table v-else class="w-full text-left text-sm">
           <thead class="text-muted">
             <tr>

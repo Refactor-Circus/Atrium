@@ -54,7 +54,7 @@ function clear(): void {
         </form>
 
         <ImpexState :error="subscriptions.error.value" :ready="!subscriptions.pending.value || subscriptions.rows.value.length > 0">
-          <p v-if="subscriptions.rows.value.length === 0" class="text-sm text-muted" data-testid="impex-subscriptions-empty">{{ t('impex.subscriptions.empty') }}</p>
+          <p v-if="subscriptions.rows.value.length === 0" class="atrium-empty" data-testid="impex-subscriptions-empty">{{ t('impex.subscriptions.empty') }}</p>
           <table v-else class="w-full text-left text-sm">
             <thead class="text-muted">
               <tr>

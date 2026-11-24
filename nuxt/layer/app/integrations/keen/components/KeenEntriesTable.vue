@@ -27,7 +27,7 @@ const rows = computed(() => props.entries.map(entry => ({
 </script>
 
 <template>
-  <p v-if="rows.length === 0" class="py-6 text-center text-sm text-muted" data-testid="keen-entries-empty">
+  <p v-if="rows.length === 0" class="atrium-empty" data-testid="keen-entries-empty">
     {{ t('keen.entries.empty') }}
   </p>
   <div v-else class="overflow-x-auto">

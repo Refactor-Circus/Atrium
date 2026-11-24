@@ -106,7 +106,7 @@ async function destroy(permission: GuardianPermission): Promise<void> {
             <div class="space-y-4">
               <GuardianErrors :action="update" testid="guardian-permission-update" />
               <GuardianErrors :action="remove" testid="guardian-permission-delete" />
-              <p v-if="rows.length === 0" class="text-sm text-muted" data-testid="guardian-permissions-empty">{{ t('guardian.access.permissions.empty') }}</p>
+              <p v-if="rows.length === 0" class="atrium-empty" data-testid="guardian-permissions-empty">{{ t('guardian.access.permissions.empty') }}</p>
               <table v-else class="w-full text-left text-sm" data-testid="guardian-permissions-table">
                 <thead class="text-muted">
                   <tr>
