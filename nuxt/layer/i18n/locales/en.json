@@ -4,12 +4,17 @@
       "unreachable": "Atrium could not be reached"
     },
     "nav": {
+      "home": "Home",
+      "sections": "Sections",
       "settings": "Settings"
     },
     "search": {
       "button": "Search…",
       "placeholder": "Search everything…",
-      "results": "Results"
+      "results": "Results",
+      "recent": "Recent",
+      "pages": "Jump to",
+      "actions": "Actions"
     },
     "theme": {
       "label": "Theme"
@@ -90,6 +95,18 @@
     },
     "notice": {
       "dismiss": "Dismiss"
+    },
+    "shell": {
+      "open_menu": "Open navigation",
+      "collapse": "Collapse the section panel",
+      "expand": "Expand the section panel",
+      "breadcrumb": "You are here",
+      "online": "Online",
+      "offline": "Offline",
+      "light_mode": "Switch to light mode",
+      "dark_mode": "Switch to dark mode",
+      "use_theme": "Use the {name} theme",
+      "current": "current"
     }
   }
 }

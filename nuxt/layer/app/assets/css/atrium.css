@@ -1,19 +1,58 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @source "../../**/*.{vue,ts}";
 
 /*
- * Atrium themes (config `atrium.themes`, and `atrium.theme` for the built-in
- * one) send their tokens as `--color-*` properties, set on :root by
- * useAtriumTheme(). Nuxt UI reads `--ui-*`, so a theme's tokens drive it when
- * present and Nuxt UI's defaults apply otherwise. Dark mode reads the
- * `-dark` tokens and falls back to Nuxt UI's dark defaults, never to a light
- * token (the status colours, which themes send once, serve both).
+ * Atrium's design system, "command deck" (D-077): a compact, dark-first
+ * admin surface. Small type (13px UI text), tight spacing, hairline borders
+ * with a faint luminous edge, the theme's primary colour as the one accent
+ * (and its glow), monospace for identifiers, counts and times.
  *
- *   surface           --ui-bg (cards, inputs, menus, the sidebar)
+ * Fonts: Geist and Geist Mono, bundled from @fontsource-variable (no
+ * request leaves for a font CDN). A host overrides them by setting
+ * `--font-sans` / `--font-mono` (and `--default-font-family`) on :root or
+ * on `:root[data-atrium-theme="…"]` in its own stylesheet.
+ */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* The compact scale: text-sm is the 13px UI size Nuxt UI's `sm` controls use. */
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+
+  /* Every Tailwind spacing step a tenth tighter (p-4 is 14.4px, not 16px). */
+  --spacing: 0.225rem;
+}
+
+/*
+ * Theme bridge. Atrium themes (config `atrium.themes`, and `atrium.theme` for
+ * the built-in one) send their tokens as `--color-*` properties; the layer's
+ * useAtriumTheme() sets each on :root, and the same value as `--atrium-token-*`
+ * (`--color-surface-dark` -> `--atrium-token-surface-dark`, `--radius-radius`
+ * -> `--atrium-token-radius`). The bridge reads the `--atrium-token-*` names only: Nuxt UI
+ * defines `--color-primary` and the other status colours as `var(--ui-primary)`,
+ * so reading `--color-primary` here would make a cycle whenever a theme does
+ * not send it (and paint every primary button transparent). Dark mode reads
+ * the `-dark` tokens and falls back to the deck's own dark defaults, never to
+ * a light token; the status colours, which themes send once, serve both.
+ *
+ *   surface           --ui-bg (panels, inputs, menus, the rail)
  *   surface-alt       --ui-bg-muted, --ui-bg-elevated
- *   canvas            --atrium-canvas (the page behind the content)
+ *   canvas            --atrium-canvas (the deck behind the panels)
  *   on-surface        --ui-text, --ui-text-toned
  *   on-surface-strong --ui-text-highlighted
  *   outline           --ui-border, --ui-border-muted
@@ -23,53 +62,704 @@
  *                     --ui-warning, --ui-error
  */
 :root {
-  --ui-primary: var(--color-primary, var(--ui-color-primary-500));
-  --ui-secondary: var(--color-secondary, var(--ui-color-secondary-500));
-  --ui-info: var(--color-info, var(--ui-color-info-500));
-  --ui-success: var(--color-success, var(--ui-color-success-500));
-  --ui-warning: var(--color-warning, var(--ui-color-warning-500));
-  --ui-error: var(--color-danger, var(--ui-color-error-500));
-  --ui-radius: var(--radius-radius, 0.375rem);
+  --ui-primary: var(--atrium-token-primary, var(--ui-color-primary-600));
+  --ui-secondary: var(--atrium-token-secondary, var(--ui-color-secondary-500));
+  --ui-info: var(--atrium-token-info, var(--ui-color-info-600));
+  --ui-success: var(--atrium-token-success, var(--ui-color-success-600));
+  --ui-warning: var(--atrium-token-warning, var(--ui-color-warning-600));
+  --ui-error: var(--atrium-token-danger, var(--ui-color-error-600));
+  --ui-radius: var(--atrium-token-radius, 0.25rem);
 
-  --ui-bg: var(--color-surface, var(--color-white));
-  --ui-bg-muted: var(--color-surface-alt, var(--ui-color-neutral-50));
-  --ui-bg-elevated: var(--color-surface-alt, var(--ui-color-neutral-100));
-  --ui-text: var(--color-on-surface, var(--ui-color-neutral-700));
-  --ui-text-toned: var(--color-on-surface, var(--ui-color-neutral-600));
-  --ui-text-highlighted: var(--color-on-surface-strong, var(--ui-color-neutral-900));
-  --ui-border: var(--color-outline, var(--ui-color-neutral-200));
-  --ui-border-muted: var(--color-outline, var(--ui-color-neutral-200));
-  --ui-border-accented: var(--color-outline-strong, var(--ui-color-neutral-300));
+  --ui-bg: var(--atrium-token-surface, #ffffff);
+  --ui-bg-muted: var(--atrium-token-surface-alt, #f6f8fb);
+  --ui-bg-elevated: var(--atrium-token-surface-alt, #eef1f5);
+  --ui-bg-accented: #e3e8ee;
+  --ui-text: var(--atrium-token-on-surface, #2f3744);
+  --ui-text-toned: var(--atrium-token-on-surface, #3d4654);
+  --ui-text-muted: #5f6b7c;
+  --ui-text-dimmed: #8a95a5;
+  --ui-text-highlighted: var(--atrium-token-on-surface-strong, #0b1220);
+  --ui-border: var(--atrium-token-outline, #e1e6ed);
+  --ui-border-muted: var(--atrium-token-outline, #e9edf2);
+  --ui-border-accented: var(--atrium-token-outline-strong, #c9d1dc);
 
-  --atrium-canvas: var(--color-canvas, var(--ui-color-neutral-50));
+  --atrium-canvas: var(--atrium-token-canvas, #f2f4f7);
+
+  /* Deck tokens: derived from the bridged colours, so a theme drives them. */
+  --atrium-glow: color-mix(in oklab, var(--ui-primary) 55%, transparent);
+  --atrium-glow-soft: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  --atrium-tint: color-mix(in oklab, var(--ui-primary) 9%, transparent);
+  --atrium-grid: color-mix(in oklab, var(--ui-text-highlighted) 5%, transparent);
+  --atrium-edge: color-mix(in oklab, var(--ui-text-highlighted) 4%, transparent);
+  --atrium-field: color-mix(in oklab, var(--ui-bg) 70%, var(--atrium-canvas));
+  --atrium-row-hover: color-mix(in oklab, var(--ui-primary) 5%, transparent);
+  --atrium-control-ring: color-mix(in oklab, var(--ui-border-accented) 45%, var(--ui-border));
+  --atrium-rail-width: 3.25rem;
+  --atrium-panel-width: 14.5rem;
+  --atrium-bar-height: 2.625rem;
+  --atrium-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --atrium-speed: 160ms;
 }
 
 .dark {
-  --ui-primary: var(--color-primary-dark, var(--color-primary, var(--ui-color-primary-400)));
-  --ui-secondary: var(--color-secondary-dark, var(--ui-color-secondary-400));
-  --ui-info: var(--color-info-dark, var(--color-info, var(--ui-color-info-400)));
-  --ui-success: var(--color-success-dark, var(--color-success, var(--ui-color-success-400)));
-  --ui-warning: var(--color-warning-dark, var(--color-warning, var(--ui-color-warning-400)));
-  --ui-error: var(--color-danger-dark, var(--color-danger, var(--ui-color-error-400)));
+  --ui-primary: var(--atrium-token-primary-dark, var(--atrium-token-primary, var(--ui-color-primary-400)));
+  --ui-secondary: var(--atrium-token-secondary-dark, var(--ui-color-secondary-400));
+  --ui-info: var(--atrium-token-info-dark, var(--atrium-token-info, var(--ui-color-info-400)));
+  --ui-success: var(--atrium-token-success-dark, var(--atrium-token-success, var(--ui-color-success-400)));
+  --ui-warning: var(--atrium-token-warning-dark, var(--atrium-token-warning, var(--ui-color-warning-400)));
+  --ui-error: var(--atrium-token-danger-dark, var(--atrium-token-danger, var(--ui-color-error-400)));
 
-  --ui-bg: var(--color-surface-dark, var(--ui-color-neutral-900));
-  --ui-bg-muted: var(--color-surface-dark-alt, var(--ui-color-neutral-800));
-  --ui-bg-elevated: var(--color-surface-dark-alt, var(--ui-color-neutral-800));
-  --ui-text: var(--color-on-surface-dark, var(--ui-color-neutral-200));
-  --ui-text-toned: var(--color-on-surface-dark, var(--ui-color-neutral-300));
-  --ui-text-highlighted: var(--color-on-surface-dark-strong, var(--color-white));
-  --ui-border: var(--color-outline-dark, var(--ui-color-neutral-800));
-  --ui-border-muted: var(--color-outline-dark, var(--ui-color-neutral-700));
-  --ui-border-accented: var(--color-outline-dark-strong, var(--ui-color-neutral-700));
+  --ui-bg: var(--atrium-token-surface-dark, #0b0e14);
+  --ui-bg-muted: var(--atrium-token-surface-dark-alt, #10141c);
+  --ui-bg-elevated: var(--atrium-token-surface-dark-alt, #141923);
+  --ui-bg-accented: #1c2330;
+  --ui-text: var(--atrium-token-on-surface-dark, #c3cad5);
+  --ui-text-toned: var(--atrium-token-on-surface-dark, #b0b9c6);
+  --ui-text-muted: #8893a4;
+  --ui-text-dimmed: #5d6778;
+  --ui-text-highlighted: var(--atrium-token-on-surface-dark-strong, #f3f6fa);
+  --ui-border: var(--atrium-token-outline-dark, #1b212c);
+  --ui-border-muted: var(--atrium-token-outline-dark, #161b24);
+  --ui-border-accented: var(--atrium-token-outline-dark-strong, #2a3240);
 
-  --atrium-canvas: var(--color-canvas-dark, var(--ui-color-neutral-950));
+  --atrium-canvas: var(--atrium-token-canvas-dark, #05070b);
+  --atrium-grid: color-mix(in oklab, var(--ui-text-highlighted) 5.5%, transparent);
+  --atrium-edge: color-mix(in oklab, var(--ui-text-highlighted) 6%, transparent);
+  --atrium-field: color-mix(in oklab, var(--ui-bg) 55%, var(--atrium-canvas));
+  --atrium-row-hover: color-mix(in oklab, var(--ui-primary) 7%, transparent);
 }
 
-/* The content area sits on the canvas; the sidebar, a panel, on the surface. */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  body {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    background-color: var(--atrium-canvas);
+  }
+
+  ::selection {
+    background: var(--atrium-glow-soft);
+    color: var(--ui-text-highlighted);
+  }
+
+  /* Visible focus everywhere: the primary outline plus a soft glow. */
+  :focus-visible {
+    outline: 1.5px solid var(--ui-primary);
+    outline-offset: 1px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border-accented) transparent;
+  }
+}
+
+@layer utilities {
+  /* Monospaced figures that line up (IDs, counts, times). */
+  .atrium-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+    letter-spacing: -0.01em;
+  }
+
+  /* An uppercase micro-label: section names, column heads, field captions. */
+  .atrium-label {
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+  }
+
+  .atrium-glow {
+    box-shadow: 0 0 0 1px var(--atrium-glow-soft), 0 0 18px -4px var(--atrium-glow);
+  }
+
+  :where(a, button, [role="button"], [tabindex]):focus-visible {
+    box-shadow: 0 0 0 3px var(--atrium-glow-soft);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The shell: rail, section panel, top bar and the canvas.
+ * ------------------------------------------------------------------------ */
+
 .atrium-canvas {
+  position: relative;
+  isolation: isolate;
   background-color: var(--atrium-canvas);
+}
+
+/* A faint engineering grid with a primary haze, fading out below the bar. */
+.atrium-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(56rem 22rem at 78% -6rem, color-mix(in oklab, var(--ui-primary) 9%, transparent), transparent 70%),
+    linear-gradient(var(--atrium-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+  background-position: 0 0, -1px -1px, -1px -1px;
+  mask-image: linear-gradient(180deg, #000 0, rgb(0 0 0 / 0.55) 18rem, rgb(0 0 0 / 0.2) 100%);
 }
 
 .atrium-sidebar {
   background-color: var(--ui-bg);
+}
+
+.atrium-rail {
+  width: var(--atrium-rail-width);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--ui-primary) 5%, transparent), transparent 12rem),
+    var(--ui-bg);
+  border-inline-end: 1px solid var(--ui-border);
+}
+
+.atrium-mark {
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: calc(var(--ui-radius) * 1.5);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ui-text-highlighted);
+  background: linear-gradient(140deg, color-mix(in oklab, var(--ui-primary) 38%, var(--ui-bg)), color-mix(in oklab, var(--ui-primary) 10%, var(--ui-bg)));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 55%, transparent), 0 0 22px -6px var(--atrium-glow);
+}
+
+.atrium-rail-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--ui-radius);
+  color: var(--ui-text-muted);
+  transition: color var(--atrium-speed) var(--atrium-ease), background-color var(--atrium-speed) var(--atrium-ease), box-shadow var(--atrium-speed) var(--atrium-ease);
+}
+
+.atrium-rail-item:hover {
+  color: var(--ui-text-highlighted);
+  background-color: var(--ui-bg-elevated);
+}
+
+.atrium-rail-item[data-shown="true"] {
+  color: var(--ui-text-highlighted);
+  background-color: var(--ui-bg-elevated);
+}
+
+.atrium-rail-item[data-current="true"] {
+  color: var(--ui-primary);
+  background-color: var(--atrium-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 30%, transparent);
+}
+
+.atrium-rail-item[data-current="true"] .atrium-rail-icon {
+  filter: drop-shadow(0 0 6px var(--atrium-glow));
+}
+
+/* The lit edge beside the route's section. */
+.atrium-rail-item[data-current="true"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -0.5rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--ui-primary);
+  box-shadow: 0 0 10px 1px var(--atrium-glow);
+}
+
+/* Rail labels: a tooltip on hover and keyboard focus (no provider needed). */
+.atrium-rail [data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  inset-inline-start: calc(100% + 0.625rem);
+  top: 50%;
+  z-index: 60;
+  translate: -4px -50%;
+  white-space: nowrap;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--ui-radius);
+  font-size: 0.71875rem;
+  font-weight: 500;
+  color: var(--ui-text-highlighted);
+  background: var(--ui-bg-elevated);
+  box-shadow: 0 0 0 1px var(--ui-border-accented), 0 6px 20px -6px rgb(0 0 0 / 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--atrium-speed) var(--atrium-ease), translate var(--atrium-speed) var(--atrium-ease);
+}
+
+.atrium-rail [data-tip]:hover::after,
+.atrium-rail [data-tip]:focus-visible::after {
+  opacity: 1;
+  translate: 0 -50%;
+}
+
+.atrium-panel-nav {
+  width: var(--atrium-panel-width);
+  background-color: color-mix(in oklab, var(--ui-bg) 92%, var(--atrium-canvas));
+  border-inline-end: 1px solid var(--ui-border);
+}
+
+.atrium-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--ui-radius);
+  color: var(--ui-text-toned);
+  font-size: 0.8125rem;
+  transition: color var(--atrium-speed) var(--atrium-ease), background-color var(--atrium-speed) var(--atrium-ease);
+}
+
+.atrium-nav-link:hover {
+  color: var(--ui-text-highlighted);
+  background-color: var(--ui-bg-elevated);
+}
+
+.atrium-nav-link[data-active="true"] {
+  color: var(--ui-text-highlighted);
+  background: linear-gradient(90deg, var(--atrium-tint), transparent);
+}
+
+.atrium-nav-link[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--ui-primary);
+  box-shadow: 0 0 8px var(--atrium-glow);
+}
+
+.atrium-nav-link[data-active="true"] .atrium-nav-icon {
+  color: var(--ui-primary);
+}
+
+.atrium-nav-badge {
+  margin-inline-start: auto;
+  min-width: 1.125rem;
+  padding: 0 0.3125rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-text-highlighted);
+  background: var(--atrium-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 28%, transparent);
+}
+
+.atrium-topbar {
+  height: var(--atrium-bar-height);
+  background: color-mix(in oklab, var(--atrium-canvas) 72%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  border-block-end: 1px solid var(--ui-border);
+}
+
+.atrium-live-dot {
+  position: relative;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background: var(--ui-success);
+  box-shadow: 0 0 8px var(--ui-success);
+}
+
+.atrium-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-success);
+  opacity: 0;
+  animation: atrium-ping 2.4s var(--atrium-ease) infinite;
+}
+
+@keyframes atrium-ping {
+  0% { opacity: 0.7; scale: 0.6; }
+  70%, 100% { opacity: 0; scale: 1.6; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Content: every page's tables, headings, native selects and panels, so
+ * pages (the layer's and the suite integrations') read as one system
+ * without restyling each. Compound selectors here outrank a page's own
+ * spacing utilities (`py-2 pr-3`) on purpose.
+ * ------------------------------------------------------------------------ */
+
+.atrium-content {
+  font-size: var(--text-sm);
+}
+
+/* A page that is not a dashboard panel scrolls in a padded frame. */
+.atrium-page {
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow-y: auto;
+  padding: 0.875rem 1rem 2rem;
+}
+
+@media (min-width: 64rem) {
+  .atrium-page {
+    padding: 1rem 1.25rem 2.5rem;
+  }
+}
+
+.atrium-page:has(> .atrium-dashboard-panel) {
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+}
+
+@layer utilities {
+  .atrium-content h1 {
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ui-text-highlighted);
+  }
+
+  /* A panel's heading: a micro-label behind a lit tick. */
+  .atrium-content h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ui-text-highlighted);
+  }
+
+  .atrium-content h2::before {
+    content: "";
+    flex: none;
+    width: 0.3125rem;
+    height: 0.3125rem;
+    border-radius: 1px;
+    background: var(--ui-primary);
+    box-shadow: 0 0 6px var(--atrium-glow);
+  }
+
+  .atrium-content h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ui-text-highlighted);
+  }
+
+  .atrium-content table {
+    font-size: 0.78125rem;
+    line-height: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .atrium-content thead {
+    color: var(--ui-text-muted);
+  }
+
+  .atrium-content thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 1.875rem;
+    padding-block: 0.375rem;
+    padding-inline: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-align: start;
+    background: color-mix(in oklab, var(--ui-bg) 94%, var(--atrium-canvas));
+    border-block-end: 1px solid var(--atrium-control-ring);
+  }
+
+  .atrium-content tbody td,
+  .atrium-content tbody th {
+    height: 2.125rem;
+    padding-block: 0.3125rem;
+    padding-inline: 0.625rem;
+    border-block-end: 1px solid var(--ui-border);
+    vertical-align: middle;
+  }
+
+  .atrium-content tbody tr:last-child > * {
+    border-block-end: 0;
+  }
+
+  .atrium-content tbody tr {
+    transition: background-color var(--atrium-speed) var(--atrium-ease);
+  }
+
+  .atrium-content tbody tr:hover {
+    background-color: var(--atrium-row-hover);
+  }
+
+  .atrium-content :is(td, th).text-right {
+    text-align: end;
+  }
+
+  .atrium-content tbody :is(td, th) a:not([class*="inline-flex"]) {
+    color: var(--ui-text-highlighted);
+    text-decoration: none;
+  }
+
+  .atrium-content tbody :is(td, th) a:not([class*="inline-flex"]):hover {
+    color: var(--ui-primary);
+  }
+
+  /* A table straight in a page (not in a panel) gets a panel of its own. */
+  .atrium-content :is(.atrium-page, [data-slot="body"]) > div > table,
+  .atrium-content .space-y-4 > table,
+  .atrium-content .overflow-x-auto:not([data-slot]) {
+    border-radius: calc(var(--ui-radius) * 1.5);
+  }
+
+  .atrium-content .overflow-x-auto:not([data-slot]):has(> table) {
+    background: var(--ui-bg);
+    box-shadow: inset 0 0 0 1px var(--ui-border), 0 1px 0 var(--atrium-edge);
+  }
+
+  .atrium-content [data-slot="body"] .overflow-x-auto:not([data-slot]):has(> table) {
+    background: transparent;
+    box-shadow: none;
+    margin-inline: -0.25rem;
+  }
+
+  .atrium-content select {
+    height: 1.75rem;
+    padding-block: 0;
+    padding-inline: 0.5rem 1.75rem;
+    font-size: 0.8125rem;
+    border-radius: var(--ui-radius);
+    border-color: var(--atrium-control-ring);
+    background-color: var(--atrium-field);
+    color: var(--ui-text-highlighted);
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ui-text-muted) 50%), linear-gradient(135deg, var(--ui-text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 0.8125rem) 50%, calc(100% - 0.5rem) 50%;
+    background-size: 0.3125rem 0.3125rem;
+    background-repeat: no-repeat;
+    transition: border-color var(--atrium-speed) var(--atrium-ease), box-shadow var(--atrium-speed) var(--atrium-ease);
+  }
+
+  .atrium-content select:hover {
+    border-color: color-mix(in oklab, var(--ui-primary) 40%, var(--atrium-control-ring));
+  }
+
+  .atrium-content select:focus-visible {
+    outline: none;
+    border-color: var(--ui-primary);
+    box-shadow: 0 0 0 3px var(--atrium-glow-soft);
+  }
+
+  .atrium-content select[multiple] {
+    height: auto;
+    padding: 0.25rem;
+    background-image: none;
+  }
+
+  .atrium-content dl dt {
+    color: var(--ui-text-muted);
+  }
+
+  .atrium-content code,
+  .atrium-content kbd,
+  .atrium-content samp,
+  .atrium-content .font-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  .atrium-content .tabular-nums {
+    font-family: var(--font-mono);
+    letter-spacing: -0.01em;
+  }
+
+  .atrium-content pre {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border-radius: var(--ui-radius);
+    background: var(--atrium-field);
+    box-shadow: inset 0 0 0 1px var(--ui-border);
+  }
+}
+
+/* A panel (UCard, and anything Nuxt UI draws as one): hairline, lit top edge. */
+.atrium-card {
+  background:
+    linear-gradient(180deg, var(--atrium-edge), transparent 2.5rem),
+    var(--ui-bg);
+  box-shadow: inset 0 0 0 1px var(--ui-border), 0 1px 0 0 var(--atrium-edge), 0 12px 32px -24px rgb(0 0 0 / 0.35);
+}
+
+.dark .atrium-card {
+  box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 0 var(--atrium-edge), 0 16px 40px -28px rgb(0 0 0 / 0.9);
+}
+
+/* Motion: short and soft, and none when the user asks for less. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Empty, failed and forbidden states (AtriumState). */
+.atrium-state-icon {
+  border-radius: calc(var(--ui-radius) * 2);
+  color: var(--ui-text-muted);
+  background:
+    linear-gradient(var(--atrium-grid) 1px, transparent 1px) 0 0 / 6px 6px,
+    linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px) 0 0 / 6px 6px,
+    var(--ui-bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+}
+
+.atrium-state[data-kind="error"] .atrium-state-icon {
+  color: var(--ui-error);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-error) 45%, transparent), 0 0 24px -8px var(--ui-error);
+}
+
+.atrium-state[data-kind="empty"] .atrium-state-icon,
+.atrium-state[data-kind="info"] .atrium-state-icon {
+  color: var(--ui-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent), 0 0 24px -10px var(--atrium-glow);
+}
+
+@media (max-width: 48rem) {
+  .atrium-content tbody :is(td, th) {
+    white-space: nowrap;
+  }
+}
+
+/* Inline notices (AtriumErrorCard, AtriumNoAccess): a strip with a lit edge. */
+.atrium-strip {
+  --tone: var(--ui-text-muted);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.5625rem 0.75rem 0.5625rem 0.875rem;
+  border-radius: calc(var(--ui-radius) * 1.5);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--ui-text);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--tone) 10%, transparent), transparent 60%), var(--ui-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone) 28%, var(--ui-border));
+}
+
+.atrium-strip::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--tone);
+  box-shadow: 0 0 10px var(--tone);
+}
+
+.atrium-strip-icon {
+  margin-top: 0.125rem;
+  color: var(--tone);
+}
+
+.atrium-strip[data-tone="error"] {
+  --tone: var(--ui-error);
+}
+
+.atrium-strip[data-tone="locked"] {
+  --tone: var(--ui-warning);
+}
+
+/* A list with nothing in it: a framed, centred note with a glyph. */
+.atrium-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.75rem 1rem;
+  border-radius: calc(var(--ui-radius) * 1.5);
+  font-size: 0.8125rem;
+  text-align: center;
+  color: var(--ui-text-muted);
+  background:
+    linear-gradient(var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
+    linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
+    color-mix(in oklab, var(--ui-bg) 60%, transparent);
+  border: 1px dashed var(--ui-border-accented);
+}
+
+.atrium-empty::before {
+  content: "";
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--ui-radius);
+  background:
+    linear-gradient(var(--ui-primary), var(--ui-primary)) center / 0.75rem 1.5px no-repeat,
+    color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent), 0 0 18px -6px var(--atrium-glow);
+}
+
+/* One figure (AtriumStat): a hairline tile with a lit edge for its tone. */
+.atrium-stat {
+  --tone: var(--ui-border-accented);
+  position: relative;
+  padding: 0.625rem 0.75rem 0.6875rem 0.875rem;
+  border-radius: calc(var(--ui-radius) * 1.5);
+  background: linear-gradient(180deg, var(--atrium-edge), transparent 2rem), var(--ui-bg);
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+
+.atrium-stat::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.625rem;
+  height: 1.25rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--tone);
+}
+
+.atrium-stat[data-tone="primary"] { --tone: var(--ui-primary); }
+.atrium-stat[data-tone="success"] { --tone: var(--ui-success); }
+.atrium-stat[data-tone="warning"] { --tone: var(--ui-warning); }
+.atrium-stat[data-tone="error"] { --tone: var(--ui-error); }
+
+.atrium-stat:not([data-tone="neutral"])::before {
+  box-shadow: 0 0 8px var(--tone);
 }

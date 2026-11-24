@@ -45,7 +45,7 @@ function open(key: string | number) {
       />
     </div>
 
-    <div :class="hasAside ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]' : ''">
+    <div :class="hasAside ? 'grid gap-3 lg:grid-cols-[minmax(0,1fr)_17rem]' : ''">
       <div class="min-w-0 space-y-4">
         <AtriumSections :screen="screen" name="before" :record="record" />
 

@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core'
 
-/** The ⌘K search button and palette (useAtriumSearch). */
+/**
+ * ⌘K: jump anywhere (D-077). The launcher button (a full one from `md`, an
+ * icon below) opens a palette of the pages visited lately, every page in the
+ * navigation, the search results once the term is long enough
+ * (useAtriumSearch) and the shell actions (useAtriumPalette).
+ */
 const { t } = useI18n()
 const open = ref(false)
 const term = ref('')
 const debounced = refDebounced(term, 250)
 
-const { groups, loading, search } = useAtriumSearch(() => { open.value = false })
+const { groups: results, loading, search } = useAtriumSearch(() => { open.value = false })
+const { groups } = useAtriumPalette(term, results, () => { open.value = false })
 
 function show() {
   open.value = true
@@ -16,32 +22,49 @@ function show() {
 defineShortcuts({ meta_k: () => { open.value = !open.value } })
 
 watch(debounced, q => search(q))
+watch(open, (value) => {
+  if (!value) {
+    term.value = ''
+  }
+})
 </script>
 
 <template>
   <UButton
-    icon="i-lucide-search"
     color="neutral"
     variant="outline"
-    class="w-full justify-start text-muted"
+    class="hidden h-7 w-full justify-start gap-2 ps-2 pe-1 text-muted md:flex"
     data-testid="atrium-search"
     @click="show"
   >
-    {{ t('atrium.search.button') }}
-    <template #trailing>
-      <UKbd value="meta" />
-      <UKbd value="K" />
-    </template>
+    <UIcon name="i-lucide-search" class="size-3.5 shrink-0" />
+    <span class="flex-1 truncate text-start">{{ t('atrium.search.button') }}</span>
+    <span class="flex gap-0.5">
+      <UKbd value="meta" size="sm" />
+      <UKbd value="K" size="sm" />
+    </span>
   </UButton>
+  <UButton
+    icon="i-lucide-search"
+    color="neutral"
+    variant="ghost"
+    size="sm"
+    class="md:hidden"
+    :aria-label="t('atrium.search.button')"
+    data-testid="atrium-search-compact"
+    @click="show"
+  />
 
-  <UModal v-model:open="open" :ui="{ content: 'p-0' }">
+  <UModal v-model:open="open" :ui="{ content: 'p-0 sm:max-w-xl top-[12vh] translate-y-0 sm:top-[14vh] atrium-glow' }" :title="t('atrium.search.button')" :description="t('atrium.search.placeholder')">
     <template #content>
       <UCommandPalette
         v-model:search-term="term"
         :groups="groups"
         :loading="loading"
         :placeholder="t('atrium.search.placeholder')"
-        class="h-96"
+        class="h-[min(28rem,70vh)]"
+        data-testid="atrium-palette"
+        @update:open="value => open = value"
       />
     </template>
   </UModal>

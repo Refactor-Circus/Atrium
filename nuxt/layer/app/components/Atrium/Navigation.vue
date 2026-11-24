@@ -1,196 +1,139 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-import type { AtriumLiveResult, AtriumNavItem, AtriumNavSection, AtriumShell } from '../../types/atrium'
+import type { AtriumNavGroup } from '../../composables/useAtriumNavigation'
 
 /**
- * The shell's navigation sections. Each item's `link` becomes a route inside
- * the SPA, or an external link opening in a new tab with
- * `rel="noopener noreferrer"`; a link the layer refuses (atriumLink) renders
- * the item as a plain label.
+ * The shell's navigation (D-077): a slim rail of sections beside a panel
+ * listing one section's pages.
  *
- * An item with a `live` key whose resolver is registered
- * (`$atrium.live(key, …)`) gets its badge or children from it, once per shell
- * load, while its integration (the key's first segment) is active. A
- * resolver that fails leaves the item as the API sent it.
+ * The rail holds the app's mark, one button per section (useAtriumNavigation:
+ * the loose sections' items together as Home, then each grouped section,
+ * labelled by a tooltip) and, at its foot, Settings. The section holding the
+ * route is lit. Choosing a section shows its pages in the panel without
+ * leaving the page; moving to another page shows the section that holds it.
  *
- * Loose sections (the app's own pages) come first, as one list. Each grouped
- * section (a package's, a nav group's) is its own list behind a separator:
- * one collapsible parent with the section's label and icon, open only while
- * the current route is inside it (see `openSections`), closed otherwise; a
- * nested item opens while it holds the route. Collapsed, the sidebar shows each loose item's
- * icon with a tooltip and each section's icon with its pages in a popover.
- * Closed sections stay in the DOM, hidden, so their links remain addressable.
+ * Collapsed, the panel is gone and a section's button opens its pages in a
+ * flyout instead. Every link goes through atriumLink (an external one opens
+ * in a new tab, an unsafe one is a plain label).
  */
 const props = defineProps<{ collapsed?: boolean }>()
 
 const store = useAtriumShellStore()
-const atrium = useAtrium()
-const nuxtApp = useNuxtApp()
-const { t } = useI18n()
-const { resolve } = useAtriumIcon()
 const route = useRoute()
+const { t } = useI18n()
+const nav = useAtriumNavigation({ live: true })
 
-const live = shallowRef(new Map<string, AtriumLiveResult>())
+const chosen = ref<string | null>(null)
 
-function liveItems(shell: AtriumShell | null): AtriumNavItem[] {
-  const all: AtriumNavItem[] = []
-  const walk = (items: AtriumNavItem[]) => items.forEach((nav) => {
-    all.push(nav)
-    walk(nav.children ?? [])
-  })
+watch(() => route.path, () => { chosen.value = null })
 
-  walk(shell?.navigation.flatMap(section => section.items) ?? [])
+const shown = computed<AtriumNavGroup | null>(() =>
+  nav.groups.value.find(group => group.key === chosen.value)
+  ?? nav.current.value
+  ?? nav.groups.value[0]
+  ?? null
+)
 
-  return all.filter(nav => nav.live)
+const activePath = computed(() => nav.page.value?.path ?? null)
+
+const mark = computed(() => (store.shell?.app.name ?? 'Atrium').trim().charAt(0).toUpperCase() || 'A')
+
+function choose(group: AtriumNavGroup): void {
+  chosen.value = group.key
 }
 
-async function runLive(shell: AtriumShell | null): Promise<void> {
-  live.value = new Map()
-
-  const runs = liveItems(shell).map(async (nav) => {
-    const { key, options } = nav.live!
-    const resolver = atrium.liveResolvers.get(key)
-
-    if (!resolver || !store.isActive(key.split('.')[0] ?? '')) {
-      return
-    }
-
-    try {
-      const result = await nuxtApp.runWithContext(() => resolver(options ?? {}))
-
-      if (shell === store.shell) {
-        live.value = new Map(live.value).set(key, result ?? {})
-      }
-    } catch {
-      // Keep the item as the API sent it.
-    }
-  })
-
-  await Promise.all(runs)
+function pageCount(group: AtriumNavGroup): string {
+  return String(nav.flatten(group.items).length).padStart(2, '0')
 }
-
-watch(() => store.shell, shell => void runLive(shell), { immediate: true })
-
-/** The SPA path a nav item links to, or null for none or an external one. */
-function internalPath(nav: AtriumNavItem): string | null {
-  const link = atriumLink(nav.link)
-
-  return link && !link.external ? link.to.split(/[?#]/)[0]! : null
-}
-
-/** Whether `current` is `path` or a page beneath it (`/` only matches itself). */
-function isUnder(current: string, path: string): boolean {
-  const base = path.replace(/\/+$/, '')
-
-  return current === path || (base !== '' && (current === base || current.startsWith(`${base}/`)))
-}
-
-function walk(items: AtriumNavItem[]): AtriumNavItem[] {
-  return items.flatMap(nav => [nav, ...walk(childrenOf(nav))])
-}
-
-function childrenOf(nav: AtriumNavItem): AtriumNavItem[] {
-  const result = nav.live ? live.value.get(nav.live.key) : undefined
-
-  return result?.children ?? nav.children ?? []
-}
-
-/** Whether the current route is one of these items' pages, or beneath one. */
-function holdsRoute(items: AtriumNavItem[]): boolean {
-  return walk(items).some((nav) => {
-    const path = internalPath(nav)
-
-    return path !== null && isUnder(route.path, path)
-  })
-}
-
-/** The first segment of a path: `showroom` for `/showroom/products`. */
-function segment(path: string): string {
-  return path.split('/')[1] ?? ''
-}
-
-/**
- * The grouped sections the current route is inside: those holding one of
- * its pages (or a page beneath one); failing that, those whose pages all
- * share the route's `/{segment}/` (a package's, for its pages the nav does
- * not list, such as `/showroom/flags`).
- */
-const openSections = computed<Set<string>>(() => {
-  const grouped = (store.shell?.navigation ?? []).filter(s => s.grouped)
-  const holding = grouped.filter(s => holdsRoute(s.items))
-
-  if (holding.length) {
-    return new Set(holding.map(s => s.key))
-  }
-
-  const current = segment(route.path)
-
-  return new Set(grouped.filter((s) => {
-    const segments = new Set(walk(s.items).map(internalPath).filter((path): path is string => path !== null).map(segment))
-
-    return current !== '' && segments.size === 1 && segments.has(current)
-  }).map(s => s.key))
-})
-
-function item(nav: AtriumNavItem): NavigationMenuItem {
-  const result = nav.live ? live.value.get(nav.live.key) : undefined
-  const badge = result && 'badge' in result ? result.badge ?? null : nav.badge
-  const children = childrenOf(nav)
-
-  return {
-    label: nav.label,
-    icon: resolve(nav.icon),
-    ...atriumLink(nav.link),
-    ...(badge !== null && badge !== undefined ? { badge: String(badge) } : {}),
-    ...(children.length ? { defaultOpen: holdsRoute(children), children: children.map(item) } : {})
-  }
-}
-
-/** A grouped section as one collapsible parent holding its items. */
-function section(s: AtriumNavSection): NavigationMenuItem {
-  return {
-    label: s.label,
-    icon: resolve(s.icon),
-    type: 'trigger',
-    value: s.key,
-    defaultOpen: openSections.value.has(s.key),
-    children: s.items.map(item),
-    class: 'font-medium'
-  }
-}
-
-const items = computed<NavigationMenuItem[][]>(() => {
-  const sections = store.shell?.navigation ?? []
-  const loose = sections.filter(s => !s.grouped).flatMap(s => s.items.map(item))
-  const grouped = sections.filter(s => s.grouped).map(s => [section(s)])
-
-  return [...(loose.length ? [loose] : []), ...grouped]
-})
-
-/**
- * The section holding the current route: the menu is keyed on it, so moving
- * into another section opens that one (the accordion reads its open items
- * only when it mounts) while other route changes keep what the user opened.
- */
-const activeSection = computed(() => [...openSections.value].join(' '))
-
-const settings = computed<NavigationMenuItem[]>(() => (store.shell?.settings.length ?? 0) > 0
-  ? [{ label: t('atrium.nav.settings'), icon: 'i-lucide-settings', to: '/settings' }]
-  : [])
 </script>
 
 <template>
-  <UNavigationMenu
-    :key="activeSection"
-    :collapsed="props.collapsed"
-    :items="items"
-    orientation="vertical"
-    type="multiple"
-    :unmount-on-hide="false"
-    tooltip
-    popover
-    :ui="{ separator: 'my-2 h-px bg-(--ui-border)' }"
-    data-testid="atrium-nav"
-  />
-  <UNavigationMenu v-if="settings.length" :collapsed="props.collapsed" :items="settings" orientation="vertical" tooltip class="mt-auto" />
+  <div class="flex h-full min-h-0" data-testid="atrium-nav" :data-collapsed="props.collapsed ? 'true' : 'false'">
+    <nav class="atrium-rail flex shrink-0 flex-col items-center gap-1 py-2" :aria-label="t('atrium.nav.sections')" data-testid="atrium-rail">
+      <NuxtLink to="/" class="atrium-mark mb-2" :title="store.shell?.app.name ?? 'Atrium'" :aria-label="store.shell?.app.name ?? 'Atrium'">
+        {{ mark }}
+      </NuxtLink>
+
+      <ul class="flex min-h-0 flex-1 flex-col items-center gap-1 px-2">
+        <li v-for="group in nav.groups.value" :key="group.key">
+          <UPopover
+            v-if="props.collapsed"
+            :key="route.path"
+            :content="{ side: 'right', align: 'start', sideOffset: 10 }"
+          >
+            <button
+              type="button"
+              class="atrium-rail-item"
+              :data-tip="group.label"
+              :aria-label="group.label"
+              :data-current="nav.current.value?.key === group.key"
+              data-testid="atrium-rail-section"
+              :data-section="group.key"
+            >
+              <UIcon :name="group.icon ?? 'i-lucide-folder'" class="atrium-rail-icon size-[1.125rem]" />
+            </button>
+            <template #content>
+              <div class="w-56 p-1.5" :data-testid="`atrium-flyout-${group.key}`">
+                <p class="atrium-label flex items-center justify-between px-2 pb-1 pt-0.5">
+                  <span>{{ group.label }}</span><span class="text-dimmed">{{ pageCount(group) }}</span>
+                </p>
+                <AtriumNavList :items="group.items" :active-path="activePath" />
+              </div>
+            </template>
+          </UPopover>
+          <button
+            v-else
+            type="button"
+            class="atrium-rail-item"
+            :data-tip="group.label"
+            :aria-label="group.label"
+            :aria-pressed="shown?.key === group.key"
+            :data-shown="shown?.key === group.key"
+            :data-current="nav.current.value?.key === group.key"
+            aria-controls="atrium-nav-panel"
+            data-testid="atrium-rail-section"
+            :data-section="group.key"
+            @click="choose(group)"
+          >
+            <UIcon :name="group.icon ?? 'i-lucide-folder'" class="atrium-rail-icon size-[1.125rem]" />
+          </button>
+        </li>
+      </ul>
+
+      <NuxtLink
+        v-if="nav.hasSettings.value"
+        to="/settings"
+        class="atrium-rail-item mt-1"
+        :data-tip="t('atrium.nav.settings')"
+        :aria-label="t('atrium.nav.settings')"
+        :data-current="route.path === '/settings' || route.path.startsWith('/settings/')"
+      >
+        <UIcon name="i-lucide-settings" class="atrium-rail-icon size-[1.125rem]" />
+      </NuxtLink>
+    </nav>
+
+    <section
+      v-if="!props.collapsed && shown"
+      id="atrium-nav-panel"
+      class="atrium-panel-nav flex min-h-0 shrink-0 flex-col"
+      :aria-label="shown.label"
+      data-testid="atrium-nav-panel"
+      :data-section="shown.key"
+    >
+      <header class="flex h-(--atrium-bar-height) shrink-0 items-center gap-2 border-b border-default px-3">
+        <UIcon :name="shown.icon ?? 'i-lucide-folder'" class="size-4 shrink-0 text-primary" />
+        <span class="truncate text-[0.8125rem] font-semibold tracking-tight text-highlighted">{{ shown.label }}</span>
+        <span class="atrium-label ms-auto text-dimmed">{{ pageCount(shown) }}</span>
+      </header>
+      <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        <AtriumNavList :items="shown.items" :active-path="activePath" />
+      </div>
+      <footer v-if="store.shell?.user" class="flex shrink-0 items-center gap-2 border-t border-default px-3 py-2">
+        <UAvatar :alt="store.shell.user.name ?? ''" size="xs" class="ring-1 ring-(--ui-border-accented)" />
+        <div class="min-w-0 leading-tight">
+          <p class="truncate text-xs font-medium text-highlighted">{{ store.shell.user.name }}</p>
+          <p class="atrium-mono truncate text-[0.65625rem] text-muted">{{ store.shell.user.email }}</p>
+        </div>
+      </footer>
+    </section>
+  </div>
 </template>

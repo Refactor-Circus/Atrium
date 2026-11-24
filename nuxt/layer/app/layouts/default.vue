@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { useLocalStorage } from '@vueuse/core'
+
 /**
- * The Atrium shell: sidebar navigation, ⌘K search, the theme switcher and
- * the signed-in user, all from GET /shell, loaded once on boot. The version
+ * The Atrium shell (D-077): the section rail and its page panel, the top bar
+ * (where you are, ⌘K, live status, theme and colour mode) and the content on
+ * the deck's canvas, all from GET /shell, loaded once on boot. Below `lg` the
+ * navigation moves into a drawer the top bar opens. The panel's collapsed
+ * state is remembered per browser (`atrium-nav-collapsed`). The version
  * banner warns when the API and this layer have drifted apart, and the
  * response notices show what response handlers raised (D-049).
  *
@@ -10,66 +15,60 @@
  * <AtriumIntegrationUnavailable>, so the page never calls its package.
  */
 const store = useAtriumShellStore()
-const theme = useAtriumTheme()
 const route = useRoute()
 const { t } = useI18n()
 
 await store.load()
 
+// Applies the chosen theme's tokens on :root for the whole shell.
+useAtriumTheme()
+
 const unavailable = computed(() => route.meta.atriumUnavailable ?? null)
+const collapsed = useLocalStorage('atrium-nav-collapsed', false)
+const drawer = ref(false)
+
+watch(() => route.fullPath, () => { drawer.value = false })
 
 useHead({ titleTemplate: title => (title ? `${title} · ` : '') + (store.shell?.app.name ?? 'Atrium') })
-
-const themeItems = computed(() => [theme.themes.value.map(item => ({
-  label: item.label,
-  type: 'checkbox' as const,
-  checked: item.key === theme.current.value?.key,
-  onSelect: () => theme.choose(item.key)
-}))])
 </script>
 
 <template>
-  <UDashboardGroup>
-    <UDashboardSidebar collapsible resizable class="atrium-sidebar" :ui="{ footer: 'border-t border-default' }">
-      <template #header="{ collapsed }">
-        <NuxtLink to="/" class="truncate font-semibold" :class="collapsed ? 'sr-only' : ''">
-          {{ store.shell?.app.name ?? 'Atrium' }}
-        </NuxtLink>
-      </template>
-
-      <template #default="{ collapsed }">
-        <AtriumSearch v-if="!collapsed" />
-        <AtriumNavigation :collapsed="collapsed" />
-      </template>
-
-      <template #footer="{ collapsed }">
-        <div class="flex w-full items-center gap-2">
-          <UAvatar v-if="store.shell?.user" :alt="store.shell.user.name ?? ''" size="sm" />
-          <div v-if="!collapsed && store.shell?.user" class="min-w-0 flex-1 text-sm">
-            <p class="truncate font-medium">{{ store.shell.user.name }}</p>
-            <p class="truncate text-muted">{{ store.shell.user.email }}</p>
-          </div>
-          <UDropdownMenu v-if="theme.switchable.value && theme.themes.value.length > 1" :items="themeItems">
-            <UButton icon="i-lucide-palette" color="neutral" variant="ghost" :aria-label="t('atrium.theme.label')" />
-          </UDropdownMenu>
-          <UColorModeButton />
-        </div>
-      </template>
-    </UDashboardSidebar>
+  <UDashboardGroup class="atrium-shell">
+    <aside class="atrium-sidebar hidden h-full shrink-0 lg:flex">
+      <AtriumNavigation :collapsed="collapsed" />
+    </aside>
 
     <div class="atrium-canvas flex min-w-0 flex-1 flex-col">
+      <AtriumTopbar v-model:collapsed="collapsed" @menu="drawer = true" />
       <AtriumVersionBanner />
       <AtriumResponseNotice />
-      <div v-if="store.error" class="m-6">
-        <UAlert color="error" :title="t('atrium.app.unreachable')" :description="String(store.error)" />
-      </div>
-      <AtriumIntegrationUnavailable
-        v-else-if="unavailable"
-        :integration="unavailable.integration"
-        :reason="unavailable.reason"
-        :label="store.integration(unavailable.integration)?.label"
-      />
-      <slot v-else />
+      <main class="atrium-content flex min-h-0 flex-1 flex-col">
+        <div v-if="store.error" class="atrium-page">
+          <AtriumState kind="error" :title="t('atrium.app.unreachable')" :description="String(store.error)" />
+        </div>
+        <AtriumIntegrationUnavailable
+          v-else-if="unavailable"
+          :integration="unavailable.integration"
+          :reason="unavailable.reason"
+          :label="store.integration(unavailable.integration)?.label"
+        />
+        <div v-else class="atrium-page">
+          <slot />
+        </div>
+      </main>
     </div>
+
+    <USlideover
+      v-model:open="drawer"
+      side="left"
+      :title="store.shell?.app.name ?? 'Atrium'"
+      :description="t('atrium.nav.sections')"
+      :ui="{ content: 'w-auto max-w-[calc(100vw-3rem)]', header: 'sr-only', body: 'p-0 sm:p-0 flex' }"
+      data-testid="atrium-drawer"
+    >
+      <template #body>
+        <AtriumNavigation />
+      </template>
+    </USlideover>
   </UDashboardGroup>
 </template>

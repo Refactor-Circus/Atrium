@@ -29,6 +29,8 @@ describe('useAtriumTheme()', () => {
 
     expect(root.dataset.atriumTheme).toBe('harbor')
     expect(root.style.getPropertyValue('--color-primary')).toBe('#0d9488')
+    expect(root.style.getPropertyValue('--atrium-token-primary')).toBe('#0d9488')
+    expect(root.style.getPropertyValue('--atrium-token-radius')).toBe('0.75rem')
     expect(localStorage.getItem('atrium-theme')).toContain('harbor')
 
     theme.choose('sunset')
@@ -37,6 +39,7 @@ describe('useAtriumTheme()', () => {
     expect(root.dataset.atriumTheme).toBe('sunset')
     expect(root.style.getPropertyValue('--color-primary')).toBe('#ea580c')
     expect(root.style.getPropertyValue('--color-info')).toBe('')
+    expect(root.style.getPropertyValue('--atrium-token-info')).toBe('')
   })
 
   it('falls back to the default theme for an unknown choice', async () => {
