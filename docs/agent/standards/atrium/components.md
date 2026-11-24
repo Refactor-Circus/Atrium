@@ -33,6 +33,7 @@ Atrium's PHP side serves data; its prebuilt front end renders it (D-079 to D-087
 - The eight suite packages (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom) ship no UI in v2 yet: their modules are staged in `ui/modules/{pkg}` until each moves into its package, and call each package's API through `useAtriumIntegration(pkg).client`; see [[integrations]].
 - A module ships no design tokens of its own: its components are built from Nuxt UI and the SDK's `Atrium*` components (`AtriumNoAccess`, `AtriumIntegrationScreen`, `AtriumErrorCard`, ...) and tokens.
 - When a package needs a generic piece of UI, add an `Atrium*` component to `ui/sdk` rather than styling it in the module.
+- The SDK is a library installed under `node_modules`, where no consumer's resolver reaches (D-088): every SDK `.vue` file imports each `Atrium*` component it renders (`./AtriumX.vue`) and each `U*` from the same `@nuxt/ui/...` file `ui/sdk/src/ui.ts` exports it from, and every type its sources import comes from its own `dependencies`. Atrium's suites leave SDK sources out of the component resolver, and `ui/scripts/check-consumer.mjs` (in `composer test:ui`) builds, type-checks and tests a module against the packed SDK.
 - A module never imports from another module. Outside `ui/modules/{pkg}/`, the SDK and Atrium's app refer to no suite package's keys, except through the shell's data and the integration fixtures.
 
 ## Enforcement

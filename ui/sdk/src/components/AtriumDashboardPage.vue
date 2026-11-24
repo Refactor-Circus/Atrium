@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import AtriumDashboardGrid from './AtriumDashboardGrid.vue'
+import UAlert from '@nuxt/ui/components/Alert.vue'
+import UButton from '@nuxt/ui/components/Button.vue'
+import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue'
+import UDashboardPanel from '@nuxt/ui/components/DashboardPanel.vue'
+import UDropdownMenu from '@nuxt/ui/components/DropdownMenu.vue'
+import UInput from '@nuxt/ui/components/Input.vue'
+import UModal from '@nuxt/ui/components/Modal.vue'
+import USkeleton from '@nuxt/ui/components/Skeleton.vue'
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAtriumDashboard } from '../composables/useAtriumDashboard'

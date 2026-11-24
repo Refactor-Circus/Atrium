@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AtriumExtension from './AtriumExtension.vue'
+import AtriumSections from './AtriumSections.vue'
+import USkeleton from '@nuxt/ui/components/Skeleton.vue'
+import UTabs from '@nuxt/ui/components/Tabs.vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAtriumIcon } from '../composables/useAtriumIcon'

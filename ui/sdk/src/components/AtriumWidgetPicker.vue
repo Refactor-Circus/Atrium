@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AtriumIcon from './AtriumIcon.vue'
+import UInput from '@nuxt/ui/components/Input.vue'
+import UModal from '@nuxt/ui/components/Modal.vue'
 import { watch, ref, computed } from 'vue'
 import { useAtriumApi } from '../composables/useAtriumApi'
 import { useI18n } from 'vue-i18n'

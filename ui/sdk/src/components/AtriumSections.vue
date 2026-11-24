@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AtriumExtension from './AtriumExtension.vue'
 import type { AtriumScreenData } from '../types/atrium'
 
 /** Every section packages placed in one slot of a screen. */

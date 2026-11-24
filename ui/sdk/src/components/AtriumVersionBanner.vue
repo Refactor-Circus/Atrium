@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import UAlert from '@nuxt/ui/components/Alert.vue'
+import UButton from '@nuxt/ui/components/Button.vue'
 import { useAtriumShellStore } from '../stores/atriumShell'
 import { useI18n } from 'vue-i18n'
 import { ref, computed, watch } from 'vue'

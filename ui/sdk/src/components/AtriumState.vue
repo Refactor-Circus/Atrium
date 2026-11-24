@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 /**
  * An empty, failed or forbidden state in the deck's style (D-077): an icon
  * in a lit frame, a title, an optional description and actions (default

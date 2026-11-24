@@ -32,6 +32,12 @@ export const ATRIUM_SDK_ROOT = fileURLToPath(new URL('..', import.meta.url))
 /** Matches the SDK's own source files. */
 const sdkSources = new RegExp(`^${join(ATRIUM_SDK_ROOT, 'src').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\\\/]`)
 
+/**
+ * What the component resolver leaves alone: Nuxt UI's default (`node_modules`
+ * but Nuxt UI's own, `.git`, `.nuxt`) and the SDK's sources, as one RegExp.
+ */
+const componentsExclude = new RegExp(`[\\\\/]node_modules[\\\\/](?!\\.pnpm|@nuxt\\/ui|@compodium\\/examples)|[\\\\/]\\.git[\\\\/]|[\\\\/]\\.nuxt[\\\\/]|${sdkSources.source}`)
+
 const VALUE_EXPORT = /^export (?:async )?(?:function|const|class|let) (\w+)/gm
 
 /** The SDK's value exports (composables, helpers, the registry), for auto-imports. */
@@ -326,6 +332,11 @@ export function nuxtUi({ dts = false, dirs = [] } = {}) {
     // The SDK's own sources import what they use: a library must not lean
     // on its consumer's auto-imports.
     autoImport: { imports: atriumAutoImports({ ui: false }), dirs, dts: autoImportsDts, vueTemplate: true, exclude: [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/, sdkSources] },
-    components: { dirs: [], resolvers: [atriumComponentResolver({ ui: false, direct: true })], dts: componentsDts }
+    // Nor on its component resolver: the SDK's `.vue` files import every
+    // `Atrium*` and `U*` component they render. Installed from GitHub they
+    // sit under `node_modules`, which Nuxt UI's default `exclude` skips, so
+    // they are skipped here too and Atrium's own suites see what a module's
+    // see. (defu replaces a RegExp, where it would concatenate an array.)
+    components: { dirs: [], resolvers: [atriumComponentResolver({ ui: false, direct: true })], dts: componentsDts, exclude: componentsExclude }
   }))
 }

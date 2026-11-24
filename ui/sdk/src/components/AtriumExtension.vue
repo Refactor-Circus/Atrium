@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AtriumErrorCard from './AtriumErrorCard.vue'
+import AtriumUnregistered from './AtriumUnregistered.vue'
 import { computed } from 'vue'
 import { useAtrium } from '../registry'
 import { useI18n } from 'vue-i18n'

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AtriumSearch from './AtriumSearch.vue'
+import UButton from '@nuxt/ui/components/Button.vue'
+import UDropdownMenu from '@nuxt/ui/components/DropdownMenu.vue'
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 import { computed } from 'vue'
 import { useAtriumTheme } from '../composables/useAtriumTheme'
 import { useAtriumNavigation } from '../composables/useAtriumNavigation'

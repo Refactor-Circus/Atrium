@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import UButton from '@nuxt/ui/components/Button.vue'
+import UCommandPalette from '@nuxt/ui/components/CommandPalette.vue'
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
+import UKbd from '@nuxt/ui/components/Kbd.vue'
+import UModal from '@nuxt/ui/components/Modal.vue'
 import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { useAtriumSearch } from '../composables/useAtriumSearch'

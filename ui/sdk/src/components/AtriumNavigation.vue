@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import AtriumLink from './AtriumLink.vue'
+import AtriumNavList from './AtriumNavList.vue'
+import UAvatar from '@nuxt/ui/components/Avatar.vue'
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
+import UPopover from '@nuxt/ui/components/Popover.vue'
 import { ref, watch, computed } from 'vue'
 import { useAtriumShellStore } from '../stores/atriumShell'
 import { useRoute } from 'vue-router'

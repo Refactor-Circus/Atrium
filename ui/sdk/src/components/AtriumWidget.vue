@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AtriumErrorCard from './AtriumErrorCard.vue'
+import AtriumUnregistered from './AtriumUnregistered.vue'
+import UCard from '@nuxt/ui/components/Card.vue'
+import USkeleton from '@nuxt/ui/components/Skeleton.vue'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useAtrium } from '../registry'
 import { useAtriumApi } from '../composables/useAtriumApi'

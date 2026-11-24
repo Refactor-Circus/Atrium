@@ -9,7 +9,8 @@
     "test": "pnpm -r --workspace-concurrency=2 test",
     "theme:check": "node scripts/nuxt-ui-theme.mjs --check",
     "sync:clients": "node scripts/sync-clients.mjs",
-    "generate:client": "node scripts/generate-client.mjs"
+    "generate:client": "node scripts/generate-client.mjs",
+    "test:consumer": "node scripts/check-consumer.mjs"
   },
   "pnpm": {
     "peerDependencyRules": {

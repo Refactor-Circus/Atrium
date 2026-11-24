@@ -72,6 +72,7 @@
     "@iconify-json/lucide": "1.2.158",
     "@iconify/vue": "5.0.5",
     "@tailwindcss/vite": "4.3.5",
+    "@types/sortablejs": "1.15.9",
     "@vitejs/plugin-vue": "6.0.11",
     "ofetch": "1.5.1",
     "sortablejs": "1.15.7",
@@ -82,7 +83,6 @@
   "devDependencies": {
     "@nuxt/ui": "4.1.0",
     "@types/node": "24.19.2",
-    "@types/sortablejs": "1.15.9",
     "@unhead/vue": "2.1.18",
     "@vue/test-utils": "2.6.0",
     "@vueuse/core": "13.9.0",

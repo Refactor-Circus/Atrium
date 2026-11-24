@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AtriumLink from './AtriumLink.vue'
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 

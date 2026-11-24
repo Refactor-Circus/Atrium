@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
 import { computed, useId } from 'vue'
 
 /**

@@ -49,174 +49,174 @@
     "src": "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js",
     "isDynamicEntry": true
   },
-  "_Alert-C5t87YzO.js": {
-    "file": "chunks/Alert-C5t87YzO.js",
+  "_Alert-6JFzMMFh.js": {
+    "file": "chunks/Alert-6JFzMMFh.js",
     "name": "Alert",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js"
+      "_DashboardPanel-CPx19Zwg.js"
     ]
   },
-  "_AtriumDashboardPage-DPWjGYxY.js": {
-    "file": "chunks/AtriumDashboardPage-DPWjGYxY.js",
+  "_AtriumDashboardPage-CKR3JOmR.js": {
+    "file": "chunks/AtriumDashboardPage-CKR3JOmR.js",
     "name": "AtriumDashboardPage",
     "imports": [
-      "_DashboardNavbar-DsqTfPvH.js",
-      "_DropdownMenu-DprnZlwl.js",
-      "_AtriumIcon-mGPs05Y0.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_useAtriumIcon-D1W0nxth.js",
-      "_vue-i18n-Dd_KwCqc.js",
-      "_AtriumErrorCard-BJWIkqIY.js",
-      "_Select-CcEsB8jN.js",
-      "_Skeleton-98YXPWpy.js",
-      "_preload-helper-DclECHGd.js",
-      "_Alert-C5t87YzO.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_AtriumUnregistered-CBY1YP7S.js",
+      "_Select-axyfecAL.js",
+      "_Skeleton-BPxjvRXs.js",
+      "_useAtriumIcon-4flAM4SP.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_AtriumIcon-DaOzKJML.js",
+      "_DropdownMenu-LotfNQ6G.js",
+      "_DashboardPanel-CPx19Zwg.js",
+      "_preload-helper-DclECHGd.js",
+      "_Alert-6JFzMMFh.js",
       "_vue.Cd6dkybA-CEf-G69L.js"
     ],
     "dynamicImports": [
       "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js"
     ]
   },
-  "_AtriumErrorCard-BJWIkqIY.js": {
-    "file": "chunks/AtriumErrorCard-BJWIkqIY.js",
-    "name": "AtriumErrorCard",
-    "imports": [
-      "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_vue-i18n-Dd_KwCqc.js"
-    ]
-  },
-  "_AtriumIcon-mGPs05Y0.js": {
-    "file": "chunks/AtriumIcon-mGPs05Y0.js",
+  "_AtriumIcon-DaOzKJML.js": {
+    "file": "chunks/AtriumIcon-DaOzKJML.js",
     "name": "AtriumIcon",
     "imports": [
-      "_DashboardNavbar-DsqTfPvH.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_useAtriumIcon-D1W0nxth.js"
+      "_DashboardPanel-CPx19Zwg.js",
+      "_useAtriumIcon-4flAM4SP.js"
     ]
   },
-  "_AtriumScreen-CHS2WEFl.js": {
-    "file": "chunks/AtriumScreen-CHS2WEFl.js",
+  "_AtriumScreen-BDHEgaIU.js": {
+    "file": "chunks/AtriumScreen-BDHEgaIU.js",
     "name": "AtriumScreen",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_useAtriumIcon-D1W0nxth.js",
-      "_AtriumErrorCard-BJWIkqIY.js",
+      "_useAtriumIcon-4flAM4SP.js",
+      "_AtriumUnregistered-CBY1YP7S.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_Tabs-BRS9DkYk.js",
-      "_Skeleton-98YXPWpy.js"
+      "_Tabs-ZZxkMZpS.js",
+      "_Skeleton-BPxjvRXs.js"
     ]
   },
-  "_AtriumSettingsPanel-Byhmz5aG.js": {
-    "file": "chunks/AtriumSettingsPanel-Byhmz5aG.js",
+  "_AtriumSettingsPanel-DIDRuAVH.js": {
+    "file": "chunks/AtriumSettingsPanel-DIDRuAVH.js",
     "name": "AtriumSettingsPanel",
     "imports": [
-      "_AtriumScreen-CHS2WEFl.js",
-      "_AtriumErrorCard-BJWIkqIY.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_useAtriumIcon-D1W0nxth.js",
+      "_AtriumUnregistered-CBY1YP7S.js",
+      "_AtriumScreen-BDHEgaIU.js",
+      "_useAtriumIcon-4flAM4SP.js",
       "_vue-i18n-Dd_KwCqc.js"
     ]
   },
-  "_AtriumVersionBanner-C9QMeiJQ.js": {
-    "file": "chunks/AtriumVersionBanner-C9QMeiJQ.js",
+  "_AtriumUnregistered-CBY1YP7S.js": {
+    "file": "chunks/AtriumUnregistered-CBY1YP7S.js",
+    "name": "AtriumUnregistered",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_vue-i18n-Dd_KwCqc.js"
+    ]
+  },
+  "_AtriumVersionBanner-B3XWNhaM.js": {
+    "file": "chunks/AtriumVersionBanner-B3XWNhaM.js",
     "name": "AtriumVersionBanner",
     "imports": [
       "_vue.Cd6dkybA-CEf-G69L.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_DropdownMenu-DprnZlwl.js",
-      "_CommandPalette-dW79IF8A.js",
-      "_useAtriumIcon-D1W0nxth.js",
+      "_DropdownMenu-LotfNQ6G.js",
+      "_CommandPalette-DlsZLRog.js",
+      "_useAtriumIcon-4flAM4SP.js",
       "_vue-i18n-Dd_KwCqc.js",
       "_pinia-C4-tzdo8.js",
-      "_Alert-C5t87YzO.js"
+      "_Alert-6JFzMMFh.js"
     ]
   },
-  "_CommandPalette-dW79IF8A.js": {
-    "file": "chunks/CommandPalette-dW79IF8A.js",
+  "_CommandPalette-DlsZLRog.js": {
+    "file": "chunks/CommandPalette-DlsZLRog.js",
     "name": "CommandPalette",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
-      "_DropdownMenu-DprnZlwl.js",
-      "_RovingFocusGroup-Q9d4Qysy.js"
+      "_DropdownMenu-LotfNQ6G.js",
+      "_RovingFocusGroup-B2jqY9uV.js"
     ]
   },
-  "_DashboardNavbar-DsqTfPvH.js": {
-    "file": "chunks/DashboardNavbar-DsqTfPvH.js",
-    "name": "DashboardNavbar",
+  "_DashboardPanel-CPx19Zwg.js": {
+    "file": "chunks/DashboardPanel-CPx19Zwg.js",
+    "name": "DashboardPanel",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js"
     ]
   },
-  "_DropdownMenu-DprnZlwl.js": {
-    "file": "chunks/DropdownMenu-DprnZlwl.js",
+  "_DropdownMenu-LotfNQ6G.js": {
+    "file": "chunks/DropdownMenu-LotfNQ6G.js",
     "name": "DropdownMenu",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
-      "_RovingFocusGroup-Q9d4Qysy.js"
+      "_RovingFocusGroup-B2jqY9uV.js"
     ]
   },
-  "_RovingFocusGroup-Q9d4Qysy.js": {
-    "file": "chunks/RovingFocusGroup-Q9d4Qysy.js",
+  "_RovingFocusGroup-B2jqY9uV.js": {
+    "file": "chunks/RovingFocusGroup-B2jqY9uV.js",
     "name": "RovingFocusGroup",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js"
+      "_DashboardPanel-CPx19Zwg.js"
     ]
   },
-  "_Select-CcEsB8jN.js": {
-    "file": "chunks/Select-CcEsB8jN.js",
+  "_Select-axyfecAL.js": {
+    "file": "chunks/Select-axyfecAL.js",
     "name": "Select",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
-      "_DropdownMenu-DprnZlwl.js",
-      "_RovingFocusGroup-Q9d4Qysy.js"
+      "_DropdownMenu-LotfNQ6G.js",
+      "_RovingFocusGroup-B2jqY9uV.js"
     ]
   },
-  "_Skeleton-98YXPWpy.js": {
-    "file": "chunks/Skeleton-98YXPWpy.js",
+  "_Skeleton-BPxjvRXs.js": {
+    "file": "chunks/Skeleton-BPxjvRXs.js",
     "name": "Skeleton",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js"
+      "_DashboardPanel-CPx19Zwg.js"
     ]
   },
-  "_Slideover-mgRlqYS_.js": {
-    "file": "chunks/Slideover-mgRlqYS_.js",
+  "_Slideover-BgehIdie.js": {
+    "file": "chunks/Slideover-BgehIdie.js",
     "name": "Slideover",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
-      "_DropdownMenu-DprnZlwl.js",
-      "_RovingFocusGroup-Q9d4Qysy.js"
+      "_DropdownMenu-LotfNQ6G.js",
+      "_RovingFocusGroup-B2jqY9uV.js"
     ]
   },
-  "_Tabs-BRS9DkYk.js": {
-    "file": "chunks/Tabs-BRS9DkYk.js",
+  "_Tabs-ZZxkMZpS.js": {
+    "file": "chunks/Tabs-ZZxkMZpS.js",
     "name": "Tabs",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js",
-      "_RovingFocusGroup-Q9d4Qysy.js",
+      "_DashboardPanel-CPx19Zwg.js",
+      "_RovingFocusGroup-B2jqY9uV.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_core--pP3C62o.js"
     ]
@@ -266,12 +266,12 @@
       "_runtime-core.esm-bundler-DdPnhzZn.js"
     ]
   },
-  "_useAtriumIcon-D1W0nxth.js": {
-    "file": "chunks/useAtriumIcon-D1W0nxth.js",
+  "_useAtriumIcon-4flAM4SP.js": {
+    "file": "chunks/useAtriumIcon-4flAM4SP.js",
     "name": "useAtriumIcon",
     "imports": [
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js"
+      "_DashboardPanel-CPx19Zwg.js"
     ]
   },
   "_vue-i18n-Dd_KwCqc.js": {
@@ -297,21 +297,21 @@
     ]
   },
   "src/main.ts": {
-    "file": "atrium-wA7-oxGl.js",
+    "file": "atrium-B--NYn8k.js",
     "name": "atrium",
     "src": "src/main.ts",
     "isEntry": true,
     "imports": [
       "_vue.Cd6dkybA-CEf-G69L.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_core--pP3C62o.js",
-      "_AtriumVersionBanner-C9QMeiJQ.js",
-      "_useAtriumIcon-D1W0nxth.js",
+      "_AtriumVersionBanner-B3XWNhaM.js",
+      "_useAtriumIcon-4flAM4SP.js",
       "_pinia-C4-tzdo8.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
       "_vue-router-DVn0e99d.js",
-      "_Slideover-mgRlqYS_.js",
+      "_Slideover-BgehIdie.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js",
       "_preload-helper-DclECHGd.js"
@@ -341,35 +341,35 @@
     ]
   },
   "src/pages/DashboardIndexPage.vue": {
-    "file": "chunks/DashboardIndexPage-BDwgtba5.js",
+    "file": "chunks/DashboardIndexPage-Vx0MsCzv.js",
     "name": "DashboardIndexPage",
     "src": "src/pages/DashboardIndexPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AtriumDashboardPage-DPWjGYxY.js",
+      "_AtriumDashboardPage-CKR3JOmR.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "__plugin-vue_export-helper-BDNMzG2s.js"
     ]
   },
   "src/pages/DashboardPage.vue": {
-    "file": "chunks/DashboardPage-CNcr0IVj.js",
+    "file": "chunks/DashboardPage-D_2Klv0p.js",
     "name": "DashboardPage",
     "src": "src/pages/DashboardPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AtriumDashboardPage-DPWjGYxY.js",
+      "_AtriumDashboardPage-CKR3JOmR.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js"
     ]
   },
   "src/pages/NotFoundPage.vue": {
-    "file": "chunks/NotFoundPage-CkdW128y.js",
+    "file": "chunks/NotFoundPage-BxDWv7rV.js",
     "name": "NotFoundPage",
     "src": "src/pages/NotFoundPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardNavbar-DsqTfPvH.js",
-      "_Alert-C5t87YzO.js",
+      "_DashboardPanel-CPx19Zwg.js",
+      "_Alert-6JFzMMFh.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js",
@@ -377,56 +377,56 @@
     ]
   },
   "src/pages/SettingsIndexPage.vue": {
-    "file": "chunks/SettingsIndexPage-BQfOIHc_.js",
+    "file": "chunks/SettingsIndexPage-BSo9q59o.js",
     "name": "SettingsIndexPage",
     "src": "src/pages/SettingsIndexPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardNavbar-DsqTfPvH.js",
-      "_AtriumScreen-CHS2WEFl.js",
-      "_AtriumIcon-mGPs05Y0.js",
-      "_Skeleton-98YXPWpy.js",
+      "_DashboardPanel-CPx19Zwg.js",
+      "_AtriumScreen-BDHEgaIU.js",
+      "_AtriumIcon-DaOzKJML.js",
+      "_Skeleton-BPxjvRXs.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_vue-i18n-Dd_KwCqc.js",
       "_vue.Cd6dkybA-CEf-G69L.js"
     ]
   },
   "src/pages/SettingsPanelPage.vue": {
-    "file": "chunks/SettingsPanelPage-DsydPkWj.js",
+    "file": "chunks/SettingsPanelPage-C7hlvhIM.js",
     "name": "SettingsPanelPage",
     "src": "src/pages/SettingsPanelPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_DashboardNavbar-DsqTfPvH.js",
-      "_AtriumSettingsPanel-Byhmz5aG.js",
-      "_Alert-C5t87YzO.js",
-      "_Skeleton-98YXPWpy.js",
+      "_DashboardPanel-CPx19Zwg.js",
+      "_AtriumSettingsPanel-DIDRuAVH.js",
+      "_Alert-6JFzMMFh.js",
+      "_Skeleton-BPxjvRXs.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_AtriumScreen-CHS2WEFl.js",
+      "_AtriumScreen-BDHEgaIU.js",
       "_vue.Cd6dkybA-CEf-G69L.js"
     ]
   },
   "src/shared/atrium-ui.ts": {
-    "file": "shared/refactor-circus-atrium-ui-BIN1S8Wj.js",
+    "file": "shared/refactor-circus-atrium-ui-D_pQRN0p.js",
     "name": "shared/refactor-circus-atrium-ui",
     "src": "src/shared/atrium-ui.ts",
     "isEntry": true,
     "imports": [
-      "_DropdownMenu-DprnZlwl.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_DropdownMenu-LotfNQ6G.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
-      "_CommandPalette-dW79IF8A.js",
+      "_CommandPalette-DlsZLRog.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_RovingFocusGroup-Q9d4Qysy.js",
+      "_RovingFocusGroup-B2jqY9uV.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
-      "_Tabs-BRS9DkYk.js",
-      "_Select-CcEsB8jN.js",
-      "_Slideover-mgRlqYS_.js",
+      "_Tabs-ZZxkMZpS.js",
+      "_Select-axyfecAL.js",
+      "_Slideover-BgehIdie.js",
       "_core--pP3C62o.js",
-      "_Skeleton-98YXPWpy.js",
-      "_Alert-C5t87YzO.js",
+      "_Skeleton-BPxjvRXs.js",
+      "_Alert-6JFzMMFh.js",
       "__plugin-vue_export-helper-BDNMzG2s.js"
     ],
     "css": [
@@ -434,24 +434,24 @@
     ]
   },
   "src/shared/atrium.ts": {
-    "file": "shared/refactor-circus-atrium-jrnvyvdD.js",
+    "file": "shared/refactor-circus-atrium-Bpjwfaqt.js",
     "name": "shared/refactor-circus-atrium",
     "src": "src/shared/atrium.ts",
     "isEntry": true,
     "imports": [
       "_vue.Cd6dkybA-CEf-G69L.js",
       "_dist-BiG2Jq2W.js",
-      "_useAtriumIcon-D1W0nxth.js",
-      "_AtriumVersionBanner-C9QMeiJQ.js",
+      "_useAtriumIcon-4flAM4SP.js",
+      "_AtriumVersionBanner-B3XWNhaM.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
-      "_AtriumErrorCard-BJWIkqIY.js",
-      "_AtriumDashboardPage-DPWjGYxY.js",
-      "_DashboardNavbar-DsqTfPvH.js",
+      "_AtriumUnregistered-CBY1YP7S.js",
+      "_AtriumDashboardPage-CKR3JOmR.js",
+      "_DashboardPanel-CPx19Zwg.js",
       "_vue-i18n-Dd_KwCqc.js",
-      "_AtriumScreen-CHS2WEFl.js",
-      "_AtriumIcon-mGPs05Y0.js",
-      "_AtriumSettingsPanel-Byhmz5aG.js"
+      "_AtriumScreen-BDHEgaIU.js",
+      "_AtriumIcon-DaOzKJML.js",
+      "_AtriumSettingsPanel-DIDRuAVH.js"
     ]
   },
   "src/shared/openapi-fetch.ts": {

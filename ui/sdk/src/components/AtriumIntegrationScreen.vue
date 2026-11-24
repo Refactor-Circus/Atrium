@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AtriumNoAccess from './AtriumNoAccess.vue'
+import AtriumScreen from './AtriumScreen.vue'
 import { computed } from 'vue'
 import { useAtriumScreen } from '../composables/useAtriumScreen'
 import { atriumStatus } from '../utils/atriumStatus'

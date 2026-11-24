@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import UAlert from '@nuxt/ui/components/Alert.vue'
+import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue'
+import UDashboardPanel from '@nuxt/ui/components/DashboardPanel.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useHead } from '@unhead/vue'

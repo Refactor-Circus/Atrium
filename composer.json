@@ -103,6 +103,7 @@
             "pnpm -C ui theme:check",
             "pnpm -C ui typecheck",
             "pnpm -C ui test",
+            "pnpm -C ui test:consumer",
             "pnpm -C ui build"
         ],
         "clear": [
@@ -157,6 +158,6 @@
         }
     ],
     "scripts-descriptions": {
-        "test:ui": "The front end's gate: frozen pnpm install, generated client and Nuxt UI theme up to date, typecheck, Vitest, and the prebuilt dist/ and module builds rebuilt (commit them)."
+        "test:ui": "The front end's gate: frozen pnpm install, generated client and Nuxt UI theme up to date, typecheck, Vitest, a module built, type-checked and tested against the packed SDK, and the prebuilt dist/ and module builds rebuilt (commit them)."
     }
 }

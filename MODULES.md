@@ -3,7 +3,7 @@
 A package's (or an app's) front end in Atrium is a **module**: Vue code built
 with Atrium's Vite preset into one ES module and a stylesheet, committed to the
 package, declared in its `composer.json`, and loaded by Atrium's page next to
-Atrium's own prebuilt front end (decisions D-079 to D-087 in
+Atrium's own prebuilt front end (decisions D-079 to D-088 in
 `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/decisions.md`).
 
 This file is the contract, then the step-by-step move of a staged suite module
@@ -116,6 +116,16 @@ export default atriumModule({ key: 'polycart', outDir: '../dist/atrium', test: {
   `useAsyncData`, …) and Nuxt UI's composables. `<U*>` and `<Atrium*>`
   components resolve by themselves. The preset writes `auto-imports.d.ts` and
   `components.d.ts` (commit them; `vue-tsc` reads them).
+- The SDK's own components import every `Atrium*` and `U*` component they
+  render, and its type dependencies (`@types/sortablejs`) are its own
+  `dependencies` (D-088): installed from GitHub (under
+  `node_modules/.pnpm/…`), it needs no resolver override, no `exclude`
+  workaround in `vite.config.ts` and no extra dev dependency. Delete any such
+  workaround when you bump the SDK pin.
+- Tests never reach the network: a `fetch` no mock answers (`mockPackageApi`,
+  `registerEndpoint`, `mockAtriumApi`, a `vi.spyOn(globalThis, 'fetch')`)
+  rejects at once with `No test mock answers GET …`, instead of trying
+  happy-dom's `http://localhost:3000`.
 - Styles: `src/atrium.css` is
 
   ```css
@@ -144,7 +154,11 @@ Pin a tag or a commit SHA. Against a local checkout, use
 committing. Add the shared modules' exact versions above as dev dependencies
 too (`vue`, `vue-router`, `pinia`, `vue-i18n`, `@vueuse/core`, `openapi-fetch`,
 `@nuxt/ui`, `@unhead/vue`), with `vite`, `vitest`, `vue-tsc`, `typescript`,
-`@vue/test-utils` and `happy-dom` (see any `ui/modules/*/package.json`).
+`@types/node`, `@vue/test-utils` and `happy-dom` (see any
+`ui/modules/*/package.json`). Nothing else: the SDK brings what its own
+sources need (`sortablejs` and its types, the Vite and Tailwind plugins).
+Atrium's `composer test:ui` installs the packed SDK into a module exactly so
+(`ui/scripts/check-consumer.mjs`) and builds, type-checks and tests it.
 
 ### 6. Clients
 
@@ -171,6 +185,22 @@ declare module '@refactor-circus/atrium' {
 
 which also types `useIntegrationQuery('polycart', …)` and the test helper
 `mockPackageApi('polycart', …)`.
+
+A module that imports the package's client entry (`../../client/src/index.ts`,
+for `createXClient`) type-checks that file too, and its `import createClient
+from 'openapi-fetch'` resolves from `client/`, where nothing is installed in
+the module's CI. Point the specifier at the module's own copy in
+`atrium/tsconfig.json` (the version is the shared one, so it is the same
+code at run time):
+
+```json
+"compilerOptions": {
+  "paths": { "openapi-fetch": ["./node_modules/openapi-fetch"] }
+}
+```
+
+Importing only the generated `schema.d.ts` types (`import type { paths }`)
+needs no such entry.
 
 ### 7. Tests
 
@@ -202,6 +232,9 @@ above. For package `{Pkg}` (key `{pkg}`):
    Atrium's `ui/modules/{pkg}/` to `atrium/`: `package.json`, `vite.config.ts`,
    `tsconfig.json`, `src/`, `test/`, `auto-imports.d.ts`, `components.d.ts`.
    Do not copy `node_modules`, `dist`, the stand-in `composer.json` or `client/`.
+   Two copied files still point into Atrium's workspace and are fixed below:
+   `tsconfig.json` extends `../../tsconfig.base.json` and includes `client`
+   (step 4), and `vite.config.ts` hashes `client` and `../../sdk/…` (step 5).
 2. **Use the package's own client.** Replace the vendored `client/` imports
    (`'../client/schema'`, `'../../client/schema'`) with the package's generated
    client (`'../../client/src/schema'`, or its `index.ts`), and point
@@ -209,16 +242,26 @@ above. For package `{Pkg}` (key `{pkg}`):
    transfers page until it can depend on Impex's client (keep `client/impex/`
    as `atrium/types/impex-schema.d.ts`).
 3. **`package.json`.** Rename to `@refactor-circus/{pkg}-atrium` (private),
-   replace `"@refactor-circus/atrium": "workspace:*"` with
+   rewrite the `description` (the staged one says "Staged in Atrium until it
+   moves"; say what the module is, e.g. "{Pkg}'s Atrium module: … built with
+   @refactor-circus/atrium/vite into ../dist/atrium."), replace
+   `"@refactor-circus/atrium": "workspace:*"` with
    `"github:refactor-circus/atrium#<tag or SHA>&path:ui/sdk"`, keep the other
-   pins, add `"packageManager": "pnpm@10.18.0"`, run `pnpm install`, commit
+   pins (and add none for the SDK: drop any `@types/sortablejs`, D-088), add
+   `"packageManager": "pnpm@10.18.0"`, run `pnpm install`, commit
    `pnpm-lock.yaml`.
-4. **`tsconfig.json`.** Inline Atrium's `ui/tsconfig.base.json` options (the
-   module no longer sits under `ui/`).
+4. **`tsconfig.json`.** The staged one `extends: "../../tsconfig.base.json"`,
+   which does not exist in the package: drop `extends` and inline Atrium's
+   `ui/tsconfig.base.json` `compilerOptions`. Replace `client` in `include`
+   with the package client's types (`../client/src/schema.d.ts`), and add the
+   `openapi-fetch` path from §6 if a source imports the client's `index.ts`.
 5. **`vite.config.ts`.** `atriumModule({ key: '{pkg}', outDir: '../dist/atrium',
-   inputs: ['src', 'package.json', 'vite.config.ts', 'pnpm-lock.yaml'], test: {
-   setupFiles: ['test/setup.ts'] } })` (drop Atrium's `../../sdk/…` inputs; the
-   lockfile pins the SDK).
+   inputs: ['src', '../client/src', 'package.json', 'vite.config.ts',
+   'pnpm-lock.yaml'], test: { setupFiles: ['test/setup.ts'] } })` (drop
+   Atrium's `client` and `../../sdk/…` inputs; the lockfile pins the SDK).
+   `../client/src` in `inputs` is recommended: a regenerated client then makes
+   the committed build stale. Nothing else goes in the config: no Nuxt UI
+   plugin override and no `exclude` for the SDK (D-088).
 6. **`composer.json`.** Add the `extra.atrium` block from the staged
    `composer.json` (`key`, `scripts: ["dist/atrium/atrium.js"]`, `styles:
    ["dist/atrium/atrium.css"]`). Make sure `.gitattributes` does not

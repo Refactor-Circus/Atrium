@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import AtriumWidget from './AtriumWidget.vue'
+import AtriumWidgetPicker from './AtriumWidgetPicker.vue'
+import UButton from '@nuxt/ui/components/Button.vue'
+import UCard from '@nuxt/ui/components/Card.vue'
+import UIcon from '@nuxt/ui/runtime/vue/components/Icon.vue'
+import USelect from '@nuxt/ui/components/Select.vue'
 import { ref, useTemplateRef, computed, nextTick, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '@nuxt/ui/composables/useToast.js'
