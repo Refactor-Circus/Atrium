@@ -763,3 +763,11 @@
 - Rationale: Both were found in a real host's browser check; each is fixed once in the SDK (the search component, the Nuxt UI theme), so every module gets it without a rebuild of its own.
 - Date: 2026-11-24
 - Raised by: browser check on a real host; choices made by the implementing agent without a user available
+
+## D-096: Which section does the shell's section panel show on a page no module section holds?
+- Choice:
+  - **The section that owns the route, never the rail's first.** `<AtriumNavigation>` showed the chosen rail section, else `current` (the group holding the route), else `groups[0]`. Atrium itself sends no nav item for the dashboard or Settings, so on a host whose nav is only the suite's sections (no `Overview` item at `/`) the dashboard, `/settings`, `/d/{slug}` and any unlisted page fell to the first group: Showroom's Catalog, which looked like the previous module's section left behind. `useAtriumNavigation()` now returns `section`, which the panel shows when nothing is chosen: `current`; else, under `/settings`, a `settings` section (All settings and one page per settings panel from the shell, the most specific page lit); else the dashboard's section, the group holding `/` (the workbench's Workspace) or, when none does, Atrium's own `atrium` section (Home: Dashboard and, with panels, Settings). These two sections are not rail entries: the rail's Settings button and the app mark already lead to them. The panel now always renders, an empty nav included.
+  - **Tests.** `ui/sdk/test/section-panel.test.ts` mounts the app's real layout and moves between a module's page, `/settings`, `/settings/{panel}`, `/`, `/d/{slug}` and an unknown page, with and without a section holding `/`, checking the panel's `data-section`, heading (`atrium-nav-panel-title`) and lit page. `integration-live.test.ts` mounted on `/` and read the first group's links; it now mounts on that group's page.
+- Rationale: Found in a real host's browser check (Catalog on the dashboard and Settings). Falling back to whichever module sorts first tells the user they are somewhere they are not; Atrium's own pages belong to Atrium's own sections.
+- Date: 2026-11-24
+- Raised by: browser check on a real host; choices made by the implementing agent without a user available

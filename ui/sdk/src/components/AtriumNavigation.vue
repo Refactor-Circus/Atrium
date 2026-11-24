@@ -10,7 +10,7 @@ import { ref, watch, computed } from 'vue'
 import { useAtriumShellStore } from '../stores/atriumShell'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAtriumNavigation } from '../composables/useAtriumNavigation'
+import { isUnderPath, useAtriumNavigation } from '../composables/useAtriumNavigation'
 
 import type { AtriumNavGroup } from '../composables/useAtriumNavigation'
 
@@ -23,7 +23,9 @@ import type { AtriumNavGroup } from '../composables/useAtriumNavigation'
  * the loose sections' items together as Home, then each grouped section,
  * labelled by a tooltip) and, at its foot, Settings. The section holding the
  * route is lit. Choosing a section shows its pages in the panel without
- * leaving the page; moving to another page shows the section that holds it.
+ * leaving the page; moving to another page shows the section that owns it
+ * (`section`: Settings on the settings pages, the dashboard's for a page no
+ * section holds), never a module's that does not hold it (D-096).
  *
  * Collapsed, the panel is gone and a section's button opens its pages in a
  * popover instead. Every link goes through atriumLink (an external one opens
@@ -40,14 +42,21 @@ const chosen = ref<string | null>(null)
 
 watch(() => route.path, () => { chosen.value = null })
 
-const shown = computed<AtriumNavGroup | null>(() =>
+// The chosen rail section, else the one owning the route (D-096): never a
+// section that does not hold it, such as the first module's.
+const shown = computed<AtriumNavGroup>(() =>
   nav.groups.value.find(group => group.key === chosen.value)
-  ?? nav.current.value
-  ?? nav.groups.value[0]
-  ?? null
+  ?? nav.section.value
 )
 
-const activePath = computed(() => nav.page.value?.path ?? null)
+/** The shown section's most specific page holding the route, else the nav's. */
+const activePath = computed(() => {
+  const paths = nav.flatten(shown.value.items)
+    .map(entry => entry.path)
+    .filter((path): path is string => path !== null && isUnderPath(route.path, path))
+
+  return paths.sort((a, b) => b.length - a.length)[0] ?? nav.page.value?.path ?? null
+})
 const appName = computed(() => store.shell?.app.name ?? 'Atrium')
 const mark = computed(() => appName.value.trim().charAt(0).toUpperCase() || 'A')
 const inSettings = computed(() => route.path === '/settings' || route.path.startsWith('/settings/'))
@@ -121,11 +130,11 @@ const railIcon = { leadingIcon: 'size-[1.125rem]' }
               :icon="group.icon ?? 'i-lucide-folder'"
               color="neutral"
               variant="ghost"
-              :class="railClass(nav.current.value?.key === group.key, shown?.key === group.key)"
+              :class="railClass(nav.current.value?.key === group.key, shown.key === group.key)"
               :ui="railIcon"
               :aria-label="group.label"
-              :aria-pressed="shown?.key === group.key"
-              :data-shown="shown?.key === group.key"
+              :aria-pressed="shown.key === group.key"
+              :data-shown="shown.key === group.key"
               :data-current="nav.current.value?.key === group.key"
               aria-controls="atrium-nav-panel"
               data-testid="atrium-rail-section"
@@ -151,7 +160,7 @@ const railIcon = { leadingIcon: 'size-[1.125rem]' }
     </nav>
 
     <section
-      v-if="!props.collapsed && shown"
+      v-if="!props.collapsed"
       id="atrium-nav-panel"
       class="flex w-(--atrium-panel-width) min-h-0 shrink-0 flex-col border-e border-default bg-[color-mix(in_oklab,var(--ui-bg)_90%,var(--atrium-canvas))]"
       :aria-label="shown.label"
@@ -160,7 +169,7 @@ const railIcon = { leadingIcon: 'size-[1.125rem]' }
     >
       <header class="relative flex h-(--atrium-bar-height) shrink-0 items-center gap-2 border-b border-default px-3 after:pointer-events-none after:absolute after:inset-x-3 after:-bottom-px after:h-1 after:bg-(image:--atrium-ruler) after:mask-[linear-gradient(90deg,transparent,#000_60%)] after:opacity-80">
         <UIcon :name="shown.icon ?? 'i-lucide-folder'" class="size-4 shrink-0 text-primary" />
-        <span class="truncate font-mono text-[0.6875rem] font-semibold tracking-[0.12em] text-highlighted uppercase">{{ shown.label }}</span>
+        <span class="truncate font-mono text-[0.6875rem] font-semibold tracking-[0.12em] text-highlighted uppercase" data-testid="atrium-nav-panel-title">{{ shown.label }}</span>
         <UBadge :label="pageCount(shown)" color="neutral" variant="outline" class="ms-auto text-dimmed" />
       </header>
       <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">

@@ -103,8 +103,8 @@
       "_Skeleton-DKti8ILn.js"
     ]
   },
-  "_AtriumVersionBanner-mG2o9OgF.js": {
-    "file": "chunks/AtriumVersionBanner-mG2o9OgF.js",
+  "_AtriumVersionBanner-DTgSzz3P.js": {
+    "file": "chunks/AtriumVersionBanner-DTgSzz3P.js",
     "name": "AtriumVersionBanner",
     "imports": [
       "_DashboardPanel-DbdaB3o7.js",
@@ -292,7 +292,7 @@
     ]
   },
   "src/main.ts": {
-    "file": "atrium-JHcd_3r1.js",
+    "file": "atrium-BEFII7ww.js",
     "name": "atrium",
     "src": "src/main.ts",
     "isEntry": true,
@@ -300,7 +300,7 @@
       "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
-      "_AtriumVersionBanner-mG2o9OgF.js",
+      "_AtriumVersionBanner-DTgSzz3P.js",
       "_useAtriumIcon-BhNVwKJ0.js",
       "_pinia-C4-tzdo8.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
@@ -424,14 +424,14 @@
     ]
   },
   "src/shared/atrium.ts": {
-    "file": "shared/refactor-circus-atrium-C-iDWaah.js",
+    "file": "shared/refactor-circus-atrium-DEwEgUtp.js",
     "name": "shared/refactor-circus-atrium",
     "src": "src/shared/atrium.ts",
     "isEntry": true,
     "imports": [
       "_dist-BiG2Jq2W.js",
       "_useAtriumIcon-BhNVwKJ0.js",
-      "_AtriumVersionBanner-mG2o9OgF.js",
+      "_AtriumVersionBanner-DTgSzz3P.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_AtriumUnregistered-D_huC_NF.js",

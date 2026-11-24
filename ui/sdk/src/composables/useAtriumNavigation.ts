@@ -31,6 +31,12 @@ export interface AtriumNavGroup {
 /** The loose sections' rail entry. */
 export const ATRIUM_NAV_HOME = 'home'
 
+/** Atrium's own section (the dashboard), shown when no section holds `/`. */
+export const ATRIUM_NAV_CORE = 'atrium'
+
+/** The settings pages' section, shown on `/settings` and its panels. */
+export const ATRIUM_NAV_SETTINGS = 'settings'
+
 /** Whether `current` is `path` or a page beneath it (`/` only matches itself). */
 export function isUnderPath(current: string, path: string): boolean {
   const base = path.replace(/\/+$/, '')
@@ -52,7 +58,13 @@ export function isUnderPath(current: string, path: string): boolean {
  * `current` is the group holding the route: one of its pages, or a page
  * beneath one; failing that, the group whose pages all share the route's
  * first segment (a package's page the nav does not list, such as
- * `/showroom/flags`); failing that, the first group.
+ * `/showroom/flags`); failing that, null.
+ *
+ * `section` is the group the section panel shows for the route (D-096):
+ * `current`; else, on a settings page, the settings pages as `settings`;
+ * else the dashboard's group, the one holding `/` or, when none does,
+ * Atrium's own `atrium` (Home: the dashboard and Settings). Never a group
+ * that does not hold the route, so no module's pages stand beside Atrium's.
  */
 export function useAtriumNavigation(options: { live?: boolean } = {}) {
   const store = useAtriumShellStore()
@@ -171,5 +183,36 @@ export function useAtriumNavigation(options: { live?: boolean } = {}) {
 
   const hasSettings = computed(() => (store.shell?.settings.length ?? 0) > 0)
 
-  return { groups, current, page, hasSettings, holds, groupOf, flatten }
+  const link = (label: string, path: string, icon: string | null = null): AtriumNavEntry =>
+    entry({ label, icon, link: { path, external: false }, badge: null, live: null, children: [] })
+
+  const settings = computed<AtriumNavGroup | null>(() => hasSettings.value
+    ? {
+        key: ATRIUM_NAV_SETTINGS,
+        label: t('atrium.nav.settings'),
+        icon: 'i-lucide-settings',
+        items: [
+          link(t('atrium.settings.all'), '/settings', 'i-lucide-layout-grid'),
+          ...store.shell!.settings.map(panel => link(panel.label, `/settings/${encodeURIComponent(panel.key)}`, panel.icon))
+        ]
+      }
+    : null)
+
+  const home = computed<AtriumNavGroup>(() => groupOf('/') ?? {
+    key: ATRIUM_NAV_CORE,
+    label: t('atrium.nav.home'),
+    icon: 'i-lucide-house',
+    items: [
+      link(t('atrium.dashboard.title'), '/', 'i-lucide-layout-dashboard'),
+      ...(hasSettings.value ? [link(t('atrium.nav.settings'), '/settings', 'i-lucide-settings')] : [])
+    ]
+  })
+
+  const section = computed<AtriumNavGroup>(() =>
+    current.value
+    ?? (isUnderPath(route.path, '/settings') ? settings.value : null)
+    ?? home.value
+  )
+
+  return { groups, current, section, page, hasSettings, holds, groupOf, flatten }
 }

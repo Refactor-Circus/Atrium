@@ -63,7 +63,7 @@ describe('live nav items', () => {
   it('sets an item\'s badge from its live resolver', async () => {
     atrium.live('impex.active-runs', async () => ({ badge: 7 }))
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(AtriumNavigation, { route: '/impex/runs' })
     await settle()
 
     expect(wrapper.find('a[href="/impex/runs"]').text()).toContain('7')
@@ -78,7 +78,7 @@ describe('live nav items', () => {
     }))
     atrium.live('keen.history', history)
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(AtriumNavigation, { route: '/impex/runs' })
     await settle()
 
     expect(history).toHaveBeenCalledWith({ exclude: ['atrium'], sort: 90 })
@@ -89,7 +89,7 @@ describe('live nav items', () => {
   it('removes the badge when the resolver returns badge null', async () => {
     atrium.live('impex.active-runs', async () => ({ badge: null }))
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(AtriumNavigation, { route: '/impex/runs' })
     await settle()
 
     expect(wrapper.find('a[href="/impex/runs"]').text().trim()).toBe('Runs')
@@ -98,7 +98,7 @@ describe('live nav items', () => {
   it('keeps the item as sent when its resolver fails', async () => {
     atrium.live('impex.active-runs', async () => { throw new Error('Network down') })
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(AtriumNavigation, { route: '/impex/runs' })
     await settle()
 
     expect(wrapper.find('a[href="/impex/runs"]').exists()).toBe(true)
@@ -109,7 +109,7 @@ describe('live nav items', () => {
     const carts = vi.fn(async () => ({ badge: 99 }))
     atrium.live('polycart.open-carts', carts)
 
-    const wrapper = await mountSuspended(AtriumNavigation)
+    const wrapper = await mountSuspended(AtriumNavigation, { route: '/impex/runs' })
     await settle()
 
     expect(carts).not.toHaveBeenCalled()
