@@ -58,7 +58,7 @@ final class GuardianIntegration extends Integration
 
         return array_map(
             fn (array $item, int $index): NavItem => NavItem::make(self::trans($item[0]))
-                ->url($item[1])
+                ->path($item[1])
                 ->icon($item[2])
                 ->group($group)
                 ->sort(60 + $index),

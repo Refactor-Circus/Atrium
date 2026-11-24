@@ -205,20 +205,20 @@ describe('declarations', function (): void {
         $items = array_map(fn (NavItem $item): array => [
             'label' => $item->label,
             'icon' => $item->icon,
-            'url' => $item->url,
+            'path' => $item->path,
             'group' => $item->group,
         ], registeredGuardian()->navigation);
 
         expect($items)->toBe([
-            ['label' => 'My security', 'icon' => 'i-lucide-shield-user', 'url' => '/guardian/security', 'group' => 'Security'],
-            ['label' => 'Roles', 'icon' => 'i-lucide-shield-check', 'url' => '/guardian/roles', 'group' => 'Security'],
-            ['label' => 'Permissions', 'icon' => 'i-lucide-key-round', 'url' => '/guardian/permissions', 'group' => 'Security'],
-            ['label' => 'Role assignments', 'icon' => 'i-lucide-user-check', 'url' => '/guardian/role-assignments', 'group' => 'Security'],
-            ['label' => 'Security events', 'icon' => 'i-lucide-scroll-text', 'url' => '/guardian/security-events', 'group' => 'Security'],
-            ['label' => 'Lockouts', 'icon' => 'i-lucide-lock', 'url' => '/guardian/lockouts', 'group' => 'Security'],
-            ['label' => 'IP rules', 'icon' => 'i-lucide-network', 'url' => '/guardian/ip-rules', 'group' => 'Security'],
-            ['label' => 'Two-factor policies', 'icon' => 'i-lucide-smartphone', 'url' => '/guardian/two-factor-policies', 'group' => 'Security'],
-            ['label' => 'Password policy', 'icon' => 'i-lucide-rectangle-ellipsis', 'url' => '/guardian/password-policy', 'group' => 'Security'],
+            ['label' => 'My security', 'icon' => 'i-lucide-shield-user', 'path' => '/guardian/security', 'group' => 'Security'],
+            ['label' => 'Roles', 'icon' => 'i-lucide-shield-check', 'path' => '/guardian/roles', 'group' => 'Security'],
+            ['label' => 'Permissions', 'icon' => 'i-lucide-key-round', 'path' => '/guardian/permissions', 'group' => 'Security'],
+            ['label' => 'Role assignments', 'icon' => 'i-lucide-user-check', 'path' => '/guardian/role-assignments', 'group' => 'Security'],
+            ['label' => 'Security events', 'icon' => 'i-lucide-scroll-text', 'path' => '/guardian/security-events', 'group' => 'Security'],
+            ['label' => 'Lockouts', 'icon' => 'i-lucide-lock', 'path' => '/guardian/lockouts', 'group' => 'Security'],
+            ['label' => 'IP rules', 'icon' => 'i-lucide-network', 'path' => '/guardian/ip-rules', 'group' => 'Security'],
+            ['label' => 'Two-factor policies', 'icon' => 'i-lucide-smartphone', 'path' => '/guardian/two-factor-policies', 'group' => 'Security'],
+            ['label' => 'Password policy', 'icon' => 'i-lucide-rectangle-ellipsis', 'path' => '/guardian/password-policy', 'group' => 'Security'],
         ]);
     });
 

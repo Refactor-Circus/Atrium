@@ -32,7 +32,7 @@ final class PennantPlusIntegration extends Integration
     {
         return [
             NavItem::make(self::trans('features'))
-                ->url('/pennantplus/features')
+                ->path('/pennantplus/features')
                 ->icon('i-lucide-flag')
                 ->group(self::trans('group'))
                 ->sort(90),

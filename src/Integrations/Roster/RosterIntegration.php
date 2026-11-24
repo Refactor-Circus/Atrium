@@ -47,25 +47,25 @@ final class RosterIntegration extends Integration
         return [
             NavItem::make(__('atrium::integrations/roster.users'))
                 ->icon('i-lucide-users')
-                ->url('/roster/users')
+                ->path('/roster/users')
                 ->group($group)
                 ->sort(10),
 
             NavItem::make(__('atrium::integrations/roster.organizations'))
                 ->icon('i-lucide-building-2')
-                ->url('/roster/organizations')
+                ->path('/roster/organizations')
                 ->group($group)
                 ->sort(20),
 
             NavItem::make(__('atrium::integrations/roster.impersonations'))
                 ->icon('i-lucide-eye')
-                ->url('/roster/impersonations')
+                ->path('/roster/impersonations')
                 ->group($group)
                 ->sort(45),
 
             NavItem::make(__('atrium::integrations/roster.transfers'))
                 ->icon('i-lucide-arrow-up-down')
-                ->url('/roster/transfers')
+                ->path('/roster/transfers')
                 ->group($group)
                 ->sort(48),
         ];

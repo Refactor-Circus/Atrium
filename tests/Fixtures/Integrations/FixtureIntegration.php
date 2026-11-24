@@ -32,7 +32,7 @@ final class FixtureIntegration extends Integration
     {
         return [
             NavItem::make($this->label().' records')
-                ->url('/'.$this->key.'/records')
+                ->path('/'.$this->key.'/records')
                 ->icon('i-lucide-box')
                 ->group($this->label())
                 ->sort(50)

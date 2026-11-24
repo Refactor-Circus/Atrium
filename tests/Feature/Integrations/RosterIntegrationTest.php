@@ -143,17 +143,17 @@ describe('declarations', function (): void {
         $items = array_map(fn (NavItem $item): array => [
             'label' => $item->label,
             'icon' => $item->icon,
-            'url' => $item->url,
+            'path' => $item->path,
             'group' => $item->group,
             'sort' => $item->sort,
             'live' => $item->live,
         ], registeredRoster()->navigation);
 
         expect($items)->toBe([
-            ['label' => 'Users', 'icon' => 'i-lucide-users', 'url' => '/roster/users', 'group' => 'Roster', 'sort' => 10, 'live' => null],
-            ['label' => 'Organizations', 'icon' => 'i-lucide-building-2', 'url' => '/roster/organizations', 'group' => 'Roster', 'sort' => 20, 'live' => null],
-            ['label' => 'Impersonations', 'icon' => 'i-lucide-eye', 'url' => '/roster/impersonations', 'group' => 'Roster', 'sort' => 45, 'live' => null],
-            ['label' => 'Imports & exports', 'icon' => 'i-lucide-arrow-up-down', 'url' => '/roster/transfers', 'group' => 'Roster', 'sort' => 48, 'live' => null],
+            ['label' => 'Users', 'icon' => 'i-lucide-users', 'path' => '/roster/users', 'group' => 'Roster', 'sort' => 10, 'live' => null],
+            ['label' => 'Organizations', 'icon' => 'i-lucide-building-2', 'path' => '/roster/organizations', 'group' => 'Roster', 'sort' => 20, 'live' => null],
+            ['label' => 'Impersonations', 'icon' => 'i-lucide-eye', 'path' => '/roster/impersonations', 'group' => 'Roster', 'sort' => 45, 'live' => null],
+            ['label' => 'Imports & exports', 'icon' => 'i-lucide-arrow-up-down', 'path' => '/roster/transfers', 'group' => 'Roster', 'sort' => 48, 'live' => null],
         ]);
     });
 

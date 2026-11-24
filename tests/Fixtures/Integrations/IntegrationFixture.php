@@ -14,7 +14,6 @@ use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Settings\Http\Resources\SettingsPanelResource;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Http\Resources\WidgetDefinitionResource;
-use RefactorCircus\Atrium\Support\ClientPath;
 use ReflectionProperty;
 
 /**
@@ -179,7 +178,7 @@ final class IntegrationFixture
             'icon' => $item->icon,
             'group' => $item->group,
             'sort' => $item->sort,
-            'link' => ClientPath::for($item->resolveUrl()),
+            'link' => $item->link(),
             'badge' => $item->resolveBadge(),
             'live' => $item->live === null ? null : ['key' => $item->live['key'], 'options' => (object) $item->live['options']],
             'children' => array_map(self::navItem(...), array_values($item->children)),

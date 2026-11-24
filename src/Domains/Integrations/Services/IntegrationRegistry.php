@@ -13,6 +13,7 @@ use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\RegisteredIntegration;
 use RefactorCircus\Atrium\Domains\Integrations\Exceptions\InvalidIntegrationException;
+use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Services\NavigationRegistry;
 use RefactorCircus\Atrium\Domains\Settings\Services\SettingsRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
@@ -177,12 +178,15 @@ final class IntegrationRegistry
             $screens[$screen->key] = $screen;
         }
 
+        $navigation = $integration->navigation();
+        $this->assertSpaPaths($key, $navigation);
+
         $registered = new RegisteredIntegration(
             $key,
             $integration->label(),
             $apiBase,
             $features,
-            $integration->navigation(),
+            $navigation,
             $integration->widgets(),
             $integration->settings(),
             $integration->searchSources(),
@@ -191,10 +195,10 @@ final class IntegrationRegistry
 
         $active = fn (Request $request): bool => $this->features->active($registered, $request);
 
-        $navigation = $this->app->make(NavigationRegistry::class);
+        $navigationRegistry = $this->app->make(NavigationRegistry::class);
 
         foreach ($registered->navigation as $item) {
-            $navigation->add($item->authorize($active));
+            $navigationRegistry->add($item->authorize($active));
         }
 
         $widgets = $this->app->make(WidgetRegistry::class);
@@ -208,6 +212,29 @@ final class IntegrationRegistry
         }
 
         $this->integrations[$key] = $registered;
+    }
+
+    /**
+     * Every nav item an integration declares, children too, links to one of
+     * its package's SPA pages with `path()`, or nowhere (a `live()` parent):
+     * a `url()` would be read as a host URL and go external outside
+     * `atrium.client_path` (D-075).
+     *
+     * @param  array<int, NavItem>  $items
+     *
+     * @throws InvalidIntegrationException for an item linking anywhere but an SPA path under `/{key}/`
+     */
+    private function assertSpaPaths(string $key, array $items): void
+    {
+        foreach ($items as $item) {
+            $outside = $item->path !== null && ! str_starts_with($item->path, '/'.$key.'/');
+
+            if ($outside || $item->url !== null || $item->route !== null) {
+                throw InvalidIntegrationException::navigationOutsidePackage($key, $item);
+            }
+
+            $this->assertSpaPaths($key, $item->children);
+        }
     }
 
     /**

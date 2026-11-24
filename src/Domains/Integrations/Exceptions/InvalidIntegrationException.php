@@ -6,6 +6,7 @@ namespace RefactorCircus\Atrium\Domains\Integrations\Exceptions;
 
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\Integration;
 use RefactorCircus\Atrium\Domains\Integrations\Data\ScreenDeclaration;
+use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Exceptions\AtriumException;
 
 /**
@@ -34,6 +35,16 @@ final class InvalidIntegrationException extends AtriumException
             $screen->key,
             $screen->path,
             $key,
+            $key,
+        ));
+    }
+
+    public static function navigationOutsidePackage(string $key, NavItem $item): self
+    {
+        return new self(sprintf(
+            'The [%s] integration declares the nav item [%s] linking outside its SPA paths under [/%s/]; integration links are pages of the SPA, declared with path(), never url() or route().',
+            $key,
+            $item->label,
             $key,
         ));
     }

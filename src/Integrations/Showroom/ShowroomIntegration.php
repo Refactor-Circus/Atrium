@@ -46,7 +46,7 @@ final class ShowroomIntegration extends Integration
         $group = $this->trans('atrium::integrations/showroom.nav.group');
 
         $item = fn (string $key, string $path, string $icon, int $sort): NavItem => NavItem::make($this->trans($key))
-            ->url('/showroom/'.$path)
+            ->path('/showroom/'.$path)
             ->icon($icon)
             ->group($group)
             ->sort($sort);

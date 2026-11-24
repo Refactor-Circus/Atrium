@@ -32,12 +32,12 @@ final class CortexIntegration extends Integration
         $group = self::trans('label');
 
         return [
-            NavItem::make(self::trans('virtual_agents'))->url('/cortex/virtual-agents')->icon('i-lucide-sparkles')->group($group)->sort(10),
-            NavItem::make(self::trans('concrete_agents'))->url('/cortex/concrete-agents')->icon('i-lucide-cpu')->group($group)->sort(20),
-            NavItem::make(self::trans('run_agent'))->url('/cortex/run')->icon('i-lucide-play')->group($group)->sort(30),
-            NavItem::make(self::trans('tools'))->url('/cortex/tools')->icon('i-lucide-wrench')->group($group)->sort(40),
-            NavItem::make(self::trans('servers'))->url('/cortex/servers')->icon('i-lucide-server')->group($group)->sort(50),
-            NavItem::make(self::trans('redirect_domains'))->url('/cortex/redirect-domains')->icon('i-lucide-globe')->group($group)->sort(60),
+            NavItem::make(self::trans('virtual_agents'))->path('/cortex/virtual-agents')->icon('i-lucide-sparkles')->group($group)->sort(10),
+            NavItem::make(self::trans('concrete_agents'))->path('/cortex/concrete-agents')->icon('i-lucide-cpu')->group($group)->sort(20),
+            NavItem::make(self::trans('run_agent'))->path('/cortex/run')->icon('i-lucide-play')->group($group)->sort(30),
+            NavItem::make(self::trans('tools'))->path('/cortex/tools')->icon('i-lucide-wrench')->group($group)->sort(40),
+            NavItem::make(self::trans('servers'))->path('/cortex/servers')->icon('i-lucide-server')->group($group)->sort(50),
+            NavItem::make(self::trans('redirect_domains'))->path('/cortex/redirect-domains')->icon('i-lucide-globe')->group($group)->sort(60),
         ];
     }
 

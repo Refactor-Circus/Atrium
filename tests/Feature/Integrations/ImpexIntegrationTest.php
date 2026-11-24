@@ -17,7 +17,6 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
 use RefactorCircus\Atrium\Integrations\Impex\ImpexFeature;
 use RefactorCircus\Atrium\Integrations\Impex\ImpexIntegration;
-use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 
 /*
@@ -129,7 +128,7 @@ it('declares the five v1 nav items, Runs carrying the impex.active-runs live key
 
     expect(array_map(fn (NavItem $item): array => [
         'label' => $item->label,
-        'link' => ClientPath::for($item->resolveUrl()),
+        'link' => $item->link(),
         'icon' => $item->icon,
         'group' => $item->group,
         'sort' => $item->sort,

@@ -127,6 +127,8 @@ Keep the layer and the Composer package on the same release. The shell sends `ap
 
 `atrium.client_path` (default `/`) is the base path the host serves the SPA from, and it must match it. Navigation items and search results are sent as `link: {path, external}`: a URL on your application's host (`app.url`) under `client_path` becomes a path inside the SPA, and any other http(s) URL is external (opened with `rel="noopener noreferrer"`). Serving the SPA from `/admin`? Set `'client_path' => '/admin'`. A link that is neither an http(s) URL nor a relative path is sent as `link: null`.
 
+A nav item that links to a page of the SPA declares it with `path()` (`NavItem::make('Invoices')->path('/billing/invoices')`): the path is sent as `{path: '/billing/invoices', external: false}` whatever `client_path` is, and the layer's router puts it under the SPA's base URL. `url()` is a URL the host serves: a relative `url('/billing/invoices')` with `client_path` `/admin` is outside the SPA and sent as external. The suite integrations' nav items all use `path()`.
+
 ### Registering components
 
 Everything a package shows is a Vue component the app registers under the key its PHP side declares: the widget, screen extension or settings panel key, unless the PHP definition names another with `->component('...')`. Register them, and your auth adapter, in a Nuxt plugin:
@@ -201,7 +203,7 @@ class BillingPlugin extends Plugin
     {
         return [
             NavItem::make('Invoices')
-                ->url('/billing/invoices')        // a page of the SPA
+                ->path('/billing/invoices')       // a page of the SPA
                 ->icon('i-lucide-receipt')
                 ->group('Billing')
                 ->badge(fn () => Invoice::unpaid()->count()),
@@ -768,12 +770,12 @@ class BillingPlugin extends Plugin
     {
         return [
             NavItem::make('Invoices')
-                ->url('/billing/invoices')
+                ->path('/billing/invoices')
                 ->can('billing.invoices.view')            // a permission
                 ->feature('billing-v2')                   // a feature flag
                 ->authorize(fn (Request $request) => ...) // anything else
                 ->children([
-                    NavItem::make('Refunds')->url('/billing/refunds')->can('billing.refunds.view'),
+                    NavItem::make('Refunds')->path('/billing/refunds')->can('billing.refunds.view'),
                 ]),
         ];
     }

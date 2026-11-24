@@ -13,7 +13,6 @@ use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
-use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
 
 /**
@@ -23,8 +22,9 @@ use RefactorCircus\Keystone\Http\Resources\JsonResource;
  * query length.
  *
  * Which navigation item is active is the layer's to work out from its own
- * route, so it is not sent. Every link goes out as ClientPath's
- * `{path, external}`, or null for a URL ClientPath refuses. An item the
+ * route, so it is not sent. Every link goes out as `{path, external}`: an
+ * item's SPA path (`NavItem::path()`) as it is, any other URL as ClientPath
+ * makes it, or null for a URL ClientPath refuses. An item the
  * layer completes from a package API carries its `live` resolver key.
  *
  * `integrations` lists every registered suite integration, in key order,
@@ -241,7 +241,7 @@ final class ShellResource extends JsonResource
             'label' => $section->label,
             'icon' => $section->icon,
             'grouped' => $section->grouped,
-            'link' => ClientPath::for($section->url()),
+            'link' => $section->link(),
             'items' => array_map($this->item(...), $section->items),
         ];
     }
@@ -254,7 +254,7 @@ final class ShellResource extends JsonResource
         return [
             'label' => $item->label,
             'icon' => $item->icon,
-            'link' => ClientPath::for($item->resolveUrl()),
+            'link' => $item->link(),
             'badge' => $item->resolveBadge(),
             'live' => $item->live === null ? null : ['key' => $item->live['key'], 'options' => (object) $item->live['options']],
             'children' => array_map($this->item(...), array_values($item->children)),

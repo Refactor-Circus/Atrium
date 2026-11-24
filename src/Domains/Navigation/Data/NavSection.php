@@ -51,4 +51,14 @@ final class NavSection
     {
         return ($this->items[0] ?? null)?->resolveUrl();
     }
+
+    /**
+     * The link the rail entry follows: the first item's.
+     *
+     * @return array{path: string, external: bool}|null
+     */
+    public function link(): ?array
+    {
+        return ($this->items[0] ?? null)?->link();
+    }
 }

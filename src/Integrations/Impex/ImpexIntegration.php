@@ -38,32 +38,32 @@ final class ImpexIntegration extends Integration
 
         return [
             NavItem::make(__('atrium::integrations/impex.nav.runs'))
-                ->url('/impex/runs')
+                ->path('/impex/runs')
                 ->icon('i-lucide-circle-play')
                 ->group($group)
                 ->sort(10)
                 ->live('impex.active-runs'),
 
             NavItem::make(__('atrium::integrations/impex.nav.messages'))
-                ->url('/impex/messages')
+                ->path('/impex/messages')
                 ->icon('i-lucide-inbox')
                 ->group($group)
                 ->sort(20),
 
             NavItem::make(__('atrium::integrations/impex.nav.flows'))
-                ->url('/impex/flows')
+                ->path('/impex/flows')
                 ->icon('i-lucide-list-ordered')
                 ->group($group)
                 ->sort(30),
 
             NavItem::make(__('atrium::integrations/impex.nav.channels'))
-                ->url('/impex/channels')
+                ->path('/impex/channels')
                 ->icon('i-lucide-radio-tower')
                 ->group($group)
                 ->sort(40),
 
             NavItem::make(__('atrium::integrations/impex.nav.subscriptions'))
-                ->url('/impex/subscriptions')
+                ->path('/impex/subscriptions')
                 ->icon('i-lucide-rss')
                 ->group($group)
                 ->sort(50),

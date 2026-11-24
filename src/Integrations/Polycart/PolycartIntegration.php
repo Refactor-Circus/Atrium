@@ -43,13 +43,13 @@ final class PolycartIntegration extends Integration
     {
         return [
             NavItem::make(self::trans('carts'))
-                ->url('/polycart/carts')
+                ->path('/polycart/carts')
                 ->icon('i-lucide-shopping-cart')
                 ->group(self::trans('group'))
                 ->sort(30),
 
             NavItem::make(self::trans('types'))
-                ->url('/polycart/types')
+                ->path('/polycart/types')
                 ->icon('i-lucide-layers')
                 ->group(self::trans('group'))
                 ->sort(31),

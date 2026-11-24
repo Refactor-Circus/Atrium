@@ -543,3 +543,14 @@
 - Rationale: AC 97 names the two default screens; keying off the subject type keeps the hook generic for a host that places the tab elsewhere, and refusing an unresolved scope is the conservative path D-048 sets.
 - Date: 2026-11-23
 - Raised by: implement (group 36); default chosen because no user was available
+
+## D-075: How do integration links stay inside the SPA when it is served under a `client_path`?
+- Choice:
+  - Integration-declared links are SPA paths, not host URLs. `NavItem` gains `path('/showroom/products')`, which clears `url()`/`route()` (and they clear it). `NavItem::link()` sends a path as `{path, external: false}` untouched; any other item goes through `ClientPath::for(resolveUrl())` as before. `NavSection::link()` is its first item's. `ShellResource` sends both, and the integration fixtures use `link()`.
+  - `resolveUrl()` of a path item is the path under `atrium.client_path` read at resolve time (`ClientPath::url()`: `/admin/showroom/products`), so `isActive()`, the registry's "parent with no link" check and a `client_path` changed after boot all stay right.
+  - `path()` checks the value with `ClientPath::assertSpaPath()` (one leading `/`, never `//` or `/\`, no whitespace, control characters or backslash) and throws `InvalidArgumentException` otherwise.
+  - Every suite integration's nav uses `path()`. `IntegrationRegistry` refuses (`InvalidIntegrationException`, at registration) an integration nav item, or child, declared with `url()` or `route()` or with a path outside `/{key}/`; an item with no link (Keen's History, a `live()` parent) stays allowed.
+  - Host-declared `url()`/`route()` keep their documented ClientPath behaviour; the README's plugin examples move to `path()` for SPA pages. `SearchResult` keeps its URL: no integration sends server-side search results (their sources run in the layer and already link `{path, external: false}`), and the hooks (`impex.run-link` and the others) send no links; the layer builds `/impex/runs/:id` and its other paths as router paths, which NuxtLink puts under `app.baseURL`. The layer needed no change.
+- Rationale: With `client_path` `/admin`, integrations' relative `url('/showroom/products')` reached ClientPath as a host path outside the SPA and went out external, so the browser opened Showroom's JSON API. Declaring SPA pages as what they are fixes it at the source for every consumer of the item, rather than prefixing at boot (stale on config changes) or teaching ClientPath to guess.
+- Date: 2026-11-23
+- Raised by: bug report (Atrium under `/admin` on the test host); default chosen because no user was available

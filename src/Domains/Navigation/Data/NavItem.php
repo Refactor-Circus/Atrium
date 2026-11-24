@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Access\Concerns\Gated;
 use RefactorCircus\Atrium\Exceptions\UnserializableDataException;
+use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Atrium\Support\Iconify;
 use RefactorCircus\Atrium\Support\JsonData;
 
@@ -19,6 +20,12 @@ class NavItem
     use Gated;
 
     public private(set) ?string $url = null;
+
+    /**
+     * The SPA path this item links to (`/showroom/products`), when it was
+     * declared with `path()`: a page of the layer, below `atrium.client_path`.
+     */
+    public private(set) ?string $path = null;
 
     /** The route name this item points at, when it was built from a route. */
     public private(set) ?string $route = null;
@@ -59,9 +66,30 @@ class NavItem
         return new static($label);
     }
 
+    /**
+     * Link to a URL the host app serves: absolute, or a path from the host's
+     * root, which the SPA follows only under `atrium.client_path`.
+     */
     public function url(string $url): static
     {
         $this->url = $url;
+        $this->route = null;
+        $this->path = null;
+
+        return $this;
+    }
+
+    /**
+     * Link to a page of the SPA (`/showroom/products`), wherever the host
+     * serves it: the path is sent as it is, never external, and its host URL
+     * is the path under `atrium.client_path` at the time it is resolved.
+     *
+     * @throws InvalidArgumentException for a path that does not start with one `/`, or holds a backslash, whitespace or control character
+     */
+    public function path(string $path): static
+    {
+        $this->path = ClientPath::assertSpaPath($path, "Nav item [{$this->label}]");
+        $this->url = null;
         $this->route = null;
 
         return $this;
@@ -75,6 +103,7 @@ class NavItem
         $this->route = $name;
         $this->routeParameters = $parameters;
         $this->url = null;
+        $this->path = null;
 
         return $this;
     }
@@ -150,6 +179,10 @@ class NavItem
 
     public function resolveUrl(): ?string
     {
+        if ($this->path !== null) {
+            return ClientPath::url($this->path);
+        }
+
         if ($this->url !== null) {
             return $this->url;
         }
@@ -159,6 +192,21 @@ class NavItem
         }
 
         return route($this->route, $this->routeParameters);
+    }
+
+    /**
+     * The link the SPA follows: an SPA path as it is, otherwise the resolved
+     * URL through ClientPath, or null for none or one ClientPath refuses.
+     *
+     * @return array{path: string, external: bool}|null
+     */
+    public function link(): ?array
+    {
+        if ($this->path !== null) {
+            return ['path' => $this->path, 'external' => false];
+        }
+
+        return ClientPath::for($this->resolveUrl());
     }
 
     public function resolveBadge(): string|int|null

@@ -37,7 +37,7 @@ final class KeenIntegration extends Integration
     {
         $items = [
             NavItem::make($this->trans('atrium::integrations/keen.audit_log'))
-                ->url('/keen/entries')
+                ->path('/keen/entries')
                 ->icon('i-lucide-clipboard-list')
                 ->group($this->label())
                 ->sort(90),

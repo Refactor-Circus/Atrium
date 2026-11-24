@@ -29,7 +29,8 @@ interface Integration
     public function label(): string;
 
     /**
-     * Nav items, linking to the integration's layer pages (`/{pkg}/...`).
+     * Nav items, linking to the integration's layer pages with `NavItem::path('/{pkg}/...')`
+     * (never `url()` or `route()`, which name host URLs; D-075).
      * Atrium computes no badge for them; an item whose badge or children
      * come from the package's API names a layer resolver with `live()`.
      *

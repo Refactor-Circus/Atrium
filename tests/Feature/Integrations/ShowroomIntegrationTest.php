@@ -19,7 +19,6 @@ use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
 use RefactorCircus\Atrium\Integrations\Showroom\ShowroomFeature;
 use RefactorCircus\Atrium\Integrations\Showroom\ShowroomIntegration;
-use RefactorCircus\Atrium\Support\ClientPath;
 use RefactorCircus\Atrium\Tests\Fixtures\Integrations\IntegrationFixture;
 use Workbench\App\Models\User;
 
@@ -140,7 +139,7 @@ it('declares the eleven v1 nav items in the Catalog group, with no badge', funct
 
     expect(array_map(fn (NavItem $item): array => [
         'label' => $item->label,
-        'link' => ClientPath::for($item->resolveUrl()),
+        'link' => $item->link(),
         'icon' => $item->icon,
         'group' => $item->group,
         'sort' => $item->sort,

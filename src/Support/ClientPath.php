@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Support;
 
+use InvalidArgumentException;
+
 /**
  * Turns a URL the host app generated (a nav item's, a search result's) into
  * the link the SPA follows: `{path, external}`.
@@ -18,6 +20,11 @@ namespace RefactorCircus\Atrium\Support;
  *   `data:`), protocol-relative `//host` forms, backslashes, whitespace or
  *   control characters around or inside the scheme, mixed-case schemes,
  *   `http:host`, userinfo URLs and bare relative paths. It never throws.
+ *
+ * A page of the SPA declared as such (`NavItem::path()`, every suite
+ * integration's nav) is no host URL and never goes through `for()`: it is
+ * sent as `{path, external: false}`, and `url()` gives its host URL under
+ * `client_path` where one is needed.
  */
 final class ClientPath
 {
@@ -49,6 +56,35 @@ final class ClientPath
         $clientPath = config('atrium.client_path', '/');
 
         return new self(is_string($host) ? $host : null, is_string($clientPath) ? $clientPath : '/')->link($url);
+    }
+
+    /**
+     * The host path of an SPA path, under `atrium.client_path` as it is
+     * configured now: `/showroom/products` is `/admin/showroom/products`
+     * with `client_path` `/admin`.
+     */
+    public static function url(string $path): string
+    {
+        $clientPath = config('atrium.client_path', '/');
+        $base = trim(is_string($clientPath) ? $clientPath : '/', '/');
+
+        return $base === '' ? $path : '/'.$base.$path;
+    }
+
+    /**
+     * Check a path is one the SPA routes to: it starts with one `/` (never
+     * `//host` or `/\host`) and holds no backslash, whitespace or control
+     * character.
+     *
+     * @throws InvalidArgumentException for any other path
+     */
+    public static function assertSpaPath(string $path, string $subject): string
+    {
+        if (! str_starts_with($path, '/') || str_starts_with($path, '//') || preg_match('/[\s\x00-\x1F\x7F\\\\]/', $path) === 1) {
+            throw new InvalidArgumentException("{$subject} has the path [{$path}]; it must be a path inside the SPA, starting with one /, such as /showroom/products.");
+        }
+
+        return $path;
     }
 
     /**
