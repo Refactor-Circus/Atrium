@@ -688,13 +688,13 @@ Each theme also carries a `layout` (`sidebar` or `top`) for a layer that lays th
 
 ### The look: command deck
 
-The bundled layer is a compact, dark-first admin surface (D-077): 13px UI text, 28px controls, 34px table rows, hairline borders, uppercase micro-labels and monospaced figures for IDs, counts and times. Light mode keeps the same structure on a cool off-white. Motion is short (160ms) and off when the user asks for reduced motion.
+The bundled layer is a compact, dark-first flight-deck interface (D-077, D-078): 13px UI text, 28px controls, 34px table rows, glass panels with corner brackets over a moving dot-matrix deck, a luminous navigation spine, statuses as glowing dots, monospaced figures for IDs, counts and times, and a status strip with each integration's live state, the API's latency and a UTC clock. Light mode ("lab white") keeps the same structure on paper panels with ink hairlines. Motion is short and stops when the user asks for reduced motion.
 
 - **Shell.** A slim rail of sections (one per navigation group, labelled on hover and focus) beside a panel listing the chosen section's pages; the top bar shows where you are, ⌘K, the API's live status and version, the theme switcher and colour mode. The panel collapses to the rail alone, whose sections then open their pages in a flyout (remembered per browser). Below `lg` the navigation opens as a drawer from the top bar.
 - **⌘K is the way around.** The palette lists the pages you visited lately, every page in the navigation, the search results and the shell's actions (colour mode, each theme).
 - **Fonts.** Geist and Geist Mono, bundled from `@fontsource-variable` (no font CDN). Your stylesheet overrides them with `--font-sans`, `--font-mono` and `--default-font-family`, on `:root` or `:root[data-atrium-theme="…"]`.
 - **Nuxt UI defaults** come from the layer's `app.config.ts` (`ui`: control sizes, panel padding, badges, tables). Override any of them in your own `app.config.ts`.
-- **Shared blocks** for packages and hosts: `<AtriumPageHeader>`, `<AtriumStat>`, `<AtriumState>` (empty, error, locked), `<AtriumErrorCard>` and `<AtriumNoAccess>`; the class `atrium-empty` for an empty list; and pages' own `<h1>`, `<h2>`, tables and native selects pick up the deck's styles inside the shell.
+- **Shared blocks** for packages and hosts: `<AtriumPageHeader>`, `<AtriumStat>` (with `delta` and a `series` sparkline), `<AtriumState>` (empty, error, locked), `<AtriumErrorCard>` and `<AtriumNoAccess>` (terminal readouts) and `<AtriumStatusBar>`; the classes `atrium-empty` for an empty list and `atrium-querybar` for a filter form (a command line with inline tokens); and pages' own `<h1>`, `<h2>`, tables, native selects and coloured badges pick up the deck's styles inside the shell.
 
 ```php
 // config/atrium.php

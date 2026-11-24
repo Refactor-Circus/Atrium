@@ -1319,3 +1319,27 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+/* The top bar's lower edge carries a primary light from the left. */
+.atrium-topbar::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ui-primary), color-mix(in oklab, var(--ui-primary) 30%, transparent) 25%, transparent 60%);
+  box-shadow: 0 0 10px var(--atrium-glow-soft);
+  pointer-events: none;
+}
+
+/* A module tile (settings): a lit icon socket, its name and code. */
+.atrium-module-icon {
+  border-radius: var(--ui-radius);
+  color: var(--ui-primary);
+  background: radial-gradient(circle at 50% 120%, color-mix(in oklab, var(--ui-primary) 30%, transparent), transparent 70%), var(--atrium-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent);
+}
+
+.atrium-module:hover .atrium-module-icon {
+  box-shadow: inset 0 0 0 1px var(--ui-primary), 0 0 16px -4px var(--atrium-glow);
+}
