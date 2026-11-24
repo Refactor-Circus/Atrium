@@ -1593,3 +1593,11 @@ Screenshots of the playground before the redesign (1440x900 and 390x844, light a
 - **⌘K finds records, not pages.** The palette only queried search sources; jumping to "Role assignments" meant opening Security in the accordion.
 - **No identity.** Stock Nuxt UI greys on Public Sans; light and dark are inversions of each other; nothing on screen reads as Atrium or as the host's brand beyond a button colour.
 - **States are afterthoughts.** An empty list is a grey sentence; a failure a red-bordered box; a 403 a grey box; all different sizes and paddings from page to page.
+
+## UI redesign: the command deck (D-077)
+
+- Files: `nuxt/layer/app/assets/css/atrium.css` (tokens, bridge, shell and content styles), `app.config.ts` (Nuxt UI defaults), `layouts/default.vue` and `public.vue`, new `components/Atrium/{Topbar,NavList,PageHeader,Stat,State}.vue`, rewritten `Navigation.vue`, `Search.vue`, `ErrorCard.vue`, `NoAccess.vue`, new `composables/useAtriumNavigation.ts` and `useAtriumPalette.ts`, `useAtriumTheme.ts` (`--atrium-token-*`), the `en` strings, `@fontsource-variable/geist` and `geist-mono` 5.3.0; the page sweep (52 empty states to `atrium-empty`, oversized gaps, `<AtriumStat>` in Impex's message volume widget); the design bench (`workbench/app/Atrium/DemoSuite.php`, `nuxt/playground/server/routes/_suite/[...path].ts`).
+- Tests: `navigation.test.ts` rewritten for the rail and panel (same coverage: links, badges, external and unsafe links, settings, route-driven section, nested items, package pages the nav does not list, loose sections, collapsed), `theme-bridge.test.ts` and `theme.test.ts` for `--atrium-token-*` and the no-cycle rule, new `shell.test.ts` (navigation model, top bar, ⌘K groups and recent pages, state, stat and header blocks).
+- Screenshots: before and after, 1440x900 and 390x844, light and dark, default and the `signal` brand theme, in the session scratchpad (`shots/before`, `shots/final`).
+- Gates: `composer test` passed (PHPStan 0 errors, Pint, type coverage 100%, Pest 1500 tests: 1492 passed, 8 skipped); `composer test:nuxt` passed (typecheck, build, Vitest 144 files / 1384 tests, consumer build with the icon check).
+- The test host's UI was rebuilt with `bin/atrium-ui-build`; its config needed no change (its Calibre font still applies under the SECLOCK theme).
