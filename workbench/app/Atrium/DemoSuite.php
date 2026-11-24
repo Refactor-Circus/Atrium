@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Workbench\App\Atrium;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Env;
 use RefactorCircus\Atrium\Domains\Integrations\Contracts\InstalledPackages;
 use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Facades\Atrium;
@@ -32,7 +33,7 @@ final class DemoSuite implements InstalledPackages
     public static function enabled(Application $app): bool
     {
         return ! $app->runningInConsole()
-            && filter_var(env('ATRIUM_WORKBENCH_SUITE', true), FILTER_VALIDATE_BOOLEAN);
+            && filter_var(Env::get('ATRIUM_WORKBENCH_SUITE', true), FILTER_VALIDATE_BOOLEAN);
     }
 
     public static function register(Application $app): void

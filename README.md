@@ -680,9 +680,21 @@ Atrium ships six themes, sent in the shell with their design tokens. People pick
 | **Midnight** | Violet on deep indigo, the roundest corners |
 | **Ledger** | Monochrome, near-square corners |
 
-The layer applies a theme's tokens to Nuxt UI: `surface` is the background of cards, menus and the sidebar (`--ui-bg`), `surface-alt` the muted and elevated backgrounds, `canvas` the page behind the content, `on-surface` and `on-surface-strong` the text, `outline` and `outline-strong` the borders, and `primary`, `secondary`, `info`, `success`, `warning` and `danger` Nuxt UI's colours of the same names (`danger` is `error`). Dark mode reads the `-dark` tokens. A token a theme leaves out keeps Nuxt UI's default.
+The layer applies a theme's tokens to Nuxt UI: `surface` is the background of panels, menus, fields and the navigation rail (`--ui-bg`), `surface-alt` the muted and elevated backgrounds, `canvas` the deck behind the panels, `on-surface` and `on-surface-strong` the text, `outline` and `outline-strong` the borders, and `primary`, `secondary`, `info`, `success`, `warning` and `danger` Nuxt UI's colours of the same names (`danger` is `error`). Dark mode reads the `-dark` tokens. A token a theme leaves out keeps the layer's default. The layer sets each token on `:root` both as sent (`--color-primary`, for your own CSS) and as `--atrium-token-primary`, which its stylesheet reads.
 
-Each theme also carries a `layout` (`sidebar` or `top`) for a layer that lays the shell out by theme; the bundled layer uses its sidebar layout for every theme.
+The primary colour is the shell's one accent: the lit edge of the current section and page, focus rings, the glow of primary buttons. A brand theme (`primary`, the neutrals and a `radius`) is enough to make the shell the brand's.
+
+Each theme also carries a `layout` (`sidebar` or `top`) for a layer that lays the shell out by theme; the bundled layer uses its rail and section panel for every theme.
+
+### The look: command deck
+
+The bundled layer is a compact, dark-first admin surface (D-077): 13px UI text, 28px controls, 34px table rows, hairline borders, uppercase micro-labels and monospaced figures for IDs, counts and times. Light mode keeps the same structure on a cool off-white. Motion is short (160ms) and off when the user asks for reduced motion.
+
+- **Shell.** A slim rail of sections (one per navigation group, labelled on hover and focus) beside a panel listing the chosen section's pages; the top bar shows where you are, ⌘K, the API's live status and version, the theme switcher and colour mode. The panel collapses to the rail alone, whose sections then open their pages in a flyout (remembered per browser). Below `lg` the navigation opens as a drawer from the top bar.
+- **⌘K is the way around.** The palette lists the pages you visited lately, every page in the navigation, the search results and the shell's actions (colour mode, each theme).
+- **Fonts.** Geist and Geist Mono, bundled from `@fontsource-variable` (no font CDN). Your stylesheet overrides them with `--font-sans`, `--font-mono` and `--default-font-family`, on `:root` or `:root[data-atrium-theme="…"]`.
+- **Nuxt UI defaults** come from the layer's `app.config.ts` (`ui`: control sizes, panel padding, badges, tables). Override any of them in your own `app.config.ts`.
+- **Shared blocks** for packages and hosts: `<AtriumPageHeader>`, `<AtriumStat>`, `<AtriumState>` (empty, error, locked), `<AtriumErrorCard>` and `<AtriumNoAccess>`; the class `atrium-empty` for an empty list; and pages' own `<h1>`, `<h2>`, tables and native selects pick up the deck's styles inside the shell.
 
 ```php
 // config/atrium.php
@@ -730,7 +742,7 @@ The switcher shows only when there is more than one theme and the feature named 
 
 ## Navigation
 
-Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`. The layer's sidebar lists the loose pages first, then each group as its own collapsible section, open while the current page is inside it.
+Navigation is sent in the shell as sections: pages outside any group (the app's own) first, then one section per group, such as each package's. Each item has a `label`, an `icon`, a `link` (`{path, external}`, see [`client_path`](#client_path)), a `badge` and its `children`. The layer's rail shows the loose pages together as Home first, then one entry per group; the section panel beside it lists the pages of the section holding the current page (or of the one chosen on the rail), and ⌘K lists every page.
 
 Items join a section with `NavItem::group('Billing')`. Describe the group to give its section an icon and a place in the list; otherwise it uses its first page's icon and sorts by its first page:
 
