@@ -10,6 +10,7 @@ Route::redirect('/', '/atrium');
 
 Route::get('login', fn () => redirect('/_workbench'))->name('login');
 
-// WORKBENCH ONLY: every suite package's API, answered from its vendored
-// openapi.json (DemoSuite points the integrations here).
+// WORKBENCH ONLY: every suite package's API, answered from the openapi.json
+// of its sibling checkout under ATRIUM_SUITE_PATH (DemoSuite points the
+// integrations here).
 Route::any('_suite/{path}', SuiteStandIn::class)->where('path', '.*');

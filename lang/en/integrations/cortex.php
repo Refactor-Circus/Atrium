@@ -6,7 +6,7 @@ declare(strict_types=1);
  * The server-side labels of the Cortex integration: its nav items, settings
  * panel and search source, ported from Cortex v1's `cortex::cortex` lines.
  * The module's own strings for the Cortex pages live in
- * `ui/modules/cortex/src/locales/cortex.en.json`.
+ * refactor-circus/cortex's `atrium/src/locales/cortex.en.json`.
  */
 
 return [

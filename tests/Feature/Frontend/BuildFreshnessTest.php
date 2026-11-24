@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /*
  * The committed front-end builds match their sources (D-085): Atrium's own
- * (`dist/`), each staged module's and the workbench's. Each build writes
+ * (`dist/`) and the workbench module's. The suite packages build and check
+ * their own modules (D-089). Each build writes
  * `build.json` with the SHA-256 of the files it was built from; this
  * recomputes it as the preset does (`hashInputs()` in ui/sdk/vite), so a
  * source changed without a rebuild fails here, with no Node needed. CI
@@ -63,17 +64,13 @@ function sourcesHash(string $root, array $inputs): string
 function committedBuilds(): array
 {
     $root = dirname(__DIR__, 3);
-    $builds = ['atrium' => [$root.'/dist/build.json'], 'workbench' => [$root.'/ui/workbench/dist/atrium/build.json']];
 
-    foreach (glob($root.'/ui/modules/*/dist/atrium/build.json') ?: [] as $file) {
-        $builds[basename(dirname($file, 3))] = [$file];
-    }
-
-    return $builds;
+    return ['atrium' => [$root.'/dist/build.json'], 'workbench' => [$root.'/ui/workbench/dist/atrium/build.json']];
 }
 
-it('has a build for Atrium, the workbench and each of the eight staged modules', function (): void {
-    expect(array_keys(committedBuilds()))->toBe(['atrium', 'workbench', 'cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom']);
+it('has a build for Atrium and the workbench, and stages no suite module (D-089)', function (): void {
+    expect(array_map(fn (array $file): bool => is_file($file[0]), committedBuilds()))->toBe(['atrium' => true, 'workbench' => true])
+        ->and(file_exists(dirname(__DIR__, 3).'/ui/modules'))->toBeFalse();
 });
 
 it('was built from the sources as they are now', function (string $file): void {

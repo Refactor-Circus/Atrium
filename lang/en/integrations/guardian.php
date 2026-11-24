@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * The server-side labels of the Guardian integration (AC 82): its nav group
  * and items. The pages' own strings live in its module:
- * `ui/modules/guardian/src/locales/guardian*.en.json`.
+ * refactor-circus/guardian's `atrium/src/locales/guardian*.en.json`.
  */
 
 return [

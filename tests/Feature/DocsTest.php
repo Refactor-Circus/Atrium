@@ -241,7 +241,7 @@ it('has an upgrade note for the history removal pointing to Keen', function (): 
 /*
  * The suite integrations (AC 76): the README's "Suite integrations" section
  * covers detection, the API base, Pennant flags, the hook keys, the module
- * routes, the vendored clients, Atrium's own OpenAPI and client, and the
+ * routes, each package's client, Atrium's own OpenAPI and client, and the
  * parity departures; the agent docs and the local standard describe them.
  */
 
@@ -307,15 +307,44 @@ it('documents the screen route, the unavailable page and page overrides', functi
         ->toContain('same path');
 });
 
-it('documents the vendored clients and sync:clients', function (): void {
+it("documents each package's own module and client (D-089)", function (): void {
     expect(docsSection(docsPath('README.md'), 'Suite integrations'))
-        ->toContain('pnpm -C ui sync:clients')
-        ->toContain('ui/modules/{pkg}/client/')
-        ->toContain('ATRIUM_SUITE_PATH')
-        ->toContain('openapi.sha256')
+        ->toContain('extra.atrium')
+        ->toContain('atrium/src/routes.ts')
         ->toContain('schema.d.ts')
         ->toContain('useAtriumIntegration(')
-        ->toContain('VendoredClientsTest');
+        ->toContain('atriumClientOptions(')
+        ->toContain('D-089')
+        ->not->toContain('sync:clients')
+        ->not->toContain('ui/modules');
+});
+
+it('stages no suite module and vendors no package client (D-089)', function (string $path): void {
+    expect((string) file_get_contents(docsPath($path)))
+        ->not->toContain('ui/modules')
+        ->not->toContain('sync:clients')
+        ->not->toContain('VendoredClientsTest');
+})->with(['README.md', 'MODULES.md', 'resources/boost/skills/atrium-development/SKILL.md', 'docs/agent/standards/atrium/domains.md', 'ui/package.json', 'ui/pnpm-workspace.yaml', '.github/workflows/ui.yml']);
+
+it('turns MODULES.md into the guide to writing a module, with the eight packages as examples (D-089)', function (): void {
+    $modules = (string) file_get_contents(docsPath('MODULES.md'));
+
+    expect(docsSection(docsPath('MODULES.md'), 'Writing a module'))->not->toBe('')
+        ->toContain('ATRIUM_SUITE_PATH')
+        ->toContain('extra.atrium')
+        ->toContain('atriumModule(')
+        ->and($modules)->not->toContain('Phase 2')
+        ->not->toContain('staged');
+
+    foreach (['Cortex', 'Guardian', 'Impex', 'Keen', 'PennantPlus', 'Polycart', 'Roster', 'Showroom'] as $package) {
+        expect(docsSection(docsPath('MODULES.md'), 'Writing a module'))->toContain('| '.$package.' |');
+    }
+});
+
+it('documents the workbench loading the sibling checkouts\' modules', function (): void {
+    expect((string) file_get_contents(docsPath('README.md')))
+        ->toContain('ATRIUM_SUITE_PATH=/path/to/checkouts composer serve')
+        ->toContain('fallback cards');
 });
 
 it("documents Atrium's own OpenAPI document and client", function (): void {
@@ -377,10 +406,10 @@ it('describes Guardian in the agent docs and the integrations standard', functio
     'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['guardian.routes.enabled', 'atrium.integrations.guardian.screens', 'responseHandler(']],
 ]);
 
-it('has Guardian in the pull request template\'s D-020 release items', function (): void {
+it('has Guardian in the pull request template\'s D-089 release items', function (): void {
     $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
 
-    preg_match('/^### [^\n]*D-020[^\n]*\n(.*?)(?=^#)/ms', $template, $section);
+    preg_match('/^### [^\n]*D-089[^\n]*\n(.*?)(?=^#)/ms', $template, $section);
 
     expect($section[1] ?? '')->toContain('Guardian');
 });
@@ -394,8 +423,8 @@ it('lists the screen route in the API table', function (): void {
 it('describes the integrations in the agent docs', function (string $path, array $phrases): void {
     expect((string) file_get_contents($path))->toContain(...$phrases);
 })->with([
-    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'src/Integrations/{Pkg}', 'atrium/integrations', 'useAtriumIntegration(', 'sync:clients']],
-    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['ui/modules/{pkg}', 'useAtriumIntegration(', '[[integrations]]']],
+    'CLAUDE.md' => [docsPath('CLAUDE.md'), ['src/Domains/Integrations', 'src/Integrations/{Pkg}', 'atrium/integrations', 'useAtriumIntegration(', 'D-089', 'MODULES.md']],
+    'components standard' => [docsPath('docs/agent/standards/atrium/components.md'), ['D-089', 'MODULES.md', 'useAtriumIntegration(', '[[integrations]]']],
     'domains standard' => [docsPath('docs/agent/standards/atrium/domains.md'), ['`Integrations`', 'src/Integrations/{Pkg}', 'atrium.screens.show']],
     'Boost skill' => [docsPath('resources/boost/skills/atrium-development/SKILL.md'), ['atrium.integrations.{pkg}.enabled', 'polycart.routes.enabled', 'roster.routes.enabled', 'Pennant', 'useAtriumIntegration(']],
 ]);
@@ -410,7 +439,8 @@ it('has the local integrations standard', function (): void {
         // Layout.
         ->toContain('src/Domains/Integrations')
         ->toContain('src/Integrations/{Pkg}')
-        ->toContain('ui/modules/{pkg}')
+        ->toContain('atrium/')
+        ->toContain('D-089')
         ->toContain('src/routes.ts')
         ->toContain('src/atrium.ts')
         // Data-only PHP, Vue through clients.
@@ -421,8 +451,8 @@ it('has the local integrations standard', function (): void {
         ->toContain('InstalledPackages')
         ->toContain('Pennant')
         ->toContain('src/Integrations/Hooks')
-        // Vendored clients.
-        ->toContain('sync:clients')
+        // No vendored clients (D-089 supersedes D-020).
+        ->not->toContain('sync:clients')
         ->toContain('D-020')
         ->toContain('D-032');
 });
@@ -443,16 +473,11 @@ it('has the integration release items in the pull request template', function ()
     $template = (string) file_get_contents(docsPath('.github/pull_request_template.md'));
 
     expect($template)
-        // D-020: the staged modules' vendored clients go once each package
-        // ships its own module with its own client.
-        ->toContain('ui/modules/{pkg}/client/')
+        // D-089: each package ships its own module, pinned to the SDK's tag.
         ->toContain('MODULES.md')
-        ->toContain('sync:clients')
-        ->toContain('VendoredClientsTest')
-        // Polycart's `/client` export-ignore.
-        ->toContain('Polycart')
-        ->toContain('/client')
-        ->toContain('export-ignore')
+        ->toContain('D-089')
+        ->toContain('github:refactor-circus/atrium#v2.0.0&path:ui/sdk')
+        ->not->toContain('ui/modules')
         // D-037: the Keystone constraint.
         ->toContain('refactor-circus/keystone')
         ->toContain('D-037');

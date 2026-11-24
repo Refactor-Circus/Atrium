@@ -126,11 +126,10 @@ function exportIgnoredPatterns(): array
     ));
 }
 
-it('keeps the front end\'s sources, staged modules, the workbench and the tests out of the dist', function (string $path): void {
+it('keeps the front end\'s sources, the workbench and the tests out of the dist', function (string $path): void {
     expect(exportIgnoredPatterns())->toContain($path);
 })->with([
     '/ui/app',
-    '/ui/modules',
     '/ui/workbench',
     '/ui/scripts',
     '/ui/package.json',

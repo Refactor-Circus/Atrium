@@ -115,6 +115,7 @@
 - Raised by: write-spec (integrations); default chosen because the user asked to proceed without stopping
 
 ## D-020: How does the layer get each package's client during this local build, while the package v2 tags are not pushed?
+- Superseded by D-089: each package's module now lives in the package and uses its own client; Atrium vendors none.
 - Choice: Vendor each package's generated types. This departs from the user's choice of a git dependency on the v2 tags, and the departure is pending the user's review.
   - `nuxt/layer/app/integrations/{pkg}/client/` holds:
     - `openapi.json`
@@ -687,3 +688,14 @@
 - Rationale: Every package that moved its module (phase 2) hit "Failed to resolve component: AtriumScreen / AtriumNoAccess / UAlert" (Nuxt UI's resolver skips `node_modules` except `.pnpm` and `@nuxt/ui`; the second `node_modules` of a pnpm path matched) and TS7016 for `sortablejs`, and worked around both in its own config. Inside Atrium's workspace `workspace:*` links `ui/sdk`, so neither showed. Fixing the preset's `exclude` instead would have kept the SDK dependent on its consumer's resolver and on pnpm's layout (npm's flat `node_modules/@refactor-circus/atrium` would still be skipped); explicit imports work under any installer and any resolver.
 - Date: 2026-11-24
 - Raised by: coordinator (package agents' reports from the phase-2 moves); choices made without a user available
+
+## D-089: Where do the suite modules and their clients live after phase 2, and how does the workbench show them?
+- Choice:
+  - **Phase 2 is done.** Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom each ship their module in their own repository (`atrium/`, built into a committed `dist/atrium/`, declared under `extra.atrium`), typed by the package's own generated client. Atrium deletes `ui/modules/*` and its workspace entry, and stages no module.
+  - **No vendored clients (supersedes D-020).** `ui/scripts/sync-clients.mjs`, the `sync:clients` script, `VendoredClientsTest` and every vendored `client/` (Showroom's copy of Impex's schema included) are deleted. A module that needs another package's types keeps its own copy in its package (Showroom's `atrium/types/impex-schema.d.ts`). The D-020 release step (pnpm git dependencies on each package's client) is dropped: no Atrium code imports a package client.
+  - **The workbench.** `DemoSuite` still reports the eight packages installed and points their API bases at `SuiteStandIn` (`/_suite/{pkg}`). When `ATRIUM_SUITE_PATH` names a folder of sibling checkouts (`Cortex`, `Guardian`, …), it registers each checkout that declares `extra.atrium` and has a built `dist/atrium/build.json` with `Atrium::module($checkout)`, which reads the checkout's `composer.json` through the same `ModuleManifest::fromComposer()` discovery uses for an installed package, and `SuiteStandIn` answers from the checkout's `openapi.json`. Without it, the workbench shows Atrium's core, `ui/workbench` and the integrations' fallback cards. Atrium requires none of the packages, in `require` or `require-dev`.
+  - **Gates.** `BuildFreshnessTest` checks Atrium's and the workbench's builds and that `ui/modules` is gone; the `ui` CI job diffs `dist` and `ui/workbench/dist`; `ChangelogUpgradeTest` reads the `// Not ported (D-032)` comments from the sibling checkouts when `ATRIUM_SUITE_PATH` is set, and checks only the CHANGELOG otherwise. The SDK consumer check (`pnpm -C ui test:consumer`) stays, as the in-repository proof that a module installed from the packed SDK builds, type-checks and tests.
+  - **Kept.** The PHP integration declarations (`src/Integrations/*`), the hooks and the integration fixtures stay in Atrium.
+- Rationale: The packages now own and build their modules, so the staged copies and the vendored clients would only drift. Requiring the packages (even as dev dependencies) for the workbench would make Atrium depend on the suite it hosts and on their unreleased v2 tags; sibling checkouts through one environment variable keep the full design bench for anyone with the suite checked out and a working workbench for everyone else, through the same manifest path a host uses.
+- Date: 2026-11-24
+- Raised by: coordinator (phase 2, MODULES.md step 9); choices made without a user available

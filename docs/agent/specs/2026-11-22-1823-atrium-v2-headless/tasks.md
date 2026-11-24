@@ -460,14 +460,15 @@ depends on: 45
 files: ui/modules/{pkg}/**, workbench/app/Atrium/DemoSuite.php, ui/scripts/sync-clients.mjs, tests/Feature/Integrations/VendoredClientsTest.php
 criteria: 115
 
-- [ ] 46.1 Cortex ships its module (MODULES.md, phase 2); remove `ui/modules/cortex`.
-- [ ] 46.2 Guardian ships its module; remove `ui/modules/guardian`.
-- [ ] 46.3 Impex ships its module; remove `ui/modules/impex`.
-- [ ] 46.4 Keen ships its module; remove `ui/modules/keen`.
-- [ ] 46.5 PennantPlus ships its module; remove `ui/modules/pennantplus`.
-- [ ] 46.6 Polycart ships its module; remove `ui/modules/polycart`.
-- [ ] 46.7 Roster ships its module; remove `ui/modules/roster`.
-- [ ] 46.8 Showroom ships its module; remove `ui/modules/showroom`.
+- [x] 46.1 Cortex ships its module (MODULES.md, phase 2); remove `ui/modules/cortex`.
+- [x] 46.2 Guardian ships its module; remove `ui/modules/guardian`.
+- [x] 46.3 Impex ships its module; remove `ui/modules/impex`.
+- [x] 46.4 Keen ships its module; remove `ui/modules/keen`.
+- [x] 46.5 PennantPlus ships its module; remove `ui/modules/pennantplus`.
+- [x] 46.6 Polycart ships its module; remove `ui/modules/polycart`.
+- [x] 46.7 Roster ships its module; remove `ui/modules/roster`.
+- [x] 46.8 Showroom ships its module; remove `ui/modules/showroom`.
+- [x] 46.9 Remove the vendored clients (`sync-clients.mjs`, `sync:clients`, `VendoredClientsTest`); the workbench loads sibling checkouts' modules through `ATRIUM_SUITE_PATH` (D-089); MODULES.md becomes the guide to writing a module.
 
 ## Group 47: Docs for the page and the module contract
 depends on: 39, 41, 43, 45

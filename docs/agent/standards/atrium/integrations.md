@@ -1,20 +1,20 @@
 ---
-description: "Atrium's suite integrations (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom): the framework in Domains/Integrations and per-package definitions in src/Integrations/{Pkg}; PHP declares static data only and never loads package code; Vue in each package's front-end module (staged in ui/modules/{pkg}) calls each package API through useAtriumIntegration(); registration by installed + enabled + API base, activation by Pennant flags; cross-package hooks; response handlers and shell-less pages; roles and permissions in Guardian; vendored clients (D-020)."
+description: "Atrium's suite integrations (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom): the framework in Domains/Integrations and per-package definitions in src/Integrations/{Pkg}; PHP declares static data only and never loads package code; Vue in each package's own Atrium module (its atrium/ folder, D-089) calls the package API through useAtriumIntegration() with the package's own client; registration by installed + enabled + API base, activation by Pennant flags; cross-package hooks; response handlers and shell-less pages; roles and permissions in Guardian; no staged modules or vendored clients in Atrium."
 tags: [atrium, integrations, suite, modules, vue, openapi, pennant, hooks]
 kind: architectural
 ---
 
 # Suite Integrations
 
-Complements [[components]] and [[domains]]: Atrium hosts the front ends of the eight suite packages, which in v2 ship only a JSON API, an MCP server, `openapi.json` and a generated client. Atrium names the packages by the user's decision (shape.md); the departures from [[dependencies]] and [[domain-modules]] are rows in `docs/agent/standards-feedback.md`.
+Complements [[components]] and [[domains]]: Atrium hosts the front ends of the eight suite packages, which in v2 ship a JSON API, an MCP server, `openapi.json`, a generated client and their own Atrium module. Atrium names the packages by the user's decision (shape.md); the departures from [[dependencies]] and [[domain-modules]] are rows in `docs/agent/standards-feedback.md`.
 
 ## Layout
 
 - **Framework:** `src/Domains/Integrations/`: the `Contracts\Integration` contract and its `Support\Integration` base, `Contracts\InstalledPackages` (bound to `Services\ComposerInstalledPackages`), `Services\IntegrationRegistry`, `Services\IntegrationFeatures`, `Data\ScreenDeclaration` and `Data\SearchSourceDeclaration`, and the `atrium.screens.show` controller, request and `routes.php`. `IntegrationsServiceProvider` is in `DomainServiceProvider::$providers`.
 - **Per package:** `src/Integrations/{Pkg}/` holds `{Pkg}Integration` and `{Pkg}Feature`, nothing else. The registry finds `RefactorCircus\Atrium\Integrations\{Pkg}\{Pkg}Integration` by convention from the keys of `atrium.integrations`, so adding a package adds a folder and a config key, not a registration.
 - **Hooks:** `src/Integrations/Hooks/` (`CortexRedirectDomains`, `ImpexRunLink`, `KeenHistory`, `GuardianScreens`), registered from `IntegrationsServiceProvider` after the integrations.
-- **Strings:** server-side labels in `lang/en/integrations/{pkg}.php`; the module's strings in `ui/modules/{pkg}/src/locales/{pkg}.en.json` (Guardian, Roster and Showroom also one file per screen area, the hooks `hooks.en.json` in the module that owns them), passed as the module's `messages`. Only `en` ships.
-- **Module (D-087):** until each package ships its own, its front-end module is staged in `ui/modules/{pkg}/`, laid out as the package's `atrium/` folder will be: `src/atrium.ts` (`defineAtriumModule()` with its registrations, its `screens` map of screen key to route name, its `responseHandlers`, and its `// Not ported (D-032)` comment), `src/routes.ts` (explicit routes keeping the old route names, such as `impex-runs-run`), `src/pages/`, `src/components/`, `src/env.d.ts` (its `AtriumIntegrationPaths` augmentation), the vendored `client/`, a stand-in `composer.json` with `extra.atrium`, and the committed `dist/atrium/`. Every path starts with `/{pkg}/`. Tests live in `ui/modules/{pkg}/test/`; `@refactor-circus/atrium/testing` has `mockPackageApi()`. The workbench loads every staged module with `Atrium::module()` (`DemoSuite`). `MODULES.md` is the move to the package (phase 2).
+- **Strings:** server-side labels in `lang/en/integrations/{pkg}.php`; the module's strings in the package's `atrium/src/locales/{pkg}.en.json` (Guardian, Roster and Showroom also one file per screen area, the hooks `hooks.en.json` in the module that owns them), passed as the module's `messages`. Only `en` ships.
+- **Module (D-089):** each package ships its front-end module in its own repository, in `atrium/`: `src/atrium.ts` (`defineAtriumModule()` with its registrations, its `screens` map of screen key to route name, its `responseHandlers`, and its `// Not ported (D-032)` comment), `src/routes.ts` (explicit routes keeping the old route names, such as `impex-runs-run`), `src/pages/`, `src/components/`, `src/env.d.ts` (its `AtriumIntegrationPaths` augmentation over the package's own `client/`), `test/`, and the committed `dist/atrium/` declared in the package's `extra.atrium`. Every path starts with `/{pkg}/`; `@refactor-circus/atrium/testing` has `mockPackageApi()`. Atrium stages no module (no `ui/modules/{pkg}`) and vendors no client. The workbench loads the sibling checkouts' built modules with `Atrium::module()` when `ATRIUM_SUITE_PATH` is set (`DemoSuite`), and shows the fallback cards otherwise. `MODULES.md` is the guide to writing a module.
 - **Fixtures:** each package's PHP integration test writes its declarations to `ui/sdk/test/fixtures/integrations/{pkg}.json` under the contract-fixture rules (compare by default, rewrite only with `UPDATE_FIXTURES=1`), exported to modules as `@refactor-circus/atrium/fixtures/integrations/{pkg}.json`. The fixtures and the PHP declarations stay in Atrium.
 
 ## PHP declares data only
@@ -26,13 +26,13 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the e
 
 ## Vue calls the package through its client
 
-- A component calls only its own package's API, through `useAtriumIntegration(pkg).client` (an `openapi-fetch` client typed by the module's `AtriumIntegrationPaths` augmentation over the vendored `schema.d.ts`; or `useAtriumIntegration(pkg, createXClient)` with a client factory, D-083), plus `atrium.screens.show` for extensions. A cross-package hook is the one exception, and lives in the module of the package whose API it calls.
+- A component calls only its own package's API, through `useAtriumIntegration(pkg).client` (an `openapi-fetch` client typed by the module's `AtriumIntegrationPaths` augmentation over the package's own generated `schema.d.ts`; or `useAtriumIntegration(pkg, createXClient)` with a client factory, D-083), plus `atrium.screens.show` for extensions. A cross-package hook is the one exception, and lives in the module of the package whose API it calls.
 - Every client is signed like every Atrium request (`atriumClientOptions(pkg)`: the session's CSRF headers by default, or the one `useAtrium().auth()` adapter): its headers and credentials, `Accept: application/json`, and `onUnauthorized()` on a 401 (except on a page declared public).
 - The widgets of one integration share one request per dashboard load through `useIntegrationQuery(pkg, operation)`.
 - Search sources register in the module's `searchSources` (keyed by the shell's source key) and live nav badges or children in its `liveResolvers`. Results pass the link guard.
 - Every screen follows the common contract: lists page as the endpoint does and send the old filters as its query; every v1 action calls the matching v2 route then reloads, destructive ones after a confirmation; 422 shows field errors, 403 `<AtriumNoAccess>`, 404 a not-found state; tabs and sections come from `<AtriumIntegrationScreen>` and switching tab sends `?tab=`.
 - An old action with no v2 route is left out and named in the `// Not ported (D-032)` comment at the top of `src/atrium.ts` (or the area's index page for Roster and Showroom), then in the CHANGELOG. Never invent an Atrium-side substitute.
-- Each screen has a Vitest file that mocks `fetch`, types each payload with `satisfies` against the vendored `paths`/`components`, and asserts the load request, every mutation (method, path, body) and the 403 state.
+- Each screen has a Vitest file that mocks `fetch`, types each payload with `satisfies` against the package client's `paths`/`components`, and asserts the load request, every mutation (method, path, body) and the 403 state.
 
 ## Gating
 
@@ -60,15 +60,14 @@ Complements [[components]] and [[domains]]: Atrium hosts the front ends of the e
 - A page that must work without the shell (`/roster/invitations/:token`, `/guardian/two-factor/challenge`, `/guardian/two-factor/setup`) declares `meta: { atrium: { public: true } }` on its route and renders in the public layout, builds a client of its own (the page's boot data, a loaded shell's `api_base`, then the package default), never reloads the page on a 401, never calls `atrium.screens.show`, and is exempt from the page-has-a-screen check (D-038, D-050).
 - Secrets a page handles (two-factor codes, plain API and SCIM tokens, TOTP secrets) stay in component state: never in the URL, the title, logs or storage.
 
-## Vendored clients (D-020)
+## Clients (D-089, superseding D-020)
 
-- `ui/modules/{pkg}/client/` holds `openapi.json`, `schema.d.ts` (the package's `client/src/schema.d.ts`, verbatim) and `openapi.sha256`. Never hand-edit them: refresh with `pnpm -C ui sync:clients` from `$ATRIUM_SUITE_PATH/{Pkg}` (default: the repository's parent directory). A missing source fails the sync naming the package and the path; a missing package build stops the work with a decision (D-039).
-- `VendoredClientsTest` checks every stamp, and compares the copies with a sibling checkout when present. Nothing in `ui/` imports `@refactor-circus/*-client` until a module moves into its package (and uses the package's own `client/`) or the release step switches the staged module to a pnpm git dependency (`github:refactor-circus/{pkg}#v2.0.0&path:/client`).
+- Each module types its package's API with the package's own generated client (`client/src/schema.d.ts` in the package). Atrium keeps no copy of any package's `openapi.json` or `schema.d.ts`; a module that needs another package's types keeps its own copy (Showroom's `atrium/types/impex-schema.d.ts`), never imports another package's module.
 - Atrium's own API follows the same idea: `openapi.json` from `composer openapi:export`, `ui/sdk/src/client/schema.d.ts` from `pnpm -C ui generate:client`, and `OpenApiTest` failing when either is stale.
 
 ## Enforcement
 
 - `tests/ArchTest.php` and `tests/Feature/Integrations/NoPackageCodeTest.php`: no package namespace in `src/`, `require` unchanged.
 - `tests/Feature/Integrations/*IntegrationTest.php`: gating, API base, declarations and the fixture, per package; `HooksTest` for the hooks.
-- Vitest: every fixture screen key has a page at its declared path, every `t()` key exists, and each screen's requests.
-- `VendoredClientsTest`, `OpenApiTest` and `BuildFreshnessTest` (no Node), and `composer test:ui`.
+- Vitest, in each package's module: every fixture screen key has a page at its declared path, every `t()` key exists, and each screen's requests.
+- `OpenApiTest` and `BuildFreshnessTest` (no Node), and `composer test:ui` (with the consumer check, a module built, type-checked and tested against the packed SDK).

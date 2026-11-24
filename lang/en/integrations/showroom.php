@@ -6,7 +6,7 @@ declare(strict_types=1);
  * The Showroom integration's server-side labels: its nav items, widgets,
  * settings panel and search source, ported from Showroom's v1 `showroom::`
  * strings. The module's own Showroom strings live in
- * `ui/modules/showroom/src/locales/showroom*.en.json`.
+ * refactor-circus/showroom's `atrium/src/locales/showroom*.en.json`.
  */
 
 return [

@@ -2,10 +2,12 @@ name: ui
 
 # The front end's gate (composer test:ui): the contract fixtures exist, a
 # frozen pnpm install, the generated client and Nuxt UI theme up to date,
-# typecheck and Vitest of the SDK and every staged module, then the builds,
-# which must reproduce the committed ones byte for byte (dist/ and each
-# module's dist/atrium). It runs apart from the PHP suite (tests.yml), which
-# stays Node-free and checks the builds' source hashes instead.
+# typecheck and Vitest of the SDK, the app and the workbench module, a module
+# built against the packed SDK, then the builds, which must reproduce the
+# committed ones byte for byte (dist/ and the workbench's dist/atrium). The
+# suite packages build and check their own modules. It runs apart from the
+# PHP suite (tests.yml), which stays Node-free and checks the builds' source
+# hashes instead.
 
 on:
   push:
@@ -54,4 +56,4 @@ jobs:
         run: composer test:ui
 
       - name: Committed builds match a fresh build
-        run: git diff --exit-code -- dist ui/modules/*/dist ui/workbench/dist ui/sdk/css ui/sdk/src/client
+        run: git diff --exit-code -- dist ui/workbench/dist ui/sdk/css ui/sdk/src/client

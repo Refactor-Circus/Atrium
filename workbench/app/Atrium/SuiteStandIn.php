@@ -16,8 +16,8 @@ use stdClass;
  *
  *   GET /_suite/showroom/products  ->  a page of believable products
  *
- * Answers come from the package's vendored `openapi.json` (the staged
- * module's `client/`, ui/modules/{pkg}/client): the operation's 2xx schema,
+ * Answers come from the package's `openapi.json` in its sibling checkout
+ * (DemoSuite::checkout(), under ATRIUM_SUITE_PATH): the operation's 2xx schema,
  * filled with deterministic values chosen from each property's name and
  * format. Writes answer with the same shape and change nothing. Where a
  * schema types a list loosely (`data: string[]`), the resource schema named
@@ -142,8 +142,9 @@ final class SuiteStandIn
     private function load(string $pkg): ?array
     {
         if (! array_key_exists($pkg, $this->docs)) {
-            $file = dirname(__DIR__, 3)."/ui/modules/{$pkg}/client/openapi.json";
-            $decoded = preg_match('/^[a-z]+$/', $pkg) === 1 && is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+            $checkout = preg_match('/^[a-z]+$/', $pkg) === 1 ? DemoSuite::checkout($pkg) : null;
+            $file = $checkout === null ? null : $checkout.'/openapi.json';
+            $decoded = $file !== null && is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
             $this->docs[$pkg] = is_array($decoded) ? $decoded : null;
         }
 

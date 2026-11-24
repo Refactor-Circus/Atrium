@@ -42,7 +42,7 @@ type SuccessOf<Operation> = Operation extends { responses: infer Responses }
   ? { [Status in keyof Responses]: Status extends 200 | 201 | 202 ? JsonOf<Responses[Status]> : never }[keyof Responses]
   : never
 
-/** The JSON body a route answers with on success, as the vendored schema documents it. */
+/** The JSON body a route answers with on success, as the package's schema documents it. */
 export type PackageBody<K extends string, R> = [SuccessOf<OperationOf<K, R>>] extends [never]
   ? unknown
   : SuccessOf<OperationOf<K, R>>
@@ -170,7 +170,7 @@ async function dispatch(input: RequestInfo | URL, init?: RequestInit): Promise<R
 /**
  * Answers `pkg`'s API under `base` (by default `/{pkg}/api`, as the test
  * shell sets it) with `routes`, keyed by method and the path template the
- * vendored schema documents:
+ * package's schema documents:
  *
  *   mockPackageApi('impex', {
  *     'GET /stats': { data: stats },

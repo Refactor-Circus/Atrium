@@ -1,13 +1,7 @@
-import { readdirSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AtriumRegistry } from '../src/registry'
 import { AtriumNavigation, useAtrium, useAtriumIntegration, useAtriumSearch } from '../src/index'
 import { mockAtriumApi, mountSuspended, resetPackageApis, settle, shell, useShell, watchPackageApis, withSetup } from '../src/testing/index'
-
-// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
-// into a served asset URL, which `fileURLToPath()` refuses.
-const here = import.meta.url
 
 /*
  * Build without packages (AC 51): a host whose shell lists no integration
@@ -79,14 +73,6 @@ describe('a shell with integrations: []', () => {
   it('gives no integration a client', async () => {
     for (const pkg of PACKAGES) {
       expect((await withSetup(() => useAtriumIntegration(pkg))).client, pkg).toBeNull()
-    }
-  })
-
-  it('stages every integration\'s module with its vendored client, so each builds with no sibling checkout', () => {
-    const modules = fileURLToPath(new URL('../../modules/', here))
-
-    for (const pkg of PACKAGES) {
-      expect(readdirSync(`${modules}${pkg}/client`), pkg).toEqual(expect.arrayContaining(['openapi.json', 'openapi.sha256', 'schema.d.ts']))
     }
   })
 })

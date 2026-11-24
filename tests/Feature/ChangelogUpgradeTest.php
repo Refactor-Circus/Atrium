@@ -194,15 +194,26 @@ it('names the parity changes', function (): void {
 });
 
 /**
- * The `// Not ported (D-032)` comment at the top of a staged module's file: its lines,
- * without the comment markers.
+ * The `// Not ported (D-032)` comment at the top of a module's file, in the
+ * package's sibling checkout under ATRIUM_SUITE_PATH (the modules live in the
+ * packages, D-089): its lines, without the comment markers. Null when there
+ * is no such checkout.
  */
-function notPortedComment(string $path): string
+function notPortedComment(string $path): ?string
 {
+    $folders = ['cortex' => 'Cortex', 'guardian' => 'Guardian', 'impex' => 'Impex', 'keen' => 'Keen', 'pennantplus' => 'PennantPlus', 'polycart' => 'Polycart', 'roster' => 'Roster', 'showroom' => 'Showroom'];
+    [$pkg, $file] = explode('/', $path, 2);
+    $suite = getenv('ATRIUM_SUITE_PATH');
+    $absolute = is_string($suite) && $suite !== '' ? rtrim($suite, '/').'/'.$folders[$pkg].'/atrium/'.$file : null;
+
+    if ($absolute === null || ! is_file($absolute)) {
+        return null;
+    }
+
     $lines = [];
     $inside = false;
 
-    foreach (file(dirname(__DIR__, 2).'/ui/modules/'.$path, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+    foreach (file($absolute, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
         if (str_contains($line, '// Not ported (D-032)')) {
             $inside = true;
         } elseif ($inside && ! str_starts_with(ltrim($line), '//')) {
@@ -310,14 +321,14 @@ it('has responseHandler() and the uqr dependency', function (): void {
         ->toContain('0.1.3');
 });
 
-it('has the D-020 release step', function (): void {
+it('records the packages shipping their own modules (D-089)', function (): void {
     expect(changelogUpgradeSection())
+        ->toContain('D-089')
         ->toContain('D-020')
-        ->toContain('ui/modules/{pkg}/client/')
-        ->toContain('pnpm -C ui sync:clients')
-        ->toContain('"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"')
-        ->toContain('create{Pkg}Client')
-        ->toContain('export-ignore');
+        ->toContain('extra.atrium')
+        ->toContain('github:refactor-circus/atrium#v2.0.0&path:ui/sdk')
+        ->toContain('ATRIUM_SUITE_PATH')
+        ->toContain('D-037');
 });
 
 it("names Atrium's own OpenAPI document and client", function (): void {

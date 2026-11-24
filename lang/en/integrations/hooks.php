@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * The cross-package hooks' server-side labels (AC 53): their tabs and
  * sections. The components' own strings live in the module of the package
- * whose API each calls, in `ui/modules/{pkg}/src/locales/hooks.en.json`.
+ * whose API each calls, in its `atrium/src/locales/hooks.en.json`.
  */
 
 return [

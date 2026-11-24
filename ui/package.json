@@ -3,12 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter atrium-app build && pnpm --parallel --filter \"./modules/*\" --filter atrium-workbench build",
-    "dev": "pnpm --parallel --filter atrium-app --filter \"./modules/*\" --filter atrium-workbench exec vite build --watch",
+    "build": "pnpm --filter atrium-app build && pnpm --filter atrium-workbench build",
+    "dev": "pnpm --parallel --filter atrium-app --filter atrium-workbench exec vite build --watch",
     "typecheck": "pnpm -r --workspace-concurrency=4 typecheck",
     "test": "pnpm -r --workspace-concurrency=2 test",
     "theme:check": "node scripts/nuxt-ui-theme.mjs --check",
-    "sync:clients": "node scripts/sync-clients.mjs",
     "generate:client": "node scripts/generate-client.mjs",
     "test:consumer": "node scripts/check-consumer.mjs"
   },

@@ -38,7 +38,7 @@ class WorkbenchServiceProvider extends ServiceProvider
         ]);
 
         // The served workbench stands in for every suite package (DemoSuite),
-        // so the playground renders each integration's pages populated.
+        // with the packages' own modules when ATRIUM_SUITE_PATH points at their checkouts.
         if (DemoSuite::enabled($this->app)) {
             DemoSuite::register($this->app);
         }

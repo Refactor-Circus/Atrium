@@ -6,7 +6,7 @@ declare(strict_types=1);
  * The Roster integration's server-side labels (AC 53): its nav items,
  * widgets and search sources, ported from Roster v1's `roster::roster` keys.
  * The module's own strings for Roster live in
- * `ui/modules/roster/src/locales/roster*.en.json`.
+ * refactor-circus/roster's `atrium/src/locales/roster*.en.json`.
  */
 
 return [

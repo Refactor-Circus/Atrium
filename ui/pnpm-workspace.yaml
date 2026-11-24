@@ -2,7 +2,6 @@ packages:
   - sdk
   - app
   - workbench
-  - modules/*
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@tailwindcss/oxide'

@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * The server-side labels of the Polycart integration (AC 53), ported from
  * Polycart v1's `polycart::polycart` lines. The pages' and widgets' own
- * strings live in its module: `ui/modules/polycart/src/locales/polycart.en.json`.
+ * strings live in its module: refactor-circus/polycart's `atrium/src/locales/polycart.en.json`.
  */
 
 return [

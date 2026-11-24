@@ -45,12 +45,11 @@ Before merging a breaking release to `main`, each of the 7 sibling packages (Cor
 - [ ] The repository's tag ruleset protects `v*` tags (no update, no deletion, no force push) before the release tag is pushed: modules install the SDK (`ui/sdk`) from the tag with pnpm, and Composer resolves the same tag. Owner: PR author.
 - [ ] After publishing the release, the Update Changelog workflow did not add a second heading for a version the CHANGELOG already has. Owner: PR author.
 
-### Suite integration clients (D-020) and Keystone (D-037)
+### Suite modules (D-089) and Keystone (D-037)
 
-Each staged module vendors its package's generated client types in `ui/modules/{pkg}/client/` until the module moves into its package (phase 2 of D-082, see `MODULES.md`), where the package's own `client/` replaces it. Do these once every one of Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom has its v2 tag and its own module, in this order:
+Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom each ship their own Atrium module in their repository (`atrium/`, built to `dist/atrium/`, declared in `extra.atrium`; see `MODULES.md`), with their own generated client. Atrium stages none of them and vendors no package client any more (D-089, superseding D-020).
 
-- [ ] Confirmed Polycart's `.gitattributes` no longer has `/client export-ignore` in the tagged release (and that no other package export-ignores `/client`): a pnpm git install reads the tag's archive, which would otherwise lack the client. Owner: PR author.
-- [ ] Removed every staged module (`ui/modules/{pkg}`, D-082) once its package ships the module itself, and with them the vendored `client/` folders, `ui/scripts/sync-clients.mjs`, the `sync:clients` script, `VendoredClientsTest` and the workbench's staged `Atrium::module()` calls; `composer test:ui` passes. Owner: PR author.
+- [ ] Each suite package's tagged v2 release pins the SDK at this release's tag (`github:refactor-circus/atrium#v2.0.0&path:ui/sdk`), and its committed `dist/atrium/build.json` targets shared API `1.0`. Owner: PR author.
 - [ ] Widened the `refactor-circus/keystone` constraint in `composer.json` to include the Keystone release that drops its built-in `atrium` surface prefix (D-037), and `composer test` passes against it. Owner: PR author.
 
 ### Manual documentation checks
@@ -61,6 +60,6 @@ The CHANGELOG upgrade guide is checked by Pest (`tests/Feature/ChangelogUpgradeT
 - [ ] CHANGELOG: the upgrade guide lists every removed API with its replacement, the removed config keys, the published-file cleanup, the route changes and the migration step. Owner: PR author.
 - [ ] Boost skill (`resources/boost/skills/atrium-development/SKILL.md`) matches the README. Owner: PR author.
 - [ ] `CLAUDE.md` (the architecture and frontend sections). Owner: PR author.
-- [ ] README "Suite integrations": detection and `enabled`, the API base and the Polycart and Roster APIs behind auth, Pennant flags, the hook keys, the modules' routes, the vendored clients, Atrium's `openapi.json` and client, the parity departures, and the Guardian part (its API behind auth, `scope_types`, the two-factor middleware and pages, the deadline header through CORS, token drivers, passkeys and the module's `responseHandlers`). Owner: PR author.
-- [ ] CHANGELOG "Suite integrations": every replaced package key, every `// Not ported (D-032)` item in the modules, the parity changes and the D-020 release step. Owner: PR author.
+- [ ] README "Suite integrations": detection and `enabled`, the API base and the Polycart and Roster APIs behind auth, Pennant flags, the hook keys, the modules' routes, where each module lives, Atrium's `openapi.json` and client, the parity departures, and the Guardian part (its API behind auth, `scope_types`, the two-factor middleware and pages, the deadline header through CORS, token drivers, passkeys and the module's `responseHandlers`). Owner: PR author.
+- [ ] CHANGELOG "Suite integrations": every replaced package key, every `// Not ported (D-032)` item in the modules, the parity changes and the packages' own modules (D-089). Owner: PR author.
 - [ ] Local standards `atrium/components`, `atrium/domains` and `atrium/integrations` (`docs/agent/standards/atrium/`), and `docs/agent/standards.index.yml` regenerated from them (`vendor/bin/ringside sync`). Owner: PR author.

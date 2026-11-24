@@ -116,7 +116,7 @@ Register it one of two ways. Packages declare the class in their `composer.json`
 
 ### 5. Suite integrations
 
-Atrium hosts the front ends of the suite packages Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom: in v2 they ship only a JSON API and MCP server, and their pages (under `/{pkg}/`, rendered by each package's front-end module, staged in Atrium's `ui/modules/{pkg}` until the packages ship their own), widgets, settings panels, search sources and nav come from Atrium. Do not look for an Atrium plugin in those packages.
+Atrium hosts the front ends of the suite packages Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom: in v2 they ship a JSON API and MCP server plus their own Atrium module (the package's `atrium/`, built into its committed `dist/atrium/` and declared under `extra.atrium`, so installing the package loads it), which renders their pages under `/{pkg}/`. Their nav, widgets, settings panels, search sources and screens are declared by Atrium (`src/Integrations/{Pkg}`). Do not look for an Atrium plugin in those packages.
 
 - An integration registers when `refactor-circus/{pkg}` is installed and `atrium.integrations.{pkg}.enabled` is true (boolean-coerced). Set it to `false` to hide an installed package.
 - It needs an API base: `atrium.integrations.{pkg}.api_base`, or else the package's own `{pkg}.routes.prefix` while `{pkg}.routes.enabled` is on. Polycart and Roster ship with their API off: set `polycart.routes.enabled` / `roster.routes.enabled` to `true` and put the app's guard (`auth:sanctum`, ...) in that package's `routes.middleware`, or the integration does not register (Atrium logs a warning naming both keys).

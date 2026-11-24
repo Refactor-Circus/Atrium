@@ -6,8 +6,9 @@ package, declared in its `composer.json`, and loaded by Atrium's page next to
 Atrium's own prebuilt front end (decisions D-079 to D-088 in
 `docs/agent/specs/2026-11-22-1823-atrium-v2-headless/decisions.md`).
 
-This file is the contract, then the step-by-step move of a staged suite module
-(`ui/modules/{pkg}` in this repository) into its own package (phase 2).
+This file is the contract, then how to write a module. The eight suite
+packages (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and
+Showroom) each ship theirs and are the worked examples (D-089).
 
 ## The contract
 
@@ -154,8 +155,8 @@ Pin a tag or a commit SHA. Against a local checkout, use
 committing. Add the shared modules' exact versions above as dev dependencies
 too (`vue`, `vue-router`, `pinia`, `vue-i18n`, `@vueuse/core`, `openapi-fetch`,
 `@nuxt/ui`, `@unhead/vue`), with `vite`, `vitest`, `vue-tsc`, `typescript`,
-`@types/node`, `@vue/test-utils` and `happy-dom` (see any
-`ui/modules/*/package.json`). Nothing else: the SDK brings what its own
+`@types/node`, `@vue/test-utils` and `happy-dom` (see any suite package's
+`atrium/package.json`). Nothing else: the SDK brings what its own
 sources need (`sortablejs` and its types, the Vite and Tailwind plugins).
 Atrium's `composer test:ui` installs the packed SDK into a module exactly so
 (`ui/scripts/check-consumer.mjs`) and builds, type-checks and tests it.
@@ -222,63 +223,77 @@ useTestModule(Polycart)
 Atrium's integration fixtures (the shell payload of its PHP declarations) are
 `@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
 
-## Phase 2: moving a staged module into its package
+## Writing a module
 
-Each `ui/modules/{pkg}` is laid out as the package's `atrium/` folder will be,
-and already builds, type-checks and passes its suite against the contract
-above. For package `{Pkg}` (key `{pkg}`):
+Every suite package keeps its module in `atrium/` and commits the build in
+`dist/atrium/`; read one beside these steps:
 
-1. **Copy the folder.** In the package's repository (a worktree beside it), copy
-   Atrium's `ui/modules/{pkg}/` to `atrium/`: `package.json`, `vite.config.ts`,
-   `tsconfig.json`, `src/`, `test/`, `auto-imports.d.ts`, `components.d.ts`.
-   Do not copy `node_modules`, `dist`, the stand-in `composer.json` or `client/`.
-   Two copied files still point into Atrium's workspace and are fixed below:
-   `tsconfig.json` extends `../../tsconfig.base.json` and includes `client`
-   (step 4), and `vite.config.ts` hashes `client` and `../../sdk/…` (step 5).
-2. **Use the package's own client.** Replace the vendored `client/` imports
-   (`'../client/schema'`, `'../../client/schema'`) with the package's generated
-   client (`'../../client/src/schema'`, or its `index.ts`), and point
-   `src/env.d.ts` at it. Showroom keeps a copy of Impex's schema for its
-   transfers page until it can depend on Impex's client (keep `client/impex/`
-   as `atrium/types/impex-schema.d.ts`).
-3. **`package.json`.** Rename to `@refactor-circus/{pkg}-atrium` (private),
-   rewrite the `description` (the staged one says "Staged in Atrium until it
-   moves"; say what the module is, e.g. "{Pkg}'s Atrium module: … built with
-   @refactor-circus/atrium/vite into ../dist/atrium."), replace
-   `"@refactor-circus/atrium": "workspace:*"` with
-   `"github:refactor-circus/atrium#<tag or SHA>&path:ui/sdk"`, keep the other
-   pins (and add none for the SDK: drop any `@types/sortablejs`, D-088), add
-   `"packageManager": "pnpm@10.18.0"`, run `pnpm install`, commit
+| Package | Worth reading for |
+| --- | --- |
+| Polycart | a compact one: pages, two widgets, a search source |
+| Cortex | a cross-package hook (redirect domains on Roster's screens) |
+| Guardian | `responseHandlers` (the two-factor challenge), shell-less pages, a bundled dependency (`uqr`) |
+| Impex | runs and flows, the run-link hook on Showroom's transfers |
+| Keen | the history and activity hooks on other packages' screens |
+| PennantPlus | one page over the package's feature-flag API |
+| Roster | a public page (`/roster/invitations/:token`) |
+| Showroom | the largest (27 screens); a copy of Impex's schema types (`atrium/types/impex-schema.d.ts`) for its transfers page |
+
+For package `{Pkg}` (key `{pkg}`):
+
+1. **The folder.** `atrium/` holds `package.json`, `vite.config.ts`,
+   `tsconfig.json`, `src/` (`atrium.ts`, `atrium.css`, `routes.ts`,
+   `env.d.ts`, `pages/`, `components/`, `locales/`), `test/` (with
+   `test/setup.ts`, §7) and the preset's generated `auto-imports.d.ts` and
+   `components.d.ts` (committed).
+2. **`package.json`.** `"name": "@refactor-circus/{pkg}-atrium"`, `"private":
+   true`, `"type": "module"`, `"packageManager": "pnpm@10.18.0"`, the scripts
+   `"build": "vite build"`, `"typecheck": "vue-tsc --noEmit -p tsconfig.json"`
+   and `"test": "vitest run"`, and the dev dependencies of §5 with the SDK
+   pinned at a tag or a commit SHA. Run `pnpm install` and commit
    `pnpm-lock.yaml`.
-4. **`tsconfig.json`.** The staged one `extends: "../../tsconfig.base.json"`,
-   which does not exist in the package: drop `extends` and inline Atrium's
-   `ui/tsconfig.base.json` `compilerOptions`. Replace `client` in `include`
-   with the package client's types (`../client/src/schema.d.ts`), and add the
+3. **`tsconfig.json`.** Standalone (`strict`, `moduleResolution: "Bundler"`,
+   `types: ["vite/client", "node"]`, `jsx: "preserve"`), including `src`,
+   `test`, the two generated `.d.ts` files and `vite.config.ts`; add the
    `openapi-fetch` path from §6 if a source imports the client's `index.ts`.
-5. **`vite.config.ts`.** `atriumModule({ key: '{pkg}', outDir: '../dist/atrium',
-   inputs: ['src', '../client/src', 'package.json', 'vite.config.ts',
-   'pnpm-lock.yaml'], test: { setupFiles: ['test/setup.ts'] } })` (drop
-   Atrium's `client` and `../../sdk/…` inputs; the lockfile pins the SDK).
-   `../client/src` in `inputs` is recommended: a regenerated client then makes
-   the committed build stale. Nothing else goes in the config: no Nuxt UI
-   plugin override and no `exclude` for the SDK (D-088).
-6. **`composer.json`.** Add the `extra.atrium` block from the staged
-   `composer.json` (`key`, `scripts: ["dist/atrium/atrium.js"]`, `styles:
-   ["dist/atrium/atrium.css"]`). Make sure `.gitattributes` does not
-   export-ignore `dist/` (it ships) and does export-ignore `atrium/`.
+4. **`vite.config.ts`.** One call:
+
+   ```ts
+   export default atriumModule({
+     key: '{pkg}',
+     outDir: '../dist/atrium',
+     inputs: ['src', '../client/src', 'package.json', 'vite.config.ts', 'pnpm-lock.yaml'],
+     test: { setupFiles: ['test/setup.ts'] }
+   })
+   ```
+
+   `../client/src` in `inputs` makes the committed build stale when the client
+   is regenerated; the lockfile pins the SDK. Nothing else goes in the config:
+   no Nuxt UI plugin override and no `exclude` for the SDK (D-088).
+5. **The client.** Type `useAtriumIntegration('{pkg}')` with the package's own
+   generated client (`../client/src/schema`) in `src/env.d.ts`, or pass its
+   factory (§6). A module never imports another package's client or module:
+   call another package's API untyped, or keep a copy of the types you need.
+6. **`composer.json`.** Add the `extra.atrium` block (§2). `.gitattributes`
+   must not export-ignore `dist/` (it ships) and should export-ignore
+   `/atrium`.
 7. **Build and check.** In `atrium/`: `pnpm typecheck`, `pnpm test`,
-   `pnpm build`; commit `dist/atrium/` (with its `build.json`). Add a CI job
+   `pnpm build`; commit `dist/atrium/` with its `build.json`. Add a CI job
    that runs the three and fails on `git diff -- dist/atrium`.
-8. **Try it in a host.** `composer require` the package (or a path repository),
-   `php artisan atrium:discover`, open `/atrium`: the module's script is on the
-   page once the integration is active.
-9. **Remove the staged copy from Atrium** (one PR per package or one at the
-   end): delete `ui/modules/{pkg}`, its `Atrium::module()` line in
-   `workbench/app/Atrium/DemoSuite.php` (the workbench then needs the package
-   installed, or keeps the stand-in), its entry in `ui/scripts/sync-clients.mjs`
-   and `VendoredClientsTest`, and run `pnpm -C ui install`.
-10. **Record it.** A line in the package's CHANGELOG ("ships its Atrium
-    module"), and tick the package in Atrium's tasks (group 46).
+8. **Try it.** In a host: `composer require` the package (or a path
+   repository), `php artisan atrium:discover`, open `/atrium`; the module's
+   script is on the page once the integration is active. In Atrium's
+   workbench: `ATRIUM_SUITE_PATH=/path/to/checkouts composer serve`, with the
+   package checked out there as `{Pkg}`; the workbench loads every sibling's
+   built module from its `extra.atrium` and stands in for its API from its
+   `openapi.json`.
+9. **Record it.** A line in the package's CHANGELOG ("ships its Atrium
+   module").
+
+The PHP side of a suite integration (its nav items, widgets, screens and
+settings panel as data) stays in Atrium's `src/Integrations/{Pkg}`, and the
+shell payloads it produces are the fixtures
+`@refactor-circus/atrium/fixtures/integrations/{pkg}.json`.
 
 ### Gotchas
 

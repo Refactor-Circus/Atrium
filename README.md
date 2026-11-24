@@ -136,7 +136,7 @@ export default defineAtriumModule({
 
 A widget component receives `data` (what its PHP resolver returned) and `settings` props; an extension receives `data` and `record`; a settings panel receives `data`. A key with no component registered renders a fallback card naming the key, never an error.
 
-[MODULES.md](MODULES.md) is the full contract: the entry, `extra.atrium`, the shared modules, the preset, typed clients, tests, and how a staged suite module moves into its package.
+[MODULES.md](MODULES.md) is the full contract: the entry, `extra.atrium`, the shared modules, the preset, typed clients, tests, and how to write a module, with the eight suite packages' modules as examples.
 
 ### Your application's own scripts
 
@@ -449,7 +449,7 @@ uses(TestCase::class, ResetsScreenExtensions::class)->in('Feature');
 
 ## Suite integrations
 
-Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and each package's front-end module renders them and calls the package's own API from the browser, signed like every Atrium request. Until each package ships its module (phase 2, [MODULES.md](MODULES.md)), the eight modules are staged in this repository under `ui/modules/{pkg}` and built into their own `dist/atrium/`; the PHP declarations and the integration fixtures stay in Atrium.
+Atrium hosts the front ends of the Refactor Circus suite: Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster and Showroom. In v2 each of those packages ships only its JSON API and MCP server, with a committed `openapi.json` and a generated client. Their pages, widgets, settings panels, search sources and navigation live in Atrium: the PHP side declares them as data, and each package's front-end module renders them and calls the package's own API from the browser, signed like every Atrium request. Each package ships its own module ([MODULES.md](MODULES.md)): its `atrium/` folder, built into a committed `dist/atrium/` and declared in its `composer.json` under `extra.atrium`, so installing the package is all it takes. The PHP declarations and the integration fixtures stay in Atrium.
 
 Atrium's PHP never loads a package's classes, models or actions, and `composer.json` still requires only PHP, Laravel and `refactor-circus/keystone`. Install the packages you want; the rest stay out of the way. Everything below is configured under `atrium.integrations` in `config/atrium.php`.
 
@@ -561,7 +561,7 @@ A target is a screen key (`roster.user`), `{package}.*` or `*`, and a slot must 
 
 ### The module routes
 
-Each integration's module declares its pages in `routes` (the staged modules' `ui/modules/{pkg}/src/routes.ts`, pages in `src/pages`), under its key, so their paths start with `/{pkg}/` and mirror the v1 URLs without the `atrium` prefix. Route names follow the file layout the pages had (`/impex/runs/:run` is `impex-runs-run`), and the screen declarations and links use them:
+Each integration's module declares its pages in `routes` (the package's `atrium/src/routes.ts`, pages in `atrium/src/pages`), under its key, so their paths start with `/{pkg}/` and mirror the v1 URLs without the `atrium` prefix. Route names follow the file layout the pages had (`/impex/runs/:run` is `impex-runs-run`), and the screen declarations and links use them:
 
 | Integration | Pages |
 | --- | --- |
@@ -579,21 +579,9 @@ Each integration's module declares its pages in `routes` (the staged modules' `u
 - `/roster/invitations/:token` is a public page (`meta: { atrium: { public: true } }` on its route): it loads no shell, and a 401 there never reloads the page or calls `onUnauthorized()` until the visitor accepts or declines.
 - Override any page from your application's own module by registering a route with the same name and the same path: `router.addRoute()` replaces a route of that name, and the application's scripts install after every package's.
 
-### Vendored clients and `sync:clients`
+### Each package's client
 
-Until each package ships its own module with its own generated client (D-020, D-083), every staged module vendors its package's generated types. `ui/modules/{pkg}/client/` holds:
-
-- `openapi.json`, copied from the package;
-- `schema.d.ts`, the package's generated `client/src/schema.d.ts`, verbatim;
-- `openapi.sha256`, the SHA-256 of `openapi.json`.
-
-`useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` client typed by that `schema.d.ts` (each module declares its `paths` once on `AtriumIntegrationPaths`, in `src/env.d.ts`) and signed like every Atrium request. A module with a client factory of its own passes it instead: `useAtriumIntegration('roster', createRosterClient)`, or `createRosterClient(atriumClientOptions('roster')!)`. Refresh the copies after a package's API changes with:
-
-```bash
-ATRIUM_SUITE_PATH=/path/to/checkouts pnpm -C ui sync:clients
-```
-
-`ATRIUM_SUITE_PATH` defaults to the repository's parent directory, holding one checkout per package (`Cortex`, `Impex`, ...). `tests/Feature/Integrations/VendoredClientsTest.php` (no Node) checks each stamp, and compares the copies with a sibling checkout when there is one. When a module moves into its package, it uses the package's own `client/` and its vendored folder goes; the CHANGELOG records the step.
+Each module calls its package's API through the package's own generated client (`client/` in the package, from its committed `openapi.json`), so a package's API and its module change together. `useAtriumIntegration(key)` returns `{ active, apiBase, client }`, where `client` is an `openapi-fetch` client typed by the package's `schema.d.ts` (each module declares its `paths` once on `AtriumIntegrationPaths`, in `src/env.d.ts`) and signed like every Atrium request. A module with a client factory of its own passes it instead: `useAtriumIntegration('roster', createRosterClient)`, or `createRosterClient(atriumClientOptions('roster')!)` (D-083). Atrium vendors no package's client (D-089).
 
 ### Atrium's own OpenAPI document and client
 
@@ -659,7 +647,7 @@ The integrations port v1's screens, with three departures, each listed in the CH
 
 - **No permission-filtered navigation (D-031).** Integration nav items show to everyone the `viewAtrium` gate admits while the integration is active. A screen shows a no-access state on the package's 403, a widget a no-access card, and a search source is dropped. Use the feature flags above to hide a whole integration from someone.
 - **Operator mode is gone (D-032).** `impex.atrium.show_all` and `polycart.atrium.show_all` have no v2 API, so every list shows what the package API returns for the signed-in user.
-- **Actions without a v2 route are left out (D-032).** Each is named in a `// Not ported (D-032)` comment in the module (`ui/modules/{pkg}/src/atrium.ts`, or the area's index page for Roster and Showroom) and in the CHANGELOG.
+- **Actions without a v2 route are left out (D-032).** Each is named in a `// Not ported (D-032)` comment in the package's module (`atrium/src/atrium.ts`, or the area's index page for Roster and Showroom) and in the CHANGELOG.
 
 The Feature flags screen of [refactor-circus/pennantplus](https://github.com/Refactor-Circus/PennantPlus) is the PennantPlus integration's `/pennantplus/features` page.
 
@@ -1022,9 +1010,8 @@ The front end lives in `ui/`, a pnpm workspace (Node and pnpm pinned in `.nvmrc`
 | --- | --- |
 | `ui/sdk` | `@refactor-circus/atrium`, the SDK: the registry, the `useAtrium*` composables, the `Atrium*` components, the stores, the types (`src/types/atrium.ts`, aliases of the generated `src/client/schema.d.ts`), `defineAtriumModule()`, the Vite preset (`vite/`, with Nuxt UI's theme config in `vite/ui-config.mjs`), the theme tokens (`css/theme.css`), Atrium's strings (`locales/en.json`), the test helpers (`src/testing`) and the contract fixtures (`test/fixtures`) |
 | `ui/app` | Atrium's own entry, router, layouts and core pages, and its stylesheet (`src/assets/atrium.css`), built to the committed `dist/` |
-| `ui/modules/{pkg}` | The eight staged suite modules, each laid out as its package's `atrium/` folder will be, with its vendored `client/` and committed `dist/atrium/` |
 | `ui/workbench` | The workbench's own module: the demo plugin's widgets and extensions |
-| `ui/scripts` | `sync-clients.mjs`, `generate-client.mjs` and `nuxt-ui-theme.mjs` (Nuxt UI's theme for module styles) |
+| `ui/scripts` | `generate-client.mjs`, `nuxt-ui-theme.mjs` (Nuxt UI's theme for module styles) and `check-consumer.mjs` (a module built, type-checked and tested against the packed SDK) |
 
 ## Configuration
 
@@ -1076,15 +1063,14 @@ composer test      # PHPStan, Pint, type coverage and Pest
 composer test:ui   # the front end: frozen pnpm install, the generated-client and theme checks, typecheck, Vitest and every build
 ```
 
-`composer test` needs no Node: `tests/Feature/Frontend/BuildFreshnessTest.php` recomputes the source hash of every committed build (`dist/` and each module's `dist/atrium/`, D-085) in PHP and fails when a build is stale. `composer test:ui` needs the Node and pnpm versions pinned in `.nvmrc` and `ui/package.json`, and rebuilds everything; CI then fails on any difference in the builds. The workspace's own scripts:
+`composer test` needs no Node: `tests/Feature/Frontend/BuildFreshnessTest.php` recomputes the source hash of every committed build (`dist/` and the workbench module's `dist/atrium/`, D-085) in PHP and fails when a build is stale. `composer test:ui` needs the Node and pnpm versions pinned in `.nvmrc` and `ui/package.json`, and rebuilds everything; CI then fails on any difference in the builds. The workspace's own scripts:
 
 ```bash
 pnpm -C ui install
-pnpm -C ui build             # Atrium's app into dist/, then every module and the workbench's
+pnpm -C ui build             # Atrium's app into dist/, then the workbench's module
 pnpm -C ui test              # Vitest, every package of the workspace
 pnpm -C ui typecheck
 pnpm -C ui dev               # rebuild every build on change (vite build --watch); reload the page
-pnpm -C ui sync:clients      # refresh the staged modules' vendored clients
 pnpm -C ui generate:client   # regenerate ui/sdk/src/client/schema.d.ts from openapi.json
 pnpm -C ui theme:check       # Nuxt UI's theme for module styles is current
 ```
@@ -1097,7 +1083,13 @@ To see a working dashboard locally:
 composer serve   # the page on http://127.0.0.1:8000/atrium
 ```
 
-The workbench signs you in through `/_workbench` as `admin@example.com` (Atrium's `auth` middleware sends a guest there as the login route), so the page and its API run on the session as a host's would. Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources, rendered by the workbench's module (`ui/workbench`). `workbench/app/Atrium/DemoSuite.php` loads every staged suite module with `Atrium::module()` and points the integrations at `workbench/app/Atrium/SuiteStandIn.php`, which answers each package's API at `/_suite/{pkg}` from its vendored `openapi.json`. Run `pnpm -C ui dev` beside it to rebuild on change.
+The workbench signs you in through `/_workbench` as `admin@example.com` (Atrium's `auth` middleware sends a guest there as the login route), so the page and its API run on the session as a host's would. Every `composer serve` reseeds the workbench with a demo shop through Atrium's own actions: a few users, the signed-in admin's default and second dashboards with widgets placed, and a dashboard shared by another user. Its demo plugin exercises every plugin surface, including permission- and feature-gated navigation, a lazy widget, a settings panel with screen extensions, and two search sources, rendered by the workbench's module (`ui/workbench`). `workbench/app/Atrium/DemoSuite.php` reports every suite package installed and points the integrations at `workbench/app/Atrium/SuiteStandIn.php`, which answers each package's API at `/_suite/{pkg}`. Atrium depends on none of the packages, so by default the workbench shows Atrium's core, its own module and the integrations' fallback cards. To see the packages' modules, point `ATRIUM_SUITE_PATH` at a folder of sibling checkouts (`Cortex`, `Guardian`, … each with its built `dist/atrium/`): the workbench loads each one's module from its `composer.json` `extra.atrium`, as discovery would an installed package's, and the stand-in answers from each one's `openapi.json`:
+
+```bash
+ATRIUM_SUITE_PATH=/path/to/checkouts composer serve
+```
+
+Run `pnpm -C ui dev` beside it to rebuild on change.
 
 ## Credits
 
