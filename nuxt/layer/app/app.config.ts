@@ -7,6 +7,14 @@
  */
 const compact = { defaultVariants: { size: 'sm' as const } }
 
+const tones = ['primary', 'secondary', 'success', 'info', 'warning', 'error'] as const
+
+// A coloured badge is a status: drawn as a glowing dot and a label (D-078).
+// An error or warning alert reads as a fault line on the deck.
+const faults = (['error', 'warning'] as const).flatMap(color => (['subtle', 'soft', 'outline'] as const).map(variant => ({ color, variant, class: { root: `atrium-fault atrium-fault-${color}` } })))
+
+const signals = tones.flatMap(color => (['subtle', 'soft', 'outline'] as const).map(variant => ({ color, variant, class: 'atrium-signal' })))
+
 export default defineAppConfig({
   atrium: {
     // Rendered in place of an icon no installed collection has. Hosts may
@@ -33,32 +41,33 @@ export default defineAppConfig({
         }
       },
       compoundVariants: [
-        { color: 'primary', variant: 'solid', class: 'shadow-[0_0_14px_-6px_var(--ui-primary)] hover:shadow-[0_0_20px_-5px_var(--ui-primary)]' },
-        { color: 'neutral', variant: 'outline', class: 'bg-(--atrium-field) ring-(color:--atrium-control-ring)' }
+        { color: 'primary', variant: 'solid', class: 'atrium-btn-primary' },
+        { color: 'primary', variant: 'outline', class: 'atrium-btn-ghost ring-(color:--atrium-control-ring) text-highlighted' },
+        { color: 'neutral', variant: 'outline', class: 'atrium-btn-ghost ring-(color:--atrium-control-ring)' }
       ]
     },
     input: {
       variants: {
         size: { md: { base: 'px-2.5 py-1 text-sm gap-1.5' } },
-        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring)' }
+        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring) shadow-[inset_0_-1px_0_var(--ui-border-accented)] focus-visible:shadow-[0_0_0_3px_var(--atrium-glow-soft),0_0_18px_-6px_var(--ui-primary)]' }
       }
     },
     textarea: {
       variants: {
         size: { md: { base: 'px-2.5 py-1 text-sm gap-1.5' } },
-        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring)' }
+        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring) shadow-[inset_0_-1px_0_var(--ui-border-accented)] focus-visible:shadow-[0_0_0_3px_var(--atrium-glow-soft),0_0_18px_-6px_var(--ui-primary)]' }
       }
     },
     select: {
       variants: {
         size: { md: { base: 'px-2.5 py-1 text-sm gap-1.5' } },
-        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring)' }
+        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring) shadow-[inset_0_-1px_0_var(--ui-border-accented)] focus-visible:shadow-[0_0_0_3px_var(--atrium-glow-soft),0_0_18px_-6px_var(--ui-primary)]' }
       }
     },
     selectMenu: {
       variants: {
         size: { md: { base: 'px-2.5 py-1 text-sm gap-1.5' } },
-        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring)' }
+        variant: { outline: 'bg-(--atrium-field) ring-(color:--atrium-control-ring) shadow-[inset_0_-1px_0_var(--ui-border-accented)] focus-visible:shadow-[0_0_0_3px_var(--atrium-glow-soft),0_0_18px_-6px_var(--ui-primary)]' }
       }
     },
     checkbox: compact,
@@ -81,11 +90,16 @@ export default defineAppConfig({
     },
     badge: {
       slots: { base: 'font-mono font-medium tracking-[0.02em] rounded-[3px] whitespace-nowrap' },
+      compoundVariants: signals,
       defaultVariants: { size: 'sm' as const, variant: 'subtle' as const }
     },
     avatar: compact,
     tabs: {
-      slots: { trigger: 'font-medium', list: 'gap-1' },
+      slots: {
+        trigger: 'font-mono text-[0.6875rem] uppercase tracking-[0.1em]',
+        list: 'gap-1',
+        indicator: 'shadow-[0_0_10px_var(--ui-primary)]'
+      },
       ...compact
     },
     dropdownMenu: compact,
@@ -96,7 +110,7 @@ export default defineAppConfig({
     card: {
       slots: {
         root: 'atrium-card rounded-[calc(var(--ui-radius)*1.5)] overflow-hidden',
-        header: 'px-3 py-2 sm:px-3.5 min-h-9 flex items-center',
+        header: 'atrium-card-head px-3 py-2 sm:px-3.5 min-h-9 flex items-center',
         body: 'p-3 sm:p-3.5',
         footer: 'px-3 py-2 sm:px-3.5'
       },
@@ -107,6 +121,7 @@ export default defineAppConfig({
       }
     },
     alert: {
+      compoundVariants: faults,
       slots: {
         root: 'rounded-[calc(var(--ui-radius)*1.5)] px-3 py-2.5 gap-2',
         title: 'text-sm font-medium',
@@ -145,7 +160,7 @@ export default defineAppConfig({
       }
     },
     skeleton: {
-      base: 'rounded-(--ui-radius) bg-elevated'
+      base: 'atrium-skeleton'
     },
     separator: {
       slots: { border: 'border-default' }

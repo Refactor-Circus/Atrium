@@ -106,7 +106,14 @@
       "light_mode": "Switch to light mode",
       "dark_mode": "Switch to dark mode",
       "use_theme": "Use the {name} theme",
-      "current": "current"
+      "current": "current",
+      "fault": "Fault",
+      "restricted": "Restricted",
+      "integrations": "Integrations",
+      "latency": "{ms} ms",
+      "command": "Command",
+      "jump": "Jump anywhere",
+      "escape": "Esc to close"
     }
   }
 }

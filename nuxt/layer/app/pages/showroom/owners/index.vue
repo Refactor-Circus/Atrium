@@ -145,7 +145,7 @@ function typeLabel(code: string | undefined): string {
         </UCard>
 
         <UCard>
-          <form class="flex flex-wrap items-end gap-3" data-testid="showroom-owners-filters" @submit.prevent="applyFilters">
+          <form class="atrium-querybar" data-testid="showroom-owners-filters" @submit.prevent="applyFilters">
             <UFormField :label="t('showroom.catalog.filters.search')">
               <UInput v-model="filters.search" class="w-56" data-testid="showroom-owners-search" />
             </UFormField>

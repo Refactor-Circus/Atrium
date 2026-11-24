@@ -148,7 +148,7 @@ defineExpose({ reload: load })
   <AtriumNoAccess v-if="forbidden" />
   <div v-else class="space-y-4">
     <UCard>
-      <form class="flex flex-wrap items-start gap-3" data-testid="keen-filters" @submit.prevent="apply">
+      <form class="atrium-querybar" data-testid="keen-filters" @submit.prevent="apply">
         <UFormField v-if="!source" :label="LABELS.source" name="source" :error="errors.source?.[0]" class="w-44">
           <USelect v-model="sourceChoice" :items="sourceItems" class="w-full" data-testid="keen-filter-source" />
         </UFormField>

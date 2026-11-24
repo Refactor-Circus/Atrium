@@ -46,7 +46,7 @@ function clear(): void {
 
     <AtriumIntegrationScreen screen-key="impex.subscriptions">
       <div class="space-y-4">
-        <form class="flex flex-wrap items-end gap-3" data-testid="impex-subscriptions-filters" @submit.prevent="filter">
+        <form class="atrium-querybar" data-testid="impex-subscriptions-filters" @submit.prevent="filter">
           <UInput v-model="form.stream" name="stream" :placeholder="t('impex.subscriptions.stream')" class="w-48" />
           <USelect v-model="form.status" :items="statusItems" :placeholder="t('impex.subscriptions.all_statuses')" class="w-44" :aria-label="t('impex.subscriptions.status')" />
           <UButton type="submit" icon="i-lucide-filter" data-testid="impex-subscriptions-filter">{{ t('impex.common.filter') }}</UButton>

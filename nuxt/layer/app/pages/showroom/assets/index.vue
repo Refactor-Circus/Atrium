@@ -186,7 +186,7 @@ function labelFor(asset: ShowroomAsset): string {
         </UCard>
 
         <UCard>
-          <form class="flex flex-wrap items-end gap-3" data-testid="showroom-assets-filters" @submit.prevent="applyFilters">
+          <form class="atrium-querybar" data-testid="showroom-assets-filters" @submit.prevent="applyFilters">
             <UFormField :label="t('showroom.catalog.filters.search')">
               <UInput v-model="filters.search" class="w-56" data-testid="showroom-assets-search" />
             </UFormField>

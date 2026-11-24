@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { ref } from 'vue'
-import { AtriumPageHeader, AtriumStat, AtriumState, AtriumTopbar } from '#components'
+import { AtriumErrorCard, AtriumNoAccess, AtriumPageHeader, AtriumStat, AtriumState, AtriumStatusBar, AtriumTopbar } from '#components'
 import { useAtriumNavigation, useAtriumPalette, useAtriumShellStore } from '#imports'
 import { inApp, shell, withSetup } from './support'
 
@@ -64,11 +64,32 @@ describe('AtriumTopbar', () => {
     expect(wrapper.emitted('menu')).toHaveLength(1)
   })
 
-  it('shows the API as online, with its version', async () => {
-    const wrapper = await mountSuspended(AtriumTopbar)
+  it('codes where you are: CTL/PRD for Catalog / Products', async () => {
+    const wrapper = await mountSuspended(inApp(AtriumTopbar), { route: '/demo/orders' })
+
+    expect(wrapper.find('[data-testid="atrium-code"]').text()).toBe('WRK/ORD')
+  })
+})
+
+describe('AtriumStatusBar', () => {
+  beforeEach(async () => {
+    const store = await withSetup(() => useAtriumShellStore())
+    store.shell = shell({ integrations: [
+      { key: 'impex', label: 'Impex', active: true, api_base: '/impex/api', features: {} },
+      { key: 'polycart', label: 'Polycart', active: false, api_base: '/polycart/api', features: {} }
+    ] })
+    store.latency = 42
+  })
+
+  it('shows the API as online, each integration as a live dot, the latency, version and a UTC clock', async () => {
+    const wrapper = await mountSuspended(AtriumStatusBar)
 
     expect(wrapper.find('[data-testid="atrium-status"]').text()).toContain('Online')
-    expect(wrapper.find('[data-testid="atrium-status"]').text()).toContain('v2.0')
+    expect(wrapper.find('[data-integration="impex"]').attributes('data-active')).toBe('true')
+    expect(wrapper.find('[data-integration="polycart"] .atrium-live-dot').attributes('data-state')).toBe('off')
+    expect(wrapper.find('[data-testid="atrium-latency"]').text()).toBe('42 ms')
+    expect(wrapper.text()).toContain('API v2.0')
+    expect(wrapper.find('[data-testid="atrium-clock"]').text()).toMatch(/^\d{2}:\d{2}:\d{2} UTC$/)
   })
 })
 
@@ -136,6 +157,30 @@ describe('the shared deck blocks', () => {
     expect(stat.text()).toContain('Inbound')
     expect(stat.text()).toContain('12')
     expect(stat.text()).toContain('last 24h')
+  })
+
+  it('draws a stat\'s series as a sparkline and its delta as a chip', async () => {
+    const wrapper = await mountSuspended(AtriumStat, { props: { label: 'Orders', value: '1,284', delta: '+8.1%', series: [3, 5, 4, 8] } })
+
+    expect(wrapper.find('[data-testid="atrium-stat-delta"]').text()).toBe('+8.1%')
+    expect(wrapper.find('[data-testid="atrium-stat-spark"] path[stroke]').attributes('d')).toMatch(/^M0\.0,/)
+  })
+
+  it('draws no sparkline for fewer than two points', async () => {
+    const wrapper = await mountSuspended(AtriumStat, { props: { label: 'Orders', value: 1, series: [3] } })
+
+    expect(wrapper.find('[data-testid="atrium-stat-spark"]').exists()).toBe(false)
+  })
+
+  it('reads a failure as a terminal fault and a 403 as a restricted readout', async () => {
+    const error = await mountSuspended(AtriumErrorCard, { props: { message: 'Nothing loaded.' } })
+    const locked = await mountSuspended(AtriumNoAccess)
+
+    expect(error.find('[data-testid="atrium-error-card"]').attributes('role')).toBe('alert')
+    expect(error.text()).toContain('Nothing loaded.')
+    expect(error.find('.atrium-terminal-head').attributes('data-code')).toBe('ERR')
+    expect(locked.find('.atrium-terminal-head').attributes('data-code')).toBe('403')
+    expect(locked.text()).toContain('No access')
   })
 
   it('renders a page header with its overline, title and actions', async () => {

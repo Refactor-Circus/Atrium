@@ -40,7 +40,7 @@ function clear(): void {
     <template #body>
       <AtriumIntegrationScreen screen-key="guardian.security-events">
         <div class="space-y-4" data-testid="guardian-security-events">
-          <form class="flex flex-wrap items-end gap-3" data-testid="guardian-events-filters" @submit.prevent="apply">
+          <form class="atrium-querybar" data-testid="guardian-events-filters" @submit.prevent="apply">
             <UFormField :label="t('guardian.admin.events.fields.type')">
               <select v-model="form.type" class="w-64 rounded-md border border-default bg-default px-2.5 py-1.5 text-sm" data-testid="guardian-events-filter-type">
                 <option value="">{{ t('guardian.admin.events.any_type') }}</option>

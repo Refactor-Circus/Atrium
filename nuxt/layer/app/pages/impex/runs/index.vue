@@ -48,7 +48,7 @@ function clear(): void {
 
     <AtriumIntegrationScreen screen-key="impex.runs">
       <div class="space-y-4">
-        <form class="flex flex-wrap items-end gap-3" data-testid="impex-runs-filters" @submit.prevent="filter">
+        <form class="atrium-querybar" data-testid="impex-runs-filters" @submit.prevent="filter">
           <USelect v-model="form.status" :items="statusItems" :placeholder="t('impex.runs.all_statuses')" class="w-44" :aria-label="t('impex.runs.status')" />
           <USelect v-model="form.trigger" :items="triggerItems" :placeholder="t('impex.runs.all_triggers')" class="w-40" :aria-label="t('impex.runs.trigger')" />
           <UInput v-model="form.flow" name="flow" :placeholder="t('impex.runs.flow')" class="w-48" />

@@ -56,6 +56,7 @@ useHead({ titleTemplate: title => (title ? `${title} · ` : '') + (store.shell?.
           <slot />
         </div>
       </main>
+      <AtriumStatusBar />
     </div>
 
     <USlideover

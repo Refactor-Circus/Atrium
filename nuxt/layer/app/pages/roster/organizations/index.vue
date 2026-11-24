@@ -168,7 +168,7 @@ async function purge(organization: RosterOrganization): Promise<void> {
           </button>
         </nav>
 
-        <form class="flex flex-wrap items-end gap-3" data-testid="roster-organizations-filters" @submit.prevent="filter">
+        <form class="atrium-querybar" data-testid="roster-organizations-filters" @submit.prevent="filter">
           <UFormField :label="t('roster.organizations.filters.search')">
             <UInput v-model="filters.search" name="search" class="w-64" data-testid="roster-organizations-search" />
           </UFormField>

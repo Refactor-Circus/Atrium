@@ -119,9 +119,9 @@ function pageCount(group: AtriumNavGroup): string {
       data-testid="atrium-nav-panel"
       :data-section="shown.key"
     >
-      <header class="flex h-(--atrium-bar-height) shrink-0 items-center gap-2 border-b border-default px-3">
+      <header class="atrium-panel-head flex h-(--atrium-bar-height) shrink-0 items-center gap-2 border-b border-default px-3">
         <UIcon :name="shown.icon ?? 'i-lucide-folder'" class="size-4 shrink-0 text-primary" />
-        <span class="truncate text-[0.8125rem] font-semibold tracking-tight text-highlighted">{{ shown.label }}</span>
+        <span class="truncate font-mono text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-highlighted">{{ shown.label }}</span>
         <span class="atrium-label ms-auto text-dimmed">{{ pageCount(shown) }}</span>
       </header>
       <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">

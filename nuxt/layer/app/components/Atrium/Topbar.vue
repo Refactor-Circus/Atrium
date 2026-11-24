@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /**
  * The shell's top bar (D-077): the navigation toggles (the drawer below
- * `lg`, the section panel above), where you are (section / page), ⌘K, the
- * API's live status and version, the theme switcher and the colour mode.
+ * `lg`, the section panel above), where you are (a short code such as
+ * `CAT/PRD`, then section / page), ⌘K, the theme switcher and the colour
+ * mode. The API's status lives in <AtriumStatusBar>.
  */
 const collapsed = defineModel<boolean>('collapsed', { default: false })
 const emit = defineEmits<{ menu: [] }>()
 
-const store = useAtriumShellStore()
 const theme = useAtriumTheme()
 const nav = useAtriumNavigation()
 const route = useRoute()
@@ -23,7 +23,19 @@ const page = computed(() => {
   return nav.page.value?.label ?? null
 })
 
-const online = computed(() => store.shell !== null && !store.error)
+/** A short code for where you are: `CAT/PRD` for Catalog / Products. */
+function abbreviate(label: string | null): string {
+  const letters = (label ?? '').normalize('NFKD').replace(/[^A-Za-z0-9 ]/g, '').trim()
+  const words = letters.split(/\s+/).filter(Boolean)
+
+  if (words.length > 1) {
+    return words.map(word => word[0]).join('').slice(0, 3).toUpperCase()
+  }
+
+  return letters.replace(/[aeiou]/gi, (match, offset) => offset === 0 ? match : '').slice(0, 3).toUpperCase()
+}
+
+const code = computed(() => [section.value, page.value].filter(Boolean).map(abbreviate).filter(Boolean).join('/'))
 
 const themeItems = computed(() => [theme.themes.value.map(item => ({
   label: item.label,
@@ -70,6 +82,7 @@ function toggleMode() {
     />
 
     <nav class="flex min-w-0 items-center gap-1.5" :aria-label="t('atrium.shell.breadcrumb')" data-testid="atrium-breadcrumb">
+      <span v-if="code" class="atrium-code hidden sm:inline-flex" data-testid="atrium-code" aria-hidden="true">{{ code }}</span>
       <span v-if="section" class="atrium-label hidden truncate sm:inline">{{ section }}</span>
       <UIcon v-if="section && page" name="i-lucide-chevron-right" class="hidden size-3 shrink-0 text-dimmed sm:inline" />
       <span v-if="page" class="truncate text-[0.8125rem] font-medium text-highlighted" aria-current="page">{{ page }}</span>
@@ -80,16 +93,6 @@ function toggleMode() {
         <AtriumSearch />
       </div>
 
-      <div
-        class="hidden items-center gap-1.5 rounded-(--ui-radius) px-2 py-1 ring-1 ring-(--ui-border) xl:flex"
-        :title="online ? t('atrium.shell.online') : t('atrium.shell.offline')"
-        data-testid="atrium-status"
-      >
-        <span v-if="online" class="atrium-live-dot" aria-hidden="true" />
-        <span v-else class="size-[0.4375rem] rounded-full bg-error" aria-hidden="true" />
-        <span class="atrium-label leading-none">{{ online ? t('atrium.shell.online') : t('atrium.shell.offline') }}</span>
-        <span v-if="store.shell?.api_version" class="atrium-mono text-[0.65625rem] leading-none text-muted">v{{ store.shell.api_version }}</span>
-      </div>
 
       <UDropdownMenu v-if="theme.switchable.value && theme.themes.value.length > 1" :items="themeItems" :content="{ align: 'end' }">
         <UButton icon="i-lucide-palette" color="neutral" variant="ghost" size="sm" :aria-label="t('atrium.theme.label')" data-testid="atrium-theme" />

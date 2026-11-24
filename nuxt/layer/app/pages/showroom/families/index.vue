@@ -97,7 +97,7 @@ async function create(): Promise<void> {
         </UCard>
 
         <UCard>
-          <form class="flex flex-wrap items-end gap-3" data-testid="showroom-families-filters" @submit.prevent="filter">
+          <form class="atrium-querybar" data-testid="showroom-families-filters" @submit.prevent="filter">
             <UFormField :label="t('showroom.catalog.filters.search')">
               <UInput v-model="search" class="w-56" data-testid="showroom-families-search" />
             </UFormField>

@@ -12,6 +12,8 @@ export const useAtriumShellStore = defineStore('atrium-shell', () => {
   const shell = ref<AtriumShell | null>(null)
   const error = ref<unknown>(null)
   const loading = ref(false)
+  /** How long GET /shell took, in milliseconds, for the status strip. */
+  const latency = ref<number | null>(null)
 
   async function load(force = false): Promise<void> {
     if (shell.value && !force) {
@@ -22,7 +24,9 @@ export const useAtriumShellStore = defineStore('atrium-shell', () => {
     error.value = null
 
     try {
+      const started = performance.now()
       const response = await nuxtApp.runWithContext(() => useAtriumApi()<AtriumShellResponse>('/shell'))
+      latency.value = Math.round(performance.now() - started)
       shell.value = response.data
       await applyLocale(response.data.locale)
     } catch (e) {
@@ -56,5 +60,5 @@ export const useAtriumShellStore = defineStore('atrium-shell', () => {
     return integration(key)?.active === true
   }
 
-  return { shell, error, loading, load, integrations, integration, isActive }
+  return { shell, error, loading, latency, load, integrations, integration, isActive }
 })

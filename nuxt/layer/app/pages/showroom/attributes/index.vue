@@ -95,7 +95,7 @@ function clear(): void {
     <AtriumIntegrationScreen screen-key="showroom.attributes">
       <div class="space-y-4">
         <UCard>
-          <form class="flex flex-wrap items-end gap-3" data-testid="showroom-attributes-filters" @submit.prevent="filter">
+          <form class="atrium-querybar" data-testid="showroom-attributes-filters" @submit.prevent="filter">
             <UFormField :label="t('showroom.catalog.filters.search')">
               <UInput v-model="filters.search" class="w-56" data-testid="showroom-attributes-search" />
             </UFormField>

@@ -45,7 +45,7 @@ function clear(): void {
 
     <AtriumIntegrationScreen screen-key="impex.messages">
       <div class="space-y-4">
-        <form class="flex flex-wrap items-end gap-3" data-testid="impex-messages-filters" @submit.prevent="filter">
+        <form class="atrium-querybar" data-testid="impex-messages-filters" @submit.prevent="filter">
           <USelect v-model="form.direction" :items="directionItems" :placeholder="t('impex.messages.all_directions')" class="w-44" :aria-label="t('impex.messages.direction')" />
           <UInput v-model="form.channel" name="channel" :placeholder="t('impex.messages.channel')" class="w-48" />
           <UButton type="submit" icon="i-lucide-filter" data-testid="impex-messages-filter">{{ t('impex.common.filter') }}</UButton>

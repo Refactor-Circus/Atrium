@@ -164,14 +164,14 @@ onBeforeUnmount(() => sortable?.destroy())
       </UButton>
     </div>
 
-    <div v-if="!cells.length" class="rounded-lg border border-dashed border-default p-10 text-center text-muted">
+    <div v-if="!cells.length" class="atrium-empty">
       <p>{{ t('atrium.dashboard.empty') }}</p>
       <UButton v-if="editable && !editing" class="mt-3" variant="soft" @click="startPicking">
         {{ t('atrium.dashboard.add_first') }}
       </UButton>
     </div>
 
-    <div ref="grid" class="grid auto-rows-[8rem] grid-cols-12 gap-4" data-testid="atrium-grid">
+    <div ref="grid" class="atrium-grid grid auto-rows-[8rem] grid-cols-12 gap-3" data-testid="atrium-grid">
       <div v-for="(cell, index) in cells" :key="cell.id" :style="span(cell.grid)" class="relative min-w-0">
         <div v-if="editing" class="absolute inset-x-2 top-2 z-10 flex items-center gap-1 rounded-md bg-default/90 p-1 shadow">
           <UIcon name="i-lucide-grip-vertical" class="size-4 cursor-grab text-muted" data-drag />

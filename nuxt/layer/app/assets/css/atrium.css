@@ -71,19 +71,19 @@
   --ui-radius: var(--atrium-token-radius, 0.25rem);
 
   --ui-bg: var(--atrium-token-surface, #ffffff);
-  --ui-bg-muted: var(--atrium-token-surface-alt, #f6f8fb);
-  --ui-bg-elevated: var(--atrium-token-surface-alt, #eef1f5);
+  --ui-bg-muted: var(--atrium-token-surface-alt, #f7f8fa);
+  --ui-bg-elevated: var(--atrium-token-surface-alt, #f0f2f5);
   --ui-bg-accented: #e3e8ee;
-  --ui-text: var(--atrium-token-on-surface, #2f3744);
+  --ui-text: var(--atrium-token-on-surface, #252b35);
   --ui-text-toned: var(--atrium-token-on-surface, #3d4654);
   --ui-text-muted: #5f6b7c;
   --ui-text-dimmed: #8a95a5;
-  --ui-text-highlighted: var(--atrium-token-on-surface-strong, #0b1220);
-  --ui-border: var(--atrium-token-outline, #e1e6ed);
+  --ui-text-highlighted: var(--atrium-token-on-surface-strong, #07090d);
+  --ui-border: var(--atrium-token-outline, #d6dbe2);
   --ui-border-muted: var(--atrium-token-outline, #e9edf2);
-  --ui-border-accented: var(--atrium-token-outline-strong, #c9d1dc);
+  --ui-border-accented: var(--atrium-token-outline-strong, #b4bbc6);
 
-  --atrium-canvas: var(--atrium-token-canvas, #f2f4f7);
+  --atrium-canvas: var(--atrium-token-canvas, #eef0f3);
 
   /* Deck tokens: derived from the bridged colours, so a theme drives them. */
   --atrium-glow: color-mix(in oklab, var(--ui-primary) 55%, transparent);
@@ -99,6 +99,18 @@
   --atrium-bar-height: 2.625rem;
   --atrium-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --atrium-speed: 160ms;
+
+  /* Glass and light. Light mode is "lab white": paper panels, ink hairlines,
+   * crisp short shadows; dark mode is glass over the moving deck. */
+  --atrium-glass: color-mix(in oklab, var(--ui-bg) 94%, transparent);
+  --atrium-blur: 10px;
+  --atrium-ink: color-mix(in oklab, var(--ui-text-highlighted) 14%, transparent);
+  --atrium-shadow: 0 1px 0 rgb(7 9 13 / 0.04), 0 2px 8px -3px rgb(7 9 13 / 0.12);
+  --atrium-highlight: rgb(255 255 255 / 0.9);
+  --atrium-spot: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+  --atrium-dots: color-mix(in oklab, var(--ui-text-highlighted) 16%, transparent);
+  --atrium-haze: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  --atrium-status-height: 1.5rem;
 }
 
 .dark {
@@ -109,7 +121,7 @@
   --ui-warning: var(--atrium-token-warning-dark, var(--atrium-token-warning, var(--ui-color-warning-400)));
   --ui-error: var(--atrium-token-danger-dark, var(--atrium-token-danger, var(--ui-color-error-400)));
 
-  --ui-bg: var(--atrium-token-surface-dark, #0b0e14);
+  --ui-bg: var(--atrium-token-surface-dark, #0a0d13);
   --ui-bg-muted: var(--atrium-token-surface-dark-alt, #10141c);
   --ui-bg-elevated: var(--atrium-token-surface-dark-alt, #141923);
   --ui-bg-accented: #1c2330;
@@ -122,11 +134,19 @@
   --ui-border-muted: var(--atrium-token-outline-dark, #161b24);
   --ui-border-accented: var(--atrium-token-outline-dark-strong, #2a3240);
 
-  --atrium-canvas: var(--atrium-token-canvas-dark, #05070b);
+  --atrium-canvas: var(--atrium-token-canvas-dark, #030509);
   --atrium-grid: color-mix(in oklab, var(--ui-text-highlighted) 5.5%, transparent);
   --atrium-edge: color-mix(in oklab, var(--ui-text-highlighted) 6%, transparent);
   --atrium-field: color-mix(in oklab, var(--ui-bg) 55%, var(--atrium-canvas));
   --atrium-row-hover: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+  --atrium-glass: color-mix(in oklab, var(--ui-bg) 72%, transparent);
+  --atrium-blur: 14px;
+  --atrium-ink: color-mix(in oklab, var(--ui-text-highlighted) 9%, transparent);
+  --atrium-shadow: 0 18px 44px -30px rgb(0 0 0 / 0.95);
+  --atrium-highlight: rgb(255 255 255 / 0.06);
+  --atrium-spot: color-mix(in oklab, var(--ui-primary) 13%, transparent);
+  --atrium-dots: color-mix(in oklab, var(--ui-text-highlighted) 19%, transparent);
+  --atrium-haze: color-mix(in oklab, var(--ui-primary) 22%, transparent);
 }
 
 @layer base {
@@ -187,9 +207,13 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
- * The shell: rail, section panel, top bar and the canvas.
- * ------------------------------------------------------------------------ */
+/* ===========================================================================
+ * THE DECK (D-077, D-078). Everything below draws the shell and restyles what
+ * pages render inside it. Colour always comes from the bridged variables
+ * above, so a host's theme re-lights the whole deck.
+ * ======================================================================== */
+
+/* ---- Canvas: dot matrix in perspective, and a slow primary glow --------- */
 
 .atrium-canvas {
   position: relative;
@@ -197,46 +221,102 @@
   background-color: var(--atrium-canvas);
 }
 
-/* A faint engineering grid with a primary haze, fading out below the bar. */
 .atrium-canvas::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: radial-gradient(var(--atrium-dots) 1px, transparent 1.4px);
+  background-size: 18px 18px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(130% 85% at 60% 0%, #000 0, rgb(0 0 0 / 0.55) 45%, transparent 85%);
+}
+
+.atrium-canvas::after {
+  content: "";
+  position: absolute;
   z-index: -1;
   pointer-events: none;
-  background-image:
-    radial-gradient(56rem 22rem at 78% -6rem, color-mix(in oklab, var(--ui-primary) 9%, transparent), transparent 70%),
-    linear-gradient(var(--atrium-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px);
-  background-size: 100% 100%, 28px 28px, 28px 28px;
-  background-position: 0 0, -1px -1px, -1px -1px;
-  mask-image: linear-gradient(180deg, #000 0, rgb(0 0 0 / 0.55) 18rem, rgb(0 0 0 / 0.2) 100%);
+  width: 62rem;
+  height: 34rem;
+  top: -16rem;
+  right: -12rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--atrium-haze), transparent);
+  filter: blur(20px);
+  animation: atrium-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
 }
+
+@keyframes atrium-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-18rem, 6rem, 0) scale(1.15); }
+  100% { transform: translate3d(-34rem, -2rem, 0) scale(0.95); }
+}
+
+/* ---- Rail: a luminous spine ------------------------------------------- */
 
 .atrium-sidebar {
   background-color: var(--ui-bg);
 }
 
 .atrium-rail {
+  position: relative;
   width: var(--atrium-rail-width);
   background:
-    linear-gradient(180deg, color-mix(in oklab, var(--ui-primary) 5%, transparent), transparent 12rem),
+    radial-gradient(120% 30% at 0% 0%, color-mix(in oklab, var(--ui-primary) 14%, transparent), transparent 70%),
     var(--ui-bg);
-  border-inline-end: 1px solid var(--ui-border);
+}
+
+/* The spine: a hairline on the rail's edge, lit at the top… */
+.atrium-rail::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 1px;
+  background: linear-gradient(180deg, var(--ui-primary), color-mix(in oklab, var(--ui-primary) 25%, var(--ui-border)) 30%, var(--ui-border) 70%);
+  box-shadow: 0 0 10px 0 var(--atrium-glow-soft);
+}
+
+/* …with a pulse of light travelling down it. */
+.atrium-rail::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -1px;
+  top: 0;
+  width: 3px;
+  height: 7rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, transparent, var(--ui-primary), transparent);
+  filter: blur(0.5px);
+  box-shadow: 0 0 12px var(--atrium-glow);
+  animation: atrium-trace 7s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes atrium-trace {
+  0% { transform: translateY(-8rem); opacity: 0; }
+  10% { opacity: 1; }
+  60% { opacity: 0.9; }
+  75%, 100% { transform: translateY(100vh); opacity: 0; }
 }
 
 .atrium-mark {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 1.875rem;
-  height: 1.875rem;
-  border-radius: calc(var(--ui-radius) * 1.5);
+  width: 2rem;
+  height: 2rem;
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: var(--ui-text-highlighted);
-  background: linear-gradient(140deg, color-mix(in oklab, var(--ui-primary) 38%, var(--ui-bg)), color-mix(in oklab, var(--ui-primary) 10%, var(--ui-bg)));
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 55%, transparent), 0 0 22px -6px var(--atrium-glow);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+  background: linear-gradient(140deg, color-mix(in oklab, var(--ui-primary) 70%, var(--ui-bg)), color-mix(in oklab, var(--ui-primary) 18%, var(--ui-bg)));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 70%, transparent);
+  text-shadow: 0 0 10px var(--atrium-glow);
 }
 
 .atrium-rail-item {
@@ -250,11 +330,7 @@
   transition: color var(--atrium-speed) var(--atrium-ease), background-color var(--atrium-speed) var(--atrium-ease), box-shadow var(--atrium-speed) var(--atrium-ease);
 }
 
-.atrium-rail-item:hover {
-  color: var(--ui-text-highlighted);
-  background-color: var(--ui-bg-elevated);
-}
-
+.atrium-rail-item:hover,
 .atrium-rail-item[data-shown="true"] {
   color: var(--ui-text-highlighted);
   background-color: var(--ui-bg-elevated);
@@ -262,28 +338,28 @@
 
 .atrium-rail-item[data-current="true"] {
   color: var(--ui-primary);
-  background-color: var(--atrium-tint);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 30%, transparent);
+  background:
+    radial-gradient(circle at 50% 120%, color-mix(in oklab, var(--ui-primary) 35%, transparent), transparent 70%),
+    var(--atrium-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 40%, transparent), 0 0 18px -6px var(--atrium-glow);
 }
 
 .atrium-rail-item[data-current="true"] .atrium-rail-icon {
   filter: drop-shadow(0 0 6px var(--atrium-glow));
 }
 
-/* The lit edge beside the route's section. */
 .atrium-rail-item[data-current="true"]::before {
   content: "";
   position: absolute;
   inset-inline-start: -0.5rem;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 2px;
-  border-radius: 2px;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   background: var(--ui-primary);
-  box-shadow: 0 0 10px 1px var(--atrium-glow);
+  box-shadow: 0 0 12px 1px var(--atrium-glow);
 }
 
-/* Rail labels: a tooltip on hover and keyboard focus (no provider needed). */
 .atrium-rail [data-tip]::after {
   content: attr(data-tip);
   position: absolute;
@@ -292,13 +368,16 @@
   z-index: 60;
   translate: -4px -50%;
   white-space: nowrap;
-  padding: 0.1875rem 0.5rem;
-  border-radius: var(--ui-radius);
-  font-size: 0.71875rem;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
   font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--ui-text-highlighted);
   background: var(--ui-bg-elevated);
-  box-shadow: 0 0 0 1px var(--ui-border-accented), 0 6px 20px -6px rgb(0 0 0 / 0.45);
+  border-inline-start: 2px solid var(--ui-primary);
+  box-shadow: 0 0 0 1px var(--ui-border-accented), 0 8px 24px -8px rgb(0 0 0 / 0.5), -6px 0 14px -8px var(--atrium-glow);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--atrium-speed) var(--atrium-ease), translate var(--atrium-speed) var(--atrium-ease);
@@ -310,10 +389,30 @@
   translate: 0 -50%;
 }
 
+/* ---- Section panel ---------------------------------------------------- */
+
 .atrium-panel-nav {
   width: var(--atrium-panel-width);
-  background-color: color-mix(in oklab, var(--ui-bg) 92%, var(--atrium-canvas));
+  background: color-mix(in oklab, var(--ui-bg) 90%, var(--atrium-canvas));
   border-inline-end: 1px solid var(--ui-border);
+}
+
+.atrium-panel-head {
+  position: relative;
+}
+
+/* A ruler of ticks along the panel head's lower edge. */
+.atrium-panel-head::after,
+.atrium-card-head::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: -1px;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--ui-border-accented) 0 1px, transparent 1px 8px);
+  mask-image: linear-gradient(90deg, transparent, #000 60%);
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .atrium-nav-link {
@@ -336,83 +435,148 @@
 
 .atrium-nav-link[data-active="true"] {
   color: var(--ui-text-highlighted);
-  background: linear-gradient(90deg, var(--atrium-tint), transparent);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--ui-primary) 16%, transparent), transparent 85%);
 }
 
 .atrium-nav-link[data-active="true"]::before {
   content: "";
   position: absolute;
   inset-inline-start: 0;
-  top: 0.375rem;
-  bottom: 0.375rem;
+  top: 0.3125rem;
+  bottom: 0.3125rem;
   width: 2px;
   border-radius: 2px;
   background: var(--ui-primary);
-  box-shadow: 0 0 8px var(--atrium-glow);
+  box-shadow: 0 0 10px var(--atrium-glow);
+}
+
+/* The active page's scanline: a band of light that crosses it once. */
+.atrium-nav-link[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ui-primary) 22%, transparent), transparent);
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: atrium-sweep 1.1s var(--atrium-ease) 0.15s both;
+  pointer-events: none;
+}
+
+@keyframes atrium-sweep {
+  from { background-position: -60% 0; }
+  to { background-position: 160% 0; }
 }
 
 .atrium-nav-link[data-active="true"] .atrium-nav-icon {
   color: var(--ui-primary);
+  opacity: 1;
 }
 
 .atrium-nav-badge {
   margin-inline-start: auto;
   min-width: 1.125rem;
   padding: 0 0.3125rem;
-  border-radius: 999px;
+  border-radius: 3px;
   font-family: var(--font-mono);
   font-size: 0.625rem;
   line-height: 1rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  color: var(--ui-text-highlighted);
+  color: var(--ui-primary);
   background: var(--atrium-tint);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 28%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent);
 }
+
+/* ---- Top bar and status strip ----------------------------------------- */
 
 .atrium-topbar {
   height: var(--atrium-bar-height);
-  background: color-mix(in oklab, var(--atrium-canvas) 72%, transparent);
-  backdrop-filter: blur(12px) saturate(1.4);
+  background: color-mix(in oklab, var(--atrium-canvas) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(1.5);
   border-block-end: 1px solid var(--ui-border);
+}
+
+.atrium-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.25rem;
+  padding: 0 0.4375rem 0 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ui-primary);
+  background: var(--atrium-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+
+.atrium-code::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--ui-primary);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  box-shadow: 0 0 6px var(--atrium-glow);
+}
+
+.atrium-statusbar {
+  height: var(--atrium-status-height);
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  letter-spacing: 0.06em;
+  color: var(--ui-text-muted);
+  background: color-mix(in oklab, var(--atrium-canvas) 80%, transparent);
+  backdrop-filter: blur(12px);
+  border-block-start: 1px solid var(--ui-border);
+}
+
+.atrium-statusbar-sep {
+  width: 1px;
+  height: 0.75rem;
+  background: var(--ui-border-accented);
 }
 
 .atrium-live-dot {
   position: relative;
-  width: 0.4375rem;
-  height: 0.4375rem;
+  flex: none;
+  width: 0.375rem;
+  height: 0.375rem;
   border-radius: 999px;
-  background: var(--ui-success);
-  box-shadow: 0 0 8px var(--ui-success);
+  background: var(--tone, var(--ui-success));
+  box-shadow: 0 0 8px var(--tone, var(--ui-success));
 }
 
-.atrium-live-dot::after {
+.atrium-live-dot[data-state="off"] {
+  --tone: var(--ui-text-dimmed);
+  box-shadow: none;
+}
+
+.atrium-live-dot:not([data-state="off"])::after {
   content: "";
   position: absolute;
   inset: -3px;
   border-radius: 999px;
-  border: 1px solid var(--ui-success);
+  border: 1px solid var(--tone, var(--ui-success));
   opacity: 0;
   animation: atrium-ping 2.4s var(--atrium-ease) infinite;
+  animation-delay: var(--delay, 0s);
 }
 
 @keyframes atrium-ping {
-  0% { opacity: 0.7; scale: 0.6; }
-  70%, 100% { opacity: 0; scale: 1.6; }
+  0% { opacity: 0.8; scale: 0.6; }
+  70%, 100% { opacity: 0; scale: 1.7; }
 }
 
-/* ---------------------------------------------------------------------------
- * Content: every page's tables, headings, native selects and panels, so
- * pages (the layer's and the suite integrations') read as one system
- * without restyling each. Compound selectors here outrank a page's own
- * spacing utilities (`py-2 pr-3`) on purpose.
- * ------------------------------------------------------------------------ */
+/* ---- Pages ------------------------------------------------------------ */
 
 .atrium-content {
   font-size: var(--text-sm);
 }
 
-/* A page that is not a dashboard panel scrolls in a padded frame. */
 .atrium-page {
   min-height: 0;
   flex: 1 1 0%;
@@ -432,13 +596,54 @@
   overflow: hidden;
 }
 
+/* Arrival: the page rises in, its panels and rows a beat after each other. */
+.atrium-page > *,
+.atrium-dashboard-panel > * {
+  animation: atrium-rise 200ms var(--atrium-ease) both;
+}
+
+@keyframes atrium-rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.atrium-content tbody tr {
+  animation: atrium-row 260ms var(--atrium-ease) both;
+}
+
+.atrium-content tbody tr:nth-child(2) { animation-delay: 20ms; }
+.atrium-content tbody tr:nth-child(3) { animation-delay: 40ms; }
+.atrium-content tbody tr:nth-child(4) { animation-delay: 60ms; }
+.atrium-content tbody tr:nth-child(5) { animation-delay: 80ms; }
+.atrium-content tbody tr:nth-child(6) { animation-delay: 100ms; }
+.atrium-content tbody tr:nth-child(7) { animation-delay: 120ms; }
+.atrium-content tbody tr:nth-child(8) { animation-delay: 140ms; }
+.atrium-content tbody tr:nth-child(n+9) { animation-delay: 160ms; }
+
+@keyframes atrium-row {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
 @layer utilities {
+  /* Page titles: tight display type behind a lit caret. */
   .atrium-content h1 {
-    font-size: 1.0625rem;
-    line-height: 1.5rem;
+    font-size: 1.1875rem;
+    line-height: 1.625rem;
     font-weight: 600;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.022em;
     color: var(--ui-text-highlighted);
+  }
+
+  .atrium-content h1::before {
+    content: "";
+    display: inline-block;
+    width: 0.25rem;
+    height: 0.9em;
+    margin-inline-end: 0.5rem;
+    vertical-align: -0.08em;
+    background: var(--ui-primary);
+    box-shadow: 0 0 10px var(--atrium-glow);
   }
 
   /* A panel's heading: a micro-label behind a lit tick. */
@@ -449,8 +654,8 @@
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     line-height: 1rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ui-text-highlighted);
   }
@@ -458,11 +663,11 @@
   .atrium-content h2::before {
     content: "";
     flex: none;
-    width: 0.3125rem;
-    height: 0.3125rem;
-    border-radius: 1px;
+    width: 0.375rem;
+    height: 0.375rem;
     background: var(--ui-primary);
-    box-shadow: 0 0 6px var(--atrium-glow);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+    filter: drop-shadow(0 0 4px var(--atrium-glow));
   }
 
   .atrium-content h3 {
@@ -471,6 +676,7 @@
     color: var(--ui-text-highlighted);
   }
 
+  /* Tables: tracked caps for heads, 34px rows, a sweep of light on hover. */
   .atrium-content table {
     font-size: 0.78125rem;
     line-height: 1.125rem;
@@ -491,14 +697,18 @@
     padding-block: 0.375rem;
     padding-inline: 0.625rem;
     font-family: var(--font-mono);
-    font-size: 0.65625rem;
+    font-size: 0.625rem;
     font-weight: 500;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     white-space: nowrap;
     text-align: start;
-    background: color-mix(in oklab, var(--ui-bg) 94%, var(--atrium-canvas));
+    background: color-mix(in oklab, var(--ui-bg) 92%, var(--atrium-canvas));
     border-block-end: 1px solid var(--atrium-control-ring);
+  }
+
+  .atrium-content thead th:first-child {
+    box-shadow: inset 2px 0 0 color-mix(in oklab, var(--ui-primary) 70%, transparent);
   }
 
   .atrium-content tbody td,
@@ -508,6 +718,7 @@
     padding-inline: 0.625rem;
     border-block-end: 1px solid var(--ui-border);
     vertical-align: middle;
+    transition: box-shadow var(--atrium-speed) var(--atrium-ease);
   }
 
   .atrium-content tbody tr:last-child > * {
@@ -515,11 +726,19 @@
   }
 
   .atrium-content tbody tr {
-    transition: background-color var(--atrium-speed) var(--atrium-ease);
+    background-repeat: no-repeat;
+    background-size: 35% 100%;
+    background-position: -50% 0;
   }
 
   .atrium-content tbody tr:hover {
     background-color: var(--atrium-row-hover);
+    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ui-primary) 14%, transparent), transparent);
+    animation: atrium-row-sweep 700ms var(--atrium-ease) both;
+  }
+
+  .atrium-content tbody tr:hover > :first-child {
+    box-shadow: inset 2px 0 0 var(--ui-primary);
   }
 
   .atrium-content :is(td, th).text-right {
@@ -533,26 +752,23 @@
 
   .atrium-content tbody :is(td, th) a:not([class*="inline-flex"]):hover {
     color: var(--ui-primary);
+    text-shadow: 0 0 12px var(--atrium-glow-soft);
   }
 
-  /* A table straight in a page (not in a panel) gets a panel of its own. */
-  .atrium-content :is(.atrium-page, [data-slot="body"]) > div > table,
-  .atrium-content .space-y-4 > table,
-  .atrium-content .overflow-x-auto:not([data-slot]) {
+  /* Monospaced first columns (identifiers) read dimmer than the data. */
+  .atrium-content tbody td.font-mono,
+  .atrium-content tbody td .font-mono {
+    letter-spacing: 0.01em;
+  }
+
+  .atrium-content .overflow-x-auto:not(.atrium-card .overflow-x-auto):has(> table) {
     border-radius: calc(var(--ui-radius) * 1.5);
+    background: var(--atrium-glass);
+    backdrop-filter: blur(var(--atrium-blur));
+    box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 var(--atrium-highlight), var(--atrium-shadow);
   }
 
-  .atrium-content .overflow-x-auto:not([data-slot]):has(> table) {
-    background: var(--ui-bg);
-    box-shadow: inset 0 0 0 1px var(--ui-border), 0 1px 0 var(--atrium-edge);
-  }
-
-  .atrium-content [data-slot="body"] .overflow-x-auto:not([data-slot]):has(> table) {
-    background: transparent;
-    box-shadow: none;
-    margin-inline: -0.25rem;
-  }
-
+  /* Native selects, as the deck's fields. */
   .atrium-content select {
     height: 1.75rem;
     padding-block: 0;
@@ -563,21 +779,21 @@
     background-color: var(--atrium-field);
     color: var(--ui-text-highlighted);
     appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--ui-text-muted) 50%), linear-gradient(135deg, var(--ui-text-muted) 50%, transparent 50%);
-    background-position: calc(100% - 0.8125rem) 50%, calc(100% - 0.5rem) 50%;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ui-primary) 50%), linear-gradient(135deg, var(--ui-primary) 50%, transparent 50%);
+    background-position: calc(100% - 0.8125rem) 55%, calc(100% - 0.5rem) 55%;
     background-size: 0.3125rem 0.3125rem;
     background-repeat: no-repeat;
     transition: border-color var(--atrium-speed) var(--atrium-ease), box-shadow var(--atrium-speed) var(--atrium-ease);
   }
 
   .atrium-content select:hover {
-    border-color: color-mix(in oklab, var(--ui-primary) 40%, var(--atrium-control-ring));
+    border-color: color-mix(in oklab, var(--ui-primary) 45%, var(--atrium-control-ring));
   }
 
   .atrium-content select:focus-visible {
     outline: none;
     border-color: var(--ui-primary);
-    box-shadow: 0 0 0 3px var(--atrium-glow-soft);
+    box-shadow: 0 0 0 3px var(--atrium-glow-soft), 0 0 16px -4px var(--atrium-glow);
   }
 
   .atrium-content select[multiple] {
@@ -593,13 +809,10 @@
   .atrium-content code,
   .atrium-content kbd,
   .atrium-content samp,
-  .atrium-content .font-mono {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums slashed-zero;
-  }
-
+  .atrium-content .font-mono,
   .atrium-content .tabular-nums {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
     letter-spacing: -0.01em;
   }
 
@@ -610,51 +823,201 @@
     background: var(--atrium-field);
     box-shadow: inset 0 0 0 1px var(--ui-border);
   }
-}
 
-/* A panel (UCard, and anything Nuxt UI draws as one): hairline, lit top edge,
- * and a HUD bracket in the primary colour on its top-left corner. */
-.atrium-card {
-  position: relative;
-  background:
-    linear-gradient(180deg, var(--atrium-edge), transparent 2.5rem),
-    var(--ui-bg);
-  box-shadow: inset 0 0 0 1px var(--ui-border), 0 1px 0 0 var(--atrium-edge), 0 12px 32px -24px rgb(0 0 0 / 0.35);
-}
+  /* Statuses (coloured badges): a glowing dot and a label, not a box. */
+  .atrium-signal.atrium-signal {
+    gap: 0.375rem;
+    padding-inline: 0 0.125rem;
+    background: transparent;
+    box-shadow: none;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+  }
 
-.atrium-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0.625rem;
-  height: 0.625rem;
-  pointer-events: none;
-  border-top-left-radius: calc(var(--ui-radius) * 1.5);
-  background:
-    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 100% 1px no-repeat,
-    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 1px 100% no-repeat;
-  opacity: 0.7;
-  filter: drop-shadow(0 0 3px var(--atrium-glow));
-}
-
-.dark .atrium-card {
-  box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 0 var(--atrium-edge), 0 16px 40px -28px rgb(0 0 0 / 0.9);
-}
-
-/* Motion: short and soft, and none when the user asks for less. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .atrium-signal.atrium-signal::before {
+    content: "";
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 2px color-mix(in oklab, currentColor 18%, transparent), 0 0 8px currentColor;
   }
 }
 
-/* Empty, failed and forbidden states (AtriumState). */
+@keyframes atrium-row-sweep {
+  from { background-position: -50% 0; }
+  to { background-position: 160% 0; }
+}
+
+/* ---- Panels: glass, a lit top edge, HUD brackets, a cursor spotlight ---- */
+
+.atrium-card {
+  position: relative;
+  background:
+    radial-gradient(22rem circle at var(--mx, -40rem) var(--my, -40rem), var(--atrium-spot), transparent 60%),
+    linear-gradient(180deg, var(--atrium-edge), transparent 2.5rem),
+    var(--atrium-glass);
+  backdrop-filter: blur(var(--atrium-blur)) saturate(1.3);
+  box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 var(--atrium-highlight), var(--atrium-shadow);
+}
+
+/* Brackets on all four corners, in the primary colour. */
+.atrium-card::after {
+  --b: color-mix(in oklab, var(--ui-primary) 80%, transparent);
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--b), var(--b)) top left / 9px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / 1px 9px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 9px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 1px 9px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 9px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 1px 9px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 9px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 1px 9px no-repeat;
+  opacity: 0.55;
+  transition: opacity var(--atrium-speed) var(--atrium-ease);
+}
+
+.atrium-card:hover::after {
+  opacity: 1;
+}
+
+.atrium-card-head {
+  position: relative;
+}
+
+/* A filter form in a panel is a command line: a prompt, inline tokens. */
+.atrium-card:has(.atrium-querybar) {
+  overflow: visible;
+}
+
+@layer utilities {
+  .atrium-querybar.atrium-querybar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  .atrium-querybar::before {
+    content: "›_";
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--ui-primary);
+    text-shadow: 0 0 10px var(--atrium-glow);
+    letter-spacing: -0.05em;
+  }
+
+  .atrium-querybar > div:has(label) {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .atrium-querybar > div > div:has(> div > label),
+  .atrium-querybar > div > div:has(> label) {
+    flex: none;
+  }
+
+  .atrium-querybar label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+    white-space: nowrap;
+  }
+
+  .atrium-querybar label::after {
+    content: ":";
+    color: var(--ui-primary);
+  }
+
+  .atrium-querybar > div > .mt-1 {
+    margin-top: 0;
+  }
+
+  .atrium-querybar input,
+  .atrium-querybar select {
+    height: 1.625rem;
+    border-radius: 0;
+    border: 0;
+    background-color: transparent;
+    box-shadow: inset 0 -1px 0 var(--atrium-control-ring);
+  }
+
+  .atrium-querybar input:focus-visible,
+  .atrium-querybar select:focus-visible {
+    box-shadow: inset 0 -2px 0 var(--ui-primary), 0 8px 14px -10px var(--atrium-glow);
+  }
+
+  .atrium-querybar [class*=" w-"],
+  .atrium-querybar [class^="w-"] {
+    width: auto;
+    min-width: 8rem;
+  }
+}
+
+/* ---- Buttons ----------------------------------------------------------- */
+
+/* Primary: a luminous solid with an inner highlight and a glow. */
+.atrium-btn-primary {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 55%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 70%, #000), 0 0 16px -4px var(--atrium-glow);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.12);
+}
+
+.atrium-btn-primary:hover {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 70%, #000), 0 0 24px -2px var(--atrium-glow);
+}
+
+/* Secondary: a hairline ghost with corner accents. */
+.atrium-btn-ghost {
+  --c: color-mix(in oklab, var(--ui-primary) 85%, transparent);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / 1px 5px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 1px 5px no-repeat,
+    var(--atrium-field);
+}
+
+.atrium-btn-ghost:hover {
+  --c: var(--ui-primary);
+  background-color: var(--atrium-tint);
+}
+
+/* ---- States ------------------------------------------------------------ */
+
+/* Loading: a scan of light across a hairline frame. */
+.atrium-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ui-radius);
+  background: color-mix(in oklab, var(--ui-bg-elevated) 70%, transparent);
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+
+.atrium-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ui-primary) 18%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: atrium-scan 1.4s var(--atrium-ease) infinite;
+}
+
+@keyframes atrium-scan {
+  to { transform: translateX(100%); }
+}
+
 .atrium-state-icon {
   border-radius: calc(var(--ui-radius) * 2);
   color: var(--ui-text-muted);
@@ -676,108 +1039,283 @@
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent), 0 0 24px -10px var(--atrium-glow);
 }
 
-@media (max-width: 48rem) {
-  .atrium-content tbody :is(td, th) {
-    white-space: nowrap;
-  }
-}
-
-/* Inline notices (AtriumErrorCard, AtriumNoAccess): a strip with a lit edge. */
-.atrium-strip {
-  --tone: var(--ui-text-muted);
+/* A failure: a terminal fault readout. */
+.atrium-terminal {
+  --tone: var(--ui-error);
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  padding: 0.5625rem 0.75rem 0.5625rem 0.875rem;
-  border-radius: calc(var(--ui-radius) * 1.5);
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
+  overflow: hidden;
+  border-radius: var(--ui-radius);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.125rem;
   color: var(--ui-text);
-  background: linear-gradient(90deg, color-mix(in oklab, var(--tone) 10%, transparent), transparent 60%), var(--ui-bg);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone) 28%, var(--ui-border));
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2px, color-mix(in oklab, var(--tone) 4%, transparent) 2px 3px),
+    color-mix(in oklab, var(--ui-bg) 88%, var(--tone));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone) 40%, var(--ui-border)), 0 0 24px -14px var(--tone);
 }
 
-.atrium-strip::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 2px;
-  border-radius: 2px;
+.atrium-terminal-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tone);
+  background: color-mix(in oklab, var(--tone) 12%, transparent);
+  border-block-end: 1px solid color-mix(in oklab, var(--tone) 30%, transparent);
+}
+
+.atrium-terminal-head::before {
+  content: attr(data-code);
+  padding: 0 0.3125rem;
+  font-weight: 700;
+  color: var(--ui-bg);
   background: var(--tone);
   box-shadow: 0 0 10px var(--tone);
 }
 
-.atrium-strip-icon {
-  margin-top: 0.125rem;
+.atrium-terminal-body {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+}
+
+.atrium-terminal-body::before {
+  content: "›";
   color: var(--tone);
 }
 
-.atrium-strip[data-tone="error"] {
-  --tone: var(--ui-error);
+.atrium-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-inline-start: 0.25em;
+  vertical-align: -0.15em;
+  background: var(--tone, var(--ui-primary));
+  animation: atrium-blink 1.1s steps(1) infinite;
 }
 
-.atrium-strip[data-tone="locked"] {
+@keyframes atrium-blink {
+  50% { opacity: 0; }
+}
+
+.atrium-terminal[data-tone="locked"] {
   --tone: var(--ui-warning);
 }
 
-/* A list with nothing in it: a framed, centred note with a glyph. */
+/* A list with nothing in it: a framed note with a radar sweep. */
 .atrium-empty {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   padding: 1.75rem 1rem;
   border-radius: calc(var(--ui-radius) * 1.5);
-  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  letter-spacing: 0.04em;
   text-align: center;
   color: var(--ui-text-muted);
   background:
     linear-gradient(var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
     linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px,
-    color-mix(in oklab, var(--ui-bg) 60%, transparent);
+    color-mix(in oklab, var(--ui-bg) 55%, transparent);
   border: 1px dashed var(--ui-border-accented);
 }
 
 .atrium-empty::before {
   content: "";
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--ui-radius);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
   background:
-    linear-gradient(var(--ui-primary), var(--ui-primary)) center / 0.75rem 1.5px no-repeat,
-    color-mix(in oklab, var(--ui-primary) 10%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, transparent), 0 0 18px -6px var(--atrium-glow);
+    conic-gradient(from 0deg, color-mix(in oklab, var(--ui-primary) 55%, transparent), transparent 25%),
+    radial-gradient(circle, transparent 45%, color-mix(in oklab, var(--ui-primary) 30%, transparent) 46% 50%, transparent 51%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 40%, transparent), 0 0 18px -6px var(--atrium-glow);
+  animation: atrium-radar 3s linear infinite;
 }
 
-/* One figure (AtriumStat): a hairline tile with a lit edge for its tone. */
+@keyframes atrium-radar {
+  to { rotate: 1turn; }
+}
+
+/* ---- Figures (AtriumStat) ---------------------------------------------- */
+
 .atrium-stat {
-  --tone: var(--ui-border-accented);
+  --tone: var(--ui-primary);
   position: relative;
-  padding: 0.625rem 0.75rem 0.6875rem 0.875rem;
+  overflow: hidden;
+  padding: 0.625rem 0.75rem 0.5rem;
   border-radius: calc(var(--ui-radius) * 1.5);
-  background: linear-gradient(180deg, var(--atrium-edge), transparent 2rem), var(--ui-bg);
-  box-shadow: inset 0 0 0 1px var(--ui-border);
+  background:
+    radial-gradient(18rem circle at var(--mx, -40rem) var(--my, -40rem), var(--atrium-spot), transparent 60%),
+    linear-gradient(180deg, var(--atrium-edge), transparent 2rem),
+    var(--atrium-glass);
+  backdrop-filter: blur(var(--atrium-blur));
+  box-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 var(--atrium-highlight), var(--atrium-shadow);
 }
 
 .atrium-stat::before {
   content: "";
   position: absolute;
-  inset-inline-start: 0;
-  top: 0.625rem;
-  height: 1.25rem;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--tone);
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--tone), transparent 70%);
+  box-shadow: 0 0 8px var(--tone);
 }
 
-.atrium-stat[data-tone="primary"] { --tone: var(--ui-primary); }
 .atrium-stat[data-tone="success"] { --tone: var(--ui-success); }
 .atrium-stat[data-tone="warning"] { --tone: var(--ui-warning); }
 .atrium-stat[data-tone="error"] { --tone: var(--ui-error); }
+.atrium-stat[data-tone="neutral"] { --tone: var(--ui-border-accented); }
 
-.atrium-stat:not([data-tone="neutral"])::before {
-  box-shadow: 0 0 8px var(--tone);
+.atrium-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.625rem;
+  line-height: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums slashed-zero;
+  color: var(--ui-text-highlighted);
+}
+
+.atrium-spark {
+  color: var(--tone);
+  filter: drop-shadow(0 0 4px color-mix(in oklab, var(--tone) 60%, transparent));
+}
+
+.atrium-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.3125rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  line-height: 1.125rem;
+  color: var(--tone);
+  background: color-mix(in oklab, var(--tone) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone) 30%, transparent);
+}
+
+/* ---- ⌘K: a heads-up overlay ------------------------------------------- */
+
+.atrium-hud {
+  position: relative;
+  background: color-mix(in oklab, var(--ui-bg) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, var(--ui-border)), 0 0 0 1px rgb(0 0 0 / 0.2), 0 30px 80px -20px rgb(0 0 0 / 0.6), 0 0 60px -20px var(--atrium-glow);
+}
+
+.atrium-hud::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ui-primary), transparent);
+  box-shadow: 0 0 12px var(--atrium-glow);
+}
+
+.atrium-hud input {
+  caret-color: var(--ui-primary);
+}
+
+/* ---- Responsive and motion -------------------------------------------- */
+
+@media (max-width: 48rem) {
+  .atrium-content tbody :is(td, th) {
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .atrium-canvas::after,
+  .atrium-rail::after {
+    animation: none !important;
+  }
+
+  .atrium-rail::after {
+    opacity: 0;
+  }
+}
+
+/* A figure inside a panel (a stat widget) borrows the panel's frame. */
+.atrium-card .atrium-stat {
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.atrium-card .atrium-stat::before {
+  display: none;
+}
+
+@layer utilities {
+  /* A widget's own title reads as a panel heading. */
+  .atrium-content .atrium-card h3:first-child {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+/* Error and warning alerts: a fault line with a lit edge and scanlines. */
+@layer utilities {
+  .atrium-fault.atrium-fault {
+    --tone: var(--ui-error);
+    position: relative;
+    padding-inline-start: 0.875rem;
+    color: var(--ui-text-highlighted);
+    background:
+      repeating-linear-gradient(180deg, transparent 0 2px, color-mix(in oklab, var(--tone) 5%, transparent) 2px 3px),
+      linear-gradient(90deg, color-mix(in oklab, var(--tone) 16%, transparent), color-mix(in oklab, var(--tone) 4%, transparent) 70%);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone) 35%, transparent), 0 0 24px -16px var(--tone);
+  }
+
+  .atrium-fault.atrium-fault::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 0.375rem;
+    width: 2px;
+    background: var(--tone);
+    box-shadow: 0 0 10px var(--tone);
+  }
+
+  .atrium-fault-warning.atrium-fault-warning {
+    --tone: var(--ui-warning);
+  }
+
+  .atrium-fault [class*="text-error"],
+  .atrium-fault [class*="text-warning"] {
+    color: var(--tone);
+  }
+}
+
+/* The dashboard grid stacks its widgets on a phone. */
+@media (max-width: 40rem) {
+  .atrium-grid > * {
+    grid-column: 1 / -1 !important;
+  }
 }

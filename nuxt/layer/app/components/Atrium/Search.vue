@@ -55,8 +55,13 @@ watch(open, (value) => {
     @click="show"
   />
 
-  <UModal v-model:open="open" :ui="{ content: 'p-0 sm:max-w-xl top-[12vh] translate-y-0 sm:top-[14vh] atrium-glow' }" :title="t('atrium.search.button')" :description="t('atrium.search.placeholder')">
+  <UModal v-model:open="open" :ui="{ content: 'atrium-hud p-0 sm:max-w-2xl top-[12vh] translate-y-0 sm:top-[14vh] ring-0' }" :title="t('atrium.search.button')" :description="t('atrium.search.placeholder')">
     <template #content>
+      <div class="flex items-center gap-2 border-b border-default px-3 py-1.5" aria-hidden="true">
+        <span class="atrium-code">{{ t('atrium.shell.command') }}</span>
+        <span class="atrium-label">{{ t('atrium.shell.jump') }}</span>
+        <span class="atrium-label ms-auto">{{ t('atrium.shell.escape') }}</span>
+      </div>
       <UCommandPalette
         v-model:search-term="term"
         :groups="groups"

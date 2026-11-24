@@ -127,7 +127,7 @@ function go(next: number): void {
 
 <template>
   <div class="space-y-4" data-testid="guardian-assignments">
-    <form v-if="filters" class="flex flex-wrap items-end gap-3" data-testid="guardian-assignments-filters" @submit.prevent="applyFilters">
+    <form v-if="filters" class="atrium-querybar" data-testid="guardian-assignments-filters" @submit.prevent="applyFilters">
       <UFormField v-if="user === null" :label="t('guardian.access.assignments.fields.user')">
         <UInput v-model="filter.user" class="w-40" data-testid="guardian-assignments-filter-user" />
       </UFormField>
