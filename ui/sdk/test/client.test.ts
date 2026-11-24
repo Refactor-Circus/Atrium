@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { useAtrium, useAtriumClient, useRuntimeConfig } from '#imports'
-import type { components } from '../app/client/schema'
-import type { AtriumDashboard, AtriumShell } from '../app/types/atrium'
-import { withSetup } from './support'
+import type { components } from '../src/client/schema'
+import type { AtriumDashboard, AtriumShell } from '../src/types/atrium'
+import { useAtrium, useAtriumBoot, useAtriumClient } from '../src/index'
+import { withSetup } from '../src/testing/index'
 
 /*
  * `useAtriumClient()`: an `openapi-fetch` client of Atrium's own API, typed
@@ -48,7 +48,7 @@ describe('useAtriumClient()', () => {
 
   it('calls Atrium\'s API at the configured apiBase, with the adapter\'s headers, credentials and Accept', async () => {
     const client = await withSetup(() => useAtriumClient())
-    const apiBase = (await withSetup(() => useRuntimeConfig())).public.atrium.apiBase as string
+    const apiBase = useAtriumBoot().api_base
 
     const { data } = await client.GET('/dashboards/{dashboard}', { params: { path: { dashboard: 'main' } } })
 

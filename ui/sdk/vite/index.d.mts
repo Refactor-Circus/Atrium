@@ -32,6 +32,7 @@ export interface AtriumTestOptions {
 
 export declare function atriumModule(options: AtriumModuleOptions): UserConfig
 export declare function atriumTestConfig(options?: AtriumTestOptions): UserConfig & { test: Record<string, unknown> }
+/** `dts`: the folder the auto-import and component declarations go in */
 export declare function nuxtUi(options?: { dts?: string | false, dirs?: string[] }): Promise<Plugin[]>
 export declare function atriumSdkExports(): string[]
 export declare function atriumComponentNames(): string[]

@@ -14,7 +14,7 @@ import { mountIntegration, packageCalls, type PackageCall } from '@refactor-circ
  * where Scramble types a resource loosely, against the shape the page reads,
  * `users.ts`), the `atrium.screens.show` answer, and a page mounter.
  *
- * Each suite mocks `useAtriumApi` itself (`mockNuxtImport` is per file) and
+ * Each suite mocks `useAtriumApi` itself (`mockAtriumApi()`, per file) and
  * answers `/screens/{key}` with `screensApi`.
  */
 

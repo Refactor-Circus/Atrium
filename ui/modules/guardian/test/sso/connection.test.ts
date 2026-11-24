@@ -156,7 +156,7 @@ describe('guardian.sso-connection', () => {
 
     expect(confirm.mock.calls[0]?.[0]).toContain('Acme Okta')
     expect(guardianCalls('DELETE', '/sso-connections/{connection}')[0]?.path).toBe('/sso-connections/acme-okta')
-    expect(navigate).toHaveBeenCalledWith('/roster/organizations/acme?tab=guardian.sso')
+    expect(navigate.mock.calls.map(call => call[0])).toEqual(['/roster/organizations/acme?tab=guardian.sso'])
   })
 
   it('goes home after a delete without Roster', async () => {
@@ -166,7 +166,7 @@ describe('guardian.sso-connection', () => {
     await wrapper.find('[data-testid="guardian-sso-delete"]').trigger('click')
     await settle()
 
-    expect(navigate).toHaveBeenCalledWith('/')
+    expect(navigate.mock.calls.map(call => call[0])).toEqual(['/'])
   })
 
   it('shows no access when the delete answers 403', async () => {

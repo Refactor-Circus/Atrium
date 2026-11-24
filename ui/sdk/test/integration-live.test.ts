@@ -1,11 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumNavigation } from '#components'
-import { useAtrium } from '#imports'
-import { AtriumRegistry } from '../app/plugins/atrium'
-import type { AtriumNavItem, AtriumNavSection } from '../app/types/atrium'
-import { inApp, settle, withSetup } from './support'
-import { integrationEntry, integrationShell, useShell } from './integrations/support'
+import { AtriumRegistry } from '../src/registry'
+import type { AtriumNavItem, AtriumNavSection } from '../src/types/atrium'
+import { AtriumNavigation, useAtrium } from '../src/index'
+import { inApp, integrationEntry, integrationShell, mountSuspended, settle, useShell, withSetup } from '../src/testing/index'
 
 /*
  * Live nav keys (AC 43, 52): Navigation calls the `live` resolver registered

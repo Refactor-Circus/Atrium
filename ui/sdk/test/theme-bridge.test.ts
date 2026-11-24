@@ -11,7 +11,8 @@ import { describe, expect, it } from 'vitest'
 
 // Read through a variable: Vite rewrites `new URL('…', import.meta.url)`.
 const here = import.meta.url
-const css = readFileSync(fileURLToPath(new URL('../app/assets/css/atrium.css', here)), 'utf8')
+const css = readFileSync(fileURLToPath(new URL('../../app/src/assets/atrium.css', here)), 'utf8')
+const theme = readFileSync(fileURLToPath(new URL('../css/theme.css', here)), 'utf8')
 
 function block(selector: string): string {
   const match = css.match(new RegExp(`^${selector.replace('.', '\\.')} \\{([^}]*)\\}`, 'm'))
@@ -77,7 +78,10 @@ describe('atrium.css theme bridge', () => {
   })
 
   it('lets a host override the fonts through --font-sans and --font-mono', () => {
-    expect(css).toMatch(/--font-sans: "Geist Variable"/)
-    expect(css).toMatch(/--font-mono: "Geist Mono Variable"/)
+    // The tokens are in the SDK's theme.css, which atrium.css and every
+    // module's stylesheet import.
+    expect(css).toContain('@import "@refactor-circus/atrium/theme.css"')
+    expect(theme).toMatch(/--font-sans: "Geist Variable"/)
+    expect(theme).toMatch(/--font-mono: "Geist Mono Variable"/)
   })
 })

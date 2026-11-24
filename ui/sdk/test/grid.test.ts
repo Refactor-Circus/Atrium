@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumDashboardGrid } from '#components'
-import type { AtriumDashboard, AtriumLayoutWidget } from '../app/types/atrium'
-import { atriumLayout } from '../app/utils/atriumLayout'
-import { settle } from './support'
+import type { AtriumDashboard, AtriumLayoutWidget } from '../src/types/atrium'
+import { atriumLayout } from '../src/utils/atriumLayout'
 import fixture from './fixtures/dashboard.json'
+import { AtriumDashboardGrid } from '../src/index'
+import { mockAtriumApi, mountSuspended, settle } from '../src/testing/index'
 
 const { api, toast } = vi.hoisted(() => ({
   api: vi.fn(async () => ({ data: {} })),
   toast: { add: vi.fn() }
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
-mockNuxtImport('useToast', () => () => toast)
+mockAtriumApi(api)
+vi.mock('@nuxt/ui/composables/useToast.js', () => ({ useToast: () => toast }))
 
 const dashboard = fixture.data as AtriumDashboard
 
@@ -76,7 +75,7 @@ describe('AtriumDashboardGrid', () => {
     await wrapper.find('[data-testid="atrium-save-layout"]').trigger('click')
     await settle()
 
-    const sent = save.mock.calls[0]![0] as AtriumLayoutWidget[]
+    const sent = (save.mock.calls as unknown as AtriumLayoutWidget[][][])[0]![0]!
 
     expect(sent.map(w => w.uuid)).not.toContain(fixture.data.widgets[1]!.uuid)
     expect(sent).toHaveLength(7)

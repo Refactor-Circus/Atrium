@@ -10,7 +10,7 @@ import { clearAtriumData, mockAtriumApi, mountSuspended, useRouter } from '@refa
 
 /*
  * `roster.invitation`, the public invitation page (AC 70, D-038). It is
- * declared public and takes the public layout. It loads no shell, and calls
+ * declared public, so it takes the public layout. It loads no shell, and calls
  * no `atrium.screens.show`. A 401 on the lookup never calls
  * `onUnauthorized()`. It renders the invitation's email, organization, teams
  * and expiry; one generic state for any 404, another for a 429. Accept and
@@ -74,9 +74,9 @@ describe('roster.invitation', () => {
   it('is declared public, in the public layout, at the path the screens map names', () => {
     const route = useRouter().getRoutes().find(candidate => candidate.name === screens['roster.invitation'])
 
-    expect(route?.path).toBe('/roster/invitations/:token()')
+    // A public route renders in the public layout (no Nuxt `meta.layout`).
+    expect(route?.path).toBe('/roster/invitations/:token')
     expect(route?.meta.atrium).toEqual({ public: true })
-    expect(route?.meta.layout).toBe('public')
   })
 
   it('looks the invitation up without loading the shell, and renders its details', async () => {

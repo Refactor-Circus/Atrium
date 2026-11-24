@@ -48,7 +48,7 @@ describe('roster.user-create', () => {
   })
 
   it('creates the user through roster.users.store, leaving out a blank password, then opens its page', async () => {
-    mockPackageApi('roster', { 'POST /users': { data: ada } })
+    mockPackageApi('roster', { 'POST /users': { data: ada as never } })
 
     const wrapper = await mountRosterPage(Page, '/roster/users/create')
     await fill(wrapper)
@@ -72,7 +72,7 @@ describe('roster.user-create', () => {
   })
 
   it('sends a typed password', async () => {
-    mockPackageApi('roster', { 'POST /users': { data: ada } })
+    mockPackageApi('roster', { 'POST /users': { data: ada as never } })
 
     const wrapper = await mountRosterPage(Page, '/roster/users/create')
     await fill(wrapper)

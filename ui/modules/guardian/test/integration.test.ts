@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { AtriumRegistry } from '@refactor-circus/atrium'
-import register, { screens } from '../src/atrium'
+import Guardian, { screens } from '../src/atrium'
 import { missingI18nKeys } from '@refactor-circus/atrium/testing'
 import fixture from '@refactor-circus/atrium/fixtures/integrations/guardian.json'
 
 /*
- * Guardian's `index.ts` (AC 49, 82) against what its PHP integration declares
+ * Guardian's `src/atrium.ts` (AC 49, 82) against what its PHP integration declares
  * in `fixtures/integrations/guardian.json`: a route name for every screen,
  * and no widget, settings panel or search source (D-057).
  */
@@ -40,9 +39,6 @@ describe('the guardian screens map', () => {
 })
 
 describe('the guardian declarations', () => {
-  const atrium = new AtriumRegistry()
-  register(atrium)
-
   it('declares nine nav items in one Security group, under /guardian/', () => {
     expect(fixture.navigation.map(item => item.link?.path)).toEqual([
       '/guardian/security',
@@ -63,10 +59,10 @@ describe('the guardian declarations', () => {
     expect(fixture.widgets).toEqual([])
     expect(fixture.settings).toBeNull()
     expect(fixture.search_sources).toEqual([])
-    expect(atrium.widgets.size).toBe(0)
-    expect(atrium.panels.size).toBe(0)
-    expect(atrium.searchSources.size).toBe(0)
-    expect(atrium.liveResolvers.size).toBe(0)
+    expect(Guardian.widgets ?? {}).toEqual({})
+    expect(Guardian.settingsPanels ?? {}).toEqual({})
+    expect(Guardian.searchSources ?? {}).toEqual({})
+    expect(Guardian.liveResolvers ?? {}).toEqual({})
   })
 })
 

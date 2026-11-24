@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { screens } from '../../src/atrium'
 import fixture from '@refactor-circus/atrium/fixtures/integrations/showroom.json'
-import { hasI18nKey, i18nKeysIn, integrationLocaleFiles } from '@refactor-circus/atrium/testing'
+import { hasI18nKey, i18nKeysIn, localeFilesIn } from '@refactor-circus/atrium/testing'
 import { useRouter } from '@refactor-circus/atrium/testing'
 
 /*
@@ -16,7 +16,7 @@ import { useRouter } from '@refactor-circus/atrium/testing'
  * key its pages and structure components use exists.
  */
 
-/** Each screen of this area to its page file, under `app/pages/showroom/`. */
+/** Each screen of this area to its page file, under `src/pages/`. */
 const PAGES: Record<string, string> = {
   'showroom.attributes': 'attributes/index.vue',
   'showroom.attribute-create': 'attributes/create.vue',
@@ -35,10 +35,10 @@ const PAGES: Record<string, string> = {
 // Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
 // into a served asset URL, which `fileURLToPath()` refuses.
 const here = import.meta.url
-const layerRoot = fileURLToPath(new URL('../../../../', here))
+const srcRoot = fileURLToPath(new URL('../../src/', here))
 
 function source(file: string): string {
-  return readFileSync(join(layerRoot, 'app', 'pages', 'showroom', file), 'utf8')
+  return readFileSync(join(srcRoot, 'pages', file), 'utf8')
 }
 
 function filesUnder(directory: string): string[] {
@@ -72,15 +72,15 @@ describe('the showroom attributes, categories, channels and flags pages', () => 
   })
 
   it('has every t() key its pages and structure components use in its locale files', () => {
-    const messages = integrationLocaleFiles('showroom').map(file => JSON.parse(readFileSync(file, 'utf8')) as unknown)
+    const messages = localeFilesIn(join(srcRoot, 'locales')).map(file => JSON.parse(readFileSync(file, 'utf8')) as unknown)
     const files = [
-      ...Object.values(PAGES).map(file => join(layerRoot, 'app', 'pages', 'showroom', file)),
-      ...filesUnder(join(layerRoot, 'app', 'integrations', 'showroom', 'components', 'structure'))
+      ...Object.values(PAGES).map(file => join(srcRoot, 'pages', file)),
+      ...filesUnder(join(srcRoot, 'components', 'structure'))
     ]
 
     const missing = files.flatMap(file => i18nKeysIn(readFileSync(file, 'utf8'))
       .filter(key => !messages.some(set => hasI18nKey(set, key)))
-      .map(key => `${relative(layerRoot, file)}: ${key}`))
+      .map(key => `${relative(srcRoot, file)}: ${key}`))
 
     expect(missing).toEqual([])
   })

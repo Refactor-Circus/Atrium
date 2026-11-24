@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Page from '../../src/pages/transfers/index.vue'
 import { settle } from '@refactor-circus/atrium/testing'
-import { mockPackageApi, reply, resetPackageApis, type PackageRoutes } from '@refactor-circus/atrium/testing'
+import { mockPackageApi, reply, resetPackageApis, type PackageCall, type PackageRoutes } from '@refactor-circus/atrium/testing'
 import { mountRosterPage, page, resetRosterPages, rosterCalls, screensApi } from '../users/support'
 import { catchDownloads, CSV, finishedExport, pendingImport } from './support'
 import { clearAtriumData, mockAtriumApi, useRouter } from '@refactor-circus/atrium/testing'
@@ -71,7 +71,7 @@ describe('roster.transfers', () => {
   })
 
   it('filters by the organization in the URL, sent as the endpoint\'s query, and pages', async () => {
-    rosterWith({ 'GET /transfers': (call => page([pendingImport], Number(call.query.page ?? 1), 2)) as never })
+    rosterWith({ 'GET /transfers': ((call: PackageCall) => page([pendingImport], Number(call.query.page ?? 1), 2)) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/transfers?organization=acme')
 

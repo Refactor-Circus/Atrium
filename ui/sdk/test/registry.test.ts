@@ -1,12 +1,10 @@
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumExtension, AtriumWidget } from '#components'
-import { useAtrium, useNuxtApp } from '#imports'
-import { AtriumRegistry } from '../app/plugins/atrium'
-import type { AtriumPlacement } from '../app/types/atrium'
-import { withSetup } from './support'
+import { AtriumRegistry } from '../src/registry'
+import type { AtriumPlacement } from '../src/types/atrium'
 import dashboard from './fixtures/dashboard.json'
+import { AtriumExtension, AtriumWidget, useAtrium, useAtriumI18n } from '../src/index'
+import { mountSuspended, runInAtrium, withSetup } from '../src/testing/index'
 
 const Revenue = defineComponent({
   props: { data: { type: Object, required: true } },
@@ -40,11 +38,11 @@ describe('the $atrium registry', () => {
     expect(registry.auth()).toBe(adapter)
   })
 
-  it('is provided to the app as $atrium and returned by useAtrium()', async () => {
+  it('is the page\'s one registry, returned by useAtrium()', async () => {
     const atrium = await withSetup(() => useAtrium())
 
     expect(atrium).toBeInstanceOf(AtriumRegistry)
-    expect(atrium).toBe(useNuxtApp().$atrium)
+    expect(atrium).toBe(useAtrium())
   })
 })
 

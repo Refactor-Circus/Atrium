@@ -45,7 +45,7 @@ export function runInAtrium<T>(fn: () => T): T {
   return current ? current.runWithContext(fn) : fn()
 }
 
-type Navigator = (to: RouteLocationRaw, options: NavigateToOptions) => unknown
+type Navigator = (to: RouteLocationRaw, options?: NavigateToOptions) => unknown
 
 let navigator: Navigator | null = null
 
@@ -65,11 +65,14 @@ export interface NavigateToOptions {
  * `client_path`), or with `{ external: true }` loads it as a page. The SDK's
  * stand-in for Nuxt's `navigateTo()`.
  */
-export async function navigateTo(to: RouteLocationRaw, options: NavigateToOptions = {}): Promise<void> {
+export async function navigateTo(to: RouteLocationRaw, given?: NavigateToOptions): Promise<void> {
   if (navigator) {
-    await navigator(to, options)
+    // A test's mock sees the call as it was made.
+    await (given === undefined ? navigator(to) : navigator(to, given))
     return
   }
+
+  const options = given ?? {}
 
   if (options.external || (typeof to === 'string' && /^https?:\/\//i.test(to))) {
     const url = String(to)

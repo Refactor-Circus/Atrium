@@ -13,9 +13,7 @@ import { runInAtrium } from '@refactor-circus/atrium/testing'
  */
 
 async function search(q: string, limit: number) {
-  const nuxtApp = await withSetup(() => useNuxtApp())
-
-  return nuxtApp.runWithContext(() => searchRuns(q, { limit }))
+  return runInAtrium(() => searchRuns(q, { limit }))
 }
 
 describe('the impex search source', () => {

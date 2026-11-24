@@ -10,9 +10,9 @@ import GuardianTwoFactorMethods from '../../src/components/two-factor/GuardianTw
 import { base64urlToBuffer, bufferToBase64url, credentialJSON } from '../../src/components/two-factor/webauthn'
 import { settle, withSetup } from '@refactor-circus/atrium/testing'
 import { mockPackageApi, packageCalls, reply, resetPackageApis, type PackageRoutes } from '@refactor-circus/atrium/testing'
-import {
 import { useAtriumShellStore } from '@refactor-circus/atrium'
 import { mountSuspended } from '@refactor-circus/atrium/testing'
+import {
   emailMethod,
   enabledStatus,
   guardianCalls,

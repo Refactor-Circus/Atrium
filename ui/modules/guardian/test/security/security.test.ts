@@ -107,7 +107,7 @@ describe('guardian.security', () => {
 
   it('has a page at the declared path, framed with its screen key', () => {
     const route = useRouter().getRoutes().find(candidate => candidate.name === screens['guardian.security'])
-    const source = readFileSync(fileURLToPath(new URL('../../../../app/pages/guardian/security/index.vue', here)), 'utf8')
+    const source = readFileSync(fileURLToPath(new URL('../../src/pages/security/index.vue', here)), 'utf8')
 
     expect(route?.path).toBe('/guardian/security')
     expect(source).toContain('screen-key="guardian.security"')

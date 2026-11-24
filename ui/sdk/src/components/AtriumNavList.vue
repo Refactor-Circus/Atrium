@@ -34,7 +34,7 @@ function toggle(nav: AtriumNavEntry, index: number): void {
   <ul class="flex flex-col gap-px" :class="props.depth ? 'ms-3 border-s border-default ps-1.5' : ''">
     <li v-for="(nav, index) in props.items" :key="`${index}:${nav.label}`">
       <div class="flex items-center gap-0.5">
-        <RouterLink
+        <AtriumLink
           v-if="nav.link"
           v-bind="nav.link"
           class="atrium-nav-link min-w-0 flex-1"
@@ -45,7 +45,7 @@ function toggle(nav: AtriumNavEntry, index: number): void {
           <span class="truncate">{{ nav.label }}</span>
           <UIcon v-if="nav.link.external" name="i-lucide-arrow-up-right" class="size-3 shrink-0 text-dimmed" />
           <span v-if="nav.badge" class="atrium-nav-badge">{{ nav.badge }}</span>
-        </RouterLink>
+        </AtriumLink>
         <span v-else class="atrium-nav-link min-w-0 flex-1 cursor-default">
           <UIcon v-if="nav.icon" :name="nav.icon" class="atrium-nav-icon size-3.5 shrink-0 opacity-80" />
           <span class="truncate">{{ nav.label }}</span>

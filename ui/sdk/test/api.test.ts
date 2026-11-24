@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { registerEndpoint } from '@nuxt/test-utils/runtime'
-import { useAtrium, useAtriumApi } from '#imports'
-import { withSetup } from './support'
+import { useAtrium, useAtriumApi } from '../src/index'
+import { registerEndpoint, withSetup } from '../src/testing/index'
 
 const seen: { authorization: string | null }[] = []
 

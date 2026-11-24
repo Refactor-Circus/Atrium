@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Page from '../../src/pages/users/[user].vue'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mockPackageApi, reply, resetPackageApis, type PackageRoutes } from '@refactor-circus/atrium/testing'
-import {
 import { clearAtriumData, mockAtriumApi, mockNavigateTo, useRouter } from '@refactor-circus/atrium/testing'
+import {
   acme,
   ada,
   confirmWith,
@@ -35,7 +35,7 @@ mockNavigateTo(navigate)
 
 function routes(overrides: PackageRoutes<'roster'> = {}): PackageRoutes<'roster'> {
   return {
-    'GET /users/{user}': { data: ada },
+    'GET /users/{user}': { data: ada as never },
     'GET /organizations': page([acme, globex]),
     'GET /organizations/{organization}/teams': page([ops]),
     ...overrides
@@ -77,7 +77,7 @@ describe('roster.user', () => {
   })
 
   it('updates the account through users.update, leaving out a blank password, then reloads', async () => {
-    mockPackageApi('roster', routes({ 'PATCH /users/{user}': { data: ada } }))
+    mockPackageApi('roster', routes({ 'PATCH /users/{user}': { data: ada as never } }))
 
     const wrapper = await mountUser()
     await wrapper.find('[data-testid="roster-account-email"]').setValue('ada@lovelace.dev')
@@ -103,7 +103,7 @@ describe('roster.user', () => {
   })
 
   it('updates the profile through users.profile.update, then reloads', async () => {
-    mockPackageApi('roster', routes({ 'PATCH /users/{user}/profile': { data: ada } }))
+    mockPackageApi('roster', routes({ 'PATCH /users/{user}/profile': { data: ada as never } }))
 
     const wrapper = await mountUser()
     await wrapper.find('[data-testid="roster-profile-bio"]').setValue('Wrote the first program.')
@@ -117,7 +117,7 @@ describe('roster.user', () => {
   })
 
   it('approves a pending user', async () => {
-    mockPackageApi('roster', routes({ 'GET /users/{user}': { data: grace }, 'POST /users/{user}/approve': { data: ada } }))
+    mockPackageApi('roster', routes({ 'GET /users/{user}': { data: grace as never }, 'POST /users/{user}/approve': { data: ada as never } }))
 
     const wrapper = await mountUser('/roster/users/8')
     await wrapper.find('[data-testid="roster-user-approve"]').trigger('click')
@@ -130,7 +130,7 @@ describe('roster.user', () => {
   })
 
   it('rejects a pending user with a reason', async () => {
-    mockPackageApi('roster', routes({ 'GET /users/{user}': { data: grace }, 'POST /users/{user}/reject': { data: grace } }))
+    mockPackageApi('roster', routes({ 'GET /users/{user}': { data: grace as never }, 'POST /users/{user}/reject': { data: grace as never } }))
 
     const wrapper = await mountUser('/roster/users/8')
     await wrapper.find('[data-testid="roster-user-reject-reason"]').setValue('Unknown applicant')
@@ -151,7 +151,7 @@ describe('roster.user', () => {
   })
 
   it('suspends the user with a reason, through users.suspend', async () => {
-    mockPackageApi('roster', routes({ 'POST /users/{user}/suspend': { data: ada } }))
+    mockPackageApi('roster', routes({ 'POST /users/{user}/suspend': { data: ada as never } }))
 
     const wrapper = await mountUser()
     await wrapper.find('[data-testid="roster-user-new-status"]').setValue('suspended')
@@ -166,7 +166,7 @@ describe('roster.user', () => {
   })
 
   it('deactivates the user with a reason, through users.deactivate', async () => {
-    mockPackageApi('roster', routes({ 'POST /users/{user}/deactivate': { data: ada } }))
+    mockPackageApi('roster', routes({ 'POST /users/{user}/deactivate': { data: ada as never } }))
 
     const wrapper = await mountUser()
     await wrapper.find('[data-testid="roster-user-new-status"]').setValue('deactivated')
@@ -181,8 +181,8 @@ describe('roster.user', () => {
 
   it('reactivates a suspended user through users.reactivate, with no body', async () => {
     mockPackageApi('roster', routes({
-      'GET /users/{user}': { data: { ...ada, status: 'suspended', status_reason: 'Chargeback' } },
-      'POST /users/{user}/reactivate': { data: ada }
+      'GET /users/{user}': { data: { ...ada, status: 'suspended', status_reason: 'Chargeback' } as never },
+      'POST /users/{user}/reactivate': { data: ada as never }
     }))
 
     const wrapper = await mountUser()
@@ -201,7 +201,7 @@ describe('roster.user', () => {
   })
 
   it('switches the user\'s context through users.context.update', async () => {
-    mockPackageApi('roster', routes({ 'PUT /users/{user}/context': { data: ada } }))
+    mockPackageApi('roster', routes({ 'PUT /users/{user}/context': { data: ada as never } }))
 
     const wrapper = await mountUser()
 
@@ -267,7 +267,7 @@ describe('roster.user', () => {
 
   it('deletes the user only after a confirmation, then offers restore', async () => {
     const confirm = confirmWith(false)
-    mockPackageApi('roster', routes({ 'DELETE /users/{user}': reply(204), 'POST /users/{user}/restore': { data: ada } }))
+    mockPackageApi('roster', routes({ 'DELETE /users/{user}': reply(204), 'POST /users/{user}/restore': { data: ada as never } }))
 
     const wrapper = await mountUser()
     await wrapper.find('[data-testid="roster-user-delete"]').trigger('click')

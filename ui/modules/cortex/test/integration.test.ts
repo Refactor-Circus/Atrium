@@ -13,12 +13,12 @@ const here = import.meta.url
 /*
  * The Cortex integration as a whole (AC 49, 53, 55): every screen the PHP
  * integration declares (`fixtures/integrations/cortex.json`, written by
- * `CortexIntegrationTest`) has a layer page at its declared path, `index.ts`
+ * `CortexIntegrationTest`) has a layer page at its declared path, `src/atrium.ts`
  * maps each to that page's route, and every `t()` key the Cortex pages and
  * components use exists in `cortex.en.json`.
  */
 
-/** Each screen's page file, under `app/pages/cortex/`. */
+/** Each screen's page file, under `src/pages/`. */
 const PAGES: Record<string, string> = {
   'cortex.virtual-agents': 'virtual-agents/index.vue',
   'cortex.virtual-agent-create': 'virtual-agents/create.vue',
@@ -69,7 +69,7 @@ describe('the cortex integration', () => {
   })
 
   it.each(Object.entries(PAGES))('frames the %s page with its own screen key, so it calls atrium.screens.show with it', (key, file) => {
-    const source = readFileSync(fileURLToPath(new URL(`../../../app/pages/cortex/${file}`, here)), 'utf8')
+    const source = readFileSync(fileURLToPath(new URL(`../src/pages/${file}`, here)), 'utf8')
 
     expect(source).toContain(`screen-key="${key}"`)
   })
@@ -81,7 +81,7 @@ describe('the cortex integration', () => {
   })
 
   it('lists the old actions with no v2 route in a Not ported (D-032) comment', () => {
-    const index = readFileSync(fileURLToPath(new URL('../../../app/integrations/cortex/index.ts', here)), 'utf8')
+    const index = readFileSync(fileURLToPath(new URL('../src/atrium.ts', here)), 'utf8')
 
     expect(index.startsWith('// Not ported (D-032)')).toBe(true)
   })

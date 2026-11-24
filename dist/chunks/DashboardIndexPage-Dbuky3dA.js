@@ -1,1 +1,0 @@
-import{t as e}from"./AtriumDashboardPage-4nW5tLMz.js";import{b as t,gt as n}from"./runtime-core.esm-bundler-DdPnhzZn.js";import{t as r}from"./_plugin-vue_export-helper-BDNMzG2s.js";var i={};function a(r,i){let a=e;return n(),t(a)}var o=r(i,[[`render`,a]]);export{o as default};

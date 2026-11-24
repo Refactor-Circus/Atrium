@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { AtriumRegistry } from '@refactor-circus/atrium'
-import register, { screens } from '../src/atrium'
+import { useAtrium } from '@refactor-circus/atrium'
+import { screens } from '../src/atrium'
 import { searchShowroom } from '../src/components/search/source'
 import SettingsPanel from '../src/components/settings/SettingsPanel.vue'
 import CompletenessWidget from '../src/components/widgets/CompletenessWidget.vue'
@@ -61,8 +61,8 @@ describe('the showroom screens map', () => {
 })
 
 describe('the showroom registrations', () => {
-  const atrium = new AtriumRegistry()
-  register(atrium)
+  // The app's registry, which test/setup.ts filled from Showroom's module alone.
+  const atrium = useAtrium()
 
   it('registers a component for every widget the fixture declares', () => {
     expect(fixture.widgets.map(widget => widget.component)).toEqual([

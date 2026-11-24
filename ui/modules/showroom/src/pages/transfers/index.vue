@@ -58,7 +58,7 @@ const prefix = computed<string | null>(() => {
   return screenError.value ? flowPrefix(null) : null
 })
 
-const rowActions = computed<AtriumExtension[]>(() => screenError.value ? [] : screen.value?.data.sections['row.actions'] ?? [])
+const rowActions = computed<AtriumExtensionData[]>(() => screenError.value ? [] : screen.value?.data.sections['row.actions'] ?? [])
 
 const runs = shallowRef<TransferRun[]>([])
 const runsLoaded = ref(false)

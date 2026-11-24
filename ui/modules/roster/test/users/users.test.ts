@@ -31,7 +31,7 @@ describe('roster.users', () => {
   })
 
   it('lists the active users and calls atrium.screens.show with its key', async () => {
-    mockPackageApi('roster', { 'GET /users': page([ada, grace]) })
+    mockPackageApi('roster', { 'GET /users': page([ada, grace]) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/users')
 
@@ -44,7 +44,7 @@ describe('roster.users', () => {
   })
 
   it('shows the deleted users on the deleted tab, through trashed=only', async () => {
-    mockPackageApi('roster', { 'GET /users': page([ada]) })
+    mockPackageApi('roster', { 'GET /users': page([ada]) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/users')
     await wrapper.find('[data-testid="roster-users-tab-deleted"]').trigger('click')
@@ -57,7 +57,7 @@ describe('roster.users', () => {
   })
 
   it('sends the status filter and search as the endpoint\'s query, from the form and the URL', async () => {
-    mockPackageApi('roster', { 'GET /users': page([ada]) })
+    mockPackageApi('roster', { 'GET /users': page([ada]) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/users?status=suspended&search=ada')
 
@@ -77,7 +77,7 @@ describe('roster.users', () => {
   })
 
   it('pages by the page number the endpoint answers with', async () => {
-    mockPackageApi('roster', { 'GET /users': call => page([ada], Number(call.query.page ?? 1), 3) })
+    mockPackageApi('roster', { 'GET /users': call => page([ada], Number(call.query.page ?? 1), 3) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/users?status=active')
 
@@ -96,7 +96,7 @@ describe('roster.users', () => {
   })
 
   it('approves a pending user from its row, then reloads', async () => {
-    mockPackageApi('roster', { 'GET /users': page([ada, grace]), 'POST /users/{user}/approve': { data: { ...grace, status: 'active' } } })
+    mockPackageApi('roster', { 'GET /users': page([ada, grace]) as never, 'POST /users/{user}/approve': { data: { ...grace, status: 'active' } as never } })
 
     const wrapper = await mountRosterPage(Page, '/roster/users')
 
@@ -112,7 +112,7 @@ describe('roster.users', () => {
   })
 
   it('restores a deleted user from the deleted tab, then reloads', async () => {
-    mockPackageApi('roster', { 'GET /users': page([ada]), 'POST /users/{user}/restore': { data: ada } })
+    mockPackageApi('roster', { 'GET /users': page([ada]) as never, 'POST /users/{user}/restore': { data: ada as never } })
 
     const wrapper = await mountRosterPage(Page, '/roster/users?trashed=only')
     await wrapper.find('[data-testid="roster-user-restore-7"]').trigger('click')
@@ -126,7 +126,7 @@ describe('roster.users', () => {
 
   it('purges a deleted user only after a confirmation', async () => {
     const confirm = confirmWith(false)
-    mockPackageApi('roster', { 'GET /users': page([ada]), 'DELETE /users/{user}/purge': reply(204) })
+    mockPackageApi('roster', { 'GET /users': page([ada]) as never, 'DELETE /users/{user}/purge': reply(204) })
 
     const wrapper = await mountRosterPage(Page, '/roster/users?trashed=only')
     await wrapper.find('[data-testid="roster-user-purge-7"]').trigger('click')
@@ -163,7 +163,7 @@ describe('roster.users', () => {
   })
 
   it('shows the no-access notice when an action answers 403', async () => {
-    mockPackageApi('roster', { 'GET /users': page([grace]), 'POST /users/{user}/approve': reply(403) })
+    mockPackageApi('roster', { 'GET /users': page([grace]) as never, 'POST /users/{user}/approve': reply(403) })
 
     const wrapper = await mountRosterPage(Page, '/roster/users')
     await wrapper.find('[data-testid="roster-user-approve-8"]').trigger('click')

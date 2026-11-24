@@ -1,17 +1,15 @@
 import { defineComponent, h } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumWidget } from '#components'
-import { useAtrium } from '#imports'
-import type { AtriumPlacement } from '../app/types/atrium'
-import { httpError, settle, withSetup } from './support'
+import type { AtriumPlacement } from '../src/types/atrium'
 import fixture from './fixtures/dashboard.json'
+import { AtriumWidget, useAtrium } from '../src/index'
+import { httpError, mockAtriumApi, mountSuspended, settle, withSetup } from '../src/testing/index'
 
 const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: unknown) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const Services = defineComponent({
   props: { data: { type: Object, required: true } },

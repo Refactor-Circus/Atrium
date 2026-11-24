@@ -61,12 +61,11 @@ describe('guardian.two-factor-setup', () => {
     await useRouter().replace('/')
   })
 
-  it('is declared public, in the public layout, at the path the screens map names', () => {
+  it('is declared public (the app renders it in its public layout), at the path the screens map names', () => {
     const route = useRouter().getRoutes().find(candidate => candidate.name === screens['guardian.two-factor-setup'])
 
     expect(route?.path).toBe('/guardian/two-factor/setup')
     expect(route?.meta.atrium).toEqual({ public: true })
-    expect(route?.meta.layout).toBe('public')
   })
 
   it('shows the allowed methods and the deadline, and offers only those methods, with no shell call', async () => {

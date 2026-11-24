@@ -16,7 +16,7 @@ import { useRouter } from '@refactor-circus/atrium/testing'
  * (D-032), and every `t()` key exists.
  */
 
-/** Each screen of this area to its page file, under `app/pages/roster/`. */
+/** Each screen of this area to its page file, under `src/pages/`. */
 const PAGES: Record<string, string> = {
   'roster.organizations': 'organizations/index.vue',
   'roster.organization-create': 'organizations/create.vue',
@@ -32,7 +32,7 @@ const FRAMED = Object.entries(PAGES).filter(([key]) => key !== 'roster.invitatio
 const here = import.meta.url
 
 function source(file: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../../../app/pages/roster/${file}`, here)), 'utf8')
+  return readFileSync(fileURLToPath(new URL(`../../src/pages/${file}`, here)), 'utf8')
 }
 
 describe('the roster organizations, teams and invitation pages', () => {
@@ -52,8 +52,10 @@ describe('the roster organizations, teams and invitation pages', () => {
 
   it('declares the invitation page public, with no screen frame', () => {
     const page = source('invitations/[token].vue')
+    const route = useRouter().getRoutes().find(candidate => candidate.name === screens['roster.invitation'])
 
-    expect(page).toContain('atrium: { public: true }')
+    // Its route (`src/routes.ts`) carries the public flag the page meta did in the Nuxt layer.
+    expect(route?.meta.atrium).toEqual({ public: true })
     expect(page).not.toContain('AtriumIntegrationScreen')
   })
 

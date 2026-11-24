@@ -14,9 +14,7 @@ import { mountSuspended, runInAtrium } from '@refactor-circus/atrium/testing'
  */
 
 async function resolve() {
-  const nuxtApp = await withSetup(() => useNuxtApp())
-
-  return nuxtApp.runWithContext(() => activeRuns())
+  return runInAtrium(() => activeRuns())
 }
 
 const sections: AtriumNavSection[] = [{

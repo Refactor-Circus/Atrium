@@ -9,7 +9,7 @@ import { useRouter } from '@refactor-circus/atrium/testing'
 /*
  * The SSO area of Guardian (AC 49, 96, D-032, D-073): `guardian.sso-connection`
  * has its page at the declared path, framed with its own screen key; the
- * v1 features with no v2 route are listed in `index.ts`; every `t()` key
+ * v1 features with no v2 route are listed in `src/atrium.ts`; every `t()` key
  * exists.
  */
 
@@ -17,7 +17,7 @@ import { useRouter } from '@refactor-circus/atrium/testing'
 const here = import.meta.url
 
 function source(file: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../../../app/${file}`, here)), 'utf8')
+  return readFileSync(fileURLToPath(new URL(`../../src/${file}`, here)), 'utf8')
 }
 
 describe('the guardian SSO pages', () => {
@@ -28,11 +28,11 @@ describe('the guardian SSO pages', () => {
     expect(declared).toBeDefined()
     expect(route).toBeDefined()
     expect(route!.path.replace(/\(\)/g, '')).toBe(declared!.path)
-    expect(source('pages/guardian/sso-connections/[connection].vue')).toContain('screen-key="guardian.sso-connection"')
+    expect(source('pages/sso-connections/[connection].vue')).toContain('screen-key="guardian.sso-connection"')
   })
 
-  it('lists the v1 features with no v2 route at the top of index.ts', () => {
-    const index = source('integrations/guardian/index.ts')
+  it('lists the v1 features with no v2 route at the top of src/atrium.ts', () => {
+    const index = source('atrium.ts')
 
     expect(index.startsWith('// Not ported (D-032)')).toBe(true)
     expect(index).toContain('guardian.sso.manage')

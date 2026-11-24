@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumNavigation } from '#components'
-import { useAtriumShellStore } from '#imports'
-import { atriumLink, isExternalUrl } from '../app/utils/atriumLink'
-import { inApp, shell, withSetup } from './support'
+import { atriumLink, isExternalUrl } from '../src/utils/atriumLink'
+import { AtriumNavigation, useAtriumShellStore } from '../src/index'
+import { inApp, mountSuspended, shell, withSetup } from '../src/testing/index'
 
 describe('atriumLink()', () => {
   it('routes a client path inside the SPA', () => {
@@ -191,9 +189,8 @@ describe('AtriumNavigation', () => {
     expect(nav.find('[data-testid="atrium-nav-panel"]').exists()).toBe(false)
     expect(rail(nav)).toEqual(['Workspace', 'Insights', 'Administration'])
 
-    for (const icon of ['lucide:briefcase', 'lucide:chart-pie', 'lucide:settings']) {
-      expect(nav.html()).toContain(icon)
-    }
+    // Each section's icon, drawn from the bundled collection.
+    expect(nav.findAll('[data-testid="atrium-rail-section"] svg')).toHaveLength(3)
 
     const administration = nav.find('[data-section="group-administration"]')
 

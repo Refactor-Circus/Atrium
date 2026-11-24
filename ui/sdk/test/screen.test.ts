@@ -1,18 +1,16 @@
 import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumScreen, AtriumSettingsPanel } from '#components'
-import { clearNuxtData, useAtrium, useAtriumSettingsPanel, useRouter } from '#imports'
-import type { AtriumScreen as ScreenData, AtriumSettingsPanel as PanelData } from '../app/types/atrium'
-import { settle, withSetup } from './support'
+import type { AtriumScreenData as ScreenData, AtriumSettingsPanelData as PanelData } from '../src/types/atrium'
 import settingsPanel from './fixtures/screen.json'
 import settingsPanelTab from './fixtures/screen-tab.json'
+import { AtriumScreen, AtriumSettingsPanel, useAtrium, useAtriumSettingsPanel } from '../src/index'
+import { clearAtriumData, mockAtriumApi, mountSuspended, settle, useRouter, withSetup } from '../src/testing/index'
 
 const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: { query?: Record<string, unknown> }) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const show = (testid: string) => defineComponent({
   props: { data: { type: Object, default: null } },
@@ -21,7 +19,7 @@ const show = (testid: string) => defineComponent({
 
 describe('screens', () => {
   beforeEach(async () => {
-    clearNuxtData()
+    clearAtriumData()
     api.mockReset()
 
     const atrium = await withSetup(() => useAtrium())

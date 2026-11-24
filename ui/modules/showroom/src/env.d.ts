@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import type { paths as ImpexPaths } from '../client/impex/schema'
 import type { paths } from '../client/schema'
 
 // Types `useAtriumIntegration('showroom')`, `useIntegrationQuery('showroom', …)` and
@@ -6,5 +7,7 @@ import type { paths } from '../client/schema'
 declare module '@refactor-circus/atrium' {
   interface AtriumIntegrationPaths {
     showroom: paths
+    // Showroom's transfers screen calls Impex's API.
+    impex: ImpexPaths
   }
 }

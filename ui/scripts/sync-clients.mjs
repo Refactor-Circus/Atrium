@@ -2,12 +2,13 @@
 // layer (D-020), until the package v2 tags exist and the layer can depend on
 // each package's client by git instead.
 //
-//   pnpm -C nuxt sync:clients                  every package
-//   pnpm -C nuxt sync:clients cortex impex     only these
+//   pnpm -C ui sync:clients                  every package
+//   pnpm -C ui sync:clients cortex impex     only these
 //
 // For each package it reads the sibling checkout `$ATRIUM_SUITE_PATH/{Pkg}`
 // (ATRIUM_SUITE_PATH defaults to the folder this repository sits in) and
-// writes `nuxt/layer/app/integrations/{pkg}/client/`:
+// writes `ui/modules/{pkg}/client/` (each staged module's own client, until
+// the module moves into its package, which generates its own):
 //
 //   openapi.json     the package's `openapi.json`, as committed there
 //   schema.d.ts      the package's `client/src/schema.d.ts`, verbatim
@@ -36,7 +37,7 @@ const PACKAGES = {
 
 const repository = fileURLToPath(new URL('../../', import.meta.url))
 const suite = resolve(process.env.ATRIUM_SUITE_PATH || dirname(repository))
-const integrations = join(repository, 'nuxt', 'layer', 'app', 'integrations')
+const integrations = join(repository, 'ui', 'modules')
 
 function fail(message) {
   console.error(`[sync:clients] ${message}`)

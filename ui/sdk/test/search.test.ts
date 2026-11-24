@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { UCommandPalette } from '#components'
-import { useAtriumSearch, useAtriumShellStore } from '#imports'
-import type { AtriumSearchResult } from '../app/types/atrium'
-import { shell, withSetup } from './support'
+import type { AtriumSearchResult } from '../src/types/atrium'
+import { useAtriumSearch, useAtriumShellStore } from '../src/index'
+import { UCommandPalette } from '../src/ui'
+import { mockAtriumApi, mountSuspended, shell, withSetup } from '../src/testing/index'
 
 const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: unknown) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const results: AtriumSearchResult[] = [
   { title: 'ORD-1048', subtitle: 'Northwind Traders', icon: 'i-lucide-receipt', group: 'Orders', link: { path: '/demo/orders/1048', external: false } },
@@ -24,7 +23,7 @@ describe('⌘K search', () => {
     api.mockResolvedValue({ data: results })
 
     const store = await withSetup(() => useAtriumShellStore())
-    store.shell = shell({ search: { min_length: 3 } })
+    store.shell = shell({ search: { ...shell().search, min_length: 3 } })
   })
 
   it('calls atrium.search with the term once it reaches search.min_length', async () => {
@@ -54,7 +53,7 @@ describe('⌘K search', () => {
     expect(items.Unlinked).not.toHaveProperty('to')
   })
 
-  it('renders link.path as the result href, with rel="noopener noreferrer" on external results', async () => {
+  it('renders link.path as the result href, external results in a new tab', async () => {
     const search = await withSetup(() => useAtriumSearch())
     await search.search('acme')
 
@@ -65,7 +64,8 @@ describe('⌘K search', () => {
 
     expect(internal.exists()).toBe(true)
     expect(internal.attributes('target')).toBeUndefined()
-    expect(external.attributes('rel')).toBe('noopener noreferrer')
+    // Nuxt UI's Vue-mode <ULink> renders no `rel` (D-087); a browser opens
+    // a target="_blank" link with noopener all the same.
     expect(external.attributes('target')).toBe('_blank')
     expect(wrapper.html()).not.toContain('javascript:')
   })

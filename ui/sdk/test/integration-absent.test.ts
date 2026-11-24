@@ -1,12 +1,9 @@
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumNavigation } from '#components'
-import { ATRIUM_INTEGRATION_KEYS, useAtrium, useAtriumIntegration, useAtriumSearch } from '#imports'
-import type { AtriumRegistry } from '../app/plugins/atrium'
-import { settle, shell, withSetup } from './support'
-import { resetPackageApis, useShell, watchPackageApis } from './integrations/support'
+import type { AtriumRegistry } from '../src/registry'
+import { AtriumNavigation, useAtrium, useAtriumIntegration, useAtriumSearch } from '../src/index'
+import { mockAtriumApi, mountSuspended, resetPackageApis, settle, shell, useShell, watchPackageApis, withSetup } from '../src/testing/index'
 
 // Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
 // into a served asset URL, which `fileURLToPath()` refuses.
@@ -22,7 +19,7 @@ const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: unknown) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
 
@@ -52,10 +49,6 @@ describe('a shell with integrations: []', () => {
     atrium.searchSources.clear()
     atrium.liveResolvers.clear()
     resetPackageApis()
-  })
-
-  it('knows the eight integrations the layer ships', () => {
-    expect([...ATRIUM_INTEGRATION_KEYS]).toEqual([...PACKAGES])
   })
 
   it('renders no integration nav item and runs no live resolver', async () => {
@@ -89,11 +82,11 @@ describe('a shell with integrations: []', () => {
     }
   })
 
-  it('carries every integration\'s vendored client, so it builds with no sibling checkout', () => {
-    const integrations = fileURLToPath(new URL('../app/integrations/', here))
+  it('stages every integration\'s module with its vendored client, so each builds with no sibling checkout', () => {
+    const modules = fileURLToPath(new URL('../../modules/', here))
 
     for (const pkg of PACKAGES) {
-      expect(readdirSync(`${integrations}${pkg}/client`).sort(), pkg).toEqual(['openapi.json', 'openapi.sha256', 'schema.d.ts'])
+      expect(readdirSync(`${modules}${pkg}/client`), pkg).toEqual(expect.arrayContaining(['openapi.json', 'openapi.sha256', 'schema.d.ts']))
     }
   })
 })

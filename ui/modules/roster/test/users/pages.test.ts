@@ -14,7 +14,7 @@ import { useRouter } from '@refactor-circus/atrium/testing'
  * actions it does not port (D-032); and every `t()` key exists.
  */
 
-/** Each screen of this area to its page file, under `app/pages/roster/`. */
+/** Each screen of this area to its page file, under `src/pages/`. */
 const PAGES: Record<string, string> = {
   'roster.users': 'users/index.vue',
   'roster.user-create': 'users/create.vue',
@@ -27,7 +27,7 @@ const PAGES: Record<string, string> = {
 const here = import.meta.url
 
 function source(file: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../../../app/pages/roster/${file}`, here)), 'utf8')
+  return readFileSync(fileURLToPath(new URL(`../../src/pages/${file}`, here)), 'utf8')
 }
 
 describe('the roster users and impersonations pages', () => {

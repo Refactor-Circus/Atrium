@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import register from '../../src/atrium'
+import Guardian from '../../src/atrium'
 import {
   DEADLINE_HEADER,
   DEADLINE_NOTICE_KEY,
@@ -7,7 +7,7 @@ import {
   guardianTwoFactorHandler,
   resetGuardianHandler
 } from '../../src/components/two-factor/handler'
-import { AtriumRegistry } from '@refactor-circus/atrium'
+import type { AtriumRegistry } from '@refactor-circus/atrium'
 import { settle, withSetup } from '@refactor-circus/atrium/testing'
 import { AtriumResponseNotice, useAtrium, useAtriumI18n } from '@refactor-circus/atrium'
 import { mountSuspended, runInAtrium, useRouter } from '@refactor-circus/atrium/testing'
@@ -35,7 +35,7 @@ async function handle(response: Response): Promise<void> {
   const handler = guardianTwoFactorHandler(atrium)
 
   // Run as the clients do: inside the app's context (mounting would reset the route).
-  await useNuxtApp().runWithContext(() => handler(response, request))
+  await runInAtrium(() => handler(response, request))
   await settle()
 }
 
@@ -53,11 +53,9 @@ describe('the guardian.two-factor response handler', () => {
     await useRouter().replace('/')
   })
 
-  it('is registered by guardian/index.ts under its key', () => {
-    const registry = new AtriumRegistry()
-    register(registry)
-
-    expect([...registry.responseHandlers.keys()]).toEqual([GUARDIAN_HANDLER_KEY])
+  it('is registered by src/atrium.ts under its key', () => {
+    expect(Object.keys(Guardian.responseHandlers ?? {})).toEqual([GUARDIAN_HANDLER_KEY])
+    expect(atrium.responseHandlers.has(GUARDIAN_HANDLER_KEY)).toBe(true)
   })
 
   it('sends two_factor_challenge_required to the challenge page, with where the user was', async () => {
@@ -80,7 +78,7 @@ describe('the guardian.two-factor response handler', () => {
     const push = vi.spyOn(useRouter(), 'push')
     const handler = guardianTwoFactorHandler(atrium)
 
-    await useNuxtApp().runWithContext(() => Promise.all([
+    await runInAtrium(() => Promise.all([
       handler(denied('two_factor_challenge_required'), request),
       handler(denied('two_factor_challenge_required'), request),
       handler(denied('two_factor_enrollment_required'), request)

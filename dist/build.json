@@ -13,9 +13,9 @@
     "sdk/package.json",
     "pnpm-lock.yaml"
   ],
-  "hash": "f00b00b2273b32c8df83e13e0da371d4393a82acb7214f5d50c76c6acb297c28",
+  "hash": "4ce3cf62f46e480f28e6710f473e432c1e1ecd011c274cf3a1cb01c612c29841",
   "entry": {
-    "script": "atrium-BC6nl4fj.js",
+    "script": "atrium-wA7-oxGl.js",
     "styles": [
       "assets/atrium-CGlasWj2.css",
       "assets/refactor-circus-atrium-ui-CuY96XEo.css"
@@ -28,7 +28,7 @@
     "vue-i18n": "shared/vue-i18n-D5J2DIV9.js",
     "@vueuse/core": "shared/vueuse-core-BpGTQ_TX.js",
     "openapi-fetch": "shared/openapi-fetch-DrqmQER3.js",
-    "@refactor-circus/atrium": "shared/refactor-circus-atrium-Dy7KDpbW.js",
+    "@refactor-circus/atrium": "shared/refactor-circus-atrium-jrnvyvdD.js",
     "@refactor-circus/atrium/ui": "shared/refactor-circus-atrium-ui-BIN1S8Wj.js"
   }
 }

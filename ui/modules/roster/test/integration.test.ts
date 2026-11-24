@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AtriumRegistry } from '@refactor-circus/atrium'
-import register, { screens } from '../src/atrium'
+import Roster, { screens } from '../src/atrium'
 import OrganizationsWidget from '../src/components/widgets/OrganizationsWidget.vue'
 import UserStatusWidget from '../src/components/widgets/UserStatusWidget.vue'
 import { searchRosterOrganizations, searchRosterUsers } from '../src/components/search/sources'
@@ -13,7 +13,7 @@ import fixture from '@refactor-circus/atrium/fixtures/integrations/roster.json'
  * and a registration for every widget and search source.
  */
 
-/** The name Nuxt gives the page at a declared path: `/roster/users/:user` is `roster-users-user`. */
+/** The route name Roster gives the page at a declared path (Nuxt's file-based convention): `/roster/users/:user` is `roster-users-user`. */
 function routeNameFor(path: string): string {
   return path.slice(1).split('/').map(part => part.replace(/^:/, '')).join('-')
 }
@@ -49,9 +49,21 @@ describe('the roster screens map', () => {
   })
 })
 
-describe('the roster registrations', () => {
+/** A fresh registry holding what Roster's module definition registers, as `installAtriumModules()` does. */
+function registryOf(definition: typeof Roster): AtriumRegistry {
   const atrium = new AtriumRegistry()
-  register(atrium)
+
+  for (const [key, component] of Object.entries(definition.widgets ?? {})) atrium.widget(key, component)
+  for (const [key, component] of Object.entries(definition.extensions ?? {})) atrium.extension(key, component)
+  for (const [key, component] of Object.entries(definition.settingsPanels ?? {})) atrium.settingsPanel(key, component)
+  for (const [key, resolver] of Object.entries(definition.liveResolvers ?? {})) atrium.live(key, resolver)
+  for (const [key, resolver] of Object.entries(definition.searchSources ?? {})) atrium.searchSource(key, resolver)
+
+  return atrium
+}
+
+describe('the roster registrations', () => {
+  const atrium = registryOf(Roster)
 
   it('registers a component for every widget the fixture declares', () => {
     expect(fixture.widgets.map(widget => widget.component)).toEqual(['roster.user-status', 'roster.organizations'])

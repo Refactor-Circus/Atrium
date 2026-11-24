@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { registerEndpoint } from '@nuxt/test-utils/runtime'
-import { useAtrium, useAtriumApi, useAtriumClient, useAtriumIntegration, useAtriumShellStore } from '#imports'
-import { AtriumRegistry } from '../app/plugins/atrium'
-import type { AtriumResponseHandler } from '../app/types/atrium'
-import { withSetup } from './support'
-import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell } from './integrations/support'
+import { AtriumRegistry } from '../src/registry'
+import type { AtriumResponseHandler } from '../src/types/atrium'
+import { useAtrium, useAtriumApi, useAtriumClient, useAtriumIntegration, useAtriumShellStore } from '../src/index'
+import { integrationEntry, integrationShell, mockPackageApi, registerEndpoint, reply, resetPackageApis, useShell, withSetup } from '../src/testing/index'
 
 /*
  * Response handlers (AC 83, D-049): `$atrium.responseHandler(key, handler)`
@@ -63,10 +61,6 @@ describe('$atrium.responseHandler()', () => {
     resetPackageApis()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
-  })
-
-  it('is registered by the integrations plugin at plugin time, Guardian\'s included', () => {
-    expect(saved.map(([key]) => key)).toContain('guardian.two-factor')
   })
 
   it('keeps handlers in registration order, a key registered again replacing its handler', async () => {

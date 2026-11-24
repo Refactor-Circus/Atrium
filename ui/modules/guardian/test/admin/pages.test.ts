@@ -25,7 +25,7 @@ const PAGES: Record<string, string> = {
 const here = import.meta.url
 
 function source(file: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../../../app/pages/guardian/${file}`, here)), 'utf8')
+  return readFileSync(fileURLToPath(new URL(`../../src/pages/${file}`, here)), 'utf8')
 }
 
 describe('the guardian administration pages', () => {

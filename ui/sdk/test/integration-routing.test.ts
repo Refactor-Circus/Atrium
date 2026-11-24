@@ -1,15 +1,12 @@
 import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumIntegrationScreen, AtriumIntegrationUnavailable, AtriumNoAccess } from '#components'
-import { clearNuxtData, useAtrium, useAtriumIntegration, useAtriumShellStore, useRouter } from '#imports'
 import type { RouteLocationNormalized } from 'vue-router'
-import DefaultLayout from '../app/layouts/default.vue'
-import PublicLayout from '../app/layouts/public.vue'
-import integrationMiddleware from '../app/middleware/atrium-integration.global'
-import type { AtriumIntegrationScreen as IntegrationScreenData } from '../app/types/atrium'
-import { httpError, settle, withSetup } from './support'
-import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell, watchPackageApis } from './integrations/support'
+import DefaultLayout from '../../app/src/layouts/AtriumDefaultLayout.vue'
+import PublicLayout from '../../app/src/layouts/AtriumPublicLayout.vue'
+import { integrationGuard as integrationMiddleware } from '../../app/src/integration-guard'
+import type { AtriumIntegrationScreenData as IntegrationScreenData } from '../src/types/atrium'
+import { AtriumIntegrationScreen, AtriumIntegrationUnavailable, AtriumNoAccess, useAtrium, useAtriumIntegration, useAtriumShellStore } from '../src/index'
+import { clearAtriumData, httpError, integrationEntry, integrationShell, mockAtriumApi, mockPackageApi, mountSuspended, reply, resetPackageApis, settle, useRouter, useShell, watchPackageApis, withSetup, setAtriumBoot } from '../src/testing/index'
 
 /*
  * Integration routing (AC 49): `/{pkg}/…` pages render only while their
@@ -23,7 +20,7 @@ const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: { query?: Record<string, unknown> }) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycart', 'roster', 'showroom'] as const
 
@@ -31,7 +28,7 @@ const PACKAGES = ['cortex', 'guardian', 'impex', 'keen', 'pennantplus', 'polycar
 const CortexPage = defineComponent({
   setup() {
     const { client } = useAtriumIntegration('cortex')
-    void client?.GET('/virtual-agents')
+    void client?.GET('/virtual-agents', {})
 
     return () => h('div', { 'data-testid': 'cortex-page' }, 'Virtual agents')
   }
@@ -42,7 +39,7 @@ function location(path: string, meta: Record<string, unknown> = {}): RouteLocati
 }
 
 async function runMiddleware(to: RouteLocationNormalized): Promise<unknown> {
-  return withSetup(() => integrationMiddleware(to, location('/')))
+  return withSetup(() => integrationMiddleware(to))
 }
 
 const shellWithIntegrations = () => integrationShell([
@@ -50,8 +47,13 @@ const shellWithIntegrations = () => integrationShell([
   integrationEntry('polycart', { active: false, label: 'Polycart' })
 ])
 
+// The app's guard runs on every navigation, as it does in the app; the page
+// lists the suite's integrations as known.
+useRouter().beforeEach(integrationMiddleware)
+
 describe('the integration route middleware', () => {
   beforeEach(async () => {
+    setAtriumBoot({ known_integrations: [...PACKAGES] })
     api.mockReset()
     await useShell(shellWithIntegrations())
   })
@@ -110,7 +112,7 @@ describe('the integration route middleware', () => {
     expect(to.meta.atriumUnavailable).toEqual({ integration: 'polycart', reason: 'inactive' })
   })
 
-  it('skips the shell on a public page, and puts it in the public layout', async () => {
+  it('skips the shell on a public page, which the app renders in its public layout', async () => {
     const store = await withSetup(() => useAtriumShellStore())
     store.shell = null
 
@@ -120,7 +122,6 @@ describe('the integration route middleware', () => {
     expect(api).not.toHaveBeenCalledWith('/shell')
     expect(store.shell).toBeNull()
     expect(to.meta.atriumUnavailable).toBeUndefined()
-    expect(to.meta.layout).toBe('public')
   })
 
   it('renders <AtriumIntegrationUnavailable> in place of the page, with no package request', async () => {
@@ -223,7 +224,7 @@ describe('<AtriumIntegrationScreen>', () => {
   })
 
   beforeEach(async () => {
-    clearNuxtData()
+    clearAtriumData()
     api.mockReset()
 
     const atrium = await withSetup(() => useAtrium())

@@ -3,7 +3,7 @@ import { searchCortex } from '../src/atrium'
 import { withSetup } from '@refactor-circus/atrium/testing'
 import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell } from '@refactor-circus/atrium/testing'
 import { cortexCalls, runnableAgents } from './support'
-import { useAtrium, useAtriumI18n } from '@refactor-circus/atrium'
+import { useAtrium } from '@refactor-circus/atrium'
 import { runInAtrium } from '@refactor-circus/atrium/testing'
 
 /*
@@ -14,9 +14,7 @@ import { runInAtrium } from '@refactor-circus/atrium/testing'
  */
 
 async function search(q: string, limit = 5) {
-  const nuxtApp = await withSetup(() => useNuxtApp())
-
-  return nuxtApp.runWithContext(() => searchCortex(q, { limit }))
+  return runInAtrium(() => searchCortex(q, { limit }))
 }
 
 describe('the cortex search source', () => {

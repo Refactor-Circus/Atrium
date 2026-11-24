@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Page from '../../src/pages/products/[product].vue'
 import { settle } from '@refactor-circus/atrium/testing'
 import { mockPackageApi, reply, resetPackageApis, type PackageRoutes } from '@refactor-circus/atrium/testing'
-import {
 import { clearAtriumData, mockAtriumApi, useRouter } from '@refactor-circus/atrium/testing'
+import {
   bySize,
   confirmWith,
   cursorPage,

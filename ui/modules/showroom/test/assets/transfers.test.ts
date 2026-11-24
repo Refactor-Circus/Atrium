@@ -2,7 +2,8 @@ import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Page from '../../src/pages/transfers/index.vue'
 import { settle, withSetup } from '@refactor-circus/atrium/testing'
-import { integrationEntry, mockPackageApi, packageCalls, reply, resetPackageApis, type PackageRoutes } from '@refactor-circus/atrium/testing'
+import { integrationEntry, mockPackageApi, packageCalls, reply, resetPackageApis, type PackageBody, type PackageRoutes } from '@refactor-circus/atrium/testing'
+import type { TransferRun } from '../../src/components/transfers/transfers'
 import { cursorPage, invalid, ok, resetShowroomPages, showroomCalls } from '../catalog/support'
 import { flow, master, mountAreaPage, pickFile, resetAreaPages, ROW_SECTION, run, shirts, transfersApi, transfersScreen, webshop } from './support'
 import { useAtrium } from '@refactor-circus/atrium'
@@ -37,15 +38,24 @@ function day(n: number): string {
 const IMPORTS = Array.from({ length: 15 }, (_, index) => run(`imp-${index + 1}`, 'showroom:import', day(index + 1)))
 const EXPORTS = Array.from({ length: 10 }, (_, index) => run(`exp-${index + 16}`, 'showroom:export', day(index + 16)))
 
+/**
+ * Runs as `impex.runs.index` lists them. Its schema types the inline `tags`
+ * map as `Record<string, never>` where `RunResource` has string values; the
+ * fixtures send null, which both allow.
+ */
+function listed(runs: TransferRun[]): PackageBody<'impex', 'GET /runs'>['data'] {
+  return runs as PackageBody<'impex', 'GET /runs'>['data']
+}
+
 function impexWith(overrides: PackageRoutes<'impex'> = {}): void {
   mockPackageApi('impex', {
     'GET /flows': { data: [flow('showroom:import'), flow('impex:cleanup'), flow('showroom:export'), flow('catalog:feed')] },
     'GET /runs': call => ({
-      data: call.query.flow === 'showroom:import'
+      data: listed(call.query.flow === 'showroom:import'
         ? [...IMPORTS].reverse()
         : call.query.flow === 'showroom:export'
           ? [...EXPORTS].reverse()
-          : call.query.flow === 'catalog:feed' ? [run('feed-1', 'catalog:feed', day(26))] : []
+          : call.query.flow === 'catalog:feed' ? [run('feed-1', 'catalog:feed', day(26))] : [])
     }),
     ...overrides
   })
@@ -126,7 +136,7 @@ describe('showroom.transfers', () => {
     })
 
     it('shows a failed run\'s error message', async () => {
-      impexWith({ 'GET /runs': call => ({ data: call.query.flow === 'showroom:import' ? [run('imp-bad', 'showroom:import', day(3), { status: 'failed', error: { message: 'Row 4 has no identifier.' } })] : [] }) })
+      impexWith({ 'GET /runs': call => ({ data: listed(call.query.flow === 'showroom:import' ? [run('imp-bad', 'showroom:import', day(3), { status: 'failed', error: { message: 'Row 4 has no identifier.' } })] : []) }) })
       showroomWith()
 
       const wrapper = await mountAreaPage(Page, PATH)

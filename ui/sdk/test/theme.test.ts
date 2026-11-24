@@ -1,7 +1,7 @@
 import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useAtriumShellStore, useAtriumTheme } from '#imports'
-import { shell, withSetup } from './support'
+import { useAtriumShellStore, useAtriumTheme } from '../src/index'
+import { shell, withSetup } from '../src/testing/index'
 
 describe('useAtriumTheme()', () => {
   beforeEach(async () => {

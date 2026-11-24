@@ -1,19 +1,8 @@
 import { defineComponent, h } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enableAutoUnmount } from '@vue/test-utils'
-import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
-import {
-  integrationData,
-  resolveIntegrationBase,
-  useAtrium,
-  useAtriumApi,
-  useAtriumIntegration,
-  useAtriumShellStore,
-  useIntegrationQuery,
-  useRuntimeConfig
-} from '#imports'
-import { settle, withSetup } from './support'
-import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell } from './integrations/support'
+import { integrationData, resolveIntegrationBase, useAtrium, useAtriumApi, useAtriumIntegration, useAtriumShellStore, useIntegrationQuery } from '../src/index'
+import { integrationEntry, integrationShell, mockPackageApi, mountSuspended, registerEndpoint, reply, resetPackageApis, setAtriumBoot, settle, useShell, withSetup } from '../src/testing/index'
 
 /*
  * One `openapi-fetch` client per integration (AC 47), all signed by the one
@@ -36,12 +25,6 @@ registerEndpoint('/atrium/api/shell', (event) => {
 registerEndpoint('/atrium/api/dashboards', () =>
   new Response(JSON.stringify({ message: 'Unauthenticated.' }), { status: 401, headers: { 'content-type': 'application/json' } }))
 
-type AtriumConfig = { apiBase: string, integrations: Record<string, { apiBase: string }> }
-
-async function atriumConfig(): Promise<AtriumConfig> {
-  return (await withSetup(() => useRuntimeConfig())).public.atrium as unknown as AtriumConfig
-}
-
 describe('resolveIntegrationBase()', () => {
   it('keeps an absolute http(s) base, without a trailing slash', () => {
     expect(resolveIntegrationBase('https://cortex.example.test/api/', '/atrium/api', 'https://app.test')).toBe('https://cortex.example.test/api')
@@ -58,12 +41,8 @@ describe('resolveIntegrationBase()', () => {
 })
 
 describe('useAtriumIntegration()', () => {
-  let config: AtriumConfig
-  let original: AtriumConfig
-
   beforeEach(async () => {
-    config = await atriumConfig()
-    original = structuredClone({ apiBase: config.apiBase, integrations: config.integrations })
+    setAtriumBoot()
 
     await useShell(integrationShell([
       integrationEntry('cortex'),
@@ -73,8 +52,7 @@ describe('useAtriumIntegration()', () => {
   })
 
   afterEach(() => {
-    config.apiBase = original.apiBase
-    config.integrations = original.integrations
+    setAtriumBoot()
   })
 
   it('resolves the shell api_base path against the page origin while the Atrium apiBase is relative', async () => {
@@ -86,7 +64,7 @@ describe('useAtriumIntegration()', () => {
   })
 
   it('resolves it against the origin of an absolute Atrium apiBase', async () => {
-    config.apiBase = 'https://api.example.test/atrium/api'
+    setAtriumBoot({ api_base: 'https://api.example.test/atrium/api' })
 
     expect((await withSetup(() => useAtriumIntegration('cortex'))).apiBase).toBe('https://api.example.test/cortex/api')
   })
@@ -95,10 +73,15 @@ describe('useAtriumIntegration()', () => {
     expect((await withSetup(() => useAtriumIntegration('impex'))).apiBase).toBe('https://impex.example.test/api')
   })
 
-  it('lets the host override the base with runtimeConfig.public.atrium.integrations.{key}.apiBase', async () => {
-    config.integrations = { ...config.integrations, cortex: { apiBase: 'https://cortex.example.test/v2' } }
+  it('reads an integration from the page\'s boot data until the shell lists it', async () => {
+    const store = await withSetup(() => useAtriumShellStore())
+    store.shell = null
+    setAtriumBoot({ integrations: { cortex: { api_base: 'https://cortex.example.test/v2', active: true } } })
 
-    expect((await withSetup(() => useAtriumIntegration('cortex'))).apiBase).toBe('https://cortex.example.test/v2')
+    const cortex = await withSetup(() => useAtriumIntegration('cortex'))
+
+    expect(cortex.apiBase).toBe('https://cortex.example.test/v2')
+    expect(cortex.client).not.toBeNull()
   })
 
   it('caches one client per key per app', async () => {
@@ -160,7 +143,7 @@ describe('one auth adapter for every client (AC 48)', () => {
     const api = await withSetup(() => useAtriumApi())
 
     await cortex.GET('/search', { params: { query: { q: 'triage' } } })
-    await impex.GET('/stats')
+    await impex.GET('/stats', {})
     await api('/shell')
 
     for (const call of [cortexCalls[0]!, impexCalls[0]!]) {
@@ -198,7 +181,7 @@ describe('one auth adapter for every client (AC 48)', () => {
     expect(fromCortex.response.status).toBe(401)
     expect(onUnauthorized).toHaveBeenCalledTimes(1)
 
-    await impex.GET('/stats')
+    await impex.GET('/stats', {})
     expect(onUnauthorized).toHaveBeenCalledTimes(2)
 
     await expect(api('/dashboards')).rejects.toMatchObject({ status: 401 })
@@ -210,7 +193,7 @@ describe('one auth adapter for every client (AC 48)', () => {
     mockPackageApi('impex', { 'GET /stats': reply(500) })
 
     await (await withSetup(() => useAtriumIntegration('cortex'))).client!.GET('/search', { params: { query: { q: 'x' } } })
-    await (await withSetup(() => useAtriumIntegration('impex'))).client!.GET('/stats')
+    await (await withSetup(() => useAtriumIntegration('impex'))).client!.GET('/stats', {})
 
     expect(onUnauthorized).not.toHaveBeenCalled()
   })
@@ -242,7 +225,7 @@ describe('useIntegrationQuery()', () => {
   function widget(testid: string, pkg: 'impex' | 'polycart' = 'impex') {
     return defineComponent({
       setup() {
-        const query = useIntegrationQuery(pkg, `${pkg}.stats.show`, async client => integrationData(await client.GET('/stats')))
+        const query = useIntegrationQuery(pkg, `${pkg}.stats.show`, async client => integrationData(await client.GET('/stats', {})))
 
         return () => h('div', { 'data-testid': testid }, [
           query.status.value,

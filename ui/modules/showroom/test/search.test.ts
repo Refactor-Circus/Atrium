@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AtriumRegistry } from '@refactor-circus/atrium'
 import type { AtriumSearchSource } from '@refactor-circus/atrium'
-import register from '../src/atrium'
+import Showroom from '../src/atrium'
 import { showroomResultPath } from '../src/components/search/source'
 import { withSetup } from '@refactor-circus/atrium/testing'
 import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell, type PackageBody } from '@refactor-circus/atrium/testing'
@@ -44,7 +44,9 @@ describe('the showroom search source', () => {
 
     atrium = await withSetup(() => useAtrium())
     atrium.searchSources.clear()
-    register(atrium)
+    for (const [key, source] of Object.entries(Showroom.searchSources ?? {})) {
+      atrium.searchSource(key, source)
+    }
 
     await useShell(integrationShell([integrationEntry('showroom')], { search: { min_length: 2, sources, per_source: 7 } }))
   })

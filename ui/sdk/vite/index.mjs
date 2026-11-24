@@ -316,12 +316,16 @@ export function atriumTestConfig({ root = process.cwd(), include = ['test/**/*.t
  * Atrium compiled, through the import map.)
  */
 export function nuxtUi({ dts = false, dirs = [] } = {}) {
+  // `dts` is the folder the declaration files go in (false for none).
+  const autoImportsDts = dts ? `${dts}/auto-imports.d.ts` : false
+  const componentsDts = dts ? `${dts}/components.d.ts` : false
+
   return import('@nuxt/ui/vite').then(({ default: ui }) => ui({
     ui: atriumUiConfig,
     colorMode: true,
     // The SDK's own sources import what they use: a library must not lean
     // on its consumer's auto-imports.
-    autoImport: { imports: atriumAutoImports({ ui: false }), dirs, dts, vueTemplate: true, exclude: [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/, sdkSources] },
-    components: { dirs: [], resolvers: [atriumComponentResolver({ ui: false, direct: true })], dts }
+    autoImport: { imports: atriumAutoImports({ ui: false }), dirs, dts: autoImportsDts, vueTemplate: true, exclude: [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/, sdkSources] },
+    components: { dirs: [], resolvers: [atriumComponentResolver({ ui: false, direct: true })], dts: componentsDts }
   }))
 }

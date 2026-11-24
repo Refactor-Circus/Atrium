@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { ref } from 'vue'
-import { AtriumErrorCard, AtriumNoAccess, AtriumPageHeader, AtriumStat, AtriumState, AtriumStatusBar, AtriumTopbar } from '#components'
-import { useAtriumNavigation, useAtriumPalette, useAtriumShellStore } from '#imports'
-import { inApp, shell, withSetup } from './support'
+import { AtriumErrorCard, AtriumNoAccess, AtriumPageHeader, AtriumStat, AtriumState, AtriumStatusBar, AtriumTopbar, useAtriumNavigation, useAtriumPalette, useAtriumShellStore } from '../src/index'
+import { inApp, mountSuspended, shell, withSetup, useRouter } from '../src/testing/index'
 
 /*
  * The deck's shell pieces (D-077): the navigation model, the top bar with its
@@ -117,6 +115,7 @@ describe('⌘K as navigation', () => {
   })
 
   it('remembers the pages visited and offers them first, the current one aside', async () => {
+    await useRouter().push('/')
     localStorage.setItem('atrium-recent', JSON.stringify(['/demo/billing']))
 
     const palette = await withSetup(() => useAtriumPalette(ref(''), ref([]), () => {}))

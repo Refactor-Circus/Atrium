@@ -1,15 +1,15 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import pennantplus, { screens } from '../src/atrium'
 import { withSetup } from '@refactor-circus/atrium/testing'
 import { hasI18nKey, missingI18nKeys } from '@refactor-circus/atrium/testing'
-import { useAtrium } from '@refactor-circus/atrium'
+import fixtureJson from '@refactor-circus/atrium/fixtures/integrations/pennantplus.json'
+import locale from '../src/locales/pennantplus.en.json'
 import { useRouter } from '@refactor-circus/atrium/testing'
 
 /*
  * The PennantPlus integration's layer side (AC 49, 53, 58): every screen and
- * nav path PHP declares (`test/fixtures/integrations/pennantplus.json`, written
- * by `PennantPlusIntegrationTest`) has its page; its `index.ts` maps each
+ * nav path PHP declares (`fixtures/integrations/pennantplus.json`, written
+ * by `PennantPlusIntegrationTest`) has its page; its `src/atrium.ts` maps each
  * screen key to that page's route; and every `t()` key it uses exists.
  */
 
@@ -22,13 +22,7 @@ interface Declarations {
   screens: { key: string, kind: string, path: string, subject_type: string | null }[]
 }
 
-// Read through a variable: Vite rewrites `new URL('…', import.meta.url)`
-// into a served asset URL, which `readFileSync()` refuses.
-const here = import.meta.url
-
-const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/pennantplus.json', here), 'utf8')) as Declarations
-
-const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/pennantplus.en.json', here), 'utf8')) as unknown
+const fixture = fixtureJson as unknown as Declarations
 
 /** A Nuxt route path as PHP declares it: `:param()` read as `:param`. */
 function declaredPath(path: string): string {
@@ -47,7 +41,7 @@ describe('the pennantplus fixture', () => {
     expect(fixture.search_sources).toEqual([])
   })
 
-  it('has a screens entry in index.ts for every screen key, and nothing else', () => {
+  it('has a screens entry in src/atrium.ts for every screen key, and nothing else', () => {
     expect(Object.keys(screens).sort()).toEqual(fixture.screens.map(screen => screen.key).sort())
   })
 
@@ -74,28 +68,12 @@ describe('the pennantplus fixture', () => {
 })
 
 describe('the pennantplus registrations', () => {
-  it('registers nothing on the registry: PennantPlus has no widget, panel, search source or live resolver', async () => {
-    const atrium = await withSetup(() => useAtrium())
-    const calls: string[] = []
-    const spy = new Proxy(atrium, {
-      get(target, property, receiver) {
-        const value = Reflect.get(target, property, receiver)
-
-        if (typeof value === 'function' && ['widget', 'extension', 'settingsPanel', 'searchSource', 'live'].includes(String(property))) {
-          return (...args: unknown[]) => {
-            calls.push(String(property))
-
-            return value.apply(target, args)
-          }
-        }
-
-        return value
-      }
-    })
-
-    pennantplus(spy)
-
-    expect(calls).toEqual([])
+  it('registers nothing on the registry: PennantPlus has no widget, panel, search source or live resolver', () => {
+    expect(pennantplus.widgets).toBeUndefined()
+    expect(pennantplus.extensions).toBeUndefined()
+    expect(pennantplus.settingsPanels).toBeUndefined()
+    expect(pennantplus.searchSources).toBeUndefined()
+    expect(pennantplus.liveResolvers).toBeUndefined()
   })
 })
 

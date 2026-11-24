@@ -1,10 +1,10 @@
-import type { AtriumRegistry } from '@refactor-circus/atrium'
+import { atriumRouter, type AtriumRegistry } from '@refactor-circus/atrium'
 import type { AtriumResponseHandler } from '@refactor-circus/atrium'
 import { CHALLENGE_PATH, formatDate, SETUP_PATH } from './guardian'
 
 /*
  * Guardian's response handler (AC 84, D-049), registered by
- * `guardian/index.ts` whether or not the shell lists Guardian: the host may
+ * `src/atrium.ts` whether or not the shell lists Guardian: the host may
  * put `guardian.two-factor` on Atrium's own route group, so the shell itself
  * can answer 403.
  *
@@ -55,8 +55,8 @@ async function codeOf(response: Response): Promise<string | null> {
 /** The handler, bound to the app's registry for its notice. */
 export function guardianTwoFactorHandler(atrium: AtriumRegistry): AtriumResponseHandler {
   return async (response) => {
-    // Taken before the first await, while the Nuxt app's context is set.
-    const router = useRouter()
+    // The app's router: a handler runs outside any component.
+    const router = atriumRouter()
     const deadline = response.headers.get(DEADLINE_HEADER)
 
     if (deadline) {

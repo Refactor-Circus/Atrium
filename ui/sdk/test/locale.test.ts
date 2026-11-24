@@ -1,19 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumSearch } from '#components'
-import { useAtriumShellStore, useNuxtApp } from '#imports'
-import { settle, shell, withSetup } from './support'
+import { addAtriumMessages, AtriumSearch, setAtriumLocale, useAtriumI18n, useAtriumShellStore } from '../src/index'
+import fr from './locales/fr.json'
+import { mockAtriumApi, mountSuspended, runInAtrium, settle, shell, withSetup } from '../src/testing/index'
 
 /*
- * `fr` is registered for Vitest only (vitest.config.ts, from test/locales):
- * the layer itself ships `en` alone.
+ * `fr` is registered for this suite only (test/locales): Atrium itself
+ * ships `en` alone; a module or the app adds a locale with
+ * addAtriumMessages().
  */
+
+addAtriumMessages({ fr })
 
 const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 async function loadShell(locale: string) {
   api.mockResolvedValue({ data: shell({ locale }) })
@@ -27,7 +29,7 @@ async function loadShell(locale: string) {
 
 describe('the layer locale', () => {
   afterEach(async () => {
-    await useNuxtApp().$i18n.setLocale('en')
+    setAtriumLocale('en')
   })
 
   it('renders the layer strings in English by default', async () => {
@@ -41,7 +43,7 @@ describe('the layer locale', () => {
   it('switches to the locale the shell sends', async () => {
     await loadShell('fr')
 
-    expect(useNuxtApp().$i18n.locale.value).toBe('fr')
+    expect(useAtriumI18n().locale.value).toBe('fr')
 
     const wrapper = await mountSuspended(AtriumSearch)
 
@@ -51,6 +53,6 @@ describe('the layer locale', () => {
   it('stays on the current locale when the app has no messages for the shell locale', async () => {
     await loadShell('de')
 
-    expect(useNuxtApp().$i18n.locale.value).toBe('en')
+    expect(useAtriumI18n().locale.value).toBe('en')
   })
 })

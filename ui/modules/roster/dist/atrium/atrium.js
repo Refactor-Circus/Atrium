@@ -481,7 +481,7 @@ var w = {
 	{
 		path: "/roster/invitations/:token",
 		name: "roster-invitations-token",
-		component: () => import("./chunks/_token_-CV4V2B3x.js"),
+		component: () => import("./chunks/_token_-DIll6Z33.js"),
 		meta: { atrium: { public: !0 } }
 	},
 	{

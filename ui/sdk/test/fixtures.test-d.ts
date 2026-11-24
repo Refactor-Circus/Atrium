@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import type { components, operations } from '../app/client/schema'
+import type { components, operations } from '../src/client/schema'
 import type {
   AtriumDashboard,
   AtriumDashboardResponse,
@@ -14,7 +14,7 @@ import type {
   AtriumWidgetDefinition,
   ScreenData,
   Shell
-} from '../app/types/atrium'
+} from '../src/types/atrium'
 import dashboard from './fixtures/dashboard.json'
 import screen from './fixtures/screen.json'
 import screenTab from './fixtures/screen-tab.json'

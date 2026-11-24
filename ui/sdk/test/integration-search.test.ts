@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { integrationData, useAtrium, useAtriumIntegration, useAtriumSearch } from '#imports'
-import { AtriumRegistry } from '../app/plugins/atrium'
-import type { AtriumSearchResult, AtriumSearchSource } from '../app/types/atrium'
-import { withSetup } from './support'
-import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell } from './integrations/support'
+import { AtriumRegistry } from '../src/registry'
+import type { AtriumSearchResult, AtriumSearchSource } from '../src/types/atrium'
+import { integrationData, useAtrium, useAtriumIntegration, useAtriumSearch } from '../src/index'
+import { integrationEntry, integrationShell, mockAtriumApi, mockPackageApi, reply, resetPackageApis, useShell, withSetup } from '../src/testing/index'
 
 /*
  * ⌘K over Atrium's own search and every client-side source the shell lists
@@ -16,7 +14,7 @@ const { api } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: unknown) => Promise<unknown>>()
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
+mockAtriumApi(api)
 
 const atriumResults: AtriumSearchResult[] = [
   { title: 'ORD-1048', subtitle: null, icon: null, group: 'Orders', link: { path: '/demo/orders/1048', external: false } }

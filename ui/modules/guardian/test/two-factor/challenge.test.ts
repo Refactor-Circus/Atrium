@@ -12,8 +12,8 @@ import { clearAtriumData, mockAtriumApi, mountSuspended, useRouter } from '@refa
 /*
  * `guardian.two-factor-challenge` (AC 85, D-050): public, in the public
  * layout, with no shell call and no `atrium.screens.show`; a client of its
- * own whose base is the host override, else a loaded shell's Guardian
- * `api_base`, else `/guardian`; each method the user has (TOTP, email and
+ * own whose base is a loaded shell's Guardian `api_base`, else the page
+ * boot's, else `/guardian`; each method the user has (TOTP, email and
  * SMS with "send code", passkey through `navigator.credentials.get()`,
  * recovery); 204 reloading the shell and following a guarded `redirect`;
  * 422, 429 and 401; and the code kept out of the URL, the title and storage.
@@ -80,12 +80,11 @@ describe('guardian.two-factor-challenge', () => {
     await useRouter().replace('/')
   })
 
-  it('is declared public, in the public layout, at the path the screens map names', () => {
+  it('is declared public (the app renders it in its public layout), at the path the screens map names', () => {
     const route = useRouter().getRoutes().find(candidate => candidate.name === screens['guardian.two-factor-challenge'])
 
     expect(route?.path).toBe('/guardian/two-factor/challenge')
     expect(route?.meta.atrium).toEqual({ public: true })
-    expect(route?.meta.layout).toBe('public')
   })
 
   it('loads the status from Guardian\'s default /guardian, with no shell call and no screen frame', async () => {
@@ -110,7 +109,7 @@ describe('guardian.two-factor-challenge', () => {
     expect(guardianCalls('GET', '/two-factor')).toHaveLength(1)
   })
 
-  it('takes the base in order: the host override, the shell\'s api_base, then /guardian', () => {
+  it('takes the base in order: a loaded shell\'s api_base, the page boot\'s, then /guardian', () => {
     expect(guardianApiBase('https://guardian.example.test/api/', '/security/api', '/atrium/api', 'https://app.test')).toBe('https://guardian.example.test/api')
     expect(guardianApiBase('', '/security/api', '/atrium/api', 'https://app.test')).toBe('https://app.test/security/api')
     expect(guardianApiBase(undefined, null, '/atrium/api', 'https://app.test')).toBe('https://app.test/guardian')

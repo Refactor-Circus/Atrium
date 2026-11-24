@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AtriumRegistry } from '@refactor-circus/atrium'
 import type { AtriumSearchSource } from '@refactor-circus/atrium'
-import register from '../src/atrium'
+import Roster from '../src/atrium'
 import { withSetup } from '@refactor-circus/atrium/testing'
 import { integrationEntry, integrationShell, mockPackageApi, reply, resetPackageApis, useShell, type PackageBody } from '@refactor-circus/atrium/testing'
 import fixture from '@refactor-circus/atrium/fixtures/integrations/roster.json'
@@ -50,7 +50,9 @@ describe('the roster search sources', () => {
 
     atrium = await withSetup(() => useAtrium())
     atrium.searchSources.clear()
-    register(atrium)
+    for (const [key, resolver] of Object.entries(Roster.searchSources ?? {})) {
+      atrium.searchSource(key, resolver)
+    }
 
     await useShell(integrationShell([integrationEntry('roster')], { search: { min_length: 2, sources, per_source: 3 } }))
   })

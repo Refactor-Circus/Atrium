@@ -72,3 +72,4 @@ export { default as AtriumUnregistered } from './components/AtriumUnregistered.v
 export { default as AtriumVersionBanner } from './components/AtriumVersionBanner.vue'
 export { default as AtriumWidget } from './components/AtriumWidget.vue'
 export { default as AtriumWidgetPicker } from './components/AtriumWidgetPicker.vue'
+export { default as AtriumLink } from './components/AtriumLink.vue'

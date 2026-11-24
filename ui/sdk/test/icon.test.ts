@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumIcon } from '#components'
-import { useAtriumIcon } from '#imports'
-import { withSetup } from './support'
+import { AtriumIcon, useAtriumIcon } from '../src/index'
+import { mountSuspended, withSetup } from '../src/testing/index'
 
 describe('useAtriumIcon()', () => {
   it('keeps an Iconify name from a bundled collection', async () => {
@@ -37,7 +35,8 @@ describe('AtriumIcon', () => {
 
     expect(icon.attributes('data-icon')).toBe('i-lucide-house')
     expect(icon.attributes('data-fallback')).toBeUndefined()
-    expect(wrapper.html()).toContain('lucide:house')
+    // Drawn from the bundled Lucide collection: no request for it.
+    expect(wrapper.find('svg').exists()).toBe(true)
   })
 
   it('renders the fallback icon, not an error, for an unknown icon', async () => {
@@ -47,7 +46,7 @@ describe('AtriumIcon', () => {
 
     expect(icon.attributes('data-icon')).toBe('i-lucide-circle-help')
     expect(icon.attributes('data-fallback')).toBe('i-nope-not-an-icon')
-    expect(wrapper.html()).toContain('lucide:circle-help')
+    expect(wrapper.find('svg').exists()).toBe(true)
   })
 
   it('renders nothing for no icon', async () => {

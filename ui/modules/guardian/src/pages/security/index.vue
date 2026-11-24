@@ -17,7 +17,11 @@ const { t } = useI18n()
 useHead({ title: () => t('guardian.security.title') })
 
 // The same request `<AtriumIntegrationScreen>` makes, shared by its key.
-const { data: screen } = useAtriumScreen('guardian.security')
+const { data: screen, status: screenStatus } = useAtriumScreen('guardian.security')
+
+// The token form starts from the screen's options, so it waits for the
+// screen (or its failure) instead of mounting with the defaults and again.
+const screenSettled = computed(() => screenStatus.value === 'success' || screenStatus.value === 'error')
 
 const options = computed(() => securityOptions(screen.value?.data.options as Record<string, unknown> | undefined))
 </script>
@@ -35,7 +39,7 @@ const options = computed(() => securityOptions(screen.value?.data.options as Rec
           </div>
           <SecuritySessions />
           <SecurityDevices />
-          <div class="lg:col-span-2">
+          <div v-if="screenSettled" class="lg:col-span-2">
             <SecurityTokens :key="options.tokenAbilities.join('|')" :abilities="options.tokenAbilities" :max-days="options.tokenMaxLifetimeDays" />
           </div>
           <div class="lg:col-span-2">

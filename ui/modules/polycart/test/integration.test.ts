@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import polycart, { screens } from '../src/atrium'
 import PolycartCartsByType from '../src/components/PolycartCartsByType.vue'
 import PolycartRecentCarts from '../src/components/PolycartRecentCarts.vue'
 import { searchPolycartCarts } from '../src/components/search'
-import { AtriumRegistry } from '@refactor-circus/atrium'
+import fixtureJson from '@refactor-circus/atrium/fixtures/integrations/polycart.json'
+import locale from '../src/locales/polycart.en.json'
 import { withSetup } from '@refactor-circus/atrium/testing'
 import { hasI18nKey, missingI18nKeys } from '@refactor-circus/atrium/testing'
 import { useRouter } from '@refactor-circus/atrium/testing'
@@ -15,8 +17,8 @@ const here = import.meta.url
 
 /*
  * The Polycart integration's layer side (AC 49, 53, 59, 60, 62): every
- * screen and nav path PHP declares (`test/fixtures/integrations/polycart.json`,
- * written by `PolycartIntegrationTest`) has its page; `index.ts` maps each
+ * screen and nav path PHP declares (`fixtures/integrations/polycart.json`,
+ * written by `PolycartIntegrationTest`) has its page; `src/atrium.ts` maps each
  * screen key to that page's route and registers a component for every widget
  * and a resolver for every search source the fixture lists; and every `t()`
  * key it uses exists.
@@ -31,11 +33,9 @@ interface Declarations {
   screens: { key: string, kind: string, path: string, subject_type: string | null }[]
 }
 
-const fixture = JSON.parse(readFileSync(new URL('../../fixtures/integrations/polycart.json', here), 'utf8')) as Declarations
+const fixture = fixtureJson as unknown as Declarations
 
-const locale = JSON.parse(readFileSync(new URL('../../../i18n/locales/integrations/polycart.en.json', here), 'utf8')) as unknown
-
-const indexSource = readFileSync(new URL('../../../app/integrations/polycart/index.ts', here), 'utf8')
+const indexSource = readFileSync(fileURLToPath(new URL('../src/atrium.ts', here)), 'utf8')
 
 /** A Nuxt route path as PHP declares it: `:param()` read as `:param`. */
 function declaredPath(path: string): string {
@@ -59,7 +59,7 @@ describe('the polycart fixture', () => {
     expect(fixture.search_sources.map(source => [source.key, source.integration])).toEqual([['polycart', 'polycart']])
   })
 
-  it('has a screens entry in index.ts for every screen key, and nothing else', () => {
+  it('has a screens entry in src/atrium.ts for every screen key, and nothing else', () => {
     expect(Object.keys(screens).sort()).toEqual(fixture.screens.map(screen => screen.key).sort())
   })
 
@@ -92,21 +92,17 @@ describe('the polycart fixture', () => {
 
 describe('the polycart registrations', () => {
   it('registers a component for each fixture widget and a resolver for each fixture search source, and nothing else', () => {
-    const registry = new AtriumRegistry()
-
-    polycart(registry)
-
-    expect([...registry.widgets.keys()]).toEqual(fixture.widgets.map(widget => widget.component))
-    expect(registry.widgets.get('polycart.carts-by-type')).toBe(PolycartCartsByType)
-    expect(registry.widgets.get('polycart.recent-carts')).toBe(PolycartRecentCarts)
-    expect([...registry.searchSources.keys()]).toEqual(fixture.search_sources.map(source => source.key))
-    expect(registry.searchSources.get('polycart')).toBe(searchPolycartCarts)
-    expect([...registry.extensions.keys()]).toEqual([])
-    expect([...registry.panels.keys()]).toEqual([])
-    expect([...registry.liveResolvers.keys()]).toEqual([])
+    expect(Object.keys(polycart.widgets ?? {})).toEqual(fixture.widgets.map(widget => widget.component))
+    expect(polycart.widgets?.['polycart.carts-by-type']).toBe(PolycartCartsByType)
+    expect(polycart.widgets?.['polycart.recent-carts']).toBe(PolycartRecentCarts)
+    expect(Object.keys(polycart.searchSources ?? {})).toEqual(fixture.search_sources.map(source => source.key))
+    expect(polycart.searchSources?.['polycart']).toBe(searchPolycartCarts)
+    expect(Object.keys(polycart.extensions ?? {})).toEqual([])
+    expect(Object.keys(polycart.settingsPanels ?? {})).toEqual([])
+    expect(Object.keys(polycart.liveResolvers ?? {})).toEqual([])
   })
 
-  it('lists what it does not port at the top of index.ts, operator mode included (D-032)', () => {
+  it('lists what it does not port at the top of src/atrium.ts, operator mode included (D-032)', () => {
     expect(indexSource.startsWith('// Not ported (D-032)')).toBe(true)
     expect(indexSource).toContain('polycart.atrium.show_all')
   })

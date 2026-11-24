@@ -69,7 +69,7 @@ export default defineConfig({
   base: './',
   plugins: [
     vue(),
-    nuxtUi({ dts: 'types/auto-imports.d.ts' }),
+    nuxtUi({ dts: 'types' }),
     atriumBuildInfo({
       key: 'atrium',
       root: ui,
@@ -102,9 +102,5 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]'
       }
     }
-  },
-  test: {
-    environment: 'happy-dom',
-    include: ['test/**/*.test.ts']
   }
 })

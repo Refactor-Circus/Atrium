@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { AtriumVersionBanner } from '#components'
-import { useAtriumShellStore, useRuntimeConfig } from '#imports'
-import { compareApiVersion } from '../app/utils/atriumVersion'
+import { compareApiVersion } from '../src/utils/atriumVersion'
 import layer from '../package.json'
-import { shell, withSetup } from './support'
+import { ATRIUM_SDK_VERSION, AtriumVersionBanner, useAtriumShellStore } from '../src/index'
+import { mountSuspended, shell, withSetup } from '../src/testing/index'
 
 describe('compareApiVersion()', () => {
   it('compares major.minor only', () => {
@@ -40,10 +38,8 @@ describe('AtriumVersionBanner', () => {
     warn.mockRestore()
   })
 
-  it('knows its own version from nuxt/layer/package.json', async () => {
-    const config = await withSetup(() => useRuntimeConfig())
-
-    expect(config.public.atrium.version).toBe(layer.version)
+  it('knows its own version from ui/sdk/package.json', () => {
+    expect(ATRIUM_SDK_VERSION).toBe(layer.version)
   })
 
   it('shows nothing when the API and the layer match', async () => {

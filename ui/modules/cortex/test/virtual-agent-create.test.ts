@@ -22,7 +22,7 @@ function options() {
     'GET /tools': { data: tools } as never,
     'GET /virtual-agents': { data: [virtualAgent] },
     'GET /concrete-agents': { data: [concreteAgent] } as never
-  } as const
+  }
 }
 
 async function fill(wrapper: Awaited<ReturnType<typeof mountCortexPage>>): Promise<void> {

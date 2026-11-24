@@ -55,9 +55,9 @@ function pageCount(group: AtriumNavGroup): string {
 <template>
   <div class="flex h-full min-h-0" data-testid="atrium-nav" :data-collapsed="props.collapsed ? 'true' : 'false'">
     <nav class="atrium-rail flex shrink-0 flex-col items-center gap-1 py-2" :aria-label="t('atrium.nav.sections')" data-testid="atrium-rail">
-      <RouterLink to="/" class="atrium-mark mb-2" :title="store.shell?.app.name ?? 'Atrium'" :aria-label="store.shell?.app.name ?? 'Atrium'">
+      <AtriumLink to="/" class="atrium-mark mb-2" :title="store.shell?.app.name ?? 'Atrium'" :aria-label="store.shell?.app.name ?? 'Atrium'">
         {{ mark }}
-      </RouterLink>
+      </AtriumLink>
 
       <ul class="flex min-h-0 flex-1 flex-col items-center gap-1 px-2">
         <li v-for="group in nav.groups.value" :key="group.key">
@@ -105,7 +105,7 @@ function pageCount(group: AtriumNavGroup): string {
         </li>
       </ul>
 
-      <RouterLink
+      <AtriumLink
         v-if="nav.hasSettings.value"
         to="/settings"
         class="atrium-rail-item mt-1"
@@ -114,7 +114,7 @@ function pageCount(group: AtriumNavGroup): string {
         :data-current="route.path === '/settings' || route.path.startsWith('/settings/')"
       >
         <UIcon name="i-lucide-settings" class="atrium-rail-icon size-[1.125rem]" />
-      </RouterLink>
+      </AtriumLink>
     </nav>
 
     <section

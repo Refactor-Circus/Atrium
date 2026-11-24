@@ -31,7 +31,7 @@ describe('roster.impersonations', () => {
   })
 
   it('lists the impersonations and calls atrium.screens.show with its key', async () => {
-    mockPackageApi('roster', { 'GET /impersonations': page([impersonation, endedImpersonation]) })
+    mockPackageApi('roster', { 'GET /impersonations': page([impersonation, endedImpersonation]) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/impersonations')
 
@@ -50,7 +50,7 @@ describe('roster.impersonations', () => {
   })
 
   it('pages by the page number the endpoint answers with', async () => {
-    mockPackageApi('roster', { 'GET /impersonations': call => page([impersonation], Number(call.query.page ?? 1), 2) })
+    mockPackageApi('roster', { 'GET /impersonations': call => page([impersonation], Number(call.query.page ?? 1), 2) as never })
 
     const wrapper = await mountRosterPage(Page, '/roster/impersonations')
     await wrapper.find('[data-testid="roster-impersonations-next"]').trigger('click')
@@ -61,8 +61,8 @@ describe('roster.impersonations', () => {
 
   it('stops an impersonation through impersonations.destroy, then reloads', async () => {
     mockPackageApi('roster', {
-      'GET /impersonations': page([impersonation]),
-      'DELETE /impersonations/{impersonation}': { data: endedImpersonation }
+      'GET /impersonations': page([impersonation]) as never,
+      'DELETE /impersonations/{impersonation}': { data: endedImpersonation as never }
     })
 
     const wrapper = await mountRosterPage(Page, '/roster/impersonations')
@@ -77,7 +77,7 @@ describe('roster.impersonations', () => {
 
   it('shows the no-access notice when stop answers 403', async () => {
     mockPackageApi('roster', {
-      'GET /impersonations': page([impersonation]),
+      'GET /impersonations': page([impersonation]) as never,
       'DELETE /impersonations/{impersonation}': reply(403)
     })
 
@@ -91,7 +91,7 @@ describe('roster.impersonations', () => {
 
   it('says so when the impersonation to stop is gone (404)', async () => {
     mockPackageApi('roster', {
-      'GET /impersonations': page([impersonation]),
+      'GET /impersonations': page([impersonation]) as never,
       'DELETE /impersonations/{impersonation}': reply(404, { message: 'Not found.' })
     })
 

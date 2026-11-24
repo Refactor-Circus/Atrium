@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { clearNuxtData, useAtriumDashboard } from '#imports'
-import type { AtriumDashboardResponse, AtriumLayoutWidget } from '../app/types/atrium'
-import { httpError, settle, withSetup } from './support'
+import type { AtriumDashboardResponse, AtriumLayoutWidget } from '../src/types/atrium'
 import fixture from './fixtures/dashboard.json'
+import { useAtriumDashboard } from '../src/index'
+import { clearAtriumData, httpError, mockAtriumApi, settle, withSetup } from '../src/testing/index'
 
 const { api, toast } = vi.hoisted(() => ({
   api: vi.fn<(path: string, options?: { method?: string, body?: unknown, query?: unknown }) => Promise<unknown>>(),
   toast: { add: vi.fn() }
 }))
 
-mockNuxtImport('useAtriumApi', () => () => api)
-mockNuxtImport('useToast', () => () => toast)
+mockAtriumApi(api)
+vi.mock('@nuxt/ui/composables/useToast.js', () => ({ useToast: () => toast }))
 
 function dashboard(version = 3): AtriumDashboardResponse {
   const response = structuredClone(fixture) as AtriumDashboardResponse
@@ -31,7 +30,7 @@ const calls = (method: string, path: string) =>
 
 describe('useAtriumDashboard()', () => {
   beforeEach(() => {
-    clearNuxtData()
+    clearAtriumData()
     api.mockReset()
     toast.add.mockReset()
   })

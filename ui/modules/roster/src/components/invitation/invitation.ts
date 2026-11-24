@@ -1,8 +1,6 @@
 import createClient from 'openapi-fetch'
 import type { components, paths } from '../../../client/schema'
-import { useAtrium } from '@refactor-circus/atrium'
-import { resolveIntegrationBase } from '@refactor-circus/atrium'
-import { useAtriumShellStore } from '@refactor-circus/atrium'
+import { atriumFetch, resolveIntegrationBase, useAtriumBoot, useAtriumShellStore } from '@refactor-circus/atrium'
 import type { RosterClient } from '../users/users'
 
 /*
@@ -32,7 +30,7 @@ export const ROSTER_DEFAULT_API_BASE = '/roster'
 
 /**
  * Where the page finds Roster's API, in the order of D-021, without loading
- * the shell: the host's `runtimeConfig.public.atrium.integrations.roster.apiBase`;
+ * the shell: the `api_base` the Blade page's boot data lists for Roster;
  * else the `api_base` of a shell this app already loaded (active or not);
  * else Roster's default prefix. A path resolves as an integration's does.
  */
@@ -41,36 +39,19 @@ export function invitationApiBase(override: string | undefined, shellBase: strin
 }
 
 /**
- * A Roster client for the public invitation page. Each request carries the
- * auth adapter's headers and credentials, so a signed-in invitee answers as
- * themselves, and `Accept: application/json`. A 401 calls nothing: the page
- * decides when to send the visitor to sign in (never for the lookup).
+ * A Roster client for the public invitation page. Each request is signed as
+ * every Atrium client's is (`atriumFetch`: the auth adapter's headers and
+ * credentials, or the page's session, and `Accept: application/json`), so a
+ * signed-in invitee answers as themselves. The page is public, so a 401
+ * calls nothing: the page decides when to send the visitor to sign in
+ * (never for the lookup).
  */
 export function useInvitationClient(): RosterClient {
-  const atrium = useAtrium()
-  const config = useRuntimeConfig().public.atrium as { apiBase: string, integrations?: Record<string, { apiBase?: string } | undefined> }
+  const boot = useAtriumBoot()
   const shellBase = useAtriumShellStore().integration('roster')?.api_base
 
-  const client = createClient<paths>({
-    baseUrl: invitationApiBase(config.integrations?.roster?.apiBase, shellBase, config.apiBase, window.location.origin),
-    // Read at request time, so a fetch swapped in later (a test's) applies.
-    fetch: (input: Request) => globalThis.fetch(input)
+  return createClient<paths>({
+    baseUrl: invitationApiBase(boot.integrations.roster?.api_base, shellBase, boot.api_base, window.location.origin),
+    fetch: atriumFetch
   })
-
-  client.use({
-    async onRequest({ request }) {
-      const auth = atrium.auth()
-      const headers = new Headers(request.headers)
-
-      headers.set('Accept', 'application/json')
-
-      for (const [name, value] of Object.entries((await auth.headers?.()) ?? {})) {
-        headers.set(name, value)
-      }
-
-      return new Request(request, { headers, ...(auth.credentials ? { credentials: auth.credentials } : {}) })
-    }
-  })
-
-  return client
 }

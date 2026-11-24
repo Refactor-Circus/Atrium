@@ -90,7 +90,7 @@ describe('the guardian.sso tab', () => {
     const [call] = guardianCalls('POST', '/organizations/{organization}/sso-connections')
     expect(call?.path).toBe('/organizations/acme/sso-connections')
     expect(call?.body).toEqual({ name: 'Acme Entra', protocol: 'azure', tenant: 'acme.onmicrosoft.com', client_id: 'client-2', client_secret: 's3cret' })
-    expect(navigate).toHaveBeenCalledWith('/guardian/sso-connections/acme-okta')
+    expect(navigate.mock.calls.map(call => call[0])).toEqual(['/guardian/sso-connections/acme-okta'])
   })
 
   it('creates a SAML connection with its own fields only', async () => {
