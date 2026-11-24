@@ -53,7 +53,7 @@ class PluginRoutesTest extends TestCase
         $route = Route::getRoutes()->getByName('atrium.plugins.routed.index');
 
         $this->assertNotNull($route);
-        $this->assertSame([ForceJsonResponse::class, 'api', Authorize::class], $route->gatherMiddleware());
+        $this->assertSame([ForceJsonResponse::class, 'web', 'auth', Authorize::class], $route->gatherMiddleware());
     }
 
     public function test_plugin_routes_answer_a_guest_with_401(): void

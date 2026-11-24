@@ -33,11 +33,19 @@ return [
     |              ['web', 'auth', Authorize::class]: the session the page
     |              was served in, so the front end needs no configuration.
     |
-    | Keep Authorize::class last: it checks the `viewAtrium` gate below
-    | against the user the guard signed in, so it must run after the guard.
-    | Errors are always JSON: a guest gets 401, never a redirect to a login
-    | page. For a front end on another origin, or token auth, swap the
-    | session for your guard: ['api', 'auth:sanctum', Authorize::class].
+    | Atrium ships no authentication: `auth` is your app's own guard, and
+    | the session is the one Atrium's page was served in, so its front end
+    | needs no setup (it sends the session cookie and the XSRF token). Keep
+    | Authorize::class last: it checks the `viewAtrium` gate below against
+    | the user the guard signed in, so it must run after the guard. Errors
+    | are always JSON: a guest gets 401, never a redirect to a login page.
+    |
+    | Another client of the API (a front end on another origin, a script)
+    | swaps the session for its guard: `auth:sanctum` for Sanctum, `auth:api`
+    | for Passport, e.g. ['api', 'auth:sanctum', Authorize::class]. Across
+    | origins it needs the host's own setup: CORS `paths` with the prefix,
+    | and for cookies `supports_credentials` and the Sanctum SPA flow (CSRF
+    | cookie first); for tokens, the `Authorization` header.
     |
     */
 
@@ -117,13 +125,13 @@ return [
     | Authorization Gate
     |--------------------------------------------------------------------------
     |
-    | The gate ability Authorize checks on the page and every API route.
-    | Define it in a service provider with Gate::define(). While it is not
-    | defined, a user model implementing
+    | The gate ability Authorize checks on the page and every API route: the
+    | `viewAtrium` gate. Define it in a service provider with Gate::define().
+    | While it is not defined, a user model implementing
     | RefactorCircus\Atrium\Domains\Access\Contracts\AtriumUser decides with
-    | canAccessAtrium(); any other user gets in only in the `local`
-    | environment. Never run a shared server with APP_ENV=local unless every
-    | user who can sign in may see the dashboard.
+    | canAccessAtrium(); any other signed-in user gets in only in the
+    | `local` environment (D-086). Never run a shared server with
+    | APP_ENV=local unless every user who can sign in may see the dashboard.
     |
     */
 

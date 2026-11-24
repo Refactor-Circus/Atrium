@@ -55,11 +55,17 @@ final class RoutesApiTest extends TestCase
 
     /**
      * The group's middleware: JSON rendering forced first, then the
-     * configured `atrium.routes.middleware` (default `['api', Authorize]`).
+     * configured `atrium.routes.middleware` (default `['web', 'auth', Authorize]`).
      *
      * @var list<string>
      */
-    private const array GROUP = [ForceJsonResponse::class, 'api', Authorize::class];
+    private const array GROUP = [ForceJsonResponse::class, 'web', 'auth', Authorize::class];
+
+    /**
+     * The front end's page and its assets (D-079, D-081): Atrium's routes,
+     * but no API routes, so outside the group.
+     */
+    private const array PAGE_ROUTES = ['atrium.app', 'atrium.assets'];
 
     protected function defineEnvironment($app): void
     {
@@ -83,7 +89,7 @@ final class RoutesApiTest extends TestCase
         foreach (Route::getRoutes()->getRoutes() as $route) {
             $name = $route->getName();
 
-            if (is_string($name) && str_starts_with($name, 'atrium.')) {
+            if (is_string($name) && str_starts_with($name, 'atrium.') && ! in_array($name, self::PAGE_ROUTES, true)) {
                 $routes[$name] = $route;
             }
         }
@@ -123,7 +129,7 @@ final class RoutesApiTest extends TestCase
     public function test_no_other_route_is_served_under_the_prefix(): void
     {
         foreach (Route::getRoutes()->getRoutes() as $route) {
-            if (str_starts_with($route->uri(), 'atrium')) {
+            if (str_starts_with($route->uri(), 'atrium') && ! in_array($route->getName(), self::PAGE_ROUTES, true)) {
                 $this->assertArrayHasKey((string) $route->getName(), self::ROUTES, $route->uri());
             }
         }
@@ -131,7 +137,7 @@ final class RoutesApiTest extends TestCase
 
     public function test_every_atrium_route_carries_the_group_middleware_with_authorize_last(): void
     {
-        $this->assertSame(['api', Authorize::class], config('atrium.routes.middleware'));
+        $this->assertSame(['web', 'auth', Authorize::class], config('atrium.routes.middleware'));
 
         foreach ($this->atriumRoutes() as $name => $route) {
             $middleware = $route->gatherMiddleware();
@@ -176,7 +182,9 @@ final class RoutesApiTest extends TestCase
         $this->assertSame([], $this->atriumRoutes());
 
         foreach (Route::getRoutes()->getRoutes() as $route) {
-            $this->assertStringStartsNotWith('atrium', $route->uri());
+            if (! in_array($route->getName(), self::PAGE_ROUTES, true)) {
+                $this->assertStringStartsNotWith('atrium', $route->uri());
+            }
         }
     }
 

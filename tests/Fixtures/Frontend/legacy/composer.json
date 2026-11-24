@@ -1,0 +1,4 @@
+{
+    "name": "acme/legacy",
+    "extra": { "atrium": { "scripts": ["dist/atrium/atrium.js"] } }
+}

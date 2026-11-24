@@ -27,14 +27,14 @@ use ReflectionProperty;
  *
  * Each package's integration test then writes what its integration declares
  * - nav items, widgets, settings panel, search sources and screens with their
- * paths - to `nuxt/layer/test/fixtures/integrations/{pkg}.json` with
+ * paths - to `ui/sdk/test/fixtures/integrations/{pkg}.json` with
  * `assertMatchesFixture()`, for the layer's Vitest suite (AC 49). As with the
  * other contract fixtures (AC 31), a plain run only compares; the file is
  * written only with `UPDATE_FIXTURES=1`.
  */
 final class IntegrationFixture
 {
-    public const string DIRECTORY = __DIR__.'/../../../nuxt/layer/test/fixtures/integrations';
+    public const string DIRECTORY = __DIR__.'/../../../ui/sdk/test/fixtures/integrations';
 
     /**
      * Report exactly these packages installed, by key (`cortex`).

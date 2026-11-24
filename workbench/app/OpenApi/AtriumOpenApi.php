@@ -128,11 +128,12 @@ final class AtriumOpenApi
 
     /**
      * Whether a route is in the document: every `atrium.*` route but the
-     * plugins', which belong to their packages.
+     * plugins', which belong to their packages, and the page and its assets
+     * (`atrium.app`, `atrium.assets`), which are no API.
      */
     public static function documents(string $name): bool
     {
-        return str_starts_with($name, 'atrium.') && ! str_starts_with($name, 'atrium.plugins.');
+        return str_starts_with($name, 'atrium.') && ! str_starts_with($name, 'atrium.plugins.') && ! in_array($name, ['atrium.app', 'atrium.assets'], true);
     }
 
     /**

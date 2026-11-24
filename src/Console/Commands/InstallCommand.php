@@ -23,7 +23,7 @@ class InstallCommand extends Command
         $this->components->task('Published config/atrium.php');
 
         $this->newLine();
-        $this->components->warn('Atrium denies access outside the local environment until you define its gate.');
+        $this->components->warn('Atrium denies access outside the local environment until you define its gate, or your user model implements AtriumUser.');
         $this->newLine();
 
         $this->line('Add this to a service provider:');
@@ -34,8 +34,9 @@ class InstallCommand extends Command
         $this->newLine();
 
         $prefix = config('atrium.routes.prefix', 'atrium/api');
+        $page = config('atrium.client_path', '/atrium');
 
-        $this->components->info('Atrium installed. Its API is served under /'.(is_string($prefix) ? trim($prefix, '/') : 'atrium/api').'.');
+        $this->components->info('Atrium installed. Open it at /'.(is_string($page) ? trim($page, '/') : 'atrium').'; its API is served under /'.(is_string($prefix) ? trim($prefix, '/') : 'atrium/api').'.');
 
         return self::SUCCESS;
     }

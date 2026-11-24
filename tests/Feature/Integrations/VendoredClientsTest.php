@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 /*
- * Vendored clients (AC 50, D-020): until the package v2 tags exist, the layer
- * carries each package's `openapi.json` and generated `schema.d.ts` in
- * `nuxt/layer/app/integrations/{pkg}/client/`, copied by
- * `pnpm -C nuxt sync:clients`. No Node is needed here: each copy's stamp is
+ * Vendored clients (AC 50, D-020): until each module moves into its package
+ * (phase 2 of D-082), each staged module carries its package's
+ * `openapi.json` and generated `schema.d.ts` in `ui/modules/{pkg}/client/`,
+ * copied by `pnpm -C ui sync:clients`. No Node is needed here: each copy's stamp is
  * checked against it, and the copies against the sibling checkout
  * (`$ATRIUM_SUITE_PATH/{Pkg}`, by default beside this repository) when one is
  * there.
@@ -33,7 +33,7 @@ function vendoredClientsRoot(): string
 
 function vendoredClientPath(string $key, string $file): string
 {
-    return vendoredClientsRoot().'/nuxt/layer/app/integrations/'.$key.'/client/'.$file;
+    return vendoredClientsRoot().'/ui/modules/'.$key.'/client/'.$file;
 }
 
 /**
@@ -78,17 +78,17 @@ it('stamps each vendored openapi.json with its SHA-256, taken with LF line endin
     $stamp = trim(vendoredClientsRead(vendoredClientPath($key, 'openapi.sha256')));
 
     expect($stamp)->toMatch('/^[0-9a-f]{64}$/')
-        ->and($stamp)->toBe(hash('sha256', $openapi), "The [{$key}] openapi.sha256 does not match its openapi.json. Run `pnpm -C nuxt sync:clients`.");
+        ->and($stamp)->toBe(hash('sha256', $openapi), "The [{$key}] openapi.sha256 does not match its openapi.json. Run `pnpm -C ui sync:clients`.");
 })->with(array_keys(VENDORED_CLIENTS_PACKAGES));
 
 it('matches the sibling checkout\'s openapi.json and client/src/schema.d.ts', function (string $key, string $folder): void {
     $sibling = vendoredClientsSibling($folder);
 
     if (! is_file($sibling.'/openapi.json') || ! is_file($sibling.'/client/src/schema.d.ts')) {
-        $this->markTestSkipped("No {$folder} v2 build at [{$sibling}] (openapi.json and client/src/schema.d.ts) to compare with. Set ATRIUM_SUITE_PATH to the folder holding the package checkouts, then run `pnpm -C nuxt sync:clients`.");
+        $this->markTestSkipped("No {$folder} v2 build at [{$sibling}] (openapi.json and client/src/schema.d.ts) to compare with. Set ATRIUM_SUITE_PATH to the folder holding the package checkouts, then run `pnpm -C ui sync:clients`.");
     }
 
-    $stale = "The vendored [{$key}] client differs from [{$sibling}]. Run `pnpm -C nuxt sync:clients` and commit the result.";
+    $stale = "The vendored [{$key}] client differs from [{$sibling}]. Run `pnpm -C ui sync:clients` and commit the result.";
 
     expect(json_decode(vendoredClientsRead(vendoredClientPath($key, 'openapi.json')), true, flags: JSON_THROW_ON_ERROR))
         ->toBe(json_decode(vendoredClientsRead($sibling.'/openapi.json'), true, flags: JSON_THROW_ON_ERROR), $stale)
@@ -97,14 +97,14 @@ it('matches the sibling checkout\'s openapi.json and client/src/schema.d.ts', fu
 })->with(vendoredClientsDataset());
 
 /**
- * Every file under `nuxt/`, build output and dependencies left out.
+ * Every file under `ui/`, build output and dependencies left out.
  *
  * @return list<string>
  */
-function vendoredClientsNuxtFiles(): array
+function vendoredClientsUiFiles(): array
 {
-    $skipped = ['node_modules', '.nuxt', '.output', '.data', 'dist'];
-    $directory = new RecursiveDirectoryIterator(vendoredClientsRoot().'/nuxt', FilesystemIterator::SKIP_DOTS);
+    $skipped = ['node_modules', 'dist'];
+    $directory = new RecursiveDirectoryIterator(vendoredClientsRoot().'/ui', FilesystemIterator::SKIP_DOTS);
     $filter = new RecursiveCallbackFilterIterator($directory, fn (SplFileInfo $file): bool => ! ($file->isDir() && in_array($file->getFilename(), $skipped, true)));
     $files = [];
 
@@ -124,16 +124,16 @@ function vendoredClientsNuxtFiles(): array
  */
 const VENDORED_CLIENTS_IMPORT = '~(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)[\'"]@refactor-circus/[a-z0-9-]+-client(?:/[^\'"]*)?[\'"]|[\'"]@refactor-circus/[a-z0-9-]+-client[\'"]\s*:~';
 
-it('imports no @refactor-circus/*-client package anywhere under nuxt/ until the release step', function (): void {
+it('imports no @refactor-circus/*-client package anywhere under ui/ until the release step', function (): void {
     $found = [];
 
-    foreach (vendoredClientsNuxtFiles() as $file) {
+    foreach (vendoredClientsUiFiles() as $file) {
         if (preg_match(VENDORED_CLIENTS_IMPORT, (string) file_get_contents($file), $match) === 1) {
             $found[] = $file.': '.$match[0];
         }
     }
 
-    expect(vendoredClientsNuxtFiles())->not->toBeEmpty()
+    expect(vendoredClientsUiFiles())->not->toBeEmpty()
         ->and($found)->toBe([]);
 });
 
@@ -147,10 +147,11 @@ it('would catch an import or a dependency of a package client', function (string
     'a package.json dependency' => ['"@refactor-circus/showroom-client": "github:refactor-circus/showroom#v2.0.0&path:/client"'],
 ]);
 
-it('lets the layer\'s own package names and prose through', function (string $source): void {
+it('lets Atrium\'s own package names and prose through', function (string $source): void {
     expect(preg_match(VENDORED_CLIENTS_IMPORT, $source))->toBe(0);
 })->with([
-    'the layer' => ['"name": "@refactor-circus/atrium-nuxt"'],
+    'the SDK' => ['"name": "@refactor-circus/atrium"'],
+    'a staged module' => ['"name": "@refactor-circus/roster-atrium"'],
     'a comment' => ['// switch to @refactor-circus/impex-client once v2.0.0 is tagged'],
 ]);
 

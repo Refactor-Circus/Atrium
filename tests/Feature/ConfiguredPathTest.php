@@ -26,6 +26,8 @@ class ConfiguredPathTest extends TestCase
         tap($app->make(Repository::class), function (Repository $config): void {
             $config->set('atrium.routes.prefix', 'control-room/api');
             $config->set('atrium.routes.middleware', ['api', MarksAtriumResponse::class, Authorize::class]);
+            // The API alone: the page would answer every path it does not.
+            $config->set('atrium.client.enabled', false);
             $config->set('atrium.plugins', [RoutedPlugin::class]);
         });
     }

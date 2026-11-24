@@ -114,10 +114,11 @@ it('lists the migration step', function (): void {
         ->toContain('version');
 });
 
-it('points hosts at the Nuxt layer and their own auth', function (): void {
+it('points hosts at the page Atrium serves, the modules and their own auth', function (): void {
     expect(changelogUpgradeSection())
-        ->toContain('github:refactor-circus/atrium/nuxt/layer#v2.0.0')
-        ->toContain('$atrium.widget(')
+        ->toContain('atrium::app')
+        ->toContain('defineAtriumModule(')
+        ->toContain('Atrium::script(')
         ->toContain('auth:sanctum');
 });
 
@@ -193,7 +194,7 @@ it('names the parity changes', function (): void {
 });
 
 /**
- * The `// Not ported (D-032)` comment at the top of a layer file: its lines,
+ * The `// Not ported (D-032)` comment at the top of a staged module's file: its lines,
  * without the comment markers.
  */
 function notPortedComment(string $path): string
@@ -201,7 +202,7 @@ function notPortedComment(string $path): string
     $lines = [];
     $inside = false;
 
-    foreach (file(dirname(__DIR__, 2).'/nuxt/layer/app/'.$path, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+    foreach (file(dirname(__DIR__, 2).'/ui/modules/'.$path, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
         if (str_contains($line, '// Not ported (D-032)')) {
             $inside = true;
         } elseif ($inside && ! str_starts_with(ltrim($line), '//')) {
@@ -227,20 +228,20 @@ it('lists the v1 actions left out of each integration (D-032)', function (string
 
     expect($matches[1])->toContain('**'.$heading.'**');
 })->with([
-    ['integrations/cortex/index.ts', 'Cortex'],
-    ['integrations/guardian/index.ts', 'Guardian SSO and SCIM'],
-    ['integrations/impex/index.ts', 'Impex'],
-    ['integrations/keen/index.ts', 'Keen'],
-    ['integrations/pennantplus/index.ts', 'PennantPlus'],
-    ['integrations/polycart/index.ts', 'Polycart'],
-    ['integrations/hooks/index.ts', 'Cross-package hooks'],
-    ['pages/roster/users/index.vue', 'Roster users and impersonations'],
-    ['pages/roster/organizations/index.vue', 'Roster organizations, teams and invitations'],
-    ['pages/roster/transfers/index.vue', 'Roster transfers'],
-    ['integrations/showroom/index.ts', 'Showroom widgets and search'],
-    ['pages/showroom/products/index.vue', 'Showroom products, product models and families'],
-    ['pages/showroom/attributes/index.vue', 'Showroom attributes, categories, channels and flags'],
-    ['pages/showroom/assets/index.vue', 'Showroom assets, owners and transfers'],
+    ['cortex/src/atrium.ts', 'Cortex'],
+    ['guardian/src/atrium.ts', 'Guardian SSO and SCIM'],
+    ['impex/src/atrium.ts', 'Impex'],
+    ['keen/src/atrium.ts', 'Keen'],
+    ['pennantplus/src/atrium.ts', 'PennantPlus'],
+    ['polycart/src/atrium.ts', 'Polycart'],
+    ['keen/src/components/hooks/hooks.ts', 'Cross-package hooks'],
+    ['roster/src/pages/users/index.vue', 'Roster users and impersonations'],
+    ['roster/src/pages/organizations/index.vue', 'Roster organizations, teams and invitations'],
+    ['roster/src/pages/transfers/index.vue', 'Roster transfers'],
+    ['showroom/src/atrium.ts', 'Showroom widgets and search'],
+    ['showroom/src/pages/products/index.vue', 'Showroom products, product models and families'],
+    ['showroom/src/pages/attributes/index.vue', 'Showroom attributes, categories, channels and flags'],
+    ['showroom/src/pages/assets/index.vue', 'Showroom assets, owners and transfers'],
 ]);
 
 it('names the left-out actions themselves (D-032)', function (string $item): void {
@@ -304,7 +305,7 @@ it('moves role assignments to the guardian.access tab', function (): void {
 
 it('has responseHandler() and the uqr dependency', function (): void {
     expect(changelogUpgradeSection())
-        ->toContain('$atrium.responseHandler(')
+        ->toContain('responseHandlers')
         ->toContain('`uqr`')
         ->toContain('0.1.3');
 });
@@ -312,8 +313,8 @@ it('has responseHandler() and the uqr dependency', function (): void {
 it('has the D-020 release step', function (): void {
     expect(changelogUpgradeSection())
         ->toContain('D-020')
-        ->toContain('nuxt/layer/app/integrations/{pkg}/client/')
-        ->toContain('pnpm -C nuxt sync:clients')
+        ->toContain('ui/modules/{pkg}/client/')
+        ->toContain('pnpm -C ui sync:clients')
         ->toContain('"@refactor-circus/{pkg}-client": "github:refactor-circus/{pkg}#v2.0.0&path:/client"')
         ->toContain('create{Pkg}Client')
         ->toContain('export-ignore');
@@ -323,6 +324,6 @@ it("names Atrium's own OpenAPI document and client", function (): void {
     expect(changelogUpgradeSection())
         ->toContain('openapi.json')
         ->toContain('composer openapi:export')
-        ->toContain('pnpm -C nuxt generate:client')
+        ->toContain('pnpm -C ui generate:client')
         ->toContain('useAtriumClient()');
 });

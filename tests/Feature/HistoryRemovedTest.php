@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use RefactorCircus\Atrium\Domains\Plugins\Support\Plugin;
 use RefactorCircus\Keystone\Audit\Contracts\AuditTrail;
@@ -35,7 +36,9 @@ it('no longer serves a package history page', function (): void {
         }
     });
 
-    $this->get('/atrium/history/billing')->assertNotFound();
+    // The path is the front end's now: Atrium's page, which renders no
+    // history; no route of Atrium's serves one.
+    expect(Route::getRoutes()->match(Request::create('/atrium/history/billing'))->getName())->toBe('atrium.app');
 
     expect(Route::has('atrium.history.show'))->toBeFalse();
 });

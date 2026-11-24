@@ -7,12 +7,11 @@ namespace RefactorCircus\Atrium\Tests\Feature\Api;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Laravel\Pennant\Feature;
 use Laravel\Pennant\PennantServiceProvider;
-use Orchestra\Testbench\Contracts\Config as TestbenchConfig;
-use Orchestra\Testbench\Foundation\Config;
 use PHPUnit\Framework\AssertionFailedError;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -32,7 +31,7 @@ use Workbench\Database\Seeders\DatabaseSeeder;
  * resolved screen, the settings list - from the workbench app as
  * `composer serve` runs it (its plugin, gates and seeded data), with seeded
  * uuids and frozen time, and compares it with the layer's fixture in
- * `nuxt/layer/test/fixtures`. Vitest type-checks the same files against the
+ * `ui/sdk/test/fixtures`. Vitest type-checks the same files against the
  * layer's types and renders its components from them, so a payload change
  * fails here until the fixture, and with it the layer, is updated.
  *
@@ -40,12 +39,12 @@ use Workbench\Database\Seeders\DatabaseSeeder;
  *
  *     UPDATE_FIXTURES=1 vendor/bin/pest tests/Feature/Api/ContractFixturesTest.php
  *
- * The same app is what the Nuxt playground runs against (AC 21), so its demo
- * plugin's API routes and workbench-only token guard are checked here too.
+ * The same app is what `composer serve` serves (AC 21), so its demo plugin's
+ * API routes and its page are checked here too.
  */
 class ContractFixturesTest extends TestCase
 {
-    private const string FIXTURES = __DIR__.'/../../../nuxt/layer/test/fixtures';
+    private const string FIXTURES = __DIR__.'/../../../ui/sdk/test/fixtures';
 
     private const string NOW = '2026-11-23 10:00:00';
 
@@ -161,25 +160,20 @@ class ContractFixturesTest extends TestCase
             ->assertJsonPath('data.title', 'Sales');
     }
 
-    public function test_the_workbench_token_guard_signs_the_playground_in_as_the_workbench_user_in_local(): void
+    public function test_the_workbench_serves_atriums_page_with_its_own_module_to_the_signed_in_user(): void
     {
-        $this->withEnvironment('local');
-
-        // testbench.yaml's `workbench.user`, as `composer serve` reads it.
-        $this->app->instance(TestbenchConfig::class, Config::loadFromYaml(dirname(__DIR__, 3)));
-
-        $this->getJson(route('atrium.shell'), ['Authorization' => 'Bearer wrong'])->assertUnauthorized();
-
-        $this->getJson(route('atrium.shell'), ['Authorization' => 'Bearer workbench'])
+        $this->actingAs($this->admin)->get('/atrium')
             ->assertOk()
-            ->assertJsonPath('data.user.email', 'admin@example.com');
+            ->assertSee('id="atrium-boot"', false)
+            ->assertSee('/vendor/atrium/demo/', false);
     }
 
-    public function test_the_workbench_token_guard_does_nothing_outside_local(): void
+    public function test_the_page_sends_a_guest_to_the_apps_login(): void
     {
-        $this->withEnvironment('production');
+        // The workbench's login route (routes/web.php), as `composer serve` has it.
+        Route::get('login', fn () => redirect('/_workbench'))->name('login');
 
-        $this->getJson(route('atrium.shell'), ['Authorization' => 'Bearer workbench'])->assertUnauthorized();
+        $this->get('/atrium')->assertRedirect('/login');
     }
 
     public function test_a_plain_run_fails_on_a_difference_and_writes_nothing(): void

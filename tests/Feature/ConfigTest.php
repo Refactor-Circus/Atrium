@@ -26,21 +26,56 @@ function routesBanner(): string
     return substr($contents, (int) $start, (int) $end - (int) $start);
 }
 
-it('defaults the API routes to the atrium/api prefix, the api group and Authorize last', function (): void {
+/**
+ * The banner comment above the `client_path` key (the page, D-079).
+ */
+function pageBanner(): string
+{
+    $contents = (string) file_get_contents(configFilePath());
+
+    $start = strpos($contents, '| The Page');
+    $end = strpos($contents, "'client_path' =>");
+
+    expect($start)->toBeInt()->and($end)->toBeInt()->toBeGreaterThan($start);
+
+    return substr($contents, (int) $start, (int) $end - (int) $start);
+}
+
+/**
+ * The banner comment above the `gate` key.
+ */
+function gateBanner(): string
+{
+    $contents = (string) file_get_contents(configFilePath());
+
+    $start = strpos($contents, '| Authorization Gate');
+    $end = strpos($contents, "'gate' =>");
+
+    expect($start)->toBeInt()->and($end)->toBeInt()->toBeGreaterThan($start);
+
+    return substr($contents, (int) $start, (int) $end - (int) $start);
+}
+
+it('defaults the API routes to the atrium/api prefix, the session, the host guard and Authorize last', function (): void {
     /** @var array<string, mixed> $config */
     $config = require configFilePath();
 
     expect($config['routes'])->toBe([
         'enabled' => true,
         'prefix' => 'atrium/api',
-        'middleware' => ['api', Authorize::class],
-    ])->and($config['client_path'])->toBe('/');
+        'middleware' => ['web', 'auth', Authorize::class],
+    ])->and($config['client_path'])->toBe('/atrium')
+        ->and($config['client'])->toBe(['enabled' => true, 'middleware' => ['web', 'auth', Authorize::class]])
+        ->and($config['assets'])->toBe(['path' => 'vendor/atrium'])
+        ->and($config['scripts'])->toBe([])
+        ->and($config['styles'])->toBe([])
+        ->and($config['icons'])->toBe(['remote' => false]);
 });
 
 it('documents the prefix, the middleware and that Authorize stays last', function (): void {
     expect(routesBanner())
         ->toContain('`atrium/api`')
-        ->toContain("['api', Authorize::class]")
+        ->toContain("['web', 'auth', Authorize::class]")
         ->toContain('Keep')
         ->toContain('Authorize::class last');
 });
@@ -52,10 +87,15 @@ it('says Atrium ships no authentication and names guards to add', function (): v
         ->toContain('`auth:api`');
 });
 
-it('documents client_path and its default', function (): void {
-    expect(routesBanner())
-        ->toContain('client_path: The base path the host serves the SPA from. Default: `/`.')
-        ->toContain('must match that base URL');
+it('documents client_path, the page, its assets and the app\'s scripts', function (): void {
+    expect(pageBanner())
+        ->toContain('Default: `/atrium`.')
+        ->toContain('client.middleware')
+        ->toContain('assets.path')
+        ->toContain('No')
+        ->toContain('publish step')
+        ->toContain('Atrium::script()')
+        ->toContain('icons.remote');
 });
 
 it('documents the CORS, CSRF and token setup a cross-origin SPA needs', function (): void {
@@ -67,8 +107,9 @@ it('documents the CORS, CSRF and token setup a cross-origin SPA needs', function
         ->toContain('`Authorization` header');
 });
 
-it('warns that the viewAtrium gate lets users through in local', function (): void {
-    expect(routesBanner())
+it('warns that the viewAtrium gate lets users through in local, and names AtriumUser', function (): void {
+    expect(gateBanner())
+        ->toContain('AtriumUser')
         ->toContain('`viewAtrium` gate')
         ->toContain('`local` environment')
         ->toContain('APP_ENV=local');

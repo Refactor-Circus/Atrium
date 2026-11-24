@@ -56,7 +56,9 @@ final class ModuleDiscovery
 
         if ($this->cachePath !== null) {
             $this->files->ensureDirectoryExists(dirname($this->cachePath));
-            $this->files->replace($this->cachePath, '<?php'.PHP_EOL.PHP_EOL.'return '.var_export($entries, true).';'.PHP_EOL);
+            // A plain PHP array, as Laravel writes its package manifest, so
+            // OPcache keeps it in memory.
+            $this->files->replace($this->cachePath, '<?php'.PHP_EOL.PHP_EOL.'return '.$this->export($entries).';'.PHP_EOL);
         }
 
         return $this->manifests($entries);
@@ -107,6 +109,30 @@ final class ModuleDiscovery
         }
 
         return $entries;
+    }
+
+    /**
+     * A PHP literal of the cached entries: strings, integers, booleans,
+     * null and arrays of them, which is all composer.json's `extra` holds.
+     */
+    private function export(mixed $value): string
+    {
+        if (is_array($value)) {
+            $items = [];
+
+            foreach ($value as $key => $item) {
+                $items[] = (is_int($key) ? $key : "'".addcslashes($key, "'\\")."'").' => '.$this->export($item);
+            }
+
+            return '['.implode(', ', $items).']';
+        }
+
+        return match (true) {
+            is_string($value) => "'".addcslashes($value, "'\\")."'",
+            is_bool($value) => $value ? 'true' : 'false',
+            is_int($value), is_float($value) => (string) $value,
+            default => 'null',
+        };
     }
 
     /**

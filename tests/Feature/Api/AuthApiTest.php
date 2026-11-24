@@ -75,7 +75,8 @@ final class AuthApiTest extends TestCase
         foreach (Route::getRoutes()->getRoutes() as $route) {
             $name = $route->getName();
 
-            if (! is_string($name) || ! str_starts_with($name, 'atrium.')) {
+            // The page and its assets are no API (PageTest covers them).
+            if (! is_string($name) || ! str_starts_with($name, 'atrium.') || in_array($name, ['atrium.app', 'atrium.assets'], true)) {
                 continue;
             }
 
@@ -117,9 +118,9 @@ final class AuthApiTest extends TestCase
         $this->assertStringContainsString('application/json', (string) $response->headers->get('Content-Type'), $context);
     }
 
-    public function test_a_guest_gets_401_json_on_every_route_with_no_guard_configured(): void
+    public function test_a_guest_gets_401_json_on_every_route_with_the_default_session_guard(): void
     {
-        $this->assertSame(['api', Authorize::class], config('atrium.routes.middleware'));
+        $this->assertSame(['web', 'auth', Authorize::class], config('atrium.routes.middleware'));
 
         // Even where the gate would let anyone through.
         $this->withEnvironment('local');

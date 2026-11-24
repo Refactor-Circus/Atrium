@@ -12,14 +12,15 @@ use RefactorCircus\Atrium\Domains\Settings\Http\Resources\SettingsPanelResource;
 use RefactorCircus\Atrium\Domains\Widgets\Http\Resources\WidgetDefinitionResource;
 use RefactorCircus\Keystone\Http\Resources\JsonResource;
 use Symfony\Component\Process\Process;
+use Workbench\App\OpenApi\AtriumOpenApi;
 
 /*
- * Atrium's own OpenAPI document and the layer's generated client (AC 72 to
+ * Atrium's own OpenAPI document and the SDK's generated client (AC 72 to
  * 75), checked without Node: the committed openapi.json must equal a fresh
  * export, and the generated schema.d.ts must carry the hash of that file.
  */
 
-const ATRIUM_OPENAPI_STALE = 'openapi.json or the layer client is out of date: run `composer openapi:export`, then `pnpm -C nuxt generate:client`, and commit openapi.json and nuxt/layer/app/client/schema.d.ts.';
+const ATRIUM_OPENAPI_STALE = 'openapi.json or the SDK client is out of date: run `composer openapi:export`, then `pnpm -C ui generate:client`, and commit openapi.json and ui/sdk/src/client/schema.d.ts.';
 
 /**
  * What each documented route's success response holds: one resource under
@@ -136,7 +137,7 @@ function openApiRouteNames(): array
 
         $names = array_values(array_filter(
             array_map(fn (array $route): string => (string) ($route['name'] ?? ''), $routes),
-            fn (string $name): bool => str_starts_with($name, 'atrium.') && ! str_starts_with($name, 'atrium.plugins.'),
+            fn (string $name): bool => AtriumOpenApi::documents($name),
         ));
         sort($names);
     }
@@ -305,8 +306,8 @@ it('holds no machine-specific value', function (): void {
         ->and($json)->not->toMatch('#https?://#');
 });
 
-it('generates the layer client from this openapi.json', function (): void {
-    $client = openApiRoot('nuxt/layer/app/client/schema.d.ts');
+it('generates the SDK client from this openapi.json', function (): void {
+    $client = openApiRoot('ui/sdk/src/client/schema.d.ts');
 
     expect($client)->toBeFile(ATRIUM_OPENAPI_STALE);
 
@@ -316,7 +317,7 @@ it('generates the layer client from this openapi.json', function (): void {
 });
 
 it('names both regeneration commands when the document or the client is stale', function (): void {
-    expect(ATRIUM_OPENAPI_STALE)->toContain('composer openapi:export', 'pnpm -C nuxt generate:client');
+    expect(ATRIUM_OPENAPI_STALE)->toContain('composer openapi:export', 'pnpm -C ui generate:client');
 });
 
 it('keeps Scramble a dev dependency and exports with composer openapi:export', function (): void {

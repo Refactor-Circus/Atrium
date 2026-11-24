@@ -1,3 +1,8 @@
+// Not ported (D-032): nothing. The hooks call routes every package's v2 API
+// has: Cortex's `redirect-domains` index, store and destroy, Keen's
+// `packages.index` and `entries.index`, and Guardian's role assignment,
+// user security, SSO and SCIM routes (whose v1 gaps Guardian's own list in
+// `ui/modules/guardian/src/atrium.ts` names). The run link makes no request.
 import type { KeenEntriesQuery } from '../entries'
 
 /*

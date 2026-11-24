@@ -32,10 +32,12 @@ function repositoryJson(string $path): array
     return is_array($decoded) ? $decoded : [];
 }
 
-it('ships no Blade views, stylesheet, icons or public build', function (string $path): void {
+it('ships no Blade-era views, stylesheet, icons or public build', function (string $path): void {
     expect(file_exists(repositoryPath($path)))->toBeFalse($path.' is removed');
 })->with([
-    'resources/views',
+    'resources/views/components',
+    'resources/views/layouts',
+    'resources/views/dashboard.blade.php',
     'resources/css',
     'resources/icons',
     'public/atrium.css',
@@ -73,8 +75,9 @@ it('drops the Blade-era helpers from the public API', function (string $method):
     expect(method_exists(Atrium::class, $method))->toBeFalse('Atrium::'.$method.'() is removed');
 })->with(['css', 'stylesheet', 'path', 'url']);
 
-it('registers no view namespace, component namespace or view and asset publish tags', function (): void {
-    expect(View::getFinder()->getHints())->not->toHaveKey('atrium')
+it('serves one Blade view, the front end\'s page (D-079), and no component namespace or view and asset publish tags', function (): void {
+    expect(glob(repositoryPath('resources/views/*')) ?: [])->toBe([repositoryPath('resources/views/app.blade.php')])
+        ->and(View::exists('atrium::app'))->toBeTrue()
         ->and(Blade::getAnonymousComponentNamespaces())->not->toHaveKey('atrium')
         ->and(ServiceProvider::pathsToPublish(null, 'atrium-views'))->toBe([])
         ->and(ServiceProvider::pathsToPublish(null, 'atrium-assets'))->toBe([]);
@@ -123,48 +126,29 @@ function exportIgnoredPatterns(): array
     ));
 }
 
-it('keeps the nuxt dev parts, the workbench and the tests out of the dist', function (string $path): void {
+it('keeps the front end\'s sources, staged modules, the workbench and the tests out of the dist', function (string $path): void {
     expect(exportIgnoredPatterns())->toContain($path);
 })->with([
-    '/nuxt/playground',
-    '/nuxt/package.json',
-    '/nuxt/pnpm-workspace.yaml',
-    '/nuxt/pnpm-lock.yaml',
-    '/nuxt/layer/test',
+    '/ui/app',
+    '/ui/modules',
+    '/ui/workbench',
+    '/ui/scripts',
+    '/ui/package.json',
+    '/ui/pnpm-workspace.yaml',
+    '/ui/pnpm-lock.yaml',
     '/workbench',
     '/tests',
 ]);
 
-it('keeps the nuxt layer in the dist, for git extends (D-015)', function (string $path): void {
+it('keeps the prebuilt front end and the SDK in the dist: the page serves dist/, modules install the SDK by git (D-079, D-082)', function (string $path): void {
     $matching = array_filter(
         exportIgnoredPatterns(),
         fn (string $pattern): bool => fnmatch(rtrim($pattern, '/'), $path),
     );
 
     expect($matching)->toBe([], $path.' is not export-ignored');
-})->with(['/nuxt', '/nuxt/layer', '/nuxt/layer/nuxt.config.ts']);
+})->with(['/dist', '/dist/build.json', '/ui/sdk', '/ui/sdk/package.json', '/ui/sdk/test/fixtures', '/resources/views/app.blade.php']);
 
-it('declares the workbench token guard only under workbench/', function (): void {
-    $root = str_replace('\\', '/', repositoryPath());
-    $declarations = [];
-
-    // Everything in the repo but installed dependencies and build output.
-    $files = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(
-        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
-        fn (SplFileInfo $file): bool => ! $file->isDir() || ! in_array($file->getFilename(), ['vendor', 'node_modules', '.git', 'build', '.nuxt', '.output'], true),
-    ));
-
-    foreach ($files as $file) {
-        $path = str_replace('\\', '/', $file->getPathname());
-
-        if (! str_ends_with($path, '.php')) {
-            continue;
-        }
-
-        if (preg_match('/\bclass\s+\w*WorkbenchToken\w*\b/', (string) file_get_contents($path)) === 1) {
-            $declarations[] = substr($path, strlen($root) + 1);
-        }
-    }
-
-    expect(array_filter($declarations, fn (string $path): bool => ! str_starts_with($path, 'workbench/')))->toBe([]);
-});
+it('has no Nuxt layer or playground left', function (string $path): void {
+    expect(file_exists(repositoryPath($path)))->toBeFalse($path.' is removed');
+})->with(['nuxt', 'workbench/app/Http/Middleware/AuthenticateWorkbenchToken.php']);
