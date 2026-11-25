@@ -7,14 +7,13 @@ use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\TabDefinition;
 
-it('defaults the label to the key, the icon to squares-2x2 and keeps the tab private', function (): void {
+it('defaults the label and component to the key, the icon to the default and keeps the tab private', function (): void {
     $tab = TabDefinition::make('acme.billing');
 
     expect($tab->key)->toBe('acme.billing')
         ->and($tab->label)->toBe('acme.billing')
-        ->and($tab->icon)->toBe('squares-2x2')
-        ->and($tab->view)->toBeNull()
-        ->and($tab->component)->toBeNull()
+        ->and($tab->icon)->toBe(TabDefinition::DEFAULT_ICON)
+        ->and($tab->component)->toBe('acme.billing')
         ->and($tab->permission)->toBeNull()
         ->and($tab->public)->toBeFalse();
 });
@@ -23,32 +22,18 @@ it('is configured through fluent setters', function (): void {
     $tab = TabDefinition::make('acme.billing');
 
     expect($tab->label('Billing'))->toBe($tab)
-        ->and($tab->icon('banknotes'))->toBe($tab)
-        ->and($tab->view('acme::billing'))->toBe($tab)
+        ->and($tab->icon('i-lucide-banknote'))->toBe($tab)
+        ->and($tab->component('AcmeBillingTab'))->toBe($tab)
         ->and($tab->permission('billing.view'))->toBe($tab)
         ->and($tab->resolve(fn (): array => []))->toBe($tab)
         ->and($tab->authorize(fn (): bool => true))->toBe($tab)
         ->and($tab->public())->toBe($tab);
 
     expect($tab->label)->toBe('Billing')
-        ->and($tab->icon)->toBe('banknotes')
-        ->and($tab->view)->toBe('acme::billing')
+        ->and($tab->icon)->toBe('i-lucide-banknote')
+        ->and($tab->component)->toBe('AcmeBillingTab')
         ->and($tab->permission)->toBe('billing.view')
         ->and($tab->public)->toBeTrue();
-});
-
-it('renders with either a view or a component, never both', function (): void {
-    $tab = TabDefinition::make('acme.billing')->view('acme::billing');
-
-    $tab->component('acme::billing-tab');
-
-    expect($tab->component)->toBe('acme::billing-tab')
-        ->and($tab->view)->toBeNull();
-
-    $tab->view('acme::billing');
-
-    expect($tab->view)->toBe('acme::billing')
-        ->and($tab->component)->toBeNull();
 });
 
 it('refuses writes to its state from outside', function (string $property, mixed $value): void {
@@ -58,8 +43,7 @@ it('refuses writes to its state from outside', function (string $property, mixed
 })->with([
     'key' => ['key', 'other'],
     'label' => ['label', 'Other'],
-    'icon' => ['icon', 'users'],
-    'view' => ['view', 'other'],
+    'icon' => ['icon', 'i-lucide-users'],
     'component' => ['component', 'other'],
     'permission' => ['permission', 'other'],
     'public' => ['public', true],

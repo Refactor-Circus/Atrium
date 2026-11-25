@@ -12,12 +12,19 @@ use RefactorCircus\Atrium\Domains\Search\Data\SearchResult;
 use RefactorCircus\Atrium\Domains\Search\Data\SearchSource;
 use RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
-use RefactorCircus\Atrium\Support\Icons;
+use RefactorCircus\Atrium\Support\ClientPath;
 use Workbench\App\Models\User;
 
 /**
  * Demonstrates every plugin surface Atrium offers with a small online shop,
- * so `composer serve` shows a working dashboard rather than an empty shell.
+ * so `composer serve` and the Nuxt playground show a working dashboard
+ * rather than an empty shell.
+ *
+ * Atrium renders no HTML: each widget and the settings panel is a Vue
+ * component the playground registers under the same key, and the shop's
+ * pages read JSON from the plugin's API routes (`atrium.plugins.demo.*`).
+ * Navigation and search link to the SPA's paths, which ClientPath sends as
+ * `{path, external}`.
  */
 class DemoPlugin extends Plugin
 {
@@ -35,47 +42,47 @@ class DemoPlugin extends Plugin
     {
         return [
             NavItem::make('Overview')
-                ->route('atrium.dashboard')
-                ->icon(Icons::svg('home'))
+                ->path('/')
+                ->icon('i-lucide-house')
                 ->group('Workspace')
                 ->sort(10),
 
             NavItem::make('Orders')
-                ->route('atrium.demo.orders')
-                ->icon(Icons::svg('shopping-cart'))
+                ->path('/demo/orders')
+                ->icon('i-lucide-shopping-cart')
                 ->group('Workspace')
                 ->sort(20)
                 ->badge(fn (): int => DemoData::orders()->where('status', 'pending')->count()),
 
             NavItem::make('Team')
-                ->route('atrium.demo.users')
-                ->icon(Icons::svg('users'))
+                ->path('/demo/users')
+                ->icon('i-lucide-users')
                 ->group('Workspace')
                 ->sort(30)
                 ->badge(fn (): int => User::query()->count()),
 
             NavItem::make('Reports')
-                ->icon(Icons::svg('chart-bar'))
+                ->icon('i-lucide-chart-column')
                 ->group('Insights')
                 ->sort(40)
-                ->children([
-                    NavItem::make('Sales')->route('atrium.demo.reports.sales'),
-                    NavItem::make('Signups')->route('atrium.demo.reports.signups'),
-                ]),
+                ->children(array_map(
+                    fn (string $key): NavItem => NavItem::make(DemoData::reports()[$key]['title'])->path('/demo/reports/'.$key),
+                    array_keys(DemoData::reports()),
+                )),
 
             NavItem::make('Billing')
-                ->route('atrium.demo.billing')
-                ->icon(Icons::svg('credit-card'))
+                ->path('/demo/billing')
+                ->icon('i-lucide-credit-card')
                 ->group('Administration')
                 ->sort(50)
                 ->feature('billing')
                 ->can('manageBilling'),
 
             // The workbench's feature resolver turns `audit-log` off, so this
-            // item is registered but never shown.
+            // item is registered but never sent.
             NavItem::make('Audit log')
-                ->url('#audit-log')
-                ->icon(Icons::svg('clipboard-document-list'))
+                ->path('/demo/audit-log')
+                ->icon('i-lucide-clipboard-list')
                 ->group('Administration')
                 ->sort(60)
                 ->feature('audit-log'),
@@ -85,32 +92,36 @@ class DemoPlugin extends Plugin
     public function navigationGroups(): array
     {
         return [
-            NavGroup::make('Workspace')->icon(Icons::svg('briefcase'))->sort(10),
-            NavGroup::make('Insights')->icon(Icons::svg('chart-pie'))->sort(20)->feature('reports')->can('viewReports'),
-            NavGroup::make('Administration')->icon(Icons::svg('cog-6-tooth'))->sort(30)->can('administer'),
+            NavGroup::make('Workspace')->icon('i-lucide-briefcase')->sort(10),
+            NavGroup::make('Insights')->icon('i-lucide-chart-pie')->sort(20)->feature('reports')->can('viewReports'),
+            NavGroup::make('Administration')->icon('i-lucide-settings')->sort(30)->can('administer'),
         ];
     }
 
+    /**
+     * The JSON the playground's shop pages read. Atrium loads these inside
+     * its API group, under `plugins/demo` and named `atrium.plugins.demo.*`,
+     * so they carry its middleware (the host's guard, then the gate).
+     */
     public function routes(): void
     {
-        Route::get('demo/orders', fn () => view('workbench::demo.orders', [
-            'orders' => DemoData::orders(),
-        ]))->name('demo.orders');
+        Route::get('orders', fn (): array => [
+            'data' => DemoData::orders()
+                ->map(fn (array $order): array => [...$order, 'status_label' => DemoData::orderStatus($order['status'])['label']])
+                ->all(),
+        ])->name('orders');
 
-        Route::get('demo/users', fn () => view('workbench::demo.users', [
-            'users' => User::query()->orderBy('name')->get(),
-        ]))->name('demo.users');
+        Route::get('users', fn (): array => [
+            'data' => User::query()->orderBy('name')->get(['id', 'name', 'email'])->toArray(),
+        ])->name('users');
 
-        // One route per report, since a navigation item is active by route
-        // name and each report has its own item.
-        foreach (DemoData::reports() as $key => $report) {
-            Route::get('demo/reports/'.$key, fn () => view('workbench::demo.report', ['report' => $report]))
-                ->name('demo.reports.'.$key);
-        }
+        Route::get('reports/{report}', fn (string $report): array => [
+            'data' => DemoData::reports()[$report],
+        ])->whereIn('report', array_keys(DemoData::reports()))->name('reports.show');
 
-        Route::get('demo/billing', fn () => view('workbench::demo.billing', [
-            'invoices' => DemoData::invoices(),
-        ]))->middleware('can:manageBilling')->name('demo.billing');
+        Route::get('billing', fn (): array => [
+            'data' => DemoData::invoices(),
+        ])->middleware('can:manageBilling')->name('billing');
     }
 
     public function settings(): ?SettingsPanel
@@ -118,13 +129,15 @@ class DemoPlugin extends Plugin
         return SettingsPanel::make('demo')
             ->label('Shop settings')
             ->description('Store details and the feature flags this workbench runs with.')
-            ->view('workbench::demo.settings')
+            ->icon('i-lucide-store')
             ->resolve(fn (): array => ['features' => DemoData::FEATURES]);
     }
 
     /**
      * Widgets are offered here. The workbench seeder places them on demo
      * dashboards; in a real application users pick them from the picker.
+     * The four stat widgets share one Vue component, registered under each
+     * of their keys.
      */
     public function widgets(): array
     {
@@ -134,35 +147,35 @@ class DemoPlugin extends Plugin
             WidgetDefinition::make('demo.revenue')
                 ->label('Revenue')
                 ->description('Revenue this month against last month.')
+                ->icon('i-lucide-banknote')
                 ->defaultSize(3, 1)
-                ->view('workbench::demo.widgets.stat')
-                ->resolve(fn (): array => ['label' => 'Revenue this month', 'icon' => 'banknotes', ...$kpis['revenue']]),
+                ->resolve(fn (): array => ['label' => 'Revenue this month', 'icon' => 'i-lucide-banknote', ...$kpis['revenue']]),
 
             WidgetDefinition::make('demo.orders')
                 ->label('Orders')
                 ->description('Orders placed this month.')
+                ->icon('i-lucide-shopping-cart')
                 ->defaultSize(3, 1)
-                ->view('workbench::demo.widgets.stat')
-                ->resolve(fn (): array => ['label' => 'Orders this month', 'icon' => 'shopping-cart', ...$kpis['orders']]),
+                ->resolve(fn (): array => ['label' => 'Orders this month', 'icon' => 'i-lucide-shopping-cart', ...$kpis['orders']]),
 
             WidgetDefinition::make('demo.conversion')
                 ->label('Conversion rate')
                 ->description('Share of storefront visits that end in an order.')
+                ->icon('i-lucide-trending-up')
                 ->defaultSize(3, 1)
-                ->view('workbench::demo.widgets.stat')
-                ->resolve(fn (): array => ['label' => 'Conversion rate', 'icon' => 'presentation-chart-line', ...$kpis['conversion']]),
+                ->resolve(fn (): array => ['label' => 'Conversion rate', 'icon' => 'i-lucide-trending-up', ...$kpis['conversion']]),
 
             WidgetDefinition::make('demo.users')
                 ->label('Team members')
                 ->description('People with access, read from the users table.')
+                ->icon('i-lucide-users')
                 ->defaultSize(3, 1)
-                ->view('workbench::demo.widgets.stat')
                 ->resolve(function (): array {
                     $pending = User::query()->whereNull('email_verified_at')->count();
 
                     return [
                         'label' => 'Team members',
-                        'icon' => 'users',
+                        'icon' => 'i-lucide-users',
                         'value' => User::query()->count(),
                         'change' => $pending.' awaiting invitation',
                         'trend' => null,
@@ -172,29 +185,32 @@ class DemoPlugin extends Plugin
             WidgetDefinition::make('demo.recent-orders')
                 ->label('Recent orders')
                 ->description('The latest orders and their status.')
+                ->icon('i-lucide-receipt')
                 ->defaultSize(8, 2)
-                ->view('workbench::demo.widgets.recent-orders')
-                ->resolve(fn (): array => ['orders' => DemoData::orders()->take(5)]),
+                ->resolve(fn (): array => ['orders' => DemoData::orders()->take(5)->all()]),
 
+            // Lazy: the dashboard arrives without its data, and the layer
+            // fetches it from `atrium.dashboards.widgets.show` by uuid.
             WidgetDefinition::make('demo.services')
                 ->label('Service status')
                 ->description('Health of the services the shop runs on.')
+                ->icon('i-lucide-activity')
                 ->defaultSize(4, 2)
-                ->view('workbench::demo.widgets.services')
+                ->lazy()
                 ->resolve(fn (): array => ['services' => DemoData::services()]),
 
             WidgetDefinition::make('demo.goals')
                 ->label('Quarterly goals')
                 ->description('Progress toward this quarter\'s targets.')
+                ->icon('i-lucide-target')
                 ->defaultSize(6, 2)
-                ->view('workbench::demo.widgets.goals')
                 ->resolve(fn (): array => ['goals' => DemoData::goals()]),
 
             WidgetDefinition::make('demo.welcome')
                 ->label('Welcome note')
                 ->description('A card explaining what this demo shows.')
-                ->defaultSize(6, 2)
-                ->view('workbench::demo.widgets.welcome'),
+                ->icon('i-lucide-sparkles')
+                ->defaultSize(6, 2),
         ];
     }
 
@@ -214,8 +230,9 @@ class DemoPlugin extends Plugin
                     ->orderBy('name')
                     ->limit(5)
                     ->get()
-                    ->map(fn (User $user): SearchResult => SearchResult::make($user->name, route('atrium.demo.users'))
+                    ->map(fn (User $user): SearchResult => SearchResult::make($user->name, ClientPath::url('/demo/users'))
                         ->subtitle($user->email)
+                        ->icon('i-lucide-user')
                         ->group('Team'))
                     ->all()),
 
@@ -224,8 +241,9 @@ class DemoPlugin extends Plugin
                 ->description('Customer orders by number or customer name.')
                 ->using(fn (string $query): array => DemoData::orders()
                     ->filter(fn (array $order): bool => str_contains(strtolower($order['number'].' '.$order['customer']), strtolower($query)))
-                    ->map(fn (array $order): SearchResult => SearchResult::make($order['number'].' · '.$order['customer'], route('atrium.demo.orders').'#'.$order['number'])
+                    ->map(fn (array $order): SearchResult => SearchResult::make($order['number'].' · '.$order['customer'], ClientPath::url('/demo/orders#'.$order['number']))
                         ->subtitle('$'.number_format($order['total'], 2).' · '.DemoData::orderStatus($order['status'])['label'])
+                        ->icon('i-lucide-receipt')
                         ->group('Orders'))
                     ->values()
                     ->all()),

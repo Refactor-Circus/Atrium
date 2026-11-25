@@ -52,8 +52,10 @@ interface Plugin
     public function navigationGroups(): array;
 
     /**
-     * Register routes. Called inside Atrium's route group, so the prefix,
-     * middleware, and name prefix are already applied.
+     * Register JSON API routes. Called inside Atrium's API group under the
+     * `plugins/{key}` prefix and the `atrium.plugins.{key}.` name, behind the
+     * group's middleware and the plugin's feature gate, so name a route by
+     * its operation only: `->name('index')` serves `atrium.plugins.{key}.index`.
      */
     public function routes(): void;
 

@@ -1,0 +1,138 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "keen",
+  "label": "Keen",
+  "features": [
+    "keen.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "Audit log",
+      "path": "/keen/entries",
+      "icon": "i-lucide-clipboard-list",
+      "group": "Keen",
+      "sort": 90
+    },
+    {
+      "label": "History",
+      "icon": "i-lucide-history",
+      "group": "Keen",
+      "sort": {
+        "$config": "atrium.integrations.keen.history.nav.sort",
+        "type": "int",
+        "default": 90
+      },
+      "live": {
+        "key": "keen.history",
+        "options": {
+          "exclude": {
+            "$config": "atrium.integrations.keen.history.nav.exclude",
+            "type": "strings",
+            "single": true,
+            "default": []
+          },
+          "groups": {
+            "$config": "atrium.integrations.keen.history.nav.groups",
+            "type": "string-map",
+            "default": {
+              "showroom": "showroom",
+              "pennantplus": "pennantplus"
+            }
+          },
+          "sort": {
+            "$config": "atrium.integrations.keen.history.nav.sort",
+            "type": "int",
+            "default": 90
+          }
+        }
+      },
+      "when": {
+        "$config": "atrium.integrations.keen.history.nav.enabled",
+        "type": "bool",
+        "default": true
+      }
+    }
+  ],
+  "screens": [
+    {
+      "key": "keen.entries",
+      "kind": "list",
+      "path": "/keen/entries"
+    },
+    {
+      "key": "keen.entry",
+      "kind": "detail",
+      "path": "/keen/entries/:entry"
+    },
+    {
+      "key": "keen.history",
+      "kind": "list",
+      "path": "/keen/history/:package"
+    }
+  ],
+  "hooks": [
+    {
+      "config": "history",
+      "format": "targets",
+      "default": {
+        "screens": [
+          "*"
+        ],
+        "slot": "after",
+        "exclude": [
+          "keen.*",
+          "atrium.*"
+        ]
+      },
+      "sections": {
+        "keen.history": {
+          "label": "History",
+          "data": {
+            "source": {
+              "$screen": "package"
+            },
+            "subject_type": {
+              "$screen": "subject_type",
+              "kinds": [
+                "detail"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "config": "history.tabs",
+      "format": "options",
+      "default": {
+        "roster.organization": {
+          "scope": true
+        }
+      },
+      "screens": {
+        "kind": "detail",
+        "subject": true
+      },
+      "tabs": {
+        "keen.activity": {
+          "label": "Activity",
+          "icon": "i-lucide-clipboard-list",
+          "data": {
+            "source": {
+              "$screen": "package"
+            },
+            "subject_type": {
+              "$screen": "subject_type"
+            },
+            "scope": {
+              "$option": "scope",
+              "type": "bool",
+              "default": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

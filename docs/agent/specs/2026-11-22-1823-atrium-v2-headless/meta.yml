@@ -1,0 +1,78 @@
+id: 2026-11-22-1823-atrium-v2-headless
+title: 'Atrium v2 headless'
+status: in-review
+created: '2026-11-22 18:23'
+release: v2.0.0
+spike: { branch: spike/v2-headless, commit: 2607d9a, worktree: ../Atrium--v2-headless }
+standards:
+  refactor-circus/standards:
+    version: dev-main
+    reference: a5b675396232
+review_passes: 2
+runs:
+  - workflow: ring-master-factory
+    run_id: wf_f3caacee-a3a
+    result: needs-decision
+    round: 0
+    date: 2026-11-23
+  - workflow: ring-master-factory
+    run_id: wf_dac4e63f-2fb
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "groups 3 and 4 implementers hit max_turns without reporting; partial work committed as WIP on their group branches (6d1e713, a2fca62); relaunched with implementer max_turns 160"
+  - workflow: ring-master-factory
+    run_id: wf_7ef8523b-dc2
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "groups 3 and 4 built and merged without conflict (30f8aae); integrator held because the full suite is red (11 failures in group 5/6 files), which D-014 accepts; continuing from group 5"
+  - workflow: ring-master-factory
+    run_id: wf_6115986a-e55
+    result: needs-decision
+    round: 0
+    date: 2026-11-23
+    note: "groups 5 (salvaged) and 6 built; D-015 and D-016 answered and added as group 10"
+  - workflow: ring-master-factory
+    run_id: wf_d9ca9c5a-efd
+    result: needs-decision
+    round: 2
+    date: 2026-11-23
+    note: "groups 7-10 built; review round 2 rework stopped on D-017 (layer deps)"
+  - workflow: ring-master-factory
+    run_id: wf_8a7c299e-6c9
+    result: needs-decision
+    round: 1
+    date: 2026-11-23
+    note: "gate green; review round 1: D-018 plus 1 major (cross-domain Http imports) and 2 minor findings for rework"
+  - workflow: ring-master-factory
+    run_id: wf_d73cf5ed-97f
+    result: approved
+    round: 2
+    date: 2026-11-23
+    note: "gate green, no nits. composer test:nuxt was not in the gate; run by hand, D-017 was found unapplied and fixed (pinned @nuxt/icon, @nuxt/fonts, @nuxtjs/color-mode, tailwindcss); composer test and composer test:nuxt both pass"
+  - workflow: ring-master-factory
+    run_id: wf_46e6ccf3-4ae
+    result: needs-decision
+    round: 0
+    date: 2026-11-23
+    note: "groups 11-18, 27 built; wave 3 group branches merged by hand (spec docs kept ours, ticks reconciled); group 22 partial, resumed with D-042"
+  - workflow: ring-master-factory
+    run_id: wf_9e04e1d8-3c7
+    result: escalated
+    round: 0
+    date: 2026-11-23
+    note: "group 19 built; merged suites red; stabilization pass d36d28e..a2fc35c made composer test and test:nuxt green"
+  - workflow: ring-master-factory
+    run_id: wf_4d1ed09c-9a1
+    result: approved
+    round: 2
+    date: 2026-11-23
+    note: "groups 20-28 built serially; gate green, no nits; composer test (pest 1357) and composer test:nuxt (vitest 1135, consumer build) re-run by hand, both green"
+  - workflow: direct
+    result: approved
+    date: 2026-11-23
+    note: "Guardian addendum: groups 29-37 built directly (34-37 in this run, D-069 to D-074); composer test (pest 1473, phpstan 0, pint, type coverage 100%) and composer test:nuxt (vitest 142 files / 1359 tests, typecheck clean, consumer build) green"
+reopened: 2026-11-23
+waits_for: [Cortex, Impex, Keen, PennantPlus, Polycart, Roster, Showroom v2 specs 2026-11-23-0943-*, Roster/2026-11-23-0943-roster-v2-api-and-mcp-only addendum (criteria 28-46), Guardian/2026-11-23-1718-guardian-v2-security-platform]
+pr: https://github.com/Refactor-Circus/Atrium/pull/20

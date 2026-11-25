@@ -7,6 +7,10 @@ namespace RefactorCircus\Atrium;
 use Closure;
 use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
+use RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleRegistry;
+use RefactorCircus\Atrium\Domains\Integrations\Data\IntegrationManifest;
+use RefactorCircus\Atrium\Domains\Integrations\Services\IntegrationRegistry;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavGroup;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavItem;
 use RefactorCircus\Atrium\Domains\Navigation\Data\NavSection;
@@ -23,10 +27,15 @@ use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Support\StyleRegistry;
 
 class Atrium
 {
+    /**
+     * The JSON API's version, the release's major.minor. The shell sends it,
+     * and the front end warns when its SDK's version differs.
+     */
+    public const string API_VERSION = '2.0';
+
     public function __construct(
         protected PluginRegistry $plugins,
         protected NavigationRegistry $navigation,
@@ -34,7 +43,6 @@ class Atrium
         protected SettingsRegistry $settings,
         protected SearchRegistry $search,
         protected Gatekeeper $gatekeeper,
-        protected StyleRegistry $styles,
         protected ThemeRegistry $themes,
         protected ScreenExtensions $screens,
     ) {}
@@ -46,6 +54,64 @@ class Atrium
     public function screens(): ScreenExtensions
     {
         return $this->screens;
+    }
+
+    /**
+     * Load the front-end module in `$path` (a folder holding a composer.json
+     * that declares `extra.atrium.scripts`) as if its package were
+     * installed: a module the app builds itself, or a checkout beside it.
+     * Its integration manifest (`extra.atrium.integration`, default
+     * `dist/atrium/integration.json`) registers with it.
+     */
+    public function module(string $path): ModuleManifest
+    {
+        return app(ModuleRegistry::class)->module($path);
+    }
+
+    /**
+     * Register an integration from a manifest (D-090): the path of an
+     * `integration.json`, or its JSON as an array. For an app's own
+     * integration, or one without a module; it wins over a package's
+     * manifest with the same key. Call it from a provider's `register()` or
+     * `boot()`: the integrations register once every provider has booted.
+     *
+     * @param  string|array<string, mixed>  $manifest
+     */
+    public function integration(string|array $manifest): IntegrationManifest
+    {
+        return app(IntegrationRegistry::class)->manifest($manifest);
+    }
+
+    /**
+     * Load a script of the app's own on Atrium's page, after every module:
+     * a URL, or a Vite entry of the app (`resources/js/atrium.ts`). It may
+     * call `defineAtriumModule()` like any module.
+     */
+    public function script(string $source): static
+    {
+        app(ModuleRegistry::class)->script($source);
+
+        return $this;
+    }
+
+    /**
+     * Load a stylesheet of the app's own on Atrium's page: a URL or a Vite entry.
+     */
+    public function style(string $source): static
+    {
+        app(ModuleRegistry::class)->style($source);
+
+        return $this;
+    }
+
+    /**
+     * Every front-end module the page may load, by key.
+     *
+     * @return array<string, ModuleManifest>
+     */
+    public function modules(): array
+    {
+        return app(ModuleRegistry::class)->all();
     }
 
     /**
@@ -65,27 +131,6 @@ class Atrium
     public function themes(): array
     {
         return $this->themes->all();
-    }
-
-    /**
-     * Link a stylesheet in the dashboard's <head>, after Atrium's own.
-     */
-    public function stylesheet(string $href): static
-    {
-        $this->styles->stylesheet($href);
-
-        return $this;
-    }
-
-    /**
-     * Add CSS to the dashboard's <head>, after Atrium's own stylesheet - for
-     * utilities a package uses that Atrium's precompiled stylesheet lacks.
-     */
-    public function css(string $css, ?string $key = null): static
-    {
-        $this->styles->css($css, $key);
-
-        return $this;
     }
 
     /**
@@ -243,23 +288,5 @@ class Atrium
     public function search(string $query, ?Request $request = null): array
     {
         return $this->search->search($request ?? request(), $query);
-    }
-
-    /**
-     * The configured dashboard URL path.
-     */
-    public function path(): string
-    {
-        $path = config('atrium.path');
-
-        return is_string($path) ? trim($path, '/') : 'atrium';
-    }
-
-    /**
-     * A URL within the dashboard.
-     */
-    public function url(string $path = ''): string
-    {
-        return url(trim($this->path().'/'.ltrim($path, '/'), '/'));
     }
 }

@@ -10,12 +10,17 @@ use RefactorCircus\Keystone\Data\Missing;
 /**
  * Input for UpdateDashboardAction: a new name, whether it is the default
  * dashboard, or both. Fields left out are left as they are.
+ *
+ * `version` is the dashboard version the change was made from, checked and
+ * never written as a field. A request must send it; code that vouches for
+ * the dashboard's state may leave it out.
  */
 final readonly class UpdateDashboardData extends Data
 {
     public function __construct(
         public string|Missing $name = new Missing,
         public bool|Missing $isDefault = new Missing,
+        public int|Missing $version = new Missing,
     ) {}
 
     /**
@@ -26,6 +31,7 @@ final readonly class UpdateDashboardData extends Data
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'is_default' => ['sometimes', 'boolean'],
+            'version' => ['required', 'integer', 'min:1'],
         ];
     }
 }

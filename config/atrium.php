@@ -12,41 +12,104 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard Path
+    | API Routes
     |--------------------------------------------------------------------------
     |
-    | The URI path the Atrium dashboard is served from. Plugin routes are
-    | registered beneath this prefix so every dashboard URL is consistent.
+    | Atrium serves its dashboard as a JSON API, which its front end (the page
+    | below) renders. Every route, plugin routes included, is registered
+    | under this prefix and middleware and named `atrium.*`.
+    |
+    | enabled:     Set to false to register no API route at all.
+    | prefix:      The URI prefix of every route. Default: `atrium/api`.
+    | middleware:  The middleware of every route. Default:
+    |              ['web', 'auth', Authorize::class]: the session the page
+    |              was served in, so the front end needs no configuration.
+    |
+    | Atrium ships no authentication: `auth` is your app's own guard, and
+    | the session is the one Atrium's page was served in, so its front end
+    | needs no setup (it sends the session cookie and the XSRF token). Keep
+    | Authorize::class last: it checks the `viewAtrium` gate below against
+    | the user the guard signed in, so it must run after the guard. Errors
+    | are always JSON: a guest gets 401, never a redirect to a login page.
+    |
+    | Another client of the API (a front end on another origin, a script)
+    | swaps the session for its guard: `auth:sanctum` for Sanctum, `auth:api`
+    | for Passport, e.g. ['api', 'auth:sanctum', Authorize::class]. Across
+    | origins it needs the host's own setup: CORS `paths` with the prefix,
+    | and for cookies `supports_credentials` and the Sanctum SPA flow (CSRF
+    | cookie first); for tokens, the `Authorization` header.
     |
     */
 
-    'path' => 'atrium',
+    'routes' => [
+        'enabled' => true,
+
+        'prefix' => 'atrium/api',
+
+        'middleware' => [
+            'web',
+            'auth',
+            Authorize::class,
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard Domain
+    | The Page
     |--------------------------------------------------------------------------
     |
-    | Optionally serve the dashboard from a dedicated subdomain. Leave null
-    | to serve it from the application's default domain.
+    | Atrium ships its front end prebuilt and serves it itself: one Blade page
+    | for every path under `client_path`, so a host needs no Node and no
+    | build step (D-079). Each installed package's front-end module, and the
+    | app's own scripts, load into that page (D-082).
+    |
+    | client_path:        Where the page is served, and the base of every
+    |                     path the front end routes to. Default: `/atrium`.
+    |                     Links on this app's host under it are sent
+    |                     relative to it; any other link as external.
+    | client.enabled:     Set to false to serve neither the page nor its
+    |                     assets (a host that serves its own front end).
+    | client.middleware:  The page's middleware: your session and guard, then
+    |                     Authorize. A guest is sent to your login page.
+    | assets.path:        Where the prebuilt files are served from, Atrium's
+    |                     and each module's: `/vendor/atrium/{owner}/{version}/…`,
+    |                     straight from the packages, cached for a year. No
+    |                     publish step; nothing is written to public/.
+    | scripts, styles:    The app's own scripts and stylesheets, loaded after
+    |                     every module's: URLs, or entries of the app's Vite
+    |                     build (`resources/js/atrium.ts`). Atrium::script()
+    |                     and Atrium::style() add more from a provider.
+    | icons.remote:       Fetch icons outside the bundled collections (Lucide)
+    |                     from the Iconify API. Off: no request leaves the page.
     |
     */
 
-    'domain' => null,
+    'client_path' => '/atrium',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Middleware
-    |--------------------------------------------------------------------------
-    |
-    | Middleware applied to every Atrium route, including plugin routes. The
-    | authorization middleware checks the gate defined below.
-    |
-    */
+    'client' => [
+        'enabled' => true,
 
-    'middleware' => [
-        'web',
-        Authorize::class,
+        'middleware' => [
+            'web',
+            'auth',
+            Authorize::class,
+        ],
+    ],
+
+    'assets' => [
+        'path' => 'vendor/atrium',
+    ],
+
+    'scripts' => [
+        //
+    ],
+
+    'styles' => [
+        //
+    ],
+
+    'icons' => [
+        'remote' => false,
     ],
 
     /*
@@ -54,26 +117,17 @@ return [
     | Authorization Gate
     |--------------------------------------------------------------------------
     |
-    | The gate ability checked before the dashboard is shown. Define it in a
-    | service provider with Gate::define(). When the gate is not defined,
-    | access is granted in the local environment and denied everywhere else.
+    | The gate ability Authorize checks on the page and every API route: the
+    | `viewAtrium` gate. Define it in a service provider with Gate::define().
+    | While it is not defined, a user model implementing
+    | RefactorCircus\Atrium\Domains\Access\Contracts\AtriumUser decides with
+    | canAccessAtrium(); any other signed-in user gets in only in the
+    | `local` environment (D-086). Never run a shared server with
+    | APP_ENV=local unless every user who can sign in may see the dashboard.
     |
     */
 
     'gate' => 'viewAtrium',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sign Out
-    |--------------------------------------------------------------------------
-    |
-    | The name of the app's logout route (a POST route, as Laravel's starter
-    | kits define it). The top bar's account menu signs out through it. Null,
-    | or a route the app does not define, hides the menu.
-    |
-    */
-
-    'logout_route' => 'logout',
 
     /*
     |--------------------------------------------------------------------------
@@ -152,19 +206,6 @@ return [
     'disabled' => [
         //
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Alpine.js
-    |--------------------------------------------------------------------------
-    |
-    | Atrium's interactive components are built on Alpine. Leave this true to
-    | let Atrium serve the copy it ships with. Set it to false when the host
-    | application already bundles Alpine, so the page does not load it twice.
-    |
-    */
-
-    'alpine' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -254,8 +295,8 @@ return [
     |                   feature resolver every feature is on, so the switcher
     |                   always shows. Null always shows it too; a feature name
     |                   of your own gates it.
-    | available:        Your own themes. Each key is a token from
-    |                   resources/css/atrium.css without `--color-`; set the
+    | available:        Your own themes. Each key is a design token of
+    |                   Atrium's stylesheet without `--color-`; set the
     |                   `-dark` tokens too so dark mode stays readable.
     |                   `layout` is `sidebar` (the default) or `top`.
     |
@@ -289,13 +330,104 @@ return [
     | here becomes "--color-{key}". To offer a whole new look, add a theme
     | under `themes.available` instead.
     |
-    | See resources/css/atrium.css for the full list of available tokens.
+    | Atrium's stylesheet (ui/app/src/assets/atrium.css) lists every token.
     |
     */
 
     'theme' => [
         // 'primary' => '#4f46e5',
         // 'on-primary' => '#ffffff',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Integrations
+    |--------------------------------------------------------------------------
+    |
+    | Atrium hosts the front ends of packages that ship an Atrium module and
+    | an integration manifest (D-090): the Refactor Circus suite (Cortex,
+    | Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom) and any
+    | other. A package declares its nav items, widgets, settings panel,
+    | search sources, screens, feature flags and hooks in
+    | `dist/atrium/integration.json` (composer.json `extra.atrium.integration`),
+    | found by `php artisan atrium:discover`; an app adds one with
+    | Atrium::module() or Atrium::integration(). Atrium's PHP never loads a
+    | package's classes. Nothing needs to be listed here: each key below
+    | overrides what the package's manifest says, by package key.
+    |
+    | enabled: an integration registers while this is true (default true, read
+    | as a boolean, so "false" from an env file turns it off). Set it to false
+    | to hide a package from Atrium while keeping it installed.
+    |
+    | api_base: where the module calls the package's API. A non-empty value
+    | wins (a path such as `/cortex/api`, or an absolute URL for a package
+    | served from another host). Otherwise it is `/` plus the package's own
+    | {pkg}.routes.prefix, while {pkg}.routes.enabled is true. When neither
+    | applies the integration does not register, and Atrium logs a warning
+    | once per process naming both keys.
+    |
+    | Security: the package APIs answer with their own auth. Guardian, Polycart
+    | and Roster ship with their API off (guardian.routes.enabled,
+    | polycart.routes.enabled and roster.routes.enabled are false), so their
+    | integrations stay away until you turn the API on, behind your
+    | application's authentication middleware (e.g. auth:sanctum) in that
+    | package's `routes.middleware`.
+    |
+    | features: feature flags that must all be on for the integration to show
+    | to a user: its navigation, widgets, settings panel, search sources and
+    | screens. By default the manifest's (`{pkg}.atrium` for the suite). With
+    | Laravel Pennant installed each resolves through
+    | Feature::for($user)->active($name), so you can turn an integration off
+    | globally or per user; Atrium defines a name you have not defined as on.
+    | Without Pennant every flag is on. An empty list always shows the
+    | integration. These are separate from the plugin features gated through
+    | Atrium::resolveFeaturesUsing().
+    |
+    | Anything else under a package's key is read by its manifest: the
+    | placements of its hooks on other packages' screens and the config its
+    | screens read, each with the manifest's default until you set it. The
+    | suite's (see each package's README):
+    |
+    | cortex.redirect_domains.screens: the screens that get Cortex's redirect
+    |              domains, as a `tab` or in a slot. Default
+    |              ['roster.organization' => 'tab', 'roster.user' => 'aside'].
+    | impex.run_link.screens: the screens whose rows link to their Impex run,
+    |              by row slot. Default ['showroom.transfers' => 'row.actions'].
+    | keen.history: the Keen history section on every screen matched by
+    |              `screens` (['*']) and not by `exclude` (['keen.*',
+    |              'atrium.*']), in `slot` ('after'); the activity tab for each
+    |              `tabs` entry (['roster.organization' => ['scope' => true]]);
+    |              and the History nav item (`nav.enabled`, `nav.sort` 90,
+    |              `nav.exclude`, `nav.groups`).
+    | showroom.transfers.flow_prefix: the Impex flows Showroom's transfers
+    |              screen lists, by name prefix ('showroom:').
+    | guardian.screens: Guardian's tabs and sections on Roster's screens. A
+    |              plain value is a tab; a `slot => key` entry is a section.
+    | guardian.scope_types: the morph type Guardian stores for each scope
+    |              (['organization' => null, 'team' => null]). A null value
+    |              resolves to guardian.adopt.scope_types.{key}; a value that
+    |              does not resolve to a non-empty string is dropped, and the
+    |              organization access tab is skipped while `organization`
+    |              does not resolve.
+    |
+    | Guardian: its `guardian.two-factor` and `guardian.session` middleware can
+    | go on Atrium's route group (`atrium.middleware`) and on the packages' API
+    | groups. A user who still owes a second factor then gets Guardian's 403,
+    | and Guardian's module sends them to its two-factor challenge page
+    | (/guardian/two-factor/challenge) or setup page (/guardian/two-factor/setup).
+    |
+    | A hook target is a screen key (`roster.user`), `{package}.*` or `*`. An
+    | invalid one throws in local and testing, and is reported and skipped
+    | anywhere else.
+    |
+    */
+
+    'integrations' => [
+        // 'polycart' => [
+        //     'enabled' => true,
+        //     'api_base' => null,
+        //     'features' => ['polycart.atrium'],
+        // ],
     ],
 
 ];

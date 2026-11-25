@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Navigation\Data;
 
+use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Access\Concerns\Gated;
+use RefactorCircus\Atrium\Support\Iconify;
 
 /**
  * A sidebar section: its icon in the rail, its place there, and visibility
@@ -17,7 +19,7 @@ class NavGroup
 {
     use Gated;
 
-    /** The section's icon in the sidebar rail, as an SVG string. */
+    /** The section's icon in the sidebar rail, as an Iconify name such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
     /** Where the section sits in the rail; lower first. */
@@ -30,9 +32,12 @@ class NavGroup
         return new static($name);
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }

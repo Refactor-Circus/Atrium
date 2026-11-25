@@ -1,0 +1,341 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@refactor-circus/atrium/theme.css";
+
+/*
+ * Atrium's stylesheet (D-077, D-078, D-091): the theme tokens, the fonts and
+ * a little global styling. Every Atrium* component is composed from Nuxt UI
+ * components, and the deck's look lives in the Nuxt UI theme
+ * (`ui/sdk/vite/ui-config.mjs`) as slot classes reading the tokens below;
+ * nothing here styles an Atrium component by a class of its own.
+ *
+ * Atrium's own sources: the app and the SDK. A module's classes are compiled
+ * by its own build (module.css), never here.
+ */
+@source "../";
+@source "../../../sdk/src";
+@source "../../../sdk/vite/ui-config.mjs";
+
+/*
+ * Theme bridge. Atrium themes (config `atrium.themes`, and `atrium.theme` for
+ * the built-in one) send their tokens as `--color-*` properties; the layer's
+ * useAtriumTheme() sets each on :root, and the same value as `--atrium-token-*`
+ * (`--color-surface-dark` -> `--atrium-token-surface-dark`, `--radius-radius`
+ * -> `--atrium-token-radius`). The bridge reads the `--atrium-token-*` names only: Nuxt UI
+ * defines `--color-primary` and the other status colours as `var(--ui-primary)`,
+ * so reading `--color-primary` here would make a cycle whenever a theme does
+ * not send it (and paint every primary button transparent). Dark mode reads
+ * the `-dark` tokens and falls back to the deck's own dark defaults, never to
+ * a light token; the status colours, which themes send once, serve both.
+ *
+ *   surface           --ui-bg (panels, inputs, menus, the rail)
+ *   surface-alt       --ui-bg-muted, --ui-bg-elevated
+ *   canvas            --atrium-canvas (the deck behind the panels)
+ *   on-surface        --ui-text, --ui-text-toned
+ *   on-surface-strong --ui-text-highlighted
+ *   outline           --ui-border, --ui-border-muted
+ *   outline-strong    --ui-border-accented
+ *   primary, secondary, info, success, warning, danger
+ *                     --ui-primary, --ui-secondary, --ui-info, --ui-success,
+ *                     --ui-warning, --ui-error
+ */
+:root {
+  --ui-primary: var(--atrium-token-primary, var(--ui-color-primary-600));
+  --ui-secondary: var(--atrium-token-secondary, var(--ui-color-secondary-500));
+  --ui-info: var(--atrium-token-info, var(--ui-color-info-600));
+  --ui-success: var(--atrium-token-success, var(--ui-color-success-600));
+  --ui-warning: var(--atrium-token-warning, var(--ui-color-warning-600));
+  --ui-error: var(--atrium-token-danger, var(--ui-color-error-600));
+  --ui-radius: var(--atrium-token-radius, 0.25rem);
+
+  --ui-bg: var(--atrium-token-surface, #ffffff);
+  --ui-bg-muted: var(--atrium-token-surface-alt, #f7f8fa);
+  --ui-bg-elevated: var(--atrium-token-surface-alt, #f0f2f5);
+  --ui-bg-accented: #e3e8ee;
+  --ui-text: var(--atrium-token-on-surface, #252b35);
+  --ui-text-toned: var(--atrium-token-on-surface, #3d4654);
+  --ui-text-muted: #5f6b7c;
+  --ui-text-dimmed: #8a95a5;
+  --ui-text-highlighted: var(--atrium-token-on-surface-strong, #07090d);
+  --ui-border: var(--atrium-token-outline, #d6dbe2);
+  --ui-border-muted: var(--atrium-token-outline, #e9edf2);
+  --ui-border-accented: var(--atrium-token-outline-strong, #b4bbc6);
+
+  --atrium-canvas: var(--atrium-token-canvas, #eef0f3);
+
+  /* Deck tokens: derived from the bridged colours, so a theme drives them. */
+  --atrium-glow: color-mix(in oklab, var(--ui-primary) 55%, transparent);
+  --atrium-glow-soft: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  --atrium-tint: color-mix(in oklab, var(--ui-primary) 9%, transparent);
+  --atrium-grid: color-mix(in oklab, var(--ui-text-highlighted) 5%, transparent);
+  --atrium-edge: color-mix(in oklab, var(--ui-text-highlighted) 4%, transparent);
+  --atrium-field: color-mix(in oklab, var(--ui-bg) 70%, var(--atrium-canvas));
+  --atrium-row-hover: color-mix(in oklab, var(--ui-primary) 5%, transparent);
+  --atrium-control-ring: color-mix(in oklab, var(--ui-border-accented) 45%, var(--ui-border));
+  --atrium-rail-width: 3.25rem;
+  --atrium-panel-width: 14.5rem;
+  --atrium-bar-height: 2.625rem;
+  --atrium-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Glass and light. Light mode is "lab white": paper panels, ink hairlines,
+   * crisp short shadows; dark mode is glass over the deck. */
+  --atrium-glass: color-mix(in oklab, var(--ui-bg) 94%, transparent);
+  --atrium-hud: color-mix(in oklab, var(--ui-bg) 88%, transparent);
+  --atrium-blur: 10px;
+  --atrium-shadow: 0 1px 0 rgb(7 9 13 / 0.04), 0 2px 8px -3px rgb(7 9 13 / 0.12);
+  --atrium-highlight: rgb(255 255 255 / 0.9);
+  --atrium-dots: color-mix(in oklab, var(--ui-text-highlighted) 16%, transparent);
+  --atrium-haze: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+
+  /* Composite tokens the Nuxt UI theme (ui-config.mjs) paints with. */
+  --atrium-panel-shadow: inset 0 0 0 1px var(--ui-border), inset 0 1px 0 var(--atrium-highlight), var(--atrium-shadow);
+  --atrium-hud-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, var(--ui-border)), 0 30px 80px -20px rgb(0 0 0 / 0.45), 0 0 60px -20px var(--atrium-glow);
+  --atrium-sheen: linear-gradient(180deg, var(--atrium-edge), transparent 2.5rem);
+  --atrium-bracket: color-mix(in oklab, var(--ui-primary) 45%, transparent);
+  --atrium-brackets:
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) top left / 9px 1px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) top left / 1px 9px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) top right / 9px 1px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) top right / 1px 9px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) bottom left / 9px 1px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) bottom left / 1px 9px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) bottom right / 9px 1px no-repeat,
+    linear-gradient(var(--atrium-bracket), var(--atrium-bracket)) bottom right / 1px 9px no-repeat;
+  --atrium-corners:
+    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 5px 1px no-repeat,
+    linear-gradient(var(--ui-primary), var(--ui-primary)) top left / 1px 5px no-repeat,
+    linear-gradient(var(--ui-primary), var(--ui-primary)) bottom right / 5px 1px no-repeat,
+    linear-gradient(var(--ui-primary), var(--ui-primary)) bottom right / 1px 5px no-repeat;
+  --atrium-ruler: repeating-linear-gradient(90deg, var(--ui-border-accented) 0 1px, transparent 1px 8px);
+  --atrium-gloss: linear-gradient(180deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 55%);
+  --atrium-lit-button: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 70%, #000), 0 0 16px -4px var(--atrium-glow);
+  --atrium-lit-button-hover: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 70%, #000), 0 0 24px -2px var(--atrium-glow);
+  --atrium-active: linear-gradient(90deg, color-mix(in oklab, var(--ui-primary) 16%, transparent), transparent 85%);
+  --atrium-socket: radial-gradient(circle at 50% 120%, color-mix(in oklab, var(--ui-primary) 30%, transparent), transparent 70%), linear-gradient(var(--atrium-tint), var(--atrium-tint));
+  --atrium-grid-paper: linear-gradient(var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, var(--atrium-grid) 1px, transparent 1px) 0 0 / 12px 12px;
+  --atrium-spine: linear-gradient(180deg, var(--ui-primary), color-mix(in oklab, var(--ui-primary) 25%, var(--ui-border)) 30%, var(--ui-border) 70%);
+  --atrium-fault: repeating-linear-gradient(180deg, transparent 0 2px, color-mix(in oklab, var(--tone) 5%, transparent) 2px 3px), linear-gradient(90deg, color-mix(in oklab, var(--tone) 16%, transparent), color-mix(in oklab, var(--tone) 4%, transparent) 70%);
+  --atrium-canvas-image: radial-gradient(62rem 34rem at 85% -10%, var(--atrium-haze), transparent 70%), radial-gradient(var(--atrium-dots) 1px, transparent 1.4px);
+}
+
+.dark {
+  --ui-primary: var(--atrium-token-primary-dark, var(--atrium-token-primary, var(--ui-color-primary-400)));
+  --ui-secondary: var(--atrium-token-secondary-dark, var(--ui-color-secondary-400));
+  --ui-info: var(--atrium-token-info-dark, var(--atrium-token-info, var(--ui-color-info-400)));
+  --ui-success: var(--atrium-token-success-dark, var(--atrium-token-success, var(--ui-color-success-400)));
+  --ui-warning: var(--atrium-token-warning-dark, var(--atrium-token-warning, var(--ui-color-warning-400)));
+  --ui-error: var(--atrium-token-danger-dark, var(--atrium-token-danger, var(--ui-color-error-400)));
+
+  --ui-bg: var(--atrium-token-surface-dark, #0a0d13);
+  --ui-bg-muted: var(--atrium-token-surface-dark-alt, #10141c);
+  --ui-bg-elevated: var(--atrium-token-surface-dark-alt, #141923);
+  --ui-bg-accented: #1c2330;
+  --ui-text: var(--atrium-token-on-surface-dark, #c3cad5);
+  --ui-text-toned: var(--atrium-token-on-surface-dark, #b0b9c6);
+  --ui-text-muted: #8893a4;
+  --ui-text-dimmed: #5d6778;
+  --ui-text-highlighted: var(--atrium-token-on-surface-dark-strong, #f3f6fa);
+  --ui-border: var(--atrium-token-outline-dark, #1b212c);
+  --ui-border-muted: var(--atrium-token-outline-dark, #161b24);
+  --ui-border-accented: var(--atrium-token-outline-dark-strong, #2a3240);
+
+  --atrium-canvas: var(--atrium-token-canvas-dark, #030509);
+  --atrium-grid: color-mix(in oklab, var(--ui-text-highlighted) 5.5%, transparent);
+  --atrium-edge: color-mix(in oklab, var(--ui-text-highlighted) 6%, transparent);
+  --atrium-field: color-mix(in oklab, var(--ui-bg) 55%, var(--atrium-canvas));
+  --atrium-row-hover: color-mix(in oklab, var(--ui-primary) 7%, transparent);
+  --atrium-glass: color-mix(in oklab, var(--ui-bg) 72%, transparent);
+  --atrium-hud: color-mix(in oklab, var(--ui-bg) 82%, transparent);
+  --atrium-blur: 14px;
+  --atrium-shadow: 0 18px 44px -30px rgb(0 0 0 / 0.95);
+  --atrium-highlight: rgb(255 255 255 / 0.06);
+  --atrium-dots: color-mix(in oklab, var(--ui-text-highlighted) 19%, transparent);
+  --atrium-haze: color-mix(in oklab, var(--ui-primary) 22%, transparent);
+  --atrium-hud-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-primary) 35%, var(--ui-border)), 0 0 0 1px rgb(0 0 0 / 0.2), 0 30px 80px -20px rgb(0 0 0 / 0.6), 0 0 60px -20px var(--atrium-glow);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  body {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    background-color: var(--atrium-canvas);
+  }
+
+  ::selection {
+    background: var(--atrium-glow-soft);
+    color: var(--ui-text-highlighted);
+  }
+
+  /* Visible focus everywhere: the primary outline plus a soft glow. */
+  :focus-visible {
+    outline: 1.5px solid var(--ui-primary);
+    outline-offset: 1px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border-accented) transparent;
+  }
+}
+
+@layer utilities {
+  /* Monospaced figures that line up (IDs, counts, times). */
+  .atrium-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+    letter-spacing: -0.01em;
+  }
+
+  /* An uppercase micro-label: section names, column heads, field captions. */
+  .atrium-label {
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+  }
+
+  :where(a, button, [role="button"], [tabindex]):focus-visible {
+    box-shadow: 0 0 0 3px var(--atrium-glow-soft);
+  }
+}
+
+@keyframes atrium-rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes atrium-scan {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes atrium-ping {
+  0% { opacity: 0.8; scale: 0.6; }
+  70%, 100% { opacity: 0; scale: 1.7; }
+}
+
+/* ===========================================================================
+ * The plain text modules' pages render inside the shell
+ * (`<main data-atrium-content>`): headings, description lists, code and
+ * figures read as the deck. Their tables, fields, filter bars and empty
+ * states are Nuxt UI (`UTable`, `USelect`, `UEmpty`, ...), styled by
+ * `ui/sdk/vite/ui-config.mjs` (D-093).
+ * ======================================================================== */
+@layer utilities {
+  /* Page titles: tight display type behind a lit caret. */
+  [data-atrium-content] h1 {
+    font-size: 1.1875rem;
+    line-height: 1.625rem;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: var(--ui-text-highlighted);
+  }
+
+  [data-atrium-content] h1::before {
+    content: "";
+    display: inline-block;
+    width: 0.25rem;
+    height: 0.9em;
+    margin-inline-end: 0.5rem;
+    vertical-align: -0.08em;
+    background: var(--ui-primary);
+    box-shadow: 0 0 10px var(--atrium-glow);
+  }
+
+  /* A panel's heading: a micro-label behind a lit tick. */
+  [data-atrium-content] h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ui-text-highlighted);
+  }
+
+  [data-atrium-content] h2::before {
+    content: "";
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    background: var(--ui-primary);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+    filter: drop-shadow(0 0 4px var(--atrium-glow));
+  }
+
+  [data-atrium-content] h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ui-text-highlighted);
+  }
+
+  [data-atrium-content] dl dt {
+    color: var(--ui-text-muted);
+  }
+
+  [data-atrium-content] code,
+  [data-atrium-content] kbd,
+  [data-atrium-content] samp,
+  [data-atrium-content] .font-mono,
+  [data-atrium-content] .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+    letter-spacing: -0.01em;
+  }
+
+  [data-atrium-content] pre {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border-radius: var(--ui-radius);
+    background: var(--atrium-field);
+    box-shadow: inset 0 0 0 1px var(--ui-border);
+  }
+
+}
+
+/* A widget's own title reads as a panel heading. */
+@layer utilities {
+  [data-atrium-content] .atrium-panel h3:first-child {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Wrapped field rows (D-098): watchFieldRows() marks a label-less control
+ * (the field-label offset) that wrapped onto a line with no labelled field, and
+ * its label offset goes. Unlayered, so it wins over the utility in Atrium's
+ * layer and in the modules' `atrium-modules` layer alike.
+ */
+[data-atrium-field-wrapped] {
+  margin-top: 0;
+}

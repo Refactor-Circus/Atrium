@@ -18,12 +18,11 @@
     ],
     "require": {
         "php": "^8.5",
-        "refactor-circus/keystone": "^0.1",
+        "refactor-circus/keystone": "^2.0",
         "laravel/framework": "^13.35"
     },
     "require-dev": {
-        "amphp/dns": "^2.1.2",
-        "amphp/socket": "^2.3.1",
+        "dedoc/scramble": "^0.13.55",
         "larastan/larastan": "^3.13",
         "laravel/ai": "^1.2",
         "laravel/pao": "^1.1.5",
@@ -31,7 +30,6 @@
         "laravel/pint": "^1.32.1, !=1.32.2",
         "orchestra/testbench": "^11.3",
         "pestphp/pest": "^5.3.4",
-        "pestphp/pest-plugin-browser": "^5.1.2",
         "pestphp/pest-plugin-laravel": "^5.0.1",
         "pestphp/pest-plugin-type-coverage": "^5.0.3",
         "phpstan/extension-installer": "^1.4.3",
@@ -86,7 +84,7 @@
             "vendor/bin/pest --type-coverage --min=100"
         ],
         "test:unit": [
-            "vendor/bin/pest --parallel --exclude-testsuite=Browser"
+            "vendor/bin/pest --parallel"
         ],
         "test": [
             "@analyse",
@@ -94,11 +92,22 @@
             "@test:types",
             "@test:unit"
         ],
+        "openapi:export": [
+            "@php vendor/bin/testbench workbench:openapi openapi.json"
+        ],
+        "test:ui": [
+            "Composer\\Config::disableProcessTimeout",
+            "node ui/sdk/test/fixtures-present.mjs",
+            "pnpm -C ui install --frozen-lockfile",
+            "pnpm -C ui generate:client --check",
+            "pnpm -C ui theme:check",
+            "pnpm -C ui typecheck",
+            "pnpm -C ui test",
+            "pnpm -C ui test:consumer",
+            "pnpm -C ui build"
+        ],
         "clear": [
             "@php vendor/bin/testbench package:purge-skeleton --ansi"
-        ],
-        "test:browser": [
-            "vendor/bin/pest --testsuite=Browser"
         ],
         "local:install": [
             "@php bin/composer-local.php",
@@ -119,6 +128,9 @@
             "aliases": {
                 "Atrium": "RefactorCircus\\Atrium\\Facades\\Atrium"
             }
+        },
+        "branch-alias": {
+            "dev-main": "2.0.x-dev"
         }
     },
     "config": {
@@ -144,5 +156,8 @@
             "type": "vcs",
             "url": "https://github.com/Refactor-Circus/Standards.git"
         }
-    ]
+    ],
+    "scripts-descriptions": {
+        "test:ui": "The front end's gate: frozen pnpm install, generated client and Nuxt UI theme up to date, typecheck, Vitest, a module built, type-checked and tested against the packed SDK, and the prebuilt dist/ and module builds rebuilt (commit them)."
+    }
 }

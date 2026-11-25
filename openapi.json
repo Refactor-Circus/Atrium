@@ -1,0 +1,1749 @@
+{
+    "openapi": "3.1.2",
+    "info": {
+        "title": "Atrium API",
+        "version": "2.0.0",
+        "description": "Atrium's JSON API: the shell, dashboards and their widgets, widget definitions, search, settings panels and integration screens. The host's guard authenticates every route, and the `viewAtrium` gate authorizes it."
+    },
+    "servers": [
+        {
+            "url": "/atrium/api"
+        }
+    ],
+    "paths": {
+        "/dashboard": {
+            "get": {
+                "operationId": "atrium.dashboards.default",
+                "tags": [
+                    "Dashboard"
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "`DashboardResource`, or null",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/DashboardResource"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "description": "What the user may do to the dashboard; absent when `data` is null.",
+                                            "properties": {
+                                                "abilities": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "update": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "abilities"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards": {
+            "get": {
+                "operationId": "atrium.dashboards.index",
+                "tags": [
+                    "Dashboard"
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "Array of `DashboardResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DashboardResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "atrium.dashboards.store",
+                "tags": [
+                    "Dashboard"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreDashboardRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "201": {
+                        "description": "`DashboardResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "description": "What the user may do to the dashboard; absent when `data` is null.",
+                                            "properties": {
+                                                "abilities": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "update": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "abilities"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/{dashboard}": {
+            "get": {
+                "operationId": "atrium.dashboards.show",
+                "tags": [
+                    "Dashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "dashboard",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "`DashboardResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "description": "What the user may do to the dashboard; absent when `data` is null.",
+                                            "properties": {
+                                                "abilities": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "update": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "abilities"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "operationId": "atrium.dashboards.update",
+                "tags": [
+                    "Dashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "dashboard",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateDashboardRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "`DashboardResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "description": "What the user may do to the dashboard; absent when `data` is null.",
+                                            "properties": {
+                                                "abilities": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "update": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "abilities"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "atrium.dashboards.destroy",
+                "tags": [
+                    "Dashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "dashboard",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "204": {
+                        "description": "No content"
+                    }
+                }
+            }
+        },
+        "/dashboards/{dashboard}/layout": {
+            "put": {
+                "operationId": "atrium.dashboards.layout",
+                "tags": [
+                    "DashboardLayout"
+                ],
+                "parameters": [
+                    {
+                        "name": "dashboard",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "`DashboardResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "description": "What the user may do to the dashboard; absent when `data` is null.",
+                                            "properties": {
+                                                "abilities": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "update": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "abilities"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/{dashboard}/widgets/{widget}": {
+            "get": {
+                "operationId": "atrium.dashboards.widgets.show",
+                "tags": [
+                    "DashboardWidget"
+                ],
+                "parameters": [
+                    {
+                        "name": "dashboard",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "widget",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "`DashboardWidgetResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardWidgetResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/screens/{screen}": {
+            "get": {
+                "operationId": "atrium.screens.show",
+                "tags": [
+                    "IntegrationScreen"
+                ],
+                "parameters": [
+                    {
+                        "name": "screen",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "`ResolvedScreenResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ResolvedScreenResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "get": {
+                "operationId": "atrium.search",
+                "tags": [
+                    "Search"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 255
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "Array of `SearchResultResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SearchResultResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/settings": {
+            "get": {
+                "operationId": "atrium.settings.index",
+                "tags": [
+                    "Settings"
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "Array of `SettingsPanelResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SettingsPanelResource"
+                                            }
+                                        },
+                                        "screen": {
+                                            "$ref": "#/components/schemas/ResolvedScreenResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "screen"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/settings/{panel}": {
+            "get": {
+                "operationId": "atrium.settings.show",
+                "tags": [
+                    "Settings"
+                ],
+                "parameters": [
+                    {
+                        "name": "panel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "`SettingsPanelResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SettingsPanelResource"
+                                        },
+                                        "screen": {
+                                            "$ref": "#/components/schemas/ResolvedScreenResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "screen"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/shell": {
+            "get": {
+                "operationId": "atrium.shell",
+                "tags": [
+                    "Shell"
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "200": {
+                        "description": "`ShellResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ShellResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/widgets": {
+            "get": {
+                "operationId": "atrium.widgets.index",
+                "tags": [
+                    "Widget"
+                ],
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "200": {
+                        "description": "Array of `WidgetDefinitionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WidgetDefinitionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DashboardResource": {
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "version": {
+                        "description": "Bumped by every change; sent back with a layout or update (409 when stale).",
+                        "type": "integer"
+                    },
+                    "widgets": {
+                        "description": "Absent in the dashboard list.",
+                        "items": {
+                            "properties": {
+                                "uuid": {
+                                    "type": "string"
+                                },
+                                "key": {
+                                    "description": "The widget definition key.",
+                                    "type": "string"
+                                },
+                                "component": {
+                                    "description": "The registered component; null for an orphaned placement.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "title": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "icon": {
+                                    "description": "An Iconify name.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "lazy": {
+                                    "type": "boolean"
+                                },
+                                "grid": {
+                                    "properties": {
+                                        "row": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        },
+                                        "column": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        },
+                                        "width": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        },
+                                        "height": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "row",
+                                        "column",
+                                        "width",
+                                        "height"
+                                    ]
+                                },
+                                "settings": {
+                                    "description": "The placement's settings, a JSON object.",
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "description": "The resolved data; absent on a lazy placement, null when it failed or is not available.",
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "error": {
+                                    "description": "Present only when resolving failed and was isolated.",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            },
+                            "type": "object",
+                            "required": [
+                                "uuid",
+                                "key",
+                                "component",
+                                "title",
+                                "icon",
+                                "lazy",
+                                "grid",
+                                "settings"
+                            ]
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "slug",
+                    "name",
+                    "is_default",
+                    "version"
+                ],
+                "title": "DashboardResource"
+            },
+            "DashboardWidgetResource": {
+                "properties": {
+                    "uuid": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "description": "The widget definition key.",
+                        "type": "string"
+                    },
+                    "component": {
+                        "description": "The registered component; null for an orphaned placement.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "icon": {
+                        "description": "An Iconify name.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lazy": {
+                        "type": "boolean"
+                    },
+                    "grid": {
+                        "properties": {
+                            "row": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "column": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "width": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "height": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "row",
+                            "column",
+                            "width",
+                            "height"
+                        ]
+                    },
+                    "settings": {
+                        "description": "The placement's settings, a JSON object.",
+                        "type": "object"
+                    },
+                    "data": {
+                        "description": "The resolved data; absent on a lazy placement, null when it failed or is not available.",
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    },
+                    "error": {
+                        "description": "Present only when resolving failed and was isolated.",
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "message"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "uuid",
+                    "key",
+                    "component",
+                    "title",
+                    "icon",
+                    "lazy",
+                    "grid",
+                    "settings"
+                ],
+                "title": "DashboardWidgetResource"
+            },
+            "ResolvedScreenResource": {
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "description": "The front end route of a declared screen.",
+                        "type": "string"
+                    },
+                    "subject_type": {
+                        "description": "The morph type a declared screen's record is stored as: its subject model's alias in the host's morph map, else its class, else the declared subject type.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "record": {
+                        "description": "The record a declared screen was asked for: its route key.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "options": {
+                        "description": "Static options a declared screen's page reads, such as showroom.transfers' flow_prefix.",
+                        "type": "object"
+                    },
+                    "open_tab": {
+                        "type": "string"
+                    },
+                    "tabs": {
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "component": {
+                                    "description": "The registered component; null on a built-in tab.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "data": {
+                                    "description": "Absent on a tab that is not open; null when it failed.",
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ]
+                                },
+                                "error": {
+                                    "description": "Present only when resolving failed and was isolated.",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "message"
+                                    ]
+                                },
+                                "icon": {
+                                    "description": "An Iconify name.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "built_in": {
+                                    "description": "A tab the page renders itself.",
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label",
+                                "component",
+                                "icon",
+                                "built_in"
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "sections": {
+                        "description": "Each slot's sections, by slot name.",
+                        "type": "object"
+                    },
+                    "rows": {
+                        "description": "Each row's row-slot sections, by row key, then slot.",
+                        "type": "object"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "kind",
+                    "open_tab",
+                    "tabs",
+                    "sections",
+                    "rows"
+                ],
+                "title": "ResolvedScreenResource"
+            },
+            "SearchResultResource": {
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "icon": {
+                        "description": "An Iconify name.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "group": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "link": {
+                        "description": "Null for a URL ClientPath refuses.",
+                        "properties": {
+                            "path": {
+                                "description": "A path inside the SPA, or an absolute http(s) URL when external.",
+                                "type": "string"
+                            },
+                            "external": {
+                                "type": "boolean"
+                            }
+                        },
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "required": [
+                            "path",
+                            "external"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "subtitle",
+                    "icon",
+                    "group",
+                    "link"
+                ],
+                "title": "SearchResultResource"
+            },
+            "SettingsPanelResource": {
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "description": "An Iconify name.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "component": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "Sent with an opened panel.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "data": {
+                        "description": "Sent with an opened panel; null when it failed.",
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    },
+                    "error": {
+                        "description": "Present only when resolving failed and was isolated.",
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "message"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "label",
+                    "icon",
+                    "component"
+                ],
+                "title": "SettingsPanelResource"
+            },
+            "ShellResource": {
+                "properties": {
+                    "app": {
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "name"
+                        ]
+                    },
+                    "user": {
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "required": [
+                            "name",
+                            "email"
+                        ]
+                    },
+                    "locale": {
+                        "description": "The app's current locale.",
+                        "type": "string"
+                    },
+                    "api_version": {
+                        "description": "Atrium's API major.minor.",
+                        "type": "string"
+                    },
+                    "navigation": {
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "icon": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "grouped": {
+                                    "type": "boolean"
+                                },
+                                "link": {
+                                    "description": "Null for a URL ClientPath refuses.",
+                                    "properties": {
+                                        "path": {
+                                            "description": "A path inside the SPA, or an absolute http(s) URL when external.",
+                                            "type": "string"
+                                        },
+                                        "external": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": [
+                                        "object",
+                                        "null"
+                                    ],
+                                    "required": [
+                                        "path",
+                                        "external"
+                                    ]
+                                },
+                                "items": {
+                                    "items": {
+                                        "properties": {
+                                            "label": {
+                                                "type": "string"
+                                            },
+                                            "icon": {
+                                                "description": "An Iconify name.",
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "link": {
+                                                "description": "Null for a URL ClientPath refuses.",
+                                                "properties": {
+                                                    "path": {
+                                                        "description": "A path inside the SPA, or an absolute http(s) URL when external.",
+                                                        "type": "string"
+                                                    },
+                                                    "external": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": [
+                                                    "object",
+                                                    "null"
+                                                ],
+                                                "required": [
+                                                    "path",
+                                                    "external"
+                                                ]
+                                            },
+                                            "badge": {
+                                                "type": [
+                                                    "string",
+                                                    "integer",
+                                                    "null"
+                                                ]
+                                            },
+                                            "live": {
+                                                "properties": {
+                                                    "key": {
+                                                        "description": "The live resolver key, `{package}.{name}`.",
+                                                        "type": "string"
+                                                    },
+                                                    "options": {
+                                                        "description": "The resolver's static options.",
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": [
+                                                    "object",
+                                                    "null"
+                                                ],
+                                                "required": [
+                                                    "key",
+                                                    "options"
+                                                ]
+                                            },
+                                            "children": {
+                                                "items": {
+                                                    "description": "A nav item, shaped as its parent.",
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            }
+                                        },
+                                        "type": "object",
+                                        "required": [
+                                            "label",
+                                            "icon",
+                                            "link",
+                                            "badge",
+                                            "live",
+                                            "children"
+                                        ]
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label",
+                                "icon",
+                                "grouped",
+                                "link",
+                                "items"
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "themes": {
+                        "properties": {
+                            "default": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "switchable": {
+                                "type": "boolean"
+                            },
+                            "all": {
+                                "items": {
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "layout": {
+                                            "type": "string"
+                                        },
+                                        "swatch": {
+                                            "type": "string"
+                                        },
+                                        "icon": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "properties": {
+                                            "description": "The CSS custom properties the theme sets, by name.",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "key",
+                                        "label",
+                                        "layout",
+                                        "swatch",
+                                        "icon",
+                                        "properties"
+                                    ]
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "default",
+                            "switchable",
+                            "all"
+                        ]
+                    },
+                    "settings": {
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "icon": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "component": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label",
+                                "icon",
+                                "component"
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "search": {
+                        "properties": {
+                            "min_length": {
+                                "type": "integer"
+                            },
+                            "sources": {
+                                "items": {
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "integration": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "icon": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "key",
+                                        "integration",
+                                        "label",
+                                        "icon"
+                                    ]
+                                },
+                                "type": "array"
+                            },
+                            "per_source": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "min_length",
+                            "sources",
+                            "per_source"
+                        ]
+                    },
+                    "integrations": {
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "active": {
+                                    "type": "boolean"
+                                },
+                                "api_base": {
+                                    "type": "string"
+                                },
+                                "features": {
+                                    "description": "Each feature flag and whether it is on for the user.",
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label",
+                                "active",
+                                "api_base",
+                                "features"
+                            ]
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "app",
+                    "user",
+                    "locale",
+                    "api_version",
+                    "navigation",
+                    "themes",
+                    "settings",
+                    "search",
+                    "integrations"
+                ],
+                "title": "ShellResource"
+            },
+            "StoreDashboardRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "title": "StoreDashboardRequest"
+            },
+            "UpdateDashboardRequest": {
+                "type": "object",
+                "description": "Renames a dashboard or makes it the default. The client sends the\n`version` it loaded; a dashboard changed since answers 409.",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "version": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "required": [
+                    "version"
+                ],
+                "title": "UpdateDashboardRequest"
+            },
+            "WidgetDefinitionResource": {
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "icon": {
+                        "description": "An Iconify name.",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "component": {
+                        "type": "string"
+                    },
+                    "lazy": {
+                        "type": "boolean"
+                    },
+                    "default_size": {
+                        "properties": {
+                            "width": {
+                                "type": "integer"
+                            },
+                            "height": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "width",
+                            "height"
+                        ]
+                    },
+                    "min_size": {
+                        "properties": {
+                            "width": {
+                                "type": "integer"
+                            },
+                            "height": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object",
+                        "required": [
+                            "width",
+                            "height"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "label",
+                    "description",
+                    "icon",
+                    "component",
+                    "lazy",
+                    "default_size",
+                    "min_size"
+                ],
+                "title": "WidgetDefinitionResource"
+            }
+        },
+        "responses": {
+            "AuthenticationException": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

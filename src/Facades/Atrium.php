@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \RefactorCircus\Atrium\Domains\Screens\Services\ScreenExtensions screens()
+ * @method static \RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest module(string $path)
+ * @method static \RefactorCircus\Atrium\Domains\Integrations\Data\IntegrationManifest integration(string|array<string, mixed> $manifest)
+ * @method static \RefactorCircus\Atrium\Atrium script(string $source)
+ * @method static \RefactorCircus\Atrium\Atrium style(string $source)
+ * @method static array<string, \RefactorCircus\Atrium\Domains\Frontend\Data\ModuleManifest> modules()
  * @method static \RefactorCircus\Atrium\Atrium theme(\RefactorCircus\Atrium\Domains\Themes\Data\Theme $theme)
  * @method static array<string, \RefactorCircus\Atrium\Domains\Themes\Data\Theme> themes()
- * @method static \RefactorCircus\Atrium\Atrium stylesheet(string $href)
- * @method static \RefactorCircus\Atrium\Atrium css(string $css, ?string $key = null)
  * @method static \RefactorCircus\Atrium\Atrium plugin(\RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin|class-string $plugin)
  * @method static array<string, \RefactorCircus\Atrium\Domains\Plugins\Contracts\Plugin> plugins()
  * @method static \RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry pluginRegistry()
@@ -30,8 +33,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static array<int, \RefactorCircus\Atrium\Domains\Settings\Data\SettingsPanel> settings(?\Illuminate\Http\Request $request = null)
  * @method static \RefactorCircus\Atrium\Atrium searchSource(\RefactorCircus\Atrium\Domains\Search\Data\SearchSource $source)
  * @method static array<int, \RefactorCircus\Atrium\Domains\Search\Data\SearchResult> search(string $query, ?\Illuminate\Http\Request $request = null)
- * @method static string path()
- * @method static string url(string $path = '')
  *
  * @see \RefactorCircus\Atrium\Atrium
  */

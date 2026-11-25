@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Blade;
 use Laravel\Pennant\Feature;
 use Laravel\Pennant\PennantServiceProvider;
 use RefactorCircus\Atrium\Domains\Access\Services\Gatekeeper;
@@ -10,10 +9,6 @@ use RefactorCircus\Atrium\Domains\Themes\Data\Theme;
 use RefactorCircus\Atrium\Domains\Themes\Features\ThemeSwitcherFeature;
 use RefactorCircus\Atrium\Domains\Themes\Services\ThemeRegistry;
 use RefactorCircus\Atrium\Facades\Atrium;
-
-beforeEach(function (): void {
-    app()->detectEnvironment(fn (): string => 'local');
-});
 
 it('ships six themes, atrium first', function (): void {
     $themes = app(ThemeRegistry::class);
@@ -65,26 +60,11 @@ it('applies the long-standing theme overrides to the atrium theme', function ():
     expect(app(ThemeRegistry::class)->find('atrium')?->properties())->toBe(['--color-primary' => '#ff0000']);
 });
 
-it('shows the switcher beside the light and dark toggle', function (): void {
-    $html = $this->get('/atrium')->assertOk()->getContent();
-
-    expect($html)->toContain('data-testid="theme-switcher"')
-        ->toContain('data-testid="palette-atrium"')
-        ->toContain('data-testid="palette-harbor"')
-        ->toContain(':root[data-atrium-theme="harbor"]')
-        ->toContain('--color-primary: #0d9488')
-        ->and(strpos($html, 'theme-switcher'))->toBeLessThan(strpos($html, 'appearance-toggle'));
-});
-
 it('shows the switcher only while its feature is on', function (): void {
     config()->set('atrium.themes.switcher_feature', 'theme-switcher');
     app(Gatekeeper::class)->resolveFeaturesUsing(fn (string $feature): bool => $feature !== 'theme-switcher');
 
-    $html = $this->get('/atrium')->assertOk()->getContent();
-
-    // Only the default theme is applied, whatever a browser remembers.
-    expect($html)->not->toContain('data-testid="theme-switcher"')
-        ->not->toContain('harbor');
+    expect(app(ThemeRegistry::class)->switchable(request()))->toBeFalse();
 });
 
 it('shows the switcher when its feature class is not installed', function (): void {
@@ -118,10 +98,6 @@ it('hides the switcher with a single theme', function (): void {
     expect($themes->switchable(request()))->toBeFalse();
 });
 
-it('applies themes on standalone guest pages too', function (): void {
-    expect(Blade::render('<x-atrium::guest>Hi</x-atrium::guest>'))->toContain('data-atrium-themes');
-});
-
 it('lays ledger out with navigation across the top', function (): void {
     $themes = app(ThemeRegistry::class);
 
@@ -132,11 +108,3 @@ it('lays ledger out with navigation across the top', function (): void {
 it('refuses a layout it does not know', function (): void {
     Theme::make('odd')->layout('diagonal');
 })->throws(InvalidArgumentException::class);
-
-it('renders the top navigation beside the sidebar for themes that choose it', function (): void {
-    $html = $this->get('/atrium')->assertOk()->getContent();
-
-    expect($html)->toContain('data-testid="top-nav"')
-        ->toContain('data-testid="topbar-brand"')
-        ->toMatch('/var layouts = .*ledger.*top/');
-});

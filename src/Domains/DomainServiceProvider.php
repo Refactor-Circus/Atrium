@@ -7,6 +7,8 @@ namespace RefactorCircus\Atrium\Domains;
 use Illuminate\Support\ServiceProvider;
 use RefactorCircus\Atrium\Domains\Access\AccessServiceProvider;
 use RefactorCircus\Atrium\Domains\Dashboard\DashboardServiceProvider;
+use RefactorCircus\Atrium\Domains\Frontend\FrontendServiceProvider;
+use RefactorCircus\Atrium\Domains\Integrations\IntegrationsServiceProvider;
 use RefactorCircus\Atrium\Domains\Navigation\NavigationServiceProvider;
 use RefactorCircus\Atrium\Domains\Plugins\PluginsServiceProvider;
 use RefactorCircus\Atrium\Domains\Screens\ScreensServiceProvider;
@@ -25,6 +27,8 @@ class DomainServiceProvider extends ServiceProvider
     private array $providers = [
         AccessServiceProvider::class,
         DashboardServiceProvider::class,
+        FrontendServiceProvider::class,
+        IntegrationsServiceProvider::class,
         NavigationServiceProvider::class,
         PluginsServiceProvider::class,
         ScreensServiceProvider::class,

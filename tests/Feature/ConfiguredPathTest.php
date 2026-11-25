@@ -5,34 +5,75 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Tests\Feature;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Facades\Route;
+use RefactorCircus\Atrium\Domains\Access\Http\Middleware\Authorize;
+use RefactorCircus\Atrium\Domains\Access\Http\Middleware\ForceJsonResponse;
+use RefactorCircus\Atrium\Tests\Fixtures\Middleware\MarksAtriumResponse;
+use RefactorCircus\Atrium\Tests\Fixtures\RoutedPlugin;
 use RefactorCircus\Atrium\Tests\TestCase;
+use Workbench\App\Models\User;
 
+/**
+ * The API group comes from `atrium.routes.prefix` and
+ * `atrium.routes.middleware`, for domain and plugin routes alike.
+ */
 class ConfiguredPathTest extends TestCase
 {
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);
 
-        $app->make(Repository::class)->set('atrium.path', 'control-room');
+        tap($app->make(Repository::class), function (Repository $config): void {
+            $config->set('atrium.routes.prefix', 'control-room/api');
+            $config->set('atrium.routes.middleware', ['api', MarksAtriumResponse::class, Authorize::class]);
+            // The API alone: the page would answer every path it does not.
+            $config->set('atrium.client.enabled', false);
+            $config->set('atrium.plugins', [RoutedPlugin::class]);
+        });
     }
 
-    public function test_the_dashboard_serves_from_the_configured_path(): void
+    private function user(): User
     {
-        $this->app->detectEnvironment(fn (): string => 'local');
-
-        $this->get('/control-room')->assertOk();
+        return User::forceCreate(['name' => 'Ann', 'email' => 'ann@example.com', 'password' => bcrypt('x')]);
     }
 
-    public function test_the_default_path_is_no_longer_routed(): void
+    public function test_the_api_serves_from_the_configured_prefix(): void
     {
-        $this->app->detectEnvironment(fn (): string => 'local');
+        $this->withEnvironment('local');
 
-        $this->get('/atrium')->assertNotFound();
+        $this->actingAs($this->user())
+            ->getJson(route('atrium.shell'))
+            ->assertOk()
+            ->assertHeader('X-Atrium-Host', 'marked');
     }
 
-    public function test_plugin_and_dashboard_routes_share_the_configured_prefix(): void
+    public function test_the_default_prefix_is_no_longer_routed(): void
     {
-        $this->assertStringContainsString('/control-room', route('atrium.dashboard'));
-        $this->assertStringContainsString('/control-room/settings', route('atrium.settings'));
+        $this->withEnvironment('local');
+
+        $this->actingAs($this->user())->getJson('/atrium/api/shell')->assertNotFound();
+    }
+
+    public function test_plugin_and_domain_routes_share_the_configured_prefix(): void
+    {
+        $this->assertStringEndsWith('/control-room/api/shell', route('atrium.shell'));
+        $this->assertStringEndsWith('/control-room/api/settings', route('atrium.settings.index'));
+        $this->assertStringEndsWith('/control-room/api/plugins/routed', route('atrium.plugins.routed.index'));
+    }
+
+    public function test_plugin_and_domain_routes_share_the_configured_middleware(): void
+    {
+        $group = [ForceJsonResponse::class, 'api', MarksAtriumResponse::class, Authorize::class];
+
+        foreach (['atrium.shell', 'atrium.dashboards.index', 'atrium.plugins.routed.index'] as $name) {
+            $this->assertSame($group, Route::getRoutes()->getByName($name)?->gatherMiddleware(), $name);
+        }
+
+        $this->withEnvironment('local');
+
+        $this->actingAs($this->user())
+            ->getJson(route('atrium.plugins.routed.index'))
+            ->assertOk()
+            ->assertHeader('X-Atrium-Host', 'marked');
     }
 }

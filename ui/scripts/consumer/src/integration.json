@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "consumer",
+  "label": "Consumer",
+  "features": ["consumer.atrium"],
+  "navigation": [
+    { "label": "Panel", "path": "/consumer/panel", "icon": "i-lucide-box", "group": "Consumer", "sort": 10 }
+  ],
+  "screens": [
+    { "key": "consumer.panel", "kind": "list", "path": "/consumer/panel", "options": { "prefix": { "$config": "consumer.prefix", "type": "string", "default": "c:" } } }
+  ]
+}

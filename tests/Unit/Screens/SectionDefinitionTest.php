@@ -7,13 +7,12 @@ use Illuminate\Http\Request;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
 
-it('defaults the label to the key and keeps the section private', function (): void {
+it('defaults the label and component to the key and keeps the section private', function (): void {
     $section = SectionDefinition::make('acme.summary');
 
     expect($section->key)->toBe('acme.summary')
         ->and($section->label)->toBe('acme.summary')
-        ->and($section->view)->toBeNull()
-        ->and($section->component)->toBeNull()
+        ->and($section->component)->toBe('acme.summary')
         ->and($section->permission)->toBeNull()
         ->and($section->public)->toBeFalse();
 });
@@ -27,30 +26,16 @@ it('is configured through fluent setters', function (): void {
     $section = SectionDefinition::make('acme.summary');
 
     expect($section->label('Summary'))->toBe($section)
-        ->and($section->component('acme::summary'))->toBe($section)
+        ->and($section->component('AcmeSummary'))->toBe($section)
         ->and($section->permission('summary.view'))->toBe($section)
         ->and($section->resolve(fn (): array => []))->toBe($section)
         ->and($section->authorize(fn (): bool => true))->toBe($section)
         ->and($section->public())->toBe($section);
 
     expect($section->label)->toBe('Summary')
-        ->and($section->component)->toBe('acme::summary')
+        ->and($section->component)->toBe('AcmeSummary')
         ->and($section->permission)->toBe('summary.view')
         ->and($section->public)->toBeTrue();
-});
-
-it('renders with either a view or a component, never both', function (): void {
-    $section = SectionDefinition::make('acme.summary')->component('acme::summary');
-
-    $section->view('acme::summary');
-
-    expect($section->view)->toBe('acme::summary')
-        ->and($section->component)->toBeNull();
-
-    $section->component('acme::summary');
-
-    expect($section->component)->toBe('acme::summary')
-        ->and($section->view)->toBeNull();
 });
 
 it('refuses writes to its state from outside', function (string $property, mixed $value): void {
@@ -60,7 +45,6 @@ it('refuses writes to its state from outside', function (string $property, mixed
 })->with([
     'key' => ['key', 'other'],
     'label' => ['label', 'Other'],
-    'view' => ['view', 'other'],
     'component' => ['component', 'other'],
     'permission' => ['permission', 'other'],
     'public' => ['public', true],

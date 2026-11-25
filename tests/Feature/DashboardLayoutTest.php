@@ -2,258 +2,186 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use RefactorCircus\Atrium\Domains\Dashboard\Actions\SaveDashboardLayoutAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Actions\UpdateDashboardAction;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\UpdateDashboardData;
+use RefactorCircus\Atrium\Domains\Dashboard\Data\WidgetPlacementData;
+use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardLayoutSavedActionEvent;
+use RefactorCircus\Atrium\Domains\Dashboard\Events\DashboardWidgetCreatingEvent;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
-use RefactorCircus\Atrium\Domains\Plugins\Services\PluginRegistry;
 use RefactorCircus\Atrium\Domains\Widgets\Data\WidgetDefinition;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
-use RefactorCircus\Atrium\Tests\Fixtures\AlphaPlugin;
-use Workbench\App\Models\User;
 
 beforeEach(function (): void {
-    // Only CSRF is exempted. The Atrium authorization middleware stays on, so
-    // the ownership assertions below exercise the real middleware stack.
-    ValidateCsrfToken::except(['*']);
-
-    app()->detectEnvironment(fn (): string => 'local');
-    app(PluginRegistry::class)->register(AlphaPlugin::class);
-});
-
-function makeUser(string $email): User
-{
-    return User::forceCreate([
-        'name' => 'Test',
-        'email' => $email,
-        'password' => bcrypt('secret'),
-    ]);
-}
-
-function dashboardFor(User $user): DashboardModel
-{
-    return DashboardModel::query()->create([
-        'name' => 'Mine',
-        'owner_type' => $user->getMorphClass(),
-        'owner_id' => $user->getKey(),
-    ]);
-}
-
-it('persists a widget placement', function (): void {
-    $user = makeUser('a@example.com');
-    $dashboard = dashboardFor($user);
-
-    $this->actingAs($user)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), [
-            'widgets' => [
-                ['widget_key' => 'alpha.stats', 'grid_row' => 0, 'grid_column' => 0, 'grid_width' => 6, 'grid_height' => 2],
-            ],
-        ])
-        ->assertOk()
-        ->assertJsonPath('data.saved', 1);
-
-    expect($dashboard->widgets()->count())->toBe(1)
-        ->and($dashboard->widgets()->first()->grid_width)->toBe(6);
-});
-
-it('ignores placements for widgets that are not available', function (): void {
-    $user = makeUser('b@example.com');
-    $dashboard = dashboardFor($user);
-
-    $this->actingAs($user)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), [
-            'widgets' => [
-                ['widget_key' => 'alpha.stats'],
-                ['widget_key' => 'not.registered'],
-            ],
-        ])
-        ->assertOk()
-        ->assertJsonPath('data.saved', 1);
-
-    expect($dashboard->widgets()->pluck('widget_key')->all())->toBe(['alpha.stats']);
-});
-
-it('refuses to modify a dashboard owned by someone else', function (): void {
-    $owner = makeUser('owner@example.com');
-    $intruder = makeUser('intruder@example.com');
-
-    $dashboard = dashboardFor($owner);
-
-    $this->actingAs($intruder)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), ['widgets' => []])
-        ->assertForbidden();
-});
-
-it('refuses to modify a shared dashboard nobody owns', function (): void {
-    $user = makeUser('c@example.com');
-    $shared = DashboardModel::query()->create(['name' => 'Shared', 'is_shared' => true]);
-
-    $this->actingAs($user)
-        ->putJson(route('atrium.dashboards.layout', $shared), ['widgets' => []])
-        ->assertForbidden();
-});
-
-it('renders a placed widget on the dashboard', function (): void {
-    $user = makeUser('d@example.com');
-    $dashboard = dashboardFor($user);
-    $dashboard->widgets()->create(['widget_key' => 'alpha.stats']);
-
-    $this->actingAs($user)->get('/atrium')->assertOk()->assertSee('Alpha stats widget');
-});
-
-it('skips a placed widget whose plugin is gone without breaking the page', function (): void {
-    $user = makeUser('e@example.com');
-    $dashboard = dashboardFor($user);
-
-    $dashboard->widgets()->create(['widget_key' => 'alpha.stats']);
-    $dashboard->widgets()->create(['widget_key' => 'uninstalled.widget']);
-
-    $response = $this->actingAs($user)->get('/atrium')->assertOk();
-
-    // The live widget still renders and the page does not error. The orphaned
-    // placement contributes no grid item of its own.
-    $response->assertSee('Alpha stats widget');
-
-    expect(substr_count($response->getContent(), 'data-widget-key='))->toBe(1);
-});
-
-it('creates a dashboard for the current user', function (): void {
-    $user = makeUser('f@example.com');
-
-    $this->actingAs($user)
-        ->post(route('atrium.dashboards.store'), ['name' => 'Operations'])
-        ->assertRedirect();
-
-    $dashboard = DashboardModel::query()->where('name', 'Operations')->firstOrFail();
-
-    expect($dashboard->isOwnedBy($user))->toBeTrue();
-});
-
-it('lets a user keep more than one dashboard', function (): void {
-    $user = makeUser('g@example.com');
-
-    $this->actingAs($user)->post(route('atrium.dashboards.store'), ['name' => 'First']);
-    $this->actingAs($user)->post(route('atrium.dashboards.store'), ['name' => 'Second']);
-
-    expect(DashboardModel::query()->ownedBy($user)->count())->toBe(2);
-});
-
-it('deletes a dashboard the user owns', function (): void {
-    $user = makeUser('h@example.com');
-    $dashboard = dashboardFor($user);
-
-    $this->actingAs($user)
-        ->delete(route('atrium.dashboards.destroy', $dashboard))
-        ->assertRedirect();
-
-    expect(DashboardModel::query()->count())->toBe(0);
-});
-
-it('creates a first dashboard for a signed in user so the picker is reachable', function (): void {
-    $user = makeUser('first@example.com');
-
-    $this->actingAs($user)->get('/atrium')->assertOk()->assertSee('Add widget');
-
-    $dashboard = DashboardModel::query()->ownedBy($user)->firstOrFail();
-
-    // Created empty. Nothing is placed on the user's behalf.
-    expect($dashboard->widgets()->count())->toBe(0);
-});
-
-it('offers every available widget in the picker without placing any', function (): void {
-    $user = makeUser('picker@example.com');
-
-    $response = $this->actingAs($user)->get('/atrium')->assertOk();
-
-    $response->assertSee('Alpha Stats');
-
-    expect(substr_count($response->getContent(), 'data-widget-key='))->toBe(0);
-});
-
-it('does not create dashboards for guests', function (): void {
-    $this->get('/atrium')->assertOk();
-
-    expect(DashboardModel::query()->count())->toBe(0);
-});
-
-it('persists a reordering of placed widgets', function (): void {
-    $user = makeUser('reorder@example.com');
-    $dashboard = dashboardFor($user);
-
     app(WidgetRegistry::class)
-        ->add(WidgetDefinition::make('app.second')->label('Second'));
+        ->add(WidgetDefinition::make('app.orders'))
+        ->add(WidgetDefinition::make('app.notes'))
+        ->add(WidgetDefinition::make('app.chart'));
 
-    $this->actingAs($user)->putJson(route('atrium.dashboards.layout', $dashboard), [
-        'widgets' => [
-            ['widget_key' => 'alpha.stats'],
-            ['widget_key' => 'app.second'],
-        ],
-    ])->assertOk();
-
-    expect($dashboard->widgets()->pluck('widget_key')->all())->toBe(['alpha.stats', 'app.second']);
-
-    // Same widgets, swapped order.
-    $this->actingAs($user)->putJson(route('atrium.dashboards.layout', $dashboard), [
-        'widgets' => [
-            ['widget_key' => 'app.second'],
-            ['widget_key' => 'alpha.stats'],
-        ],
-    ])->assertOk();
-
-    expect($dashboard->widgets()->pluck('widget_key')->all())->toBe(['app.second', 'alpha.stats']);
+    $this->dashboard = DashboardModel::query()->create(['name' => 'Ops']);
 });
 
-it('persists a resize of a placed widget', function (): void {
-    $user = makeUser('resize@example.com');
-    $dashboard = dashboardFor($user);
+/**
+ * @param  array<int, WidgetPlacementData>  $widgets
+ */
+function saveLayout(DashboardModel $dashboard, array $widgets, ?int $version = null): DashboardModel
+{
+    $data = $version === null ? new SaveDashboardLayoutData($widgets) : new SaveDashboardLayoutData($widgets, $version);
 
-    $this->actingAs($user)->putJson(route('atrium.dashboards.layout', $dashboard), [
-        'widgets' => [['widget_key' => 'alpha.stats', 'grid_width' => 8, 'grid_height' => 3]],
-    ])->assertOk();
+    return app(SaveDashboardLayoutAction::class)->execute($dashboard, $data);
+}
 
-    $placement = $dashboard->widgets()->firstOrFail();
+/**
+ * @return array<int, array<string, mixed>>
+ */
+function layoutRows(DashboardModel $dashboard): array
+{
+    return $dashboard->widgets()->get()->map->only(['uuid', 'widget_key', 'grid_width', 'sort'])->all();
+}
 
-    expect($placement->grid_width)->toBe(8)->and($placement->grid_height)->toBe(3);
+function expectVersionConflict(Closure $save): void
+{
+    try {
+        $save();
+    } catch (ValidationException $exception) {
+        expect($exception->status)->toBe(409)
+            ->and($exception->errors())->toHaveKey('version');
+
+        return;
+    }
+
+    expect(false)->toBeTrue('A stale version was not refused.');
+}
+
+it('updates a placement in place when its uuid is given', function (): void {
+    $orders = $this->dashboard->widgets()->create(['widget_key' => 'app.orders']);
+
+    saveLayout($this->dashboard, [
+        new WidgetPlacementData('app.notes'),
+        new WidgetPlacementData('app.orders', gridRow: 2, gridWidth: 8, settings: ['range' => 'week'], uuid: $orders->uuid),
+    ]);
+
+    $kept = $orders->fresh();
+
+    expect($kept?->id)->toBe($orders->id)
+        ->and($kept?->uuid)->toBe($orders->uuid)
+        ->and($kept?->grid_row)->toBe(2)
+        ->and($kept?->grid_width)->toBe(8)
+        ->and($kept?->settings)->toBe(['range' => 'week'])
+        // The payload's order is the sort order.
+        ->and($kept?->sort)->toBe(1)
+        ->and($this->dashboard->widgets()->pluck('widget_key')->all())->toBe(['app.notes', 'app.orders']);
 });
 
-it('removes a placement when it is left out of the payload', function (): void {
-    $user = makeUser('removal@example.com');
-    $dashboard = dashboardFor($user);
+it('creates a placement sent without a uuid, with a new uuid', function (): void {
+    $dashboard = saveLayout($this->dashboard, [new WidgetPlacementData('app.orders', gridWidth: 6)]);
 
-    $dashboard->widgets()->create(['widget_key' => 'alpha.stats']);
+    $placement = $dashboard->widgets()->sole();
 
-    $this->actingAs($user)
-        ->putJson(route('atrium.dashboards.layout', $dashboard), ['widgets' => []])
-        ->assertOk()
-        ->assertJsonPath('data.saved', 0);
-
-    expect($dashboard->widgets()->count())->toBe(0);
+    expect(Str::isUuid($placement->uuid))->toBeTrue()
+        ->and($placement->grid_width)->toBe(6);
 });
 
-it('renders the edit controls only for a dashboard the user can modify', function (): void {
-    $user = makeUser('controls@example.com');
-    $dashboard = dashboardFor($user);
-    $dashboard->widgets()->create(['widget_key' => 'alpha.stats']);
+it('treats a uuid the dashboard does not have as a new placement', function (): void {
+    $unknown = (string) Str::uuid7();
 
-    $this->actingAs($user)->get('/atrium')
-        ->assertOk()
-        ->assertSee('data-testid="remove-alpha-stats"', false)
-        ->assertSee('draggable="true"', false);
+    $dashboard = saveLayout($this->dashboard, [new WidgetPlacementData('app.orders', uuid: $unknown)]);
+
+    expect($dashboard->widgets()->sole()->uuid)->not->toBe($unknown);
 });
 
-it('omits the edit controls on a shared dashboard the user does not own', function (): void {
-    $user = makeUser('viewer@example.com');
+it('deletes the placements the layout leaves out', function (): void {
+    $orders = $this->dashboard->widgets()->create(['widget_key' => 'app.orders']);
+    $this->dashboard->widgets()->create(['widget_key' => 'app.notes']);
 
-    $shared = DashboardModel::query()->create(['name' => 'Shared', 'is_shared' => true, 'is_default' => true]);
-    $shared->widgets()->create(['widget_key' => 'alpha.stats']);
+    saveLayout($this->dashboard, [new WidgetPlacementData('app.orders', uuid: $orders->uuid)]);
 
-    $this->actingAs($user)->get('/atrium')
-        ->assertOk()
-        ->assertSee('Alpha stats widget')
-        ->assertDontSee('data-testid="remove-alpha-stats"', false);
+    expect($this->dashboard->widgets()->pluck('uuid')->all())->toBe([$orders->uuid]);
 });
 
-it('answers a missing dashboard with a plain 404', function (): void {
-    $this->actingAs(makeUser('owner@example.com'))
-        ->putJson(route('atrium.dashboards.layout', 999), ['widgets' => []])
-        ->assertNotFound()
-        ->assertExactJson(['message' => 'Not found.']);
+it('keeps orphaned placements the layout leaves out', function (): void {
+    $orphan = $this->dashboard->widgets()->create(['widget_key' => 'uninstalled.widget', 'grid_width' => 3, 'sort' => 4]);
+    $this->dashboard->widgets()->create(['widget_key' => 'app.notes']);
+
+    saveLayout($this->dashboard, []);
+
+    expect(layoutRows($this->dashboard))->toBe([
+        ['uuid' => $orphan->uuid, 'widget_key' => 'uninstalled.widget', 'grid_width' => 3, 'sort' => 4],
+    ]);
+});
+
+it('moves the dashboard version on with every save', function (): void {
+    expect(saveLayout($this->dashboard, [], version: 1)->version)->toBe(2)
+        ->and(saveLayout($this->dashboard, [], version: 2)->version)->toBe(3);
+
+    // Code that vouches for the dashboard's state may leave the version out;
+    // the save still moves it on, so a client holding the old one is refused.
+    expect(saveLayout($this->dashboard, [])->version)->toBe(4);
+});
+
+it('refuses a stale version with a 409 and changes nothing', function (): void {
+    $orders = $this->dashboard->widgets()->create(['widget_key' => 'app.orders']);
+    $before = layoutRows($this->dashboard);
+    $finished = [];
+    Event::listen(DashboardLayoutSavedActionEvent::class, function (DashboardLayoutSavedActionEvent $event) use (&$finished): void {
+        $finished[] = $event;
+    });
+
+    saveLayout($this->dashboard, [new WidgetPlacementData('app.orders', uuid: $orders->uuid)], version: 1);
+
+    expectVersionConflict(fn (): DashboardModel => saveLayout($this->dashboard, [], version: 1));
+
+    expect(layoutRows($this->dashboard))->toBe($before)
+        ->and($this->dashboard->fresh()?->version)->toBe(2)
+        ->and($finished)->toHaveCount(1);
+});
+
+it('rolls a layout that fails part way back, leaving the old placements intact', function (): void {
+    $orders = $this->dashboard->widgets()->create(['widget_key' => 'app.orders']);
+    $notes = $this->dashboard->widgets()->create(['widget_key' => 'app.notes']);
+    $before = layoutRows($this->dashboard);
+
+    Event::listen(DashboardWidgetCreatingEvent::class, function (DashboardWidgetCreatingEvent $event): void {
+        if ($event->widget->widget_key === 'app.chart') {
+            throw new RuntimeException('the new placement fails');
+        }
+    });
+
+    // It would update one placement, delete another and create a third.
+    expect(fn (): DashboardModel => saveLayout($this->dashboard, [
+        new WidgetPlacementData('app.orders', gridWidth: 12, uuid: $orders->uuid),
+        new WidgetPlacementData('app.chart'),
+    ], version: 1))->toThrow(RuntimeException::class, 'the new placement fails');
+
+    expect(layoutRows($this->dashboard))->toBe($before)
+        ->and($notes->fresh())->not->toBeNull()
+        ->and($this->dashboard->fresh()?->version)->toBe(1);
+});
+
+it('guards a dashboard update with the version and moves it on', function (): void {
+    $updated = app(UpdateDashboardAction::class)->execute($this->dashboard, new UpdateDashboardData(name: 'Renamed', version: 1));
+
+    expect($updated->name)->toBe('Renamed')
+        ->and($updated->version)->toBe(2);
+
+    expectVersionConflict(fn (): DashboardModel => app(UpdateDashboardAction::class)->execute(
+        $this->dashboard,
+        new UpdateDashboardData(name: 'Stale', version: 1),
+    ));
+
+    expect($this->dashboard->fresh()?->name)->toBe('Renamed')
+        ->and($this->dashboard->fresh()?->version)->toBe(2);
+});
+
+it('moves the version on for an update that leaves it out, and never writes it as a field', function (): void {
+    $data = new UpdateDashboardData(name: 'Renamed');
+
+    expect($data->toArray())->toBe(['name' => 'Renamed'])
+        ->and(app(UpdateDashboardAction::class)->execute($this->dashboard, $data)->version)->toBe(2)
+        ->and((new UpdateDashboardData(name: 'Again', version: 2))->toArray())->toBe(['name' => 'Again', 'version' => 2])
+        ->and(app(UpdateDashboardAction::class)->execute($this->dashboard, new UpdateDashboardData(name: 'Again', version: 2))->version)->toBe(3);
 });

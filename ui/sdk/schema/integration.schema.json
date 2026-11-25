@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/refactor-circus/atrium/blob/main/ui/sdk/schema/integration.schema.json",
+  "title": "Atrium integration manifest",
+  "description": "What Atrium shows of a package, as data (D-090): its nav items, widgets, settings panel, search sources, screens, feature flags and the tabs and sections it adds to other packages' screens. Source `atrium/src/integration.json`; the preset copies it to `dist/atrium/integration.json`, which composer.json's `extra.atrium.integration` names. Labels are plain English, translated by the host through Laravel's lang JSON. Atrium checks every manifest against this schema and then: screen keys start with `{key}.`, screen and nav paths with `/{key}/`, keys are unique, `$config` reads only `{key}.*` or `atrium.integrations.{key}.*`, `$screen` and `$subject_scope` appear only in hook data, `$option` only in an `options` hook's data.",
+  "type": "object",
+  "required": ["version", "key", "label"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1, "description": "The manifest format's version." },
+    "key": { "$ref": "#/$defs/packageKey" },
+    "label": { "$ref": "#/$defs/label" },
+    "features": {
+      "type": "array",
+      "description": "Feature flag names that must all be on for the integration to be active (Pennant, by name; Atrium defines each one as on unless the host does). A host replaces the list with `atrium.integrations.{key}.features`.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "navigation": { "type": "array", "items": { "$ref": "#/$defs/navItem" } },
+    "widgets": { "type": "array", "items": { "$ref": "#/$defs/widget" } },
+    "settings": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/settings" }] },
+    "search_sources": { "type": "array", "items": { "$ref": "#/$defs/searchSource" } },
+    "screens": { "type": "array", "items": { "$ref": "#/$defs/screen" } },
+    "hooks": { "type": "array", "items": { "$ref": "#/$defs/hook" } }
+  },
+  "$defs": {
+    "packageKey": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "label": { "type": "string", "minLength": 1 },
+    "icon": { "type": "string", "pattern": "^i-[a-z0-9]+(-[a-z0-9]+)+$", "description": "An Iconify name, such as `i-lucide-home`." },
+    "dottedKey": { "type": "string", "pattern": "^[a-z0-9-]+\\.[a-z0-9.-]+$" },
+    "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "target": {
+      "type": "string",
+      "pattern": "^(\\*|[a-z0-9-]+\\.\\*|[a-z0-9-]+\\.[a-z0-9.-]+)$",
+      "description": "`*`, `{package}.*` or a screen key."
+    },
+    "spaPath": { "type": "string", "pattern": "^/[^/\\s\\\\][^\\s\\\\]*$" },
+    "screenPath": { "type": "string", "pattern": "^/[a-z0-9-]+(/([a-z0-9._-]+|:[a-z][A-Za-z0-9_]*))*$" },
+    "size": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "navItem": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "$ref": "#/$defs/label" },
+        "path": { "$ref": "#/$defs/spaPath" },
+        "icon": { "$ref": "#/$defs/icon" },
+        "group": { "$ref": "#/$defs/label" },
+        "sort": { "anyOf": [{ "type": "integer" }, { "$ref": "#/$defs/configExpression" }] },
+        "when": {
+          "anyOf": [{ "type": "boolean" }, { "$ref": "#/$defs/configExpression" }],
+          "description": "Whether the item is declared at all, read at boot."
+        },
+        "live": {
+          "type": "object",
+          "required": ["key"],
+          "additionalProperties": false,
+          "properties": {
+            "key": { "$ref": "#/$defs/dottedKey" },
+            "options": { "$ref": "#/$defs/values" }
+          }
+        },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/navItem" } }
+      }
+    },
+    "widget": {
+      "type": "object",
+      "required": ["key", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/dottedKey" },
+        "label": { "$ref": "#/$defs/label" },
+        "description": { "$ref": "#/$defs/label" },
+        "icon": { "$ref": "#/$defs/icon" },
+        "component": { "type": "string", "minLength": 1 },
+        "size": { "$ref": "#/$defs/size" },
+        "min_size": { "$ref": "#/$defs/size" },
+        "lazy": { "type": "boolean" }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "required": ["key", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "label": { "$ref": "#/$defs/label" },
+        "description": { "$ref": "#/$defs/label" },
+        "icon": { "$ref": "#/$defs/icon" },
+        "component": { "type": "string", "minLength": 1 },
+        "sort": { "type": "integer" }
+      }
+    },
+    "searchSource": {
+      "type": "object",
+      "required": ["key"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "label": { "$ref": "#/$defs/label" },
+        "icon": { "$ref": "#/$defs/icon" }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "required": ["key", "kind", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/dottedKey" },
+        "kind": { "enum": ["detail", "list"] },
+        "path": { "$ref": "#/$defs/screenPath" },
+        "subject_type": {
+          "type": "string",
+          "pattern": "\\S",
+          "description": "The screen's subject: a morph alias, or the suite's name for it (`roster.organization`) when the morph type depends on the host, with `subject_model` then giving the model. Hook targeting and `$subject_scope` read it."
+        },
+        "subject_model": {
+          "anyOf": [{ "type": "string", "pattern": "\\S" }, { "$ref": "#/$defs/configExpression" }],
+          "description": "The model the subject is stored as, a class or morph alias, or a `$config` expression reading it. Atrium sends its morph type (the host's alias, else the class) as `$screen` `subject_type`; the record a screen passes is the model's route key. Needs `subject_type`."
+        },
+        "options": { "$ref": "#/$defs/values" }
+      }
+    },
+    "extension": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "$ref": "#/$defs/label" },
+        "icon": { "$ref": "#/$defs/icon" },
+        "data": { "$ref": "#/$defs/values" }
+      }
+    },
+    "hookScreens": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Which of the matched screens get the hook: `kind`, only those with a `subject_type`, only other packages' screens.",
+      "properties": {
+        "kind": { "enum": ["detail", "list"] },
+        "subject": { "type": "boolean" },
+        "others": { "type": "boolean" }
+      }
+    },
+    "hookBase": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)*$",
+          "description": "Where a host overrides `default`, under `atrium.integrations.{key}.`."
+        },
+        "screens": { "$ref": "#/$defs/hookScreens" },
+        "tabs": { "type": "object", "propertyNames": { "$ref": "#/$defs/dottedKey" }, "additionalProperties": { "$ref": "#/$defs/extension" } },
+        "sections": { "type": "object", "propertyNames": { "$ref": "#/$defs/dottedKey" }, "additionalProperties": { "$ref": "#/$defs/extension" } }
+      }
+    },
+    "hook": {
+      "description": "Tabs and sections this package adds to other screens. `map`: target -> `tab` (its one tab) or a slot (its one section). `lists`: target -> a list where a plain value is a tab key and `slot: key` a section key. `targets`: `screens` (targets), `slot` and `exclude` (targets) for its one section. `options`: target -> options for its one tab, read by `$option`.",
+      "oneOf": [
+        {
+          "allOf": [{ "$ref": "#/$defs/hookBase" }],
+          "type": "object",
+          "required": ["format", "default"],
+          "additionalProperties": false,
+          "properties": {
+            "format": { "const": "map" },
+            "config": true, "screens": true, "tabs": true, "sections": true,
+            "default": { "type": "object", "propertyNames": { "$ref": "#/$defs/target" }, "additionalProperties": { "$ref": "#/$defs/name" } }
+          }
+        },
+        {
+          "allOf": [{ "$ref": "#/$defs/hookBase" }],
+          "type": "object",
+          "required": ["format", "default"],
+          "additionalProperties": false,
+          "properties": {
+            "format": { "const": "lists" },
+            "config": true, "screens": true, "tabs": true, "sections": true,
+            "default": {
+              "type": "object",
+              "propertyNames": { "$ref": "#/$defs/target" },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    { "$ref": "#/$defs/dottedKey" },
+                    { "type": "object", "minProperties": 1, "maxProperties": 1, "propertyNames": { "$ref": "#/$defs/name" }, "additionalProperties": { "$ref": "#/$defs/dottedKey" } }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "allOf": [{ "$ref": "#/$defs/hookBase" }],
+          "type": "object",
+          "required": ["format", "default"],
+          "additionalProperties": false,
+          "properties": {
+            "format": { "const": "targets" },
+            "config": true, "screens": true, "tabs": true, "sections": true,
+            "default": {
+              "type": "object",
+              "required": ["screens", "slot"],
+              "additionalProperties": false,
+              "properties": {
+                "screens": { "type": "array", "items": { "$ref": "#/$defs/target" } },
+                "slot": { "$ref": "#/$defs/name" },
+                "exclude": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+              }
+            }
+          }
+        },
+        {
+          "allOf": [{ "$ref": "#/$defs/hookBase" }],
+          "type": "object",
+          "required": ["format", "default"],
+          "additionalProperties": false,
+          "properties": {
+            "format": { "const": "options" },
+            "config": true, "screens": true, "tabs": true, "sections": true,
+            "default": { "type": "object", "propertyNames": { "$ref": "#/$defs/target" }, "additionalProperties": { "type": "object" } }
+          }
+        }
+      ]
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/value" }
+    },
+    "value": {
+      "description": "JSON, where an object holding `$config`, `$screen`, `$option` or `$subject_scope` is an expression, read when the integration registers.",
+      "anyOf": [
+        { "$ref": "#/$defs/expression" },
+        { "type": ["string", "number", "boolean", "null"] },
+        { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/value" },
+          "not": {
+            "anyOf": [
+              { "required": ["$config"] },
+              { "required": ["$screen"] },
+              { "required": ["$option"] },
+              { "required": ["$subject_scope"] }
+            ]
+          }
+        }
+      ]
+    },
+    "expression": {
+      "anyOf": [
+        { "$ref": "#/$defs/configExpression" },
+        { "$ref": "#/$defs/screenExpression" },
+        { "$ref": "#/$defs/optionExpression" },
+        { "$ref": "#/$defs/subjectScopeExpression" }
+      ]
+    },
+    "cast": {
+      "enum": ["string", "bool", "int", "positive-int", "enum", "strings", "string-map", "path", "map"],
+      "description": "string: a string, else the default. bool: read as a boolean. int: a number, as an integer. positive-int: an integer of 1 or more (`nullable`: an explicit null stays null). enum: one of `values`. strings: a list of strings (`single`: wrap a lone string; `unique`; `non_empty`: an empty list is the default). string-map: string keys to non-empty strings. path: `/` plus the string trimmed of slashes. map: string keys to non-empty trimmed strings, a null value read from `fallback.{key}`; `entries` names the two fields of a list of pairs instead."
+    },
+    "configExpression": {
+      "type": "object",
+      "required": ["$config"],
+      "additionalProperties": false,
+      "properties": {
+        "$config": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)+$" },
+        "type": { "$ref": "#/$defs/cast" },
+        "default": true,
+        "values": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "nullable": { "type": "boolean" },
+        "single": { "type": "boolean" },
+        "unique": { "type": "boolean" },
+        "non_empty": { "type": "boolean" },
+        "fallback": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)+$" },
+        "entries": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 2, "maxItems": 2 }
+      }
+    },
+    "screenExpression": {
+      "type": "object",
+      "required": ["$screen"],
+      "additionalProperties": false,
+      "properties": {
+        "$screen": { "enum": ["subject_type", "package", "key"] },
+        "kinds": { "type": "array", "items": { "enum": ["detail", "list"] }, "minItems": 1 }
+      }
+    },
+    "optionExpression": {
+      "type": "object",
+      "required": ["$option"],
+      "additionalProperties": false,
+      "properties": {
+        "$option": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/cast" },
+        "default": true
+      }
+    },
+    "subjectScopeExpression": {
+      "type": "object",
+      "required": ["$subject_scope"],
+      "additionalProperties": false,
+      "description": "The scope a screen's record is (the last `.` part of its subject_type), looked up in a map expression: null when it is `self`; the extension is left off a screen whose scope does not resolve, with one warning per process.",
+      "properties": {
+        "$subject_scope": { "$ref": "#/$defs/configExpression" },
+        "self": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

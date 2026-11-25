@@ -14,8 +14,11 @@ class RoutedPlugin extends Plugin
         return 'routed';
     }
 
+    /**
+     * Served as `atrium.plugins.routed.index`, at `{prefix}/plugins/routed`.
+     */
     public function routes(): void
     {
-        Route::get('routed', fn (): string => 'from plugin')->name('routed.index');
+        Route::get('/', fn (): array => ['from' => 'plugin'])->name('index');
     }
 }

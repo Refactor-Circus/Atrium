@@ -1,18 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Workbench\App\Atrium\ScreenHost\ScreenHostController;
+use Workbench\App\Atrium\SuiteStandIn;
 
-// `composer serve` signs in the seeded admin through /_workbench and starts
-// at the dashboard (see testbench.yaml), so the root only points there.
+// Atrium serves its page at /atrium (atrium.client_path). The workbench
+// signs testbench.yaml's `workbench.user` in through /_workbench, which
+// Atrium's `auth` middleware sends a guest to as the app's login route.
 Route::redirect('/', '/atrium');
 
-// The screen-extensions test host: a detail and a list screen, each under
-// its own key or the one given.
-Route::get('test/host/{screen?}', [ScreenHostController::class, 'detail'])
-    ->where('screen', '[a-z0-9.-]+')
-    ->name('test.host');
+Route::get('login', fn () => redirect('/_workbench'))->name('login');
 
-Route::get('test/list/{screen?}', [ScreenHostController::class, 'list'])
-    ->where('screen', '[a-z0-9.-]+')
-    ->name('test.list');
+// WORKBENCH ONLY: every suite package's API, answered from the openapi.json
+// of its sibling checkout under ATRIUM_SUITE_PATH (DemoSuite points the
+// integrations here).
+Route::any('_suite/{path}', SuiteStandIn::class)->where('path', '.*');

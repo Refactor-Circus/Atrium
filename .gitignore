@@ -10,8 +10,6 @@ composer.lock
 .idea
 .vscode
 /node_modules
-/tests/Browser/Screenshots
-/tests/Browser/Traces
 composer.local.json
 composer.local.lock
 

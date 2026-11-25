@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Requests;
 
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\CreateDashboardAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Data\CreateDashboardData;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
 use RefactorCircus\Atrium\Domains\Dashboard\Services\DashboardManager;
 use RefactorCircus\Atrium\Http\Requests\Request;
 
-class StoreDashboardRequest extends Request
+final class StoreDashboardRequest extends Request
 {
     public function authorize(): bool
     {
@@ -26,13 +26,15 @@ class StoreDashboardRequest extends Request
         return CreateDashboardData::rules();
     }
 
-    public function persist(): RedirectResponse
+    public function persist(): JsonResponse
     {
+        $manager = app(DashboardManager::class);
+
         $dashboard = app(CreateDashboardAction::class)->execute(
             CreateDashboardData::fromValidated($this->validated()),
-            app(DashboardManager::class)->owner($this),
+            $manager->owner($this),
         );
 
-        return redirect()->route('atrium.dashboard.show', $dashboard->slug);
+        return $manager->resource($dashboard, $this)->response($this)->setStatusCode(201);
     }
 }

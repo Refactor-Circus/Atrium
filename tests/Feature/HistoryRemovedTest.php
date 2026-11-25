@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use RefactorCircus\Atrium\Domains\Plugins\Support\Plugin;
 use RefactorCircus\Keystone\Audit\Contracts\AuditTrail;
@@ -35,7 +36,9 @@ it('no longer serves a package history page', function (): void {
         }
     });
 
-    $this->get('/atrium/history/billing')->assertNotFound();
+    // The path is the front end's now: Atrium's page, which renders no
+    // history; no route of Atrium's serves one.
+    expect(Route::getRoutes()->match(Request::create('/atrium/history/billing'))->getName())->toBe('atrium.app');
 
     expect(Route::has('atrium.history.show'))->toBeFalse();
 });
@@ -53,13 +56,4 @@ it('ships neither the history controller nor the audit components', function ():
 
 it('gives plugins no history nav item', function (): void {
     expect(method_exists(Plugin::class, 'historyNavItem'))->toBeFalse();
-});
-
-it('compiles no audit or history view into the stylesheet', function (): void {
-    $sources = array_filter(
-        file(dirname(__DIR__, 2).'/resources/css/atrium.css', FILE_IGNORE_NEW_LINES) ?: [],
-        fn (string $line): bool => str_starts_with(trim($line), '@source'),
-    );
-
-    expect(array_filter($sources, fn (string $line): bool => str_contains($line, 'audit') || str_contains($line, 'history/')))->toBe([]);
 });

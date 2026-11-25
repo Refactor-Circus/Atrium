@@ -11,6 +11,7 @@ use RefactorCircus\Atrium\Tests\Fixtures\AlphaPlugin;
 use RefactorCircus\Atrium\Tests\Fixtures\BetaPlugin;
 use RefactorCircus\Atrium\Tests\Fixtures\NotAPlugin;
 use RefactorCircus\Atrium\Tests\Fixtures\UnauthorizedPlugin;
+use Workbench\App\Models\User;
 
 function registry(): PluginRegistry
 {
@@ -130,12 +131,14 @@ it('decides again when the request user changes or a plugin is registered', func
         ->and($plugin->asked)->toBe(3);
 });
 
-it('asks each plugin once while rendering a dashboard page', function (): void {
+it('asks each plugin once while serving the shell', function (): void {
     app()->detectEnvironment(fn (): string => 'local');
 
     registry()->register($plugin = countingPlugin());
 
-    $this->get('/atrium')->assertOk();
+    $user = User::forceCreate(['name' => 'Ann', 'email' => 'ann@example.com', 'password' => bcrypt('x')]);
+
+    $this->actingAs($user)->getJson(route('atrium.shell'))->assertOk();
 
     expect($plugin->asked)->toBe(1);
 });

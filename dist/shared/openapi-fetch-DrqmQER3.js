@@ -1,0 +1,1 @@
+export{n as createFinalURL,r as createPathBasedClient,i as createQuerySerializer,t as default,a as defaultBodySerializer,o as defaultPathSerializer,s as mergeHeaders,c as randomID,l as removeTrailingSlash,u as serializeArrayParam,d as serializeObjectParam,f as serializePrimitiveParam,p as wrapAsPathBasedClient}from"../chunks/dist-BiG2Jq2W.js";

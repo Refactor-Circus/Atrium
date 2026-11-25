@@ -1,0 +1,4 @@
+{
+    "name": "acme/app",
+    "extra": { "atrium": { "key": "app", "scripts": ["dist/atrium/atrium.js"] } }
+}

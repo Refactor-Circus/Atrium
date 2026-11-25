@@ -8,7 +8,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use RefactorCircus\Atrium\Domains\Access\Concerns\Gated;
+use RefactorCircus\Atrium\Exceptions\UnserializableDataException;
+use RefactorCircus\Atrium\Support\ClientPath;
+use RefactorCircus\Atrium\Support\Iconify;
+use RefactorCircus\Atrium\Support\JsonData;
 
 class NavItem
 {
@@ -16,12 +21,19 @@ class NavItem
 
     public private(set) ?string $url = null;
 
+    /**
+     * The SPA path this item links to (`/showroom/products`), when it was
+     * declared with `path()`: a page of the front end, below `atrium.client_path`.
+     */
+    public private(set) ?string $path = null;
+
     /** The route name this item points at, when it was built from a route. */
     public private(set) ?string $route = null;
 
     /** @var array<string, mixed> */
     private array $routeParameters = [];
 
+    /** An Iconify name, such as `i-lucide-home`. */
     public private(set) ?string $icon = null;
 
     public private(set) ?string $group = null;
@@ -34,6 +46,19 @@ class NavItem
     /** @var array<int, NavItem> */
     public private(set) array $children = [];
 
+    /**
+     * The front end resolver that computes this item's badge or children from a
+     * package API, and the static options it is handed.
+     *
+     * @var array{key: string, options: array<array-key, mixed>}|null
+     */
+    public private(set) ?array $live = null;
+
+    /**
+     * A live key: the package, a dot, then the resolver (`impex.active-runs`).
+     */
+    public const string LIVE_KEY_PATTERN = '/^[a-z0-9-]+\.[a-z0-9.-]+$/D';
+
     final public function __construct(public readonly string $label) {}
 
     public static function make(string $label): static
@@ -41,9 +66,30 @@ class NavItem
         return new static($label);
     }
 
+    /**
+     * Link to a URL the host app serves: absolute, or a path from the host's
+     * root, which the SPA follows only under `atrium.client_path`.
+     */
     public function url(string $url): static
     {
         $this->url = $url;
+        $this->route = null;
+        $this->path = null;
+
+        return $this;
+    }
+
+    /**
+     * Link to a page of the SPA (`/showroom/products`), wherever the host
+     * serves it: the path is sent as it is, never external, and its host URL
+     * is the path under `atrium.client_path` at the time it is resolved.
+     *
+     * @throws InvalidArgumentException for a path that does not start with one `/`, or holds a backslash, whitespace or control character
+     */
+    public function path(string $path): static
+    {
+        $this->path = ClientPath::assertSpaPath($path, "Nav item [{$this->label}]");
+        $this->url = null;
         $this->route = null;
 
         return $this;
@@ -57,13 +103,17 @@ class NavItem
         $this->route = $name;
         $this->routeParameters = $parameters;
         $this->url = null;
+        $this->path = null;
 
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException for a value that is not an Iconify name, such as `i-lucide-home`
+     */
     public function icon(string $icon): static
     {
-        $this->icon = $icon;
+        $this->icon = Iconify::assert($icon);
 
         return $this;
     }
@@ -102,8 +152,37 @@ class NavItem
         return $this;
     }
 
+    /**
+     * Let the front end compute the badge or children with the resolver it
+     * registered under the key (`$atrium.live(key, ...)`), handing it the
+     * options. Atrium sends the key and options as they are, so they must
+     * be static, JSON-serializable data.
+     *
+     * @param  array<array-key, mixed>  $options
+     *
+     * @throws InvalidArgumentException for a key that is not `{package}.{resolver}`
+     * @throws UnserializableDataException for options JSON cannot carry
+     */
+    public function live(string $key, array $options = []): static
+    {
+        if (preg_match(self::LIVE_KEY_PATTERN, $key) !== 1) {
+            throw new InvalidArgumentException("Nav item [{$this->label}] has the live key [{$key}]; it must be {package}.{resolver} and match ^[a-z0-9-]+\\.[a-z0-9.-]+$.");
+        }
+
+        $this->live = [
+            'key' => $key,
+            'options' => JsonData::check($options, "Nav item [{$this->label}] live options"),
+        ];
+
+        return $this;
+    }
+
     public function resolveUrl(): ?string
     {
+        if ($this->path !== null) {
+            return ClientPath::url($this->path);
+        }
+
         if ($this->url !== null) {
             return $this->url;
         }
@@ -115,6 +194,21 @@ class NavItem
         return route($this->route, $this->routeParameters);
     }
 
+    /**
+     * The link the SPA follows: an SPA path as it is, otherwise the resolved
+     * URL through ClientPath, or null for none or one ClientPath refuses.
+     *
+     * @return array{path: string, external: bool}|null
+     */
+    public function link(): ?array
+    {
+        if ($this->path !== null) {
+            return ['path' => $this->path, 'external' => false];
+        }
+
+        return ClientPath::for($this->resolveUrl());
+    }
+
     public function resolveBadge(): string|int|null
     {
         return $this->badge === null ? null : ($this->badge)();
@@ -124,7 +218,7 @@ class NavItem
      * Whether the request is this item's page or a page beneath it: an
      * item on a resource's `*.index` route stays active on the resource's
      * other routes (`*.show`, `*.edit`), and an item with a URL on the paths
-     * beneath it - except the dashboard root, which every page is beneath.
+     * beneath it - except the site root, which every page is beneath.
      */
     public function isActive(Request $request): bool
     {
@@ -162,8 +256,6 @@ class NavItem
             return true;
         }
 
-        $root = trim((string) config('atrium.path', 'atrium'), '/');
-
-        return $path !== '' && $path !== $root && str_starts_with($current, $path.'/');
+        return $path !== '' && str_starts_with($current, $path.'/');
     }
 }

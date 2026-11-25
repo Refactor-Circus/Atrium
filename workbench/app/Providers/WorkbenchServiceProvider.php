@@ -2,17 +2,27 @@
 
 namespace Workbench\App\Providers;
 
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
-use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use RefactorCircus\Atrium\Facades\Atrium;
 use Workbench\App\Atrium\DemoData;
 use Workbench\App\Atrium\DemoPlugin;
-use Workbench\App\Atrium\ScreenHost\ScreenHostPlugin;
-use Workbench\App\Http\Middleware\SignInWorkbenchUser;
+use Workbench\App\Atrium\DemoScreens;
+use Workbench\App\Atrium\DemoSuite;
 use Workbench\App\Models\User;
+use Workbench\App\OpenApi\AtriumOpenApi;
+use Workbench\App\OpenApi\ExportOpenApiCommand;
 
+/**
+ * The workbench app is a host application of Atrium: `composer serve` serves
+ * it on :8000, Atrium's page at /atrium (signed in as testbench.yaml's
+ * `workbench.user` through /_workbench), with every staged suite module and
+ * the workbench's own demo module loaded into it.
+ *
+ * It also holds the one Scramble configuration `workbench:openapi` exports
+ * openapi.json with (`composer openapi:export`, AtriumOpenApi). Nothing in
+ * src/ knows about Scramble: it is a dev dependency.
+ */
 class WorkbenchServiceProvider extends ServiceProvider
 {
     /**
@@ -20,7 +30,18 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // The host chooses its auth: here Atrium's default, the session the
+        // page was served in (web + auth, then Authorize), for the page and
+        // the API alike.
+        config([
+            ...AtriumOpenApi::config(),
+        ]);
+
+        // The served workbench stands in for every suite package (DemoSuite),
+        // with the packages' own modules when ATRIUM_SUITE_PATH points at their checkouts.
+        if (DemoSuite::enabled($this->app)) {
+            DemoSuite::register($this->app);
+        }
     }
 
     /**
@@ -28,23 +49,28 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Keep the workbench user signed in whatever URL is opened first.
-        $this->callAfterResolving(HttpKernel::class, function (HttpKernel $kernel): void {
-            if ($kernel instanceof Kernel) {
-                $kernel->appendMiddlewareToGroup('web', SignInWorkbenchUser::class);
-            }
-        });
+        if ($this->app->runningInConsole()) {
+            $this->commands([ExportOpenApiCommand::class]);
+        }
 
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'workbench');
+        AtriumOpenApi::register();
 
         // Installed packages are discovered from their composer.json; the
-        // workbench app is the host, so it registers its plugins explicitly.
-        // The screen host's pages are the screen-extensions test screens.
+        // workbench app is the host, so it registers its plugin explicitly.
         Atrium::plugin(DemoPlugin::class);
-        Atrium::plugin(ScreenHostPlugin::class);
 
-        // The workbench dashboard is open so `composer serve` is usable
-        // without logging in. A real application defines a real gate.
+        DemoScreens::register(Atrium::screens());
+
+        // The workbench's own front-end module (ui/workbench), loaded the way
+        // an app loads one it builds itself.
+        Atrium::module(self::ui('workbench'));
+
+        if (DemoSuite::enabled($this->app)) {
+            DemoSuite::boot();
+        }
+
+        // The workbench dashboard is open to anyone signed in.
+        // A real application defines a real gate.
         Gate::define('viewAtrium', fn ($user = null): bool => true);
 
         // The permissions the demo's navigation is gated by. The seeded admin
@@ -56,5 +82,13 @@ class WorkbenchServiceProvider extends ServiceProvider
         // A stand-in for a feature-flag package: `audit-log` is off, so its
         // navigation item stays hidden.
         Atrium::resolveFeaturesUsing(fn (string $feature): bool => DemoData::FEATURES[$feature] ?? true);
+    }
+
+    /**
+     * A folder of the package's `ui/` workspace.
+     */
+    public static function ui(string $path): string
+    {
+        return dirname(__DIR__, 3).'/ui/'.$path;
     }
 }

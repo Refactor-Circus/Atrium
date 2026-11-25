@@ -1,0 +1,21 @@
+/*
+ * A module's stylesheet (D-084): import it from the module's own CSS entry,
+ *
+ *   @import "@refactor-circus/atrium/module.css";
+ *   @source "./";
+ *
+ * It compiles the Tailwind utilities the module's sources use that Atrium's
+ * own stylesheet does not already define (core-classes.css), and nothing
+ * else: no preflight, no base styles, no component classes. They go in the
+ * `atrium-modules` layer, after Atrium's `utilities`, so a module's
+ * responsive or state variant beats a base utility Atrium defines, while
+ * Atrium's own elements are never restyled by a module. The theme is
+ * Atrium's and Nuxt UI's, so `p-4`, `text-sm` and `text-muted` mean what they
+ * mean on the page; the variables a module's utilities use are emitted again
+ * with the same values.
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "./nuxt-ui-theme.css";
+@import "./theme.css";
+@import "./core-classes.css";
+@import "tailwindcss/utilities.css" layer(atrium-modules) source(none);

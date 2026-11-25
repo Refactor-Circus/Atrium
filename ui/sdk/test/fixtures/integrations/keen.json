@@ -1,0 +1,69 @@
+{
+    "key": "keen",
+    "label": "Keen",
+    "api_base": "/keen/api",
+    "features": [
+        "keen.atrium"
+    ],
+    "navigation": [
+        {
+            "label": "Audit log",
+            "icon": "i-lucide-clipboard-list",
+            "group": "Keen",
+            "sort": 90,
+            "link": {
+                "path": "/keen/entries",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        },
+        {
+            "label": "History",
+            "icon": "i-lucide-history",
+            "group": "Keen",
+            "sort": 90,
+            "link": null,
+            "badge": null,
+            "live": {
+                "key": "keen.history",
+                "options": {
+                    "exclude": [],
+                    "groups": {
+                        "showroom": "showroom",
+                        "pennantplus": "pennantplus"
+                    },
+                    "sort": 90
+                }
+            },
+            "children": []
+        }
+    ],
+    "widgets": [],
+    "settings": null,
+    "search_sources": [],
+    "screens": [
+        {
+            "key": "keen.entries",
+            "kind": "list",
+            "path": "/keen/entries",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "keen.entry",
+            "kind": "detail",
+            "path": "/keen/entries/:entry",
+            "subject_type": null,
+            "options": {}
+        },
+        {
+            "key": "keen.history",
+            "kind": "list",
+            "path": "/keen/history/:package",
+            "subject_type": null,
+            "options": {}
+        }
+    ]
+}

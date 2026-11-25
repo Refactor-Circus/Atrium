@@ -1,0 +1,504 @@
+{
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-ext-wght-normal.woff2": {
+    "file": "assets/geist-mono-cyrillic-ext-wght-normal-X_5orZeX.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-ext-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-wght-normal.woff2": {
+    "file": "assets/geist-mono-cyrillic-wght-normal-DiZS0aHC.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-cyrillic-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-ext-wght-normal.woff2": {
+    "file": "assets/geist-mono-latin-ext-wght-normal-Bwz-egvJ.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-ext-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2": {
+    "file": "assets/geist-mono-latin-wght-normal-XN7g48iV.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-symbols2-wght-normal.woff2": {
+    "file": "assets/geist-mono-symbols2-wght-normal-CO5SzqOn.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-symbols2-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-vietnamese-wght-normal.woff2": {
+    "file": "assets/geist-mono-vietnamese-wght-normal-DadHysG0.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist-mono@5.3.0/node_modules/@fontsource-variable/geist-mono/files/geist-mono-vietnamese-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-cyrillic-ext-wght-normal.woff2": {
+    "file": "assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-cyrillic-ext-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2": {
+    "file": "assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2": {
+    "file": "assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2": {
+    "file": "assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-vietnamese-wght-normal.woff2": {
+    "file": "assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2",
+    "src": "../node_modules/.pnpm/@fontsource-variable+geist@5.3.0/node_modules/@fontsource-variable/geist/files/geist-vietnamese-wght-normal.woff2"
+  },
+  "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js": {
+    "file": "chunks/sortable.esm-DB70rnJL.js",
+    "name": "sortable.esm",
+    "src": "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js",
+    "isDynamicEntry": true
+  },
+  "_AtriumDashboardPage-Du3axU3j.js": {
+    "file": "chunks/AtriumDashboardPage-Du3axU3j.js",
+    "name": "AtriumDashboardPage",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_Select-CyX1CoCb.js",
+      "_Skeleton-DKti8ILn.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_preload-helper-DclECHGd.js"
+    ],
+    "dynamicImports": [
+      "../node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js"
+    ]
+  },
+  "_AtriumScreen-B3jnMUtP.js": {
+    "file": "chunks/AtriumScreen-B3jnMUtP.js",
+    "name": "AtriumScreen",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_Tabs-CqfRXhK5.js",
+      "_Skeleton-DKti8ILn.js"
+    ]
+  },
+  "_AtriumSettingsPanel-BpmQAqgi.js": {
+    "file": "chunks/AtriumSettingsPanel-BpmQAqgi.js",
+    "name": "AtriumSettingsPanel",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_AtriumScreen-B3jnMUtP.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_vue-i18n-Dd_KwCqc.js"
+    ]
+  },
+  "_AtriumUnregistered-D_huC_NF.js": {
+    "file": "chunks/AtriumUnregistered-D_huC_NF.js",
+    "name": "AtriumUnregistered",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_Badge-DBxp4YA6.js",
+      "_Skeleton-DKti8ILn.js"
+    ]
+  },
+  "_AtriumVersionBanner-CH90IByL.js": {
+    "file": "chunks/AtriumVersionBanner-CH90IByL.js",
+    "name": "AtriumVersionBanner",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_core--pP3C62o.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_pinia-C4-tzdo8.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_Badge-DBxp4YA6.js": {
+    "file": "chunks/Badge-DBxp4YA6.js",
+    "name": "Badge",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_ColorModeButton-yq2RxK5W.js": {
+    "file": "chunks/ColorModeButton-yq2RxK5W.js",
+    "name": "ColorModeButton",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_core--pP3C62o.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_DashboardPanel-DbdaB3o7.js": {
+    "file": "chunks/DashboardPanel-DbdaB3o7.js",
+    "name": "DashboardPanel",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_core--pP3C62o.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js"
+    ]
+  },
+  "_DashboardSidebar-CvViEL0E.js": {
+    "file": "chunks/DashboardSidebar-CvViEL0E.js",
+    "name": "DashboardSidebar",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_core--pP3C62o.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_DropdownMenu-DdLCmTh8.js": {
+    "file": "chunks/DropdownMenu-DdLCmTh8.js",
+    "name": "DropdownMenu",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_core--pP3C62o.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_PageGrid-CCjYyhrj.js": {
+    "file": "chunks/PageGrid-CCjYyhrj.js",
+    "name": "PageGrid",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_core--pP3C62o.js"
+    ]
+  },
+  "_PageHeader-_fc-AG76.js": {
+    "file": "chunks/PageHeader-_fc-AG76.js",
+    "name": "PageHeader",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_DashboardPanel-DbdaB3o7.js"
+    ]
+  },
+  "_Select-CyX1CoCb.js": {
+    "file": "chunks/Select-CyX1CoCb.js",
+    "name": "Select",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_core--pP3C62o.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_Skeleton-DKti8ILn.js": {
+    "file": "chunks/Skeleton-DKti8ILn.js",
+    "name": "Skeleton",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_core--pP3C62o.js",
+      "_Badge-DBxp4YA6.js"
+    ]
+  },
+  "_Tabs-CqfRXhK5.js": {
+    "file": "chunks/Tabs-CqfRXhK5.js",
+    "name": "Tabs",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_Badge-DBxp4YA6.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_core--pP3C62o.js"
+    ]
+  },
+  "__plugin-vue_export-helper-BDNMzG2s.js": {
+    "file": "chunks/_plugin-vue_export-helper-BDNMzG2s.js",
+    "name": "_plugin-vue_export-helper"
+  },
+  "_core--pP3C62o.js": {
+    "file": "chunks/core--pP3C62o.js",
+    "name": "core",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js"
+    ]
+  },
+  "_devtools-RytpElE1-Cb4cD7Ml.js": {
+    "file": "chunks/devtools-RytpElE1-Cb4cD7Ml.js",
+    "name": "devtools-RytpElE1",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_dist-BiG2Jq2W.js": {
+    "file": "chunks/dist-BiG2Jq2W.js",
+    "name": "dist"
+  },
+  "_pinia-C4-tzdo8.js": {
+    "file": "chunks/pinia-C4-tzdo8.js",
+    "name": "pinia",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_preload-helper-DclECHGd.js": {
+    "file": "chunks/preload-helper-DclECHGd.js",
+    "name": "preload-helper"
+  },
+  "_runtime-core.esm-bundler-DdPnhzZn.js": {
+    "file": "chunks/runtime-core.esm-bundler-DdPnhzZn.js",
+    "name": "runtime-core.esm-bundler"
+  },
+  "_runtime-dom.esm-bundler-CyPfl49P.js": {
+    "file": "chunks/runtime-dom.esm-bundler-CyPfl49P.js",
+    "name": "runtime-dom.esm-bundler",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_useAtriumIcon-BhNVwKJ0.js": {
+    "file": "chunks/useAtriumIcon-BhNVwKJ0.js",
+    "name": "useAtriumIcon",
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_vue-i18n-Dd_KwCqc.js": {
+    "file": "chunks/vue-i18n-Dd_KwCqc.js",
+    "name": "vue-i18n",
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "_vue-router-DVn0e99d.js": {
+    "file": "chunks/vue-router-DVn0e99d.js",
+    "name": "vue-router",
+    "imports": [
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js"
+    ]
+  },
+  "src/main.ts": {
+    "file": "atrium-ChcTPOQe.js",
+    "name": "atrium",
+    "src": "src/main.ts",
+    "isEntry": true,
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_core--pP3C62o.js",
+      "_AtriumVersionBanner-CH90IByL.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_pinia-C4-tzdo8.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_vue-router-DVn0e99d.js",
+      "_DashboardSidebar-CvViEL0E.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_preload-helper-DclECHGd.js"
+    ],
+    "dynamicImports": [
+      "src/pages/DashboardIndexPage.vue",
+      "src/pages/DashboardPage.vue",
+      "src/pages/SettingsIndexPage.vue",
+      "src/pages/SettingsPanelPage.vue",
+      "src/pages/NotFoundPage.vue"
+    ],
+    "css": [
+      "assets/atrium-xis8QTRH.css"
+    ],
+    "assets": [
+      "assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2",
+      "assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2",
+      "assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2",
+      "assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+      "assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+      "assets/geist-mono-cyrillic-ext-wght-normal-X_5orZeX.woff2",
+      "assets/geist-mono-cyrillic-wght-normal-DiZS0aHC.woff2",
+      "assets/geist-mono-symbols2-wght-normal-CO5SzqOn.woff2",
+      "assets/geist-mono-vietnamese-wght-normal-DadHysG0.woff2",
+      "assets/geist-mono-latin-ext-wght-normal-Bwz-egvJ.woff2",
+      "assets/geist-mono-latin-wght-normal-XN7g48iV.woff2"
+    ]
+  },
+  "src/pages/DashboardIndexPage.vue": {
+    "file": "chunks/DashboardIndexPage-DVqSYpQF.js",
+    "name": "DashboardIndexPage",
+    "src": "src/pages/DashboardIndexPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_AtriumDashboardPage-Du3axU3j.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "__plugin-vue_export-helper-BDNMzG2s.js"
+    ]
+  },
+  "src/pages/DashboardPage.vue": {
+    "file": "chunks/DashboardPage-Brn-YLL8.js",
+    "name": "DashboardPage",
+    "src": "src/pages/DashboardPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_AtriumDashboardPage-Du3axU3j.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js"
+    ]
+  },
+  "src/pages/NotFoundPage.vue": {
+    "file": "chunks/NotFoundPage-CBD-y0Q6.js",
+    "name": "NotFoundPage",
+    "src": "src/pages/NotFoundPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_vue-i18n-Dd_KwCqc.js"
+    ]
+  },
+  "src/pages/SettingsIndexPage.vue": {
+    "file": "chunks/SettingsIndexPage-CBqLS8H2.js",
+    "name": "SettingsIndexPage",
+    "src": "src/pages/SettingsIndexPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_AtriumScreen-B3jnMUtP.js",
+      "_PageGrid-CCjYyhrj.js",
+      "_Skeleton-DKti8ILn.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_useAtriumIcon-BhNVwKJ0.js"
+    ]
+  },
+  "src/pages/SettingsPanelPage.vue": {
+    "file": "chunks/SettingsPanelPage-CM-OYRDA.js",
+    "name": "SettingsPanelPage",
+    "src": "src/pages/SettingsPanelPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_DashboardPanel-DbdaB3o7.js",
+      "_AtriumSettingsPanel-BpmQAqgi.js",
+      "_Skeleton-DKti8ILn.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_AtriumScreen-B3jnMUtP.js"
+    ]
+  },
+  "src/shared/atrium-ui.ts": {
+    "file": "shared/refactor-circus-atrium-ui-B22JM-v0.js",
+    "name": "shared/refactor-circus-atrium-ui",
+    "src": "src/shared/atrium-ui.ts",
+    "isEntry": true,
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_DropdownMenu-DdLCmTh8.js",
+      "_Badge-DBxp4YA6.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_ColorModeButton-yq2RxK5W.js",
+      "_Tabs-CqfRXhK5.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js",
+      "_Select-CyX1CoCb.js",
+      "_DashboardSidebar-CvViEL0E.js",
+      "_core--pP3C62o.js",
+      "_Skeleton-DKti8ILn.js",
+      "_PageHeader-_fc-AG76.js",
+      "__plugin-vue_export-helper-BDNMzG2s.js",
+      "_PageGrid-CCjYyhrj.js"
+    ],
+    "css": [
+      "assets/refactor-circus-atrium-ui-CzL5_8D6.css"
+    ]
+  },
+  "src/shared/atrium.ts": {
+    "file": "shared/refactor-circus-atrium-B8ggGf7A.js",
+    "name": "shared/refactor-circus-atrium",
+    "src": "src/shared/atrium.ts",
+    "isEntry": true,
+    "imports": [
+      "_dist-BiG2Jq2W.js",
+      "_useAtriumIcon-BhNVwKJ0.js",
+      "_AtriumVersionBanner-CH90IByL.js",
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_AtriumUnregistered-D_huC_NF.js",
+      "_AtriumDashboardPage-Du3axU3j.js",
+      "_DashboardPanel-DbdaB3o7.js",
+      "_vue-i18n-Dd_KwCqc.js",
+      "_AtriumScreen-B3jnMUtP.js",
+      "_PageHeader-_fc-AG76.js",
+      "_Select-CyX1CoCb.js",
+      "_Badge-DBxp4YA6.js",
+      "_AtriumSettingsPanel-BpmQAqgi.js"
+    ]
+  },
+  "src/shared/openapi-fetch.ts": {
+    "file": "shared/openapi-fetch-DrqmQER3.js",
+    "name": "shared/openapi-fetch",
+    "src": "src/shared/openapi-fetch.ts",
+    "isEntry": true,
+    "imports": [
+      "_dist-BiG2Jq2W.js"
+    ]
+  },
+  "src/shared/pinia.ts": {
+    "file": "shared/pinia-BGBzs3dJ.js",
+    "name": "shared/pinia",
+    "src": "src/shared/pinia.ts",
+    "isEntry": true,
+    "imports": [
+      "_pinia-C4-tzdo8.js"
+    ]
+  },
+  "src/shared/vue-i18n.ts": {
+    "file": "shared/vue-i18n-D5J2DIV9.js",
+    "name": "shared/vue-i18n",
+    "src": "src/shared/vue-i18n.ts",
+    "isEntry": true,
+    "imports": [
+      "_vue-i18n-Dd_KwCqc.js"
+    ]
+  },
+  "src/shared/vue-router.ts": {
+    "file": "shared/vue-router-qZzToSim.js",
+    "name": "shared/vue-router",
+    "src": "src/shared/vue-router.ts",
+    "isEntry": true,
+    "imports": [
+      "_devtools-RytpElE1-Cb4cD7Ml.js",
+      "_vue-router-DVn0e99d.js"
+    ]
+  },
+  "src/shared/vue.ts": {
+    "file": "shared/vue-C09dFR3P.js",
+    "name": "shared/vue",
+    "src": "src/shared/vue.ts",
+    "isEntry": true,
+    "imports": [
+      "_runtime-core.esm-bundler-DdPnhzZn.js",
+      "_runtime-dom.esm-bundler-CyPfl49P.js"
+    ]
+  },
+  "src/shared/vueuse-core.ts": {
+    "file": "shared/vueuse-core-BpGTQ_TX.js",
+    "name": "shared/vueuse-core",
+    "src": "src/shared/vueuse-core.ts",
+    "isEntry": true,
+    "imports": [
+      "_core--pP3C62o.js"
+    ]
+  }
+}

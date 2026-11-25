@@ -10,6 +10,15 @@
 /pint.json              export-ignore
 /testbench.yaml         export-ignore
 /workbench              export-ignore
+/ui/app                 export-ignore
+/ui/workbench           export-ignore
+/ui/scripts             export-ignore
+/ui/package.json        export-ignore
+/ui/pnpm-workspace.yaml export-ignore
+/ui/pnpm-lock.yaml      export-ignore
+/ui/tsconfig.base.json  export-ignore
+/ui/.gitignore          export-ignore
+/.nvmrc                 export-ignore
 /.claude                export-ignore
 /.agents                export-ignore
 /CLAUDE.md              export-ignore
@@ -17,7 +26,14 @@
 /.mcp.json              export-ignore
 /agent-os               export-ignore
 /bin                    export-ignore
-/package.json           export-ignore
-/package-lock.json      export-ignore
 /phpstan.windows.neon   export-ignore
-/art                export-ignore
+/art                    export-ignore
+
+# Prebuilt front ends (D-079, D-085): committed, rebuilt by `pnpm -C ui build`,
+# checked against their sources by tests/Feature/Frontend/BuildFreshnessTest.
+/dist/**                          linguist-generated=true -diff
+/ui/workbench/dist/**             linguist-generated=true -diff
+/ui/sdk/css/core-classes.css      linguist-generated=true -diff
+/ui/sdk/css/nuxt-ui-theme.css     linguist-generated=true
+**/auto-imports.d.ts              linguist-generated=true
+**/components.d.ts                linguist-generated=true

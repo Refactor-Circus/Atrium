@@ -28,11 +28,6 @@
         <testsuite name="Modes">
             <directory>tests/Modes</directory>
         </testsuite>
-        <!-- Browser tests need Playwright, so they are excluded from the
-             default run and invoked explicitly with `composer test:browser`. -->
-        <testsuite name="Browser">
-            <directory>tests/Browser</directory>
-        </testsuite>
     </testsuites>
     <source>
         <include>

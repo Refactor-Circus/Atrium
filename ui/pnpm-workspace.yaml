@@ -1,0 +1,9 @@
+packages:
+  - sdk
+  - app
+  - workbench
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - vue-demi

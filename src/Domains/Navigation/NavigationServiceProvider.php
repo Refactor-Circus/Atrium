@@ -15,4 +15,9 @@ class NavigationServiceProvider extends ServiceProvider
         $this->app->singleton(NavigationRegistry::class);
         $this->app->scoped(NavigationState::class);
     }
+
+    public function boot(): void
+    {
+        $this->loadApiRoutesFrom(__DIR__.'/routes.php');
+    }
 }

@@ -7,17 +7,28 @@ namespace RefactorCircus\Atrium\Domains\Dashboard\Http\Requests;
 use Illuminate\Http\JsonResponse;
 use RefactorCircus\Atrium\Domains\Dashboard\Actions\SaveDashboardLayoutAction;
 use RefactorCircus\Atrium\Domains\Dashboard\Data\SaveDashboardLayoutData;
-use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardModel;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Requests\Concerns\ResolvesRouteDashboard;
 use RefactorCircus\Atrium\Domains\Dashboard\Models\DashboardWidgetModel;
+use RefactorCircus\Atrium\Domains\Dashboard\Services\DashboardManager;
 use RefactorCircus\Atrium\Domains\Widgets\Services\WidgetRegistry;
 use RefactorCircus\Atrium\Http\Requests\Request;
 
-class SaveDashboardLayoutRequest extends Request
+/**
+ * Saves the dashboard's full layout and answers with the dashboard as it now
+ * stands, so the client renders new placements with their data and uuids.
+ *
+ * Placements are named by `uuid`, which must be one of this dashboard's; one
+ * without a uuid is new. The client sends the `version` it loaded; a
+ * dashboard changed since answers 409.
+ */
+final class SaveDashboardLayoutRequest extends Request
 {
+    use ResolvesRouteDashboard;
+
     /**
      * Saving replaces every placement: it needs `update` on the dashboard,
-     * `delete` on each placement it removes, and `create` on placements when
-     * it adds any.
+     * `delete` on each placement it may remove, and `create` on placements
+     * when it adds any.
      */
     public function authorize(): bool
     {
@@ -34,19 +45,17 @@ class SaveDashboardLayoutRequest extends Request
      */
     public function rules(): array
     {
-        return SaveDashboardLayoutData::rules();
+        return SaveDashboardLayoutData::rules($this->dashboard());
     }
 
     public function persist(): JsonResponse
     {
         $dashboard = app(SaveDashboardLayoutAction::class)->execute(
             $this->dashboard(),
-            SaveDashboardLayoutData::fromValidated(['widgets' => $this->placements()]),
+            SaveDashboardLayoutData::fromValidated([...$this->validated(), 'widgets' => $this->placements()]),
         );
 
-        return response()->json([
-            'data' => ['saved' => $dashboard->widgets()->count()],
-        ]);
+        return app(DashboardManager::class)->resource($dashboard, $this)->response($this);
     }
 
     /**
@@ -60,20 +69,11 @@ class SaveDashboardLayoutRequest extends Request
         $available = app(WidgetRegistry::class)->available($this);
 
         /** @var array<int, array<string, mixed>> $submitted */
-        $submitted = $this->validated()['widgets'] ?? [];
+        $submitted = $this->validated('widgets', []);
 
         return array_values(array_filter(
             $submitted,
-            fn (array $widget): bool => isset($available[$widget['widget_key']]),
+            fn (array $widget): bool => is_string($widget['widget_key'] ?? null) && isset($available[$widget['widget_key']]),
         ));
-    }
-
-    protected function dashboard(): DashboardModel
-    {
-        $dashboard = $this->route('dashboard');
-
-        abort_unless($dashboard instanceof DashboardModel, 404);
-
-        return $dashboard;
     }
 }

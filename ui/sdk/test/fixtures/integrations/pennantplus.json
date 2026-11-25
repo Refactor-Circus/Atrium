@@ -1,0 +1,35 @@
+{
+    "key": "pennantplus",
+    "label": "PennantPlus",
+    "api_base": "/pennantplus",
+    "features": [
+        "pennantplus.atrium"
+    ],
+    "navigation": [
+        {
+            "label": "Feature flags",
+            "icon": "i-lucide-flag",
+            "group": "System",
+            "sort": 90,
+            "link": {
+                "path": "/pennantplus/features",
+                "external": false
+            },
+            "badge": null,
+            "live": null,
+            "children": []
+        }
+    ],
+    "widgets": [],
+    "settings": null,
+    "search_sources": [],
+    "screens": [
+        {
+            "key": "pennantplus.features",
+            "kind": "list",
+            "path": "/pennantplus/features",
+            "subject_type": null,
+            "options": {}
+        }
+    ]
+}

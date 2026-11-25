@@ -1,0 +1,59 @@
+{
+    "data": {
+        "key": "demo",
+        "label": "Shop settings",
+        "description": "Store details and the feature flags this workbench runs with.",
+        "icon": "i-lucide-store",
+        "component": "demo",
+        "data": {
+            "features": {
+                "reports": true,
+                "billing": true,
+                "audit-log": false
+            }
+        }
+    },
+    "screen": {
+        "key": "atrium.settings-panel",
+        "kind": "detail",
+        "open_tab": "demo.storefront",
+        "tabs": [
+            {
+                "key": "overview",
+                "label": "Overview",
+                "icon": "i-lucide-layout-grid",
+                "built_in": true,
+                "component": null
+            },
+            {
+                "key": "demo.storefront",
+                "label": "Storefront",
+                "icon": "i-lucide-store",
+                "built_in": false,
+                "component": "demo.storefront",
+                "data": {
+                    "name": "Acme Shop",
+                    "url": "https://shop.acme.test",
+                    "currency": "USD",
+                    "timezone": "America/New_York"
+                }
+            }
+        ],
+        "sections": {
+            "header.actions": [
+                {
+                    "key": "demo.visit-store",
+                    "label": "Visit store",
+                    "component": "demo.visit-store",
+                    "data": {
+                        "url": "https://shop.acme.test"
+                    }
+                }
+            ],
+            "before": [],
+            "after": [],
+            "aside": []
+        },
+        "rows": {}
+    }
+}

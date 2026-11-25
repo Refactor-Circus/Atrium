@@ -10,7 +10,7 @@ class InstallCommand extends Command
 {
     protected $signature = 'atrium:install {--force : Overwrite any existing published files}';
 
-    protected $description = 'Publish the Atrium config and assets, and print the authorization gate stub.';
+    protected $description = 'Publish the Atrium config, and print the authorization gate stub.';
 
     public function handle(): int
     {
@@ -22,14 +22,8 @@ class InstallCommand extends Command
         ]);
         $this->components->task('Published config/atrium.php');
 
-        $this->callSilently('vendor:publish', [
-            '--tag' => 'atrium-assets',
-            '--force' => (bool) $this->option('force'),
-        ]);
-        $this->components->task('Published public/vendor/atrium');
-
         $this->newLine();
-        $this->components->warn('Atrium denies access outside the local environment until you define its gate.');
+        $this->components->warn('Atrium denies access outside the local environment until you define its gate, or your user model implements AtriumUser.');
         $this->newLine();
 
         $this->line('Add this to a service provider:');
@@ -39,7 +33,10 @@ class InstallCommand extends Command
         $this->line('    });');
         $this->newLine();
 
-        $this->components->info('Atrium installed. Visit /'.config('atrium.path', 'atrium').'.');
+        $prefix = config('atrium.routes.prefix', 'atrium/api');
+        $page = config('atrium.client_path', '/atrium');
+
+        $this->components->info('Atrium installed. Open it at /'.(is_string($page) ? trim($page, '/') : 'atrium').'; its API is served under /'.(is_string($prefix) ? trim($prefix, '/') : 'atrium/api').'.');
 
         return self::SUCCESS;
     }

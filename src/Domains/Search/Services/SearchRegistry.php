@@ -43,6 +43,18 @@ class SearchRegistry
     }
 
     /**
+     * The fewest characters a query needs, from `atrium.search.min_length`:
+     * at least 1, which null or any other value means. The search request
+     * enforces it and the shell sends it to the front end's search box.
+     */
+    public function minLength(): int
+    {
+        $length = config('atrium.search.min_length');
+
+        return is_int($length) ? max(1, $length) : 1;
+    }
+
+    /**
      * Sources the given request may query.
      *
      * @return array<int, SearchSource>

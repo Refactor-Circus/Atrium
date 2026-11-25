@@ -1,0 +1,140 @@
+/*
+ * @refactor-circus/atrium/ui: the Nuxt UI 4.1 components and composables
+ * Atrium shares with its modules (D-082), compiled once in Atrium's build with
+ * its theme (`vite/ui-config.mjs`). Modules import from here (the module
+ * preset resolves `<UButton>` and friends to it) and never bundle Nuxt UI.
+ *
+ * Part of the shared module API: removing an export is a major change.
+ * It carries the dashboard shell (`UDashboard*`, `UDashboardSearch`), the
+ * navigation and page building blocks (`UNavigationMenu`, `UPage*`,
+ * `UEmpty`) and the colour-mode controls Atrium's own components are built
+ * from, so a module composes its pages from the same pieces (D-091).
+ * Left out on purpose: the marketing, blog, changelog, pricing and chat
+ * components, which an admin module has no use for.
+ */
+
+export { default as UAccordion } from '@nuxt/ui/components/Accordion.vue'
+export { default as UAlert } from '@nuxt/ui/components/Alert.vue'
+export { default as UApp } from '@nuxt/ui/components/App.vue'
+export { default as UAvatar } from '@nuxt/ui/components/Avatar.vue'
+export { default as UAvatarGroup } from '@nuxt/ui/components/AvatarGroup.vue'
+export { default as UBadge } from '@nuxt/ui/components/Badge.vue'
+export { default as UBanner } from '@nuxt/ui/components/Banner.vue'
+export { default as UBreadcrumb } from '@nuxt/ui/components/Breadcrumb.vue'
+export { default as UButton } from '@nuxt/ui/components/Button.vue'
+export { default as UCalendar } from '@nuxt/ui/components/Calendar.vue'
+export { default as UCard } from '@nuxt/ui/components/Card.vue'
+export { default as UCheckbox } from '@nuxt/ui/components/Checkbox.vue'
+export { default as UCheckboxGroup } from '@nuxt/ui/components/CheckboxGroup.vue'
+export { default as UChip } from '@nuxt/ui/components/Chip.vue'
+export { default as UCollapsible } from '@nuxt/ui/components/Collapsible.vue'
+export { default as UColorModeButton } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeButton.vue'
+export { default as UColorModeSelect } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeSelect.vue'
+export { default as UColorModeSwitch } from '@nuxt/ui/runtime/vue/components/color-mode/ColorModeSwitch.vue'
+export { default as UColorPicker } from '@nuxt/ui/components/ColorPicker.vue'
+export { default as UCommandPalette } from '@nuxt/ui/components/CommandPalette.vue'
+export { default as UContainer } from '@nuxt/ui/components/Container.vue'
+export { default as UContextMenu } from '@nuxt/ui/components/ContextMenu.vue'
+export { default as UContextMenuContent } from '@nuxt/ui/components/ContextMenuContent.vue'
+export { default as UDashboardGroup } from '@nuxt/ui/components/DashboardGroup.vue'
+export { default as UDashboardNavbar } from '@nuxt/ui/components/DashboardNavbar.vue'
+export { default as UDashboardPanel } from '@nuxt/ui/components/DashboardPanel.vue'
+export { default as UDashboardResizeHandle } from '@nuxt/ui/components/DashboardResizeHandle.vue'
+export { default as UDashboardSearch } from '@nuxt/ui/components/DashboardSearch.vue'
+export { default as UDashboardSearchButton } from '@nuxt/ui/components/DashboardSearchButton.vue'
+export { default as UDashboardSidebar } from '@nuxt/ui/components/DashboardSidebar.vue'
+export { default as UDashboardSidebarCollapse } from '@nuxt/ui/components/DashboardSidebarCollapse.vue'
+export { default as UDashboardSidebarToggle } from '@nuxt/ui/components/DashboardSidebarToggle.vue'
+export { default as UDashboardToolbar } from '@nuxt/ui/components/DashboardToolbar.vue'
+export { default as UDrawer } from '@nuxt/ui/components/Drawer.vue'
+export { default as UDropdownMenu } from '@nuxt/ui/components/DropdownMenu.vue'
+export { default as UDropdownMenuContent } from '@nuxt/ui/components/DropdownMenuContent.vue'
+export { default as UEmpty } from '@nuxt/ui/components/Empty.vue'
+export { default as UFieldGroup } from '@nuxt/ui/components/FieldGroup.vue'
+export { default as UFileUpload } from '@nuxt/ui/components/FileUpload.vue'
+export { default as UForm } from '@nuxt/ui/components/Form.vue'
+export { default as UFormField } from '@nuxt/ui/components/FormField.vue'
+export { default as UIcon } from '@nuxt/ui/runtime/vue/components/Icon.vue'
+export { default as UInput } from '@nuxt/ui/components/Input.vue'
+export { default as UInputMenu } from '@nuxt/ui/components/InputMenu.vue'
+export { default as UInputNumber } from '@nuxt/ui/components/InputNumber.vue'
+export { default as UInputTags } from '@nuxt/ui/components/InputTags.vue'
+export { default as UKbd } from '@nuxt/ui/components/Kbd.vue'
+export { default as ULink } from '@nuxt/ui/runtime/vue/components/Link.vue'
+export { default as UMain } from '@nuxt/ui/components/Main.vue'
+export { default as UModal } from '@nuxt/ui/components/Modal.vue'
+export { default as UNavigationMenu } from '@nuxt/ui/components/NavigationMenu.vue'
+export { default as UPage } from '@nuxt/ui/components/Page.vue'
+export { default as UPageAside } from '@nuxt/ui/components/PageAside.vue'
+export { default as UPageBody } from '@nuxt/ui/components/PageBody.vue'
+export { default as UPageCard } from '@nuxt/ui/components/PageCard.vue'
+export { default as UPageColumns } from '@nuxt/ui/components/PageColumns.vue'
+export { default as UPageFeature } from '@nuxt/ui/components/PageFeature.vue'
+export { default as UPageGrid } from '@nuxt/ui/components/PageGrid.vue'
+export { default as UPageHeader } from '@nuxt/ui/components/PageHeader.vue'
+export { default as UPageLinks } from '@nuxt/ui/components/PageLinks.vue'
+export { default as UPageList } from '@nuxt/ui/components/PageList.vue'
+export { default as UPageSection } from '@nuxt/ui/components/PageSection.vue'
+export { default as UPagination } from '@nuxt/ui/components/Pagination.vue'
+export { default as UPinInput } from '@nuxt/ui/components/PinInput.vue'
+export { default as UPopover } from '@nuxt/ui/components/Popover.vue'
+export { default as UProgress } from '@nuxt/ui/components/Progress.vue'
+export { default as URadioGroup } from '@nuxt/ui/components/RadioGroup.vue'
+export { default as USelect } from '@nuxt/ui/components/Select.vue'
+export { default as USelectMenu } from '@nuxt/ui/components/SelectMenu.vue'
+export { default as USeparator } from '@nuxt/ui/components/Separator.vue'
+export { default as USkeleton } from '@nuxt/ui/components/Skeleton.vue'
+export { default as USlideover } from '@nuxt/ui/components/Slideover.vue'
+export { default as USlider } from '@nuxt/ui/components/Slider.vue'
+export { default as UStepper } from '@nuxt/ui/components/Stepper.vue'
+export { default as USwitch } from '@nuxt/ui/components/Switch.vue'
+export { default as UTable } from '@nuxt/ui/components/Table.vue'
+export { default as UTabs } from '@nuxt/ui/components/Tabs.vue'
+export { default as UTextarea } from '@nuxt/ui/components/Textarea.vue'
+export { default as UTimeline } from '@nuxt/ui/components/Timeline.vue'
+export { default as UToast } from '@nuxt/ui/components/Toast.vue'
+export { default as UToaster } from '@nuxt/ui/components/Toaster.vue'
+export { default as UTooltip } from '@nuxt/ui/components/Tooltip.vue'
+export { default as UTree } from '@nuxt/ui/components/Tree.vue'
+export { default as UUser } from '@nuxt/ui/components/User.vue'
+
+export { useToast } from '@nuxt/ui/composables/useToast.js'
+export { useOverlay } from '@nuxt/ui/composables/useOverlay.js'
+export { defineShortcuts } from '@nuxt/ui/composables/defineShortcuts.js'
+export { defineLocale } from '@nuxt/ui/composables/defineLocale.js'
+export { useLocale } from '@nuxt/ui/composables/useLocale.js'
+export { useKbd } from '@nuxt/ui/composables/useKbd.js'
+
+/*
+ * Nuxt UI's public types, type-only (D-093): a module types its columns,
+ * items and form handlers from here, never from '@nuxt/ui' itself.
+ */
+export type {
+  AccordionItem,
+  AlertProps,
+  BadgeProps,
+  BreadcrumbItem,
+  ButtonProps,
+  CardProps,
+  CheckboxProps,
+  CommandPaletteGroup,
+  CommandPaletteItem,
+  DropdownMenuItem,
+  EmptyProps,
+  FormError,
+  FormSubmitEvent,
+  InputNumberProps,
+  InputProps,
+  ModalProps,
+  NavigationMenuItem,
+  PageHeaderProps,
+  SelectItem,
+  SelectMenuItem,
+  SelectProps,
+  SelectValue,
+  SwitchProps,
+  TableColumn,
+  TableProps,
+  TableRow,
+  TabsItem
+} from '@nuxt/ui'

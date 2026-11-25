@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
+use RefactorCircus\Atrium\Domains\Dashboard\Http\Controllers\DashboardController;
 use RefactorCircus\Atrium\Domains\DomainServiceProvider;
+use RefactorCircus\Atrium\Domains\Integrations\IntegrationsServiceProvider;
 use RefactorCircus\Atrium\Domains\Screens\Data\ResolvedScreen;
 use RefactorCircus\Atrium\Domains\Screens\Data\Screen;
 use RefactorCircus\Atrium\Domains\Screens\Data\SectionDefinition;
@@ -122,6 +124,44 @@ arch('atrium requires only keystone among the suite packages')
     )))
     ->toBe(['refactor-circus/keystone']);
 
+arch('atrium uses no suite package\'s code, only its API (AC 45)')
+    ->expect('RefactorCircus\Atrium')
+    ->not->toUse([
+        'RefactorCircus\Cortex',
+        'RefactorCircus\Guardian',
+        'RefactorCircus\Impex',
+        'RefactorCircus\Keen',
+        'RefactorCircus\PennantPlus',
+        'RefactorCircus\Polycart',
+        'RefactorCircus\Roster',
+        'RefactorCircus\Showroom',
+    ]);
+
+arch('scramble stays in the workbench: the package source uses nothing from Dedoc (AC 72)')
+    ->expect('RefactorCircus\Atrium')
+    ->not->toUse('Dedoc');
+
+arch('no source or config file names Dedoc, not even as a string (AC 72)')
+    ->expect(fn (): array => array_values(array_filter(
+        array_values(array_filter(
+            array_map(fn (SplFileInfo $file): string => $file->getPathname(), [
+                ...iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../src', FilesystemIterator::SKIP_DOTS)), false),
+                ...iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../config', FilesystemIterator::SKIP_DOTS)), false),
+            ]),
+            fn (string $path): bool => str_ends_with($path, '.php'),
+        )),
+        fn (string $path): bool => str_contains(str_replace('\\\\', '\\', (string) file_get_contents($path)), 'Dedoc\\'),
+    )))
+    ->toBeEmpty();
+
+arch('the per-package integration definitions import nothing from Pennant')
+    ->expect('RefactorCircus\Atrium\Integrations')
+    ->not->toUse('Laravel\Pennant');
+
+arch('the integrations domain provider is registered by the domain provider')
+    ->expect(fn (): array => new ReflectionProperty(DomainServiceProvider::class, 'providers')->getDefaultValue())
+    ->toContain(IntegrationsServiceProvider::class);
+
 arch('the history screen and audit components left for Keen')
     ->expect(fn (): array => array_values(array_filter(
         [
@@ -134,6 +174,106 @@ arch('the history screen and audit components left for Keen')
     )))
     ->toBeEmpty();
 
+arch('the source renders no views and uses no Blade')
+    ->expect('RefactorCircus\Atrium')
+    ->not->toUse(['view', 'Illuminate\View', 'Illuminate\Support\Facades\Blade', 'Illuminate\Support\Facades\View']);
+
+arch('no source file calls view(), names Illuminate\View or uses Blade::')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(function (string $path): ?string {
+            $tokens = array_values(array_filter(
+                PhpToken::tokenize((string) file_get_contents($path)),
+                fn (PhpToken $token): bool => ! $token->isIgnorable(),
+            ));
+
+            foreach ($tokens as $index => $token) {
+                $previous = $tokens[$index - 1] ?? null;
+                $next = $tokens[$index + 1] ?? null;
+                $name = ltrim($token->text, '\\');
+
+                // A call to the global view() helper; a method or a property named view is fine.
+                $callsView = $token->is([T_STRING, T_NAME_FULLY_QUALIFIED]) && strtolower($name) === 'view'
+                    && $next?->text === '('
+                    && ! $previous?->is([T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_NEW]);
+
+                $namesView = $token->is([T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_CONSTANT_ENCAPSED_STRING])
+                    && str_contains(str_replace('\\\\', '\\', $token->text), 'Illuminate\\View');
+
+                $usesBlade = ($token->is(T_STRING) && $token->text === 'Blade' && $next?->is(T_DOUBLE_COLON))
+                    || ($token->is([T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED]) && str_ends_with($token->text, '\\Blade'));
+
+                if ($callsView || $namesView || $usesBlade) {
+                    return $path.':'.$token->line.' '.$token->text;
+                }
+            }
+
+            return null;
+        }, array_values(array_filter(
+            array_map(fn (SplFileInfo $file): string => $file->getPathname(), iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../src', FilesystemIterator::SKIP_DOTS)))),
+            fn (string $path): bool => str_ends_with($path, '.php'),
+        ))),
+    )))
+    ->toBeEmpty();
+
+arch('every controller method is a single return $request->persist()')
+    ->expect(fn (): array => array_values(array_filter(
+        array_merge(...array_map(function (string $file): array {
+            $class = 'RefactorCircus\\Atrium\\Domains\\'.basename(dirname($file, 3)).'\\Http\\Controllers\\'.basename($file, '.php');
+            $lines = file($file) ?: [];
+            $violations = [];
+
+            foreach (new ReflectionClass($class)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                if ($method->getDeclaringClass()->getName() !== $class) {
+                    continue;
+                }
+
+                $body = implode('', array_slice($lines, (int) $method->getStartLine(), (int) $method->getEndLine() - (int) $method->getStartLine()));
+
+                if (preg_replace('/\s+/', '', $body) !== '{return$request->persist();}') {
+                    $violations[] = $class.'::'.$method->getName();
+                }
+            }
+
+            return $violations;
+        }, glob(ATRIUM_DOMAINS.'/*/Http/Controllers/*.php') ?: [])),
+    )))
+    ->toBeEmpty();
+
+arch('the shell reaches other domains through their data and services, never their Http classes')
+    ->expect('RefactorCircus\Atrium\Domains\Navigation')
+    ->not->toUse(array_map(
+        fn (string $domain): string => 'RefactorCircus\\Atrium\\Domains\\'.$domain.'\\Http',
+        ['Access', 'Dashboard', 'Plugins', 'Screens', 'Search', 'Settings', 'Themes', 'Widgets'],
+    ));
+
+arch('no domain uses another domain\'s requests')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(function (string $path): ?string {
+            $domain = explode('/', substr($path, strlen(ATRIUM_DOMAINS) + 1))[0];
+            preg_match_all('/RefactorCircus\\\\Atrium\\\\Domains\\\\(\w+)\\\\Http\\\\Requests\\\\/', (string) file_get_contents($path), $matches);
+            $foreign = array_values(array_diff(array_unique($matches[1]), [$domain]));
+
+            return $foreign === [] ? null : $path.' uses '.implode(', ', $foreign);
+        }, array_values(array_filter(
+            array_map(fn (SplFileInfo $file): string => $file->getPathname(), iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(ATRIUM_DOMAINS, FilesystemIterator::SKIP_DOTS)))),
+            fn (string $path): bool => str_ends_with($path, '.php'),
+        ))),
+    )))
+    ->toBeEmpty();
+
+arch('the dashboard controller names each method for its request\'s verb')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(
+            fn (ReflectionMethod $method): ?string => in_array($method->getName(), ['index', 'show', 'showDefault', 'store', 'update', 'destroy'], true) ? null : $method->getName(),
+            new ReflectionClass(DashboardController::class)->getMethods(ReflectionMethod::IS_PUBLIC),
+        ),
+    )))
+    ->toBeEmpty();
+
+arch('the controllers exist for the persist rule to check')
+    ->expect(fn (): array => glob(ATRIUM_DOMAINS.'/*/Http/Controllers/*.php') ?: [])
+    ->not->toBeEmpty();
+
 arch('tables are named through Tables, never as literals')
     ->expect(fn (): array => Arch::literalTableNames(
         [...array_values(array_filter(
@@ -143,3 +283,11 @@ arch('tables are named through Tables, never as literals')
         array_values(Tables::DEFAULTS),
     ))
     ->toBeEmpty();
+
+arch('only the Frontend domain renders a view: Atrium\'s one page (D-079)')
+    ->expect(fn (): array => array_values(array_filter(
+        array_map(fn (SplFileInfo $file): string => str_replace('\\', '/', $file->getPathname()), iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../src', FilesystemIterator::SKIP_DOTS)))),
+        fn (string $path): bool => str_ends_with($path, '.php') && preg_match('/->view\(/', (string) file_get_contents($path)) === 1,
+    )))
+    ->toHaveCount(1)
+    ->each->toEndWith('src/Domains/Frontend/Http/Requests/ShowAppRequest.php');

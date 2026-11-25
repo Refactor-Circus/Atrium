@@ -1,31 +1,51 @@
 ---
-description: "Atrium owns every component and style of the first-party suite; packages use x-atrium components plus the safelisted utilities only, checked by AtriumStyles; third parties may still add CSS and component namespaces"
-tags: [atrium, frontend, blade, components, css]
+description: "Atrium renders one HTML page: PHP sends JSON keyed by component, and the prebuilt Vue 3 front end (sources in ui/) renders it with components that modules register by key through defineAtriumModule(); the SDK in ui/sdk owns every shared component and style, built on Nuxt UI with Iconify icons"
+tags: [atrium, frontend, vue, modules, components, api]
 kind: architectural
 ---
 
-# Components and Styles
+# Components and the Front End
 
-Atrium owns every Blade component and every style of the first-party suite; other first-party packages build their screens from `x-atrium::*` components and the safelisted utilities only.
+Atrium's PHP side serves data; its prebuilt front end renders it (D-079 to D-087, `MODULES.md`). The one HTML Atrium renders is the `Frontend` domain's page, `atrium::app`, which loads Atrium's app from the committed `dist/` and every module's script and stylesheet. The SDK owns every shared component and style of the dashboard.
 
-## First-party packages
+## The contract between PHP and Vue
 
-- Cortex, Impex, Keen, PennantPlus, Polycart, Roster and Showroom ship no `resources/css`, no compiled stylesheet, no `Atrium::css()` / `Atrium::stylesheet()` call and no component namespace.
-- Their views are domain screens built from `x-atrium::*` components plus the layout utilities Atrium safelists in `resources/css/atrium.css` (`@source inline(...)`): grid columns and spans, flex alignment, gap, spacing, widths and heights, sizes, text sizes, font and wrapping helpers, overflow, positioning, borders and the surface/text tokens.
-- No package CSS, `<style>` block or `style` attribute. A screen that needs something not covered gets a new generic component in Atrium, or a safelist entry.
+- Every widget, screen tab, screen section and settings panel is sent as `{key, component, data}` (plus its own fields). `component` is a client key, not a template name: it defaults to the definition's key and changes with `->component('...')`.
+- The front end looks `component` up in the registry a module fills with `defineAtriumModule({ key, widgets, extensions, settingsPanels, ... })` (tabs and sections are `extensions`), or with `useAtrium().widget()` / `.extension()` / `.settingsPanel()` from a module's `setup()`. A key with no component renders `<AtriumUnregistered>`, never an error.
+- Component props are fixed: a widget gets `data` and `settings`, an extension `data` and `record`, a settings panel `data`.
+- `data` is whatever the PHP resolver returned, checked by `Support\JsonData`: JSON-serializable values only, preferably a JSON resource. A failed resolver arrives as `data: null` plus `error`, and the front end renders `<AtriumErrorCard>`.
+- Links are `{path, external}` from `Support\ClientPath` against `atrium.client_path`, or null. The front end renders only paths starting with `/` or http(s) URLs, and external links get `rel="noopener noreferrer"` (`<AtriumLink>`).
+- Icons are Iconify names (`i-lucide-home`), validated by `Support\Iconify` when a PHP definition is built and rendered by `<AtriumIcon>` with a fallback for unknown names.
 
-## Existing generic pieces
+## The workspace
 
-- `description-list`, bare form controls (`bare`), input `prefix`/`suffix`, `form.combobox`, `search-input`, `chip`, `banner` (`standalone` for host-app pages), `form.actions`, `flash`, `guest`.
+- `ui/` is a pnpm workspace: `ui/sdk` (`@refactor-circus/atrium`, the SDK), `ui/app` (Atrium's entry, router, layouts and core pages, built to `dist/`) and `ui/workbench` (the workbench's module). No package's module lives in Atrium (D-089). Vue 3, Vue Router, Pinia, Nuxt UI 4 through its Vite plugin in Vue mode, vue-i18n and VueUse, built with Vite. Every build is committed with its `build.json` (D-085).
+- The SDK's public surface: the registry (`useAtrium()`: `auth()`, `widget()`, `extension()`, `settingsPanel()`, `searchSource()`, `live()`, `responseHandler()`, `notify()`), `defineAtriumModule()`, the `useAtrium*` composables (including `useAtriumIntegration()`, `atriumClientOptions()` and `useAtriumClient()`), the `Atrium*` components, the types, the Vite preset (`@refactor-circus/atrium/vite`), Nuxt UI as Atrium compiled it (`@refactor-circus/atrium/ui`), the module stylesheet (`@refactor-circus/atrium/module.css`) and the test helpers (`@refactor-circus/atrium/testing`). Anything else is internal.
+- The shared modules of the page's import map are a versioned API (`ATRIUM_SHARED_API` in `ui/sdk/vite/shared.mjs`): removing a specifier or moving a library to a new major is a new major.
+- The SDK's response types in `ui/sdk/src/types/atrium.ts` are aliases of `components['schemas']` in `ui/sdk/src/client/schema.d.ts`, generated from Atrium's `openapi.json` (`pnpm -C ui generate:client`), with the public names kept.
+- Atrium's own strings come from `ui/sdk/locales` (`en` shipped); each module brings its own `messages`; server-side labels stay translated by Laravel.
+- Icons come from collections bundled locally (`lucide`; more with `addAtriumIcons()`); the remote Iconify API stays off unless `atrium.icons.remote` is on.
+- **Atrium* components compose Nuxt UI; no bespoke markup for things Nuxt UI provides** (D-091). Buttons are `UButton`, fields `UInput` / `USelect` / `UTextarea`, tables `UTable`, disclosures `UCollapsible`, menus `UNavigationMenu` / `UDropdownMenu`, overlays `UModal` / `USlideover` / `UPopover`, states `UEmpty` / `UAlert`, the shell `UDashboard*`. Links are `UButton to` / `ULink`, or `<AtriumLink>` for an API link that may be external (the only file allowed an `<a href>`). Layout `div`s and plain text are fine.
+- The deck's look (D-077, D-078) lives in the Nuxt UI theme (`ui/sdk/vite/ui-config.mjs`: slot classes, variants, compound variants) reading the `--atrium-*` tokens; a component adds Tailwind utilities, not a class of its own in `atrium.css`. `atrium.css` holds the theme bridge, the tokens, the base layer and the deck's type for the plain text modules render inside `[data-atrium-content]` (headings, `<dl>`, `<code>`, `<pre>`); it styles no raw table, native field or module class (`.atrium-querybar`, `.atrium-empty` are gone, D-093), and `<UTable>`'s look is its theme in `ui-config.mjs`.
+- Styling uses Nuxt UI components and the design tokens in `ui/sdk/css/theme.css`, shared by Atrium's stylesheet (`ui/app/src/assets/atrium.css`) and every module's. Nuxt UI is compiled once, in Atrium's build, with the theme config in `ui/sdk/vite/ui-config.mjs`; modules never run its plugin for a build or bundle it, and their utilities go in the `atrium-modules` layer (D-084). Themes (`Domains\Themes`) are sent in the shell as token values and applied on `:root`; never hard-code a colour a theme should own.
+
+## Modules and suite packages
+
+- A package's Atrium UI is PHP definitions and JSON plugin routes, plus a module: Vue code built with `atriumModule()`, committed to `dist/atrium/`, declared in its `composer.json` under `extra.atrium` (`scripts`, `styles`), with no Composer dependency on Atrium.
+- The eight suite packages (Cortex, Guardian, Impex, Keen, PennantPlus, Polycart, Roster, Showroom) each ship their module this way, in the package's own `atrium/` (D-089), and call the package's API through `useAtriumIntegration(pkg).client`; they are the examples `MODULES.md` points to. Never stage a package's module in Atrium's `ui/` (no `ui/modules/{pkg}`); see [[integrations]].
+- A module ships no design tokens of its own: its components are built from Nuxt UI and the SDK's `Atrium*` components (`AtriumNoAccess`, `AtriumIntegrationScreen`, `AtriumErrorCard`, ...) and tokens. A token more than one module needs goes in `ui/sdk/css/theme.css`, never in a module's `@theme`.
+- Field rows (D-097): a row of form fields is `items-start`; a label-less control (a submit button) takes `mt-field-label`; a lone checkbox or switch takes `mt-field-label h-field items-center`. `--spacing-field-label` (the `formField` label row: `text-xs` line plus `mt-1`) and `--spacing-field` (a control: `text-sm` line plus `py-1`) live in the SDK's `theme.css`, derived from `--spacing` and the text scale, so they follow any change to the `formField` or control theme; `ui/sdk/test/field-row.test.ts` and the consumer check guard them.
+- When a package needs a generic piece of UI, add an `Atrium*` component to `ui/sdk` rather than styling it in the module.
+- Modules compose Nuxt UI as the SDK does (D-093): no raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<details>` or `<a href>` in a module's `.vue` files; each module's suite runs `expect(rawHtmlIn('src')).toEqual([])` from `@refactor-circus/atrium/testing`. The SDK gives what the conversions needed: `<AtriumPageHeader>` (`title`, `leading`, `headline`, `description`, `meta` slots, `links`, `back`), `<AtriumDetails>` (a record's facts) and `<AtriumSelect>` (a blank item over `<USelect>`, which refuses `''`); Nuxt UI's types are re-exported type-only from `@refactor-circus/atrium/ui`, so a module never imports `@nuxt/ui`.
+- D-094: `<AtriumSelect>` takes Nuxt UI's `SelectItem[]` or `SelectItem[][]` (its model a `SelectValue`, `value-key`/`label-key` honoured by the blank item); `<AtriumDetails>` looks a slot up as an own property (any key is safe), gives an `href` item's link `linkTestid`, and marks each item's row element `data-row` = `key` plus `rowAttrs`; `<AtriumPageHeader>`'s `ui` merges per slot with its own classes, never replacing them. Free text with suggestions is `<UInput list>` + a native `<datalist>` (Nuxt UI 4.1's `<UInputMenu>` keeps no typed free text).
+- A `<UTable>` row carries its test id on its first cell's content (`UTable` 4.1 sets no attribute on a `<tr>`); tests find it with `tableRow(wrapper, testid)` and read cells with `tableCellText(row, 'Heading')`. Modules drive Nuxt UI in tests with the shared helpers (`chooseOption()`, `pickOption()`, `setChecked()`, `setNumber()`, `setField()`, ...), not local copies.
+- The SDK is a library installed under `node_modules`, where no consumer's resolver reaches (D-088): every SDK `.vue` file imports each `Atrium*` component it renders (`./AtriumX.vue`) and each `U*` from the same `@nuxt/ui/...` file `ui/sdk/src/ui.ts` exports it from, and every type its sources import comes from its own `dependencies`. Atrium's suites leave SDK sources out of the component resolver, and `ui/scripts/check-consumer.mjs` (in `composer test:ui`) builds, type-checks and tests a module against the packed SDK.
+- A module never imports from another module. The SDK and Atrium's app refer to no suite package's keys, except through the shell's data and the integration fixtures.
 
 ## Enforcement
 
-- Each first-party package has a test asserting `AtriumStyles::missingClasses()` and `AtriumStyles::inlineStyles()` are empty for its `resources/views`.
-
-## Third parties
-
-- Third-party packages may still register styles with `Atrium::css()` / `Atrium::stylesheet()` and their own component namespace.
-
-## Building
-
-- After changing any Atrium Blade file or the safelist, run `npm run build:css` and commit `public/atrium.css`.
+- `tests/ArchTest.php` fails if `src/` outside `Domains\Frontend` calls `view(`, references `Illuminate\View` or uses `Blade::`.
+- PHP feature tests compare the API's payloads with the contract fixtures in `ui/sdk/test/fixtures` (rewritten only with `UPDATE_FIXTURES=1`), and Vitest type-checks each fixture against the SDK's types.
+- `tests/Feature/Frontend/BuildFreshnessTest.php` fails when a committed build's source hash is stale.
+- `ui/sdk/test/nuxt-ui-guard.test.ts` fails when an SDK or app `.vue` file renders `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<details>` or an `<a href>` outside `AtriumLink.vue`; it runs `rawHtmlIn()`, the helper each module's guard test calls over its `src`.
+- `composer test:ui` runs the frozen install, the `generate:client` and `theme:check` checks, typecheck, Vitest and every build. Run it after any change under `ui/`, and commit the rebuilt `dist/` and `ui/workbench/dist/atrium/`.

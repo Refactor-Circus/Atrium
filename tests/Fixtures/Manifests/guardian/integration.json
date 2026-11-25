@@ -1,0 +1,341 @@
+{
+  "$schema": "../node_modules/@refactor-circus/atrium/schema/integration.schema.json",
+  "version": 1,
+  "key": "guardian",
+  "label": "Guardian",
+  "features": [
+    "guardian.atrium"
+  ],
+  "navigation": [
+    {
+      "label": "My security",
+      "path": "/guardian/security",
+      "icon": "i-lucide-shield-user",
+      "group": "Security",
+      "sort": 60
+    },
+    {
+      "label": "Roles",
+      "path": "/guardian/roles",
+      "icon": "i-lucide-shield-check",
+      "group": "Security",
+      "sort": 61
+    },
+    {
+      "label": "Permissions",
+      "path": "/guardian/permissions",
+      "icon": "i-lucide-key-round",
+      "group": "Security",
+      "sort": 62
+    },
+    {
+      "label": "Role assignments",
+      "path": "/guardian/role-assignments",
+      "icon": "i-lucide-user-check",
+      "group": "Security",
+      "sort": 63
+    },
+    {
+      "label": "Security events",
+      "path": "/guardian/security-events",
+      "icon": "i-lucide-scroll-text",
+      "group": "Security",
+      "sort": 64
+    },
+    {
+      "label": "Lockouts",
+      "path": "/guardian/lockouts",
+      "icon": "i-lucide-lock",
+      "group": "Security",
+      "sort": 65
+    },
+    {
+      "label": "IP rules",
+      "path": "/guardian/ip-rules",
+      "icon": "i-lucide-network",
+      "group": "Security",
+      "sort": 66
+    },
+    {
+      "label": "Two-factor policies",
+      "path": "/guardian/two-factor-policies",
+      "icon": "i-lucide-smartphone",
+      "group": "Security",
+      "sort": 67
+    },
+    {
+      "label": "Password policy",
+      "path": "/guardian/password-policy",
+      "icon": "i-lucide-rectangle-ellipsis",
+      "group": "Security",
+      "sort": 68
+    }
+  ],
+  "screens": [
+    {
+      "key": "guardian.security",
+      "kind": "detail",
+      "path": "/guardian/security",
+      "options": {
+        "token_abilities": {
+          "$config": "guardian.tokens.abilities",
+          "type": "strings",
+          "unique": true,
+          "non_empty": true,
+          "default": [
+            "*"
+          ]
+        },
+        "token_max_lifetime_days": {
+          "$config": "guardian.tokens.max_lifetime_days",
+          "type": "positive-int",
+          "nullable": true,
+          "default": 365
+        }
+      }
+    },
+    {
+      "key": "guardian.two-factor-challenge",
+      "kind": "detail",
+      "path": "/guardian/two-factor/challenge"
+    },
+    {
+      "key": "guardian.two-factor-setup",
+      "kind": "detail",
+      "path": "/guardian/two-factor/setup"
+    },
+    {
+      "key": "guardian.roles",
+      "kind": "list",
+      "path": "/guardian/roles",
+      "options": {
+        "scope_types": {
+          "$config": "atrium.integrations.guardian.scope_types",
+          "type": "map",
+          "fallback": "guardian.adopt.scope_types",
+          "default": {
+            "organization": null,
+            "team": null
+          },
+          "entries": [
+            "key",
+            "type"
+          ]
+        }
+      }
+    },
+    {
+      "key": "guardian.role",
+      "kind": "detail",
+      "path": "/guardian/roles/:role",
+      "options": {
+        "scope_types": {
+          "$config": "atrium.integrations.guardian.scope_types",
+          "type": "map",
+          "fallback": "guardian.adopt.scope_types",
+          "default": {
+            "organization": null,
+            "team": null
+          },
+          "entries": [
+            "key",
+            "type"
+          ]
+        }
+      }
+    },
+    {
+      "key": "guardian.permissions",
+      "kind": "list",
+      "path": "/guardian/permissions"
+    },
+    {
+      "key": "guardian.role-assignments",
+      "kind": "list",
+      "path": "/guardian/role-assignments",
+      "options": {
+        "scope_types": {
+          "$config": "atrium.integrations.guardian.scope_types",
+          "type": "map",
+          "fallback": "guardian.adopt.scope_types",
+          "default": {
+            "organization": null,
+            "team": null
+          },
+          "entries": [
+            "key",
+            "type"
+          ]
+        }
+      }
+    },
+    {
+      "key": "guardian.user",
+      "kind": "detail",
+      "path": "/guardian/users/:user",
+      "options": {
+        "scope_types": {
+          "$config": "atrium.integrations.guardian.scope_types",
+          "type": "map",
+          "fallback": "guardian.adopt.scope_types",
+          "default": {
+            "organization": null,
+            "team": null
+          },
+          "entries": [
+            "key",
+            "type"
+          ]
+        },
+        "token_abilities": {
+          "$config": "guardian.tokens.abilities",
+          "type": "strings",
+          "unique": true,
+          "non_empty": true,
+          "default": [
+            "*"
+          ]
+        }
+      }
+    },
+    {
+      "key": "guardian.security-events",
+      "kind": "list",
+      "path": "/guardian/security-events"
+    },
+    {
+      "key": "guardian.security-event",
+      "kind": "detail",
+      "path": "/guardian/security-events/:event"
+    },
+    {
+      "key": "guardian.lockouts",
+      "kind": "list",
+      "path": "/guardian/lockouts"
+    },
+    {
+      "key": "guardian.ip-rules",
+      "kind": "list",
+      "path": "/guardian/ip-rules",
+      "options": {
+        "mode": {
+          "$config": "guardian.ip_rules.mode",
+          "type": "enum",
+          "values": [
+            "allowlist",
+            "denylist"
+          ],
+          "default": "denylist"
+        }
+      }
+    },
+    {
+      "key": "guardian.two-factor-policies",
+      "kind": "list",
+      "path": "/guardian/two-factor-policies",
+      "options": {
+        "scope_types": {
+          "$config": "atrium.integrations.guardian.scope_types",
+          "type": "map",
+          "fallback": "guardian.adopt.scope_types",
+          "default": {
+            "organization": null,
+            "team": null
+          },
+          "entries": [
+            "key",
+            "type"
+          ]
+        }
+      }
+    },
+    {
+      "key": "guardian.password-policy",
+      "kind": "detail",
+      "path": "/guardian/password-policy"
+    },
+    {
+      "key": "guardian.sso-connection",
+      "kind": "detail",
+      "path": "/guardian/sso-connections/:connection"
+    }
+  ],
+  "hooks": [
+    {
+      "config": "screens",
+      "format": "lists",
+      "default": {
+        "roster.organization": [
+          "guardian.access",
+          "guardian.sso",
+          "guardian.scim"
+        ],
+        "roster.user": [
+          "guardian.access",
+          "guardian.user-security",
+          {
+            "aside": "guardian.sso-identities"
+          }
+        ]
+      },
+      "screens": {
+        "kind": "detail",
+        "subject": true,
+        "others": true
+      },
+      "tabs": {
+        "guardian.access": {
+          "label": "Access",
+          "icon": "i-lucide-key-round",
+          "data": {
+            "scope_type": {
+              "$subject_scope": {
+                "$config": "atrium.integrations.guardian.scope_types",
+                "type": "map",
+                "fallback": "guardian.adopt.scope_types",
+                "default": {
+                  "organization": null,
+                  "team": null
+                }
+              },
+              "self": "user"
+            }
+          }
+        },
+        "guardian.user-security": {
+          "label": "Security",
+          "icon": "i-lucide-shield",
+          "data": {}
+        },
+        "guardian.sso": {
+          "label": "SSO",
+          "icon": "i-lucide-log-in",
+          "data": {
+            "scim_path": {
+              "$config": "guardian.scim.prefix",
+              "type": "path",
+              "default": "scim/v2"
+            }
+          }
+        },
+        "guardian.scim": {
+          "label": "SCIM",
+          "icon": "i-lucide-server",
+          "data": {
+            "scim_path": {
+              "$config": "guardian.scim.prefix",
+              "type": "path",
+              "default": "scim/v2"
+            }
+          }
+        }
+      },
+      "sections": {
+        "guardian.sso-identities": {
+          "label": "SSO identities",
+          "data": {}
+        }
+      }
+    }
+  ]
+}

@@ -44,7 +44,7 @@ final class DemoData
     }
 
     /**
-     * The status dot variant and label for an order status.
+     * The badge variant and label for an order status.
      *
      * @return array{variant: string, label: string}
      */
@@ -118,6 +118,21 @@ final class DemoData
                 'unit' => '',
                 'rows' => ['May' => 212, 'June' => 248, 'July' => 231, 'August' => 276, 'September' => 301, 'October' => 286],
             ],
+        ];
+    }
+
+    /**
+     * The store details the settings panel's Storefront tab shows.
+     *
+     * @return array{name: string, url: string, currency: string, timezone: string}
+     */
+    public static function storefront(): array
+    {
+        return [
+            'name' => 'Acme Shop',
+            'url' => 'https://shop.acme.test',
+            'currency' => 'USD',
+            'timezone' => 'America/New_York',
         ];
     }
 

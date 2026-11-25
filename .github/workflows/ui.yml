@@ -1,0 +1,59 @@
+name: ui
+
+# The front end's gate (composer test:ui): the contract fixtures exist, a
+# frozen pnpm install, the generated client and Nuxt UI theme up to date,
+# typecheck and Vitest of the SDK, the app and the workbench module, a module
+# built against the packed SDK, then the builds, which must reproduce the
+# committed ones byte for byte (dist/ and the workbench's dist/atrium). The
+# suite packages build and check their own modules. It runs apart from the
+# PHP suite (tests.yml), which stays Node-free and checks the builds' source
+# hashes instead.
+
+on:
+  push:
+    branches:
+      - main
+      - '*.x'
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+
+    name: Front end
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: 8.5
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: ui/package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+
+      - name: Front-end gate
+        run: composer test:ui
+
+      - name: Committed builds match a fresh build
+        run: git diff --exit-code -- dist ui/workbench/dist ui/sdk/css ui/sdk/src/client

@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace RefactorCircus\Atrium\Domains\Plugins\Console\Commands;
 
 use Illuminate\Console\Command;
+use RefactorCircus\Atrium\Domains\Frontend\Services\ModuleDiscovery;
 use RefactorCircus\Atrium\Domains\Plugins\Services\ComposerPluginDiscovery;
 
 class ClearDiscoveredPluginsCommand extends Command
 {
     protected $signature = 'atrium:clear-discovered';
 
-    protected $description = 'Remove the cached list of discovered Atrium plugins.';
+    protected $description = 'Remove the cached lists of discovered Atrium plugins and front-end modules.';
 
-    public function handle(ComposerPluginDiscovery $discovery): int
+    public function handle(ComposerPluginDiscovery $discovery, ModuleDiscovery $modules): int
     {
         $discovery->clear();
+        $modules->clear();
 
-        $this->components->info('Cached Atrium plugins cleared.');
+        $this->components->info('Cached Atrium plugins and front-end modules cleared.');
 
         return self::SUCCESS;
     }

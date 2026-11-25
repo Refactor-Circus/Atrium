@@ -28,7 +28,7 @@ final class ResetsScreenExtensionsTest extends TestCase
     {
         $this->assertSame(['acme.boot'], $this->tabKeys());
 
-        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.inline')->view('acme::inline'));
+        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.inline'));
 
         $this->assertSame(['acme.boot', 'acme.inline'], $this->tabKeys());
     }
@@ -42,8 +42,8 @@ final class ResetsScreenExtensionsTest extends TestCase
     public function test_the_snapshot_taken_after_boot_is_restored_when_the_test_ends(): void
     {
         Atrium::screens()
-            ->tab('test.screen', TabDefinition::make('acme.inline')->view('acme::inline'))
-            ->section('*', 'before', SectionDefinition::make('acme.inline')->view('acme::inline'));
+            ->tab('test.screen', TabDefinition::make('acme.inline'))
+            ->section('*', 'before', SectionDefinition::make('acme.inline'));
 
         // What the trait runs as the application is torn down.
         $this->tearDownResetsScreenExtensions();
@@ -79,6 +79,6 @@ final class RegistersScreenTabOnBoot extends ServiceProvider
 {
     public function boot(): void
     {
-        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.boot')->view('acme::boot'));
+        Atrium::screens()->tab('test.screen', TabDefinition::make('acme.boot'));
     }
 }

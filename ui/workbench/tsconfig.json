@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.base.json",
+  "include": ["src", "auto-imports.d.ts", "components.d.ts", "vite.config.ts"]
+}
