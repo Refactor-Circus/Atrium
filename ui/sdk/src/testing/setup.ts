@@ -7,6 +7,18 @@ if (typeof window !== 'undefined' && typeof window.confirm !== 'function') {
   window.confirm = () => false
 }
 
+// Nuxt UI's toast measures itself (`$el.getBoundingClientRect()`) on the tick
+// after it mounts. A toast raised as a test ends is unmounted before that
+// tick, and its `$el` is then the comment Vue leaves in its place, which has
+// no such method: the run fails with an unhandled rejection after every test
+// passed. A comment or text node measures as an empty box instead.
+if (typeof CharacterData !== 'undefined' && !('getBoundingClientRect' in CharacterData.prototype)) {
+  Object.defineProperty(CharacterData.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => new DOMRect()
+  })
+}
+
 // Nothing a test runs may leave for the network. A request no mock answers
 // (a page refetching after its test reset the package mocks, say) fails at
 // once, as an offline fetch would, instead of reaching happy-dom's fetch,

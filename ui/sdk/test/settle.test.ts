@@ -76,3 +76,10 @@ describe('settle()', () => {
     await expect(settle()).rejects.toThrow(/settle\(\) timed out after 50 ms; still pending: navigation to \/settle\/never/)
   })
 })
+
+describe('the test setup', () => {
+  it('measures a comment or text node as an empty box, as an unmounted toast\'s $el is', () => {
+    expect((document.createComment('v-if') as unknown as Element).getBoundingClientRect().height).toBe(0)
+    expect((document.createTextNode('x') as unknown as Element).getBoundingClientRect().width).toBe(0)
+  })
+})
