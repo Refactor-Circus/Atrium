@@ -1,6 +1,6 @@
 /*
  * Wrapped field rows (D-098). In a row of form fields (D-097) a control with
- * no label of its own takes `mt-field-label`, which drops it by the label row
+ * no label of its own takes the field-label offset utility, which drops it by the label row
  * to line up with the fields' controls. When the row wraps (a narrow screen,
  * a long row) and such a control lands on a line with no labelled field, the
  * drop is only a gap: there is no label beside it to line up with.
@@ -14,7 +14,11 @@
 
 export const FIELD_WRAPPED_ATTRIBUTE = 'data-atrium-field-wrapped'
 
-const OFFSET_CLASS = /(^|:)mt-field-label$/
+// Assembled, so Atrium's Tailwind build does not see the class and compile it:
+// modules compile it from the SDK theme (D-097), and Atrium's class list
+// (core-classes.css) would otherwise tell them not to.
+const OFFSET = ['mt', 'field', 'label'].join('-')
+const OFFSET_CLASS = new RegExp(`(^|:)${OFFSET}$`)
 
 function isOffset(element: Element): boolean {
   for (const name of element.classList) {
@@ -105,7 +109,7 @@ export function watchFieldRows(root: Element): () => void {
   const resize = new ResizeObserver(entries => entries.forEach(entry => schedule(entry.target)))
 
   const scan = (): void => {
-    root.querySelectorAll('[class*="mt-field-label"]').forEach(element => {
+    root.querySelectorAll(`[class*="${OFFSET}"]`).forEach(element => {
       const row = element.parentElement
 
       if (row === null) {

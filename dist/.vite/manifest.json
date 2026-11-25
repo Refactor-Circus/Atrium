@@ -103,8 +103,8 @@
       "_Skeleton-DKti8ILn.js"
     ]
   },
-  "_AtriumVersionBanner-tMOWJ6UL.js": {
-    "file": "chunks/AtriumVersionBanner-tMOWJ6UL.js",
+  "_AtriumVersionBanner-CH90IByL.js": {
+    "file": "chunks/AtriumVersionBanner-CH90IByL.js",
     "name": "AtriumVersionBanner",
     "imports": [
       "_DashboardPanel-DbdaB3o7.js",
@@ -292,7 +292,7 @@
     ]
   },
   "src/main.ts": {
-    "file": "atrium-C2GWr7-1.js",
+    "file": "atrium-ChcTPOQe.js",
     "name": "atrium",
     "src": "src/main.ts",
     "isEntry": true,
@@ -300,7 +300,7 @@
       "_DashboardPanel-DbdaB3o7.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_core--pP3C62o.js",
-      "_AtriumVersionBanner-tMOWJ6UL.js",
+      "_AtriumVersionBanner-CH90IByL.js",
       "_useAtriumIcon-BhNVwKJ0.js",
       "_pinia-C4-tzdo8.js",
       "_runtime-dom.esm-bundler-CyPfl49P.js",
@@ -318,7 +318,7 @@
       "src/pages/NotFoundPage.vue"
     ],
     "css": [
-      "assets/atrium-CVN1CCdg.css"
+      "assets/atrium-xis8QTRH.css"
     ],
     "assets": [
       "assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2",
@@ -424,14 +424,14 @@
     ]
   },
   "src/shared/atrium.ts": {
-    "file": "shared/refactor-circus-atrium-D1ypkebe.js",
+    "file": "shared/refactor-circus-atrium-B8ggGf7A.js",
     "name": "shared/refactor-circus-atrium",
     "src": "src/shared/atrium.ts",
     "isEntry": true,
     "imports": [
       "_dist-BiG2Jq2W.js",
       "_useAtriumIcon-BhNVwKJ0.js",
-      "_AtriumVersionBanner-tMOWJ6UL.js",
+      "_AtriumVersionBanner-CH90IByL.js",
       "_runtime-core.esm-bundler-DdPnhzZn.js",
       "_devtools-RytpElE1-Cb4cD7Ml.js",
       "_AtriumUnregistered-D_huC_NF.js",
